@@ -1,5 +1,14 @@
 # https://blogs.bmj.com/bmjebmspotlight/2017/11/14/rare-adverse-events-clinical-trials-understanding-rule-three/
 
+<<<<<<< HEAD
+=======
+# TO DO:
+# 1. Show Francois - see what he likes or doesnt
+# 2. Upload to HCIE shiny server
+
+#install.packages("shinythemes")
+# install.packages('tinytex')
+>>>>>>> c0bb349a8b9ddb94b4a3b5e15e9a4e62c56d0345
 library(shiny)
 library(shinythemes)
 library(pwr)
@@ -27,7 +36,11 @@ ui <- fluidPage(
                                  sliderInput("power_discon", "Withdrawal or Discontinuation rate? (%):", min = 0, max = 20, value = 10)
                         ),
                         tabPanel("Sample Size",
+<<<<<<< HEAD
                                  sliderInput("ss_power", "Please specify desired power(%):", min = 50, max = 100, value = 80),
+=======
+                                 sliderInput("ss_power", "Please specify desired power(%):", min = 0, max = 100, value = 80),
+>>>>>>> c0bb349a8b9ddb94b4a3b5e15e9a4e62c56d0345
                                  # sliderInput("ss_p", "Please specify frequency of the event of interest (1 in x):", min = 1, max = 10000, value = 100),
                                  numericInput("ss_p", "Please specify frequency of the event of interest (1 in x):", min = 1, max = 10000, value = 100),
                                  sliderInput("ss_discon", "Withdrawal or Discontinuation rate? (%):", min = 0, max = 20, value = 10)
@@ -38,7 +51,11 @@ ui <- fluidPage(
         # Show a plot of the generated distribution
         mainPanel(
             h1("About this tool"),
+<<<<<<< HEAD
             p("In statistical analysis, the 'Rule of Three' states that if a certain event did not occur in a sample with n participants, the interval from 0 to 3/n is a 95% confidence interval for the rate of occurrences in the population. When n is greater than 30, this is a good approximation of results from more sensitive tests. For example, a pain-relief drug is tested on 1500 human participants, and no adverse event is recorded. From the rule of three, it can be concluded with 95% confidence that fewer than 1 person in 500 (or 3/1500) will experience an adverse event."),
+=======
+            p("In statistical analysis, the 'Rule of Three' states that if a certain event did not occur in a sample with n subjects, the interval from 0 to 3/n is a 95% confidence interval for the rate of occurrences in the population. When n is greater than 30, this is a good approximation of results from more sensitive tests. For example, a pain-relief drug is tested on 1500 human subjects, and no adverse event is recorded. From the rule of three, it can be concluded with 95% confidence that fewer than 1 person in 500 (or 3/1500) will experience an adverse event."),
+>>>>>>> c0bb349a8b9ddb94b4a3b5e15e9a4e62c56d0345
             p("This is one of the recommended methods of estimating sample size or power for studies examining safety-event data, such as post-marketing surveillance (PMS) studies. It is also very useful in the interpretation of clinical trials generally, particularly in phase II or III trials where often there are limitations in duration or statistical power for safety assessment."),
             h6(a("Reference: Hanley JA, and Lippman-Hand A. If nothing goes wrong, is everything all right? Interpreting zero numerators. JAMA, 1983.", target="_blank", href="Hanley-1983-1743.pdf")),
             
