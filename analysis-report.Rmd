@@ -1,0 +1,92 @@
+---
+title: "Rule of 3 Analysis"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  pdf_document:
+    df_print: kable
+    keep_tex: false
+fontsize: 12pt
+geometry: margin=1in
+always_allow_html: yes
+header-includes:
+  - \usepackage{float}
+  - \usepackage{booktabs}
+  - \usepackage{threeparttable}
+params:
+  tabset: 'Sample Size'
+  incidence_rate: 100
+  sample_size: 230
+  power: 0.8
+  discon: 0.10
+  adj_n: 250
+  progress: NA
+---
+
+```{r, include=FALSE}
+options(tinytex.verbose = F)
+```
+
+```{r setup, include=TRUE, echo=FALSE, message=FALSE, warning=FALSE, error=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(pwr)
+library(binom)
+library(kableExtra)
+```
+
+## About this analysis
+In statistical analysis, the 'Rule of Three' states that if a certain event did not occur in a sample with n subjects, the interval from 0 to 3/n is a 95% confidence interval for the rate of occurrences in the population. When n is greater than 30, this is a good approximation of results from more sensitive tests. For example, a pain-relief drug is tested on 1,500 human subjects, and no adverse event is recorded. From the rule of three, it can be concluded with 95% confidence that fewer than 1 person in 500 (or 3/1,500) will experience an adverse event.
+
+This is one of the recommended methods of estimating sample size or power for studies examining safety-event data, such as post-marketing surveillance (PMS) studies. It is also very useful in the interpretation of clinical trials generally, particularly in phase II or III trials where often there are limitations in duration or statistical power for safety assessment.
+
+Reference: Hanley JA, and Lippman-Hand A. If nothing goes wrong, is everything all right? Interpreting zero numerators. JAMA, 1983.
+
+## Results of this analysis
+Based on the Binominal distribution and a true event incidence rate of 1 in `r format(params$incidence_rate, digits=2, nsmall=2)` (or `r format(1/params$incidence_rate, digits=2, nsmall=2)`%), `r format(ceiling(params$sample_size), digits=0, nsmall=0)` participants would be needed to observe at least one event with `r format(params$power*100, digits=0, nsmall=0)`% probability. Accounting for a possible withdrawal or discontinuation rate of `r format(params$discon*100, digits=0)`%, the target number of participants is set as `r format(ceiling((params$sample_size * (1+params$discon))), digits=0)`.
+
+\newpage
+### Figure 1. Estimated power for the given conditions at different sample sizes.
+```{r figure1, echo=FALSE}
+# Increment the progress bar, and update the detail text.
+params$progress$inc(1/3, detail = "Making Figure 2")
+
+p.out <- if(params$tabset == 'Power'){
+    pwr.p.test(sig.level=0.05, power=NULL, h = ES.h(1/params$incidence_rate, 0), alt="greater", n = params$sample_size)
+  } else {
+    pwr.p.test(sig.level=0.05, power=params$power, h = ES.h(1/params$incidence_rate, 0), alt="greater", n = NULL)
+  }
+      
+plot(p.out)
+```
+
+\newpage
+### Table 1. Event rate accuracy with 95% confidence interval limits
+If `r format(ceiling(params$sample_size), digits=0, nsmall=0)` participants are included, the event rate would be estimated to an accuracy shown in the table below:
+
+
+```{r table1, echo=FALSE, results='asis'}
+# Increment the progress bar, and update the detail text.
+params$progress$inc(1/4, detail = "Creating Table 1")
+
+sequence <- unique(c(seq(0, 5), seq(10, 25, by=5), seq(50, min(round(params$sample_size, 0), 1000), by=50), seq(min(round(params$sample_size, 0), 1000), min(round(params$sample_size, 0), 10000), by=1000)))
+bb <- lapply(sequence, function(n) {
+  binom.confint(n, params$sample_size, conf.level = 0.95, methods = "exact")
+})
+
+table <- do.call(rbind, bb)
+table$length <- table$upper - table$lower
+var <- c("mean", "lower", "upper", "length")
+for (i in var) {
+  table[, i] <- round(table[, i]*100, 1)
+}
+
+table <- table[, c(2,4:7)]
+kable(table, align='lrrrr', 
+      col.names = c('Number of Events Observed', "Event Rate$^1$", "Lower Limit$^2$", "Upper Limit$^2$",'Length'), 
+      format = "latex", booktabs=T, escape=F) %>%
+  kable_styling(full_width = FALSE, position="center", fixed_thead = T) %>%
+  add_header_above(c(" ", " ", "95% Confidence Interval" = 2, " ")) %>%
+  footnote(number = c("Event rate (%) is estimated as a crude rate, defined as the number of participants exposed and experiencing the event of interest divided by the total number of participants. ",
+                      "Confidence Interval (%) based on exact Clopper-Pearson exact method for one proportion.")
+           , threeparttable = T)
+params$progress$inc(1/5, detail = "Writing PDF File (May take a few minutes)")
+```

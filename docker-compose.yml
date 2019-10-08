@@ -1,0 +1,10 @@
+version: '2.0' 
+ 
+services: 
+  shiny: 
+    build: 
+      context: . 
+      dockerfile: local.Dockerfile 
+    ports: ['3838:3838'] 
+    volumes: 
+      - '.:/srv/shiny-server' 
