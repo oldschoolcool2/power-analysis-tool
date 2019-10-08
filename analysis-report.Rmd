@@ -11,10 +11,7 @@ always_allow_html: yes
 header-includes:
   - \usepackage{float}
   - \usepackage{booktabs}
-<<<<<<< HEAD
   - \usepackage{threeparttable}
-=======
->>>>>>> c0bb349a8b9ddb94b4a3b5e15e9a4e62c56d0345
 params:
   tabset: 'Sample Size'
   incidence_rate: 100
@@ -26,12 +23,7 @@ params:
 ---
 
 ```{r, include=FALSE}
-<<<<<<< HEAD
 options(tinytex.verbose = F)
-=======
-options(tinytex.verbose = TRUE)
-    # latexengine: xelatex
->>>>>>> c0bb349a8b9ddb94b4a3b5e15e9a4e62c56d0345
 ```
 
 ```{r setup, include=TRUE, echo=FALSE, message=FALSE, warning=FALSE, error=FALSE}
@@ -88,7 +80,6 @@ for (i in var) {
 }
 
 table <- table[, c(2,4:7)]
-<<<<<<< HEAD
 kable(table, align='lrrrr', 
       col.names = c('Number of Events Observed', "Event Rate$^1$", "Lower Limit$^2$", "Upper Limit$^2$",'Length'), 
       format = "latex", booktabs=T, escape=F) %>%
@@ -97,14 +88,5 @@ kable(table, align='lrrrr',
   footnote(number = c("Event rate (%) is estimated as a crude rate, defined as the number of participants exposed and experiencing the event of interest divided by the total number of participants. ",
                       "Confidence Interval (%) based on exact Clopper-Pearson exact method for one proportion.")
            , threeparttable = T)
-=======
-kable(table, align='lrrrr', col.names = c('Number of Events Observed', 'Event Rate (1)', 'Lower Limit', 'Upper Limit','Length'), format = "latex", booktabs=T) %>% 
-  column_spec(column = 1:5, width = "1.0in") %>%
-  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE, position="center", fixed_thead = T) %>%
-  add_header_above(c(" ", " ", "95% Confidence Interval(2)" = 2, " ")) %>%
-  footnote(number = c("Event rate (%) is estimated as a crude rate, defined as the number of participants exposed and experiencing the event of interest divided by the total number of participants. ", 
-                      "Confidence Interval (%) based on exact Clopper-Pearson exact method for one proportion.")
-           )
->>>>>>> c0bb349a8b9ddb94b4a3b5e15e9a4e62c56d0345
 params$progress$inc(1/5, detail = "Writing PDF File (May take a few minutes)")
 ```
