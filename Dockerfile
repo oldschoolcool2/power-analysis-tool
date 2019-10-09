@@ -10,6 +10,8 @@ RUN curl -sL "https://yihui.name/gh/tinytex/tools/install-unx.sh" | sh -s - --ad
   && /opt/TinyTeX/bin/*/tlmgr path add \
   && rm -rf /tmp/texlive
 
+RUN tlmgr install threeparttable float booktabs
+
 USER shiny
 
 COPY --chown=shiny:shiny . /srv/shiny-server
