@@ -4,7 +4,8 @@ USER root
 
 RUN R --quiet -e "install.packages(c('shinythemes', 'pwr', 'binom', 'kableExtra'), quiet = TRUE)"
 
-RUN tlmgr install threeparttable float booktabs
+# ctan.org went down when I tested this. The repository argument can be removed
+RUN tlmgr -repository http://ctan.math.illinois.edu/systems/texlive/tlnet install threeparttable float booktabs
 
 USER shiny
 
