@@ -165,7 +165,7 @@ Access at `http://localhost:3838`
 3. Click **Calculate**
 4. Review results and download CSV/PDF
 
-**Result interpretation:** The app will show your statistical power (e.g., 91.8%) and provide copy-paste ready text for your protocol.
+**Result interpretation:** The app will show your statistical power (e.g., 91.8%) and provide copy-paste-ready text for your protocol.
 
 ---
 
@@ -291,7 +291,7 @@ This calculator does NOT account for:
 - **tinytex**: LaTeX support (PDF export)
 
 ### File Structure
-```
+```text
 .
 ├── app.R                 # Main Shiny application
 ├── analysis-report.Rmd   # R Markdown template for PDF export
