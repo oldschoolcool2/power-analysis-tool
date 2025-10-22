@@ -1,4 +1,4 @@
-FROM 354388601783.dkr.ecr.eu-west-1.amazonaws.com/shiny:3.6.1-20191015
+FROM rocker/shiny:4.2.0
 
 USER root
 
