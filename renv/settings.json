@@ -1,0 +1,14 @@
+{
+  "r.version": "4.4.0",
+  "snapshot.type": "implicit",
+  "vcs.ignore.library": true,
+  "use.cache": true,
+  "package.dependency.fields": [
+    "Imports",
+    "Depends",
+    "LinkingTo"
+  ],
+  "external.libraries": [],
+  "ppm.enabled": true,
+  "ppm.ignored.urls": []
+}

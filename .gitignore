@@ -1,7 +1,20 @@
 .Rproj.user
+
+# renv - keep lock and activation files, ignore library
+renv/library/
+renv/local/
+renv/cellar/
+renv/lock/
+renv/python/
+renv/sandbox/
+renv/staging/
 .Rhistory
 .RData
 .Ruserdata
 .build
 Dockerfile~
 *.backup
+
+# Claude Code configuration (user-specific)
+.claude/
+CLAUDE.md

@@ -9,32 +9,44 @@ RUN apt-get update && apt-get install -y \
     libcurl4-openssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install R packages (combining both versions: rmarkdown from bug fix, bslib/renv from Tier 3)
-RUN R --quiet -e "install.packages(c(\
-    'bslib', \
-    'shinyBS', \
-    'pwr', \
-    'binom', \
-    'kableExtra', \
-    'rmarkdown', \
-    'tinytex', \
-    'powerSurvEpi', \
-    'epiR', \
-    'renv' \
-    ), repos='https://cloud.r-project.org/', quiet = TRUE)"
+# Install renv for package management
+ENV RENV_VERSION 1.0.7
+RUN R --quiet -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.org'))" && \
+    R --quiet -e "remotes::install_github('rstudio/renv@${RENV_VERSION}')"
 
-# Install TinyTeX for PDF generation
+# Set working directory
+WORKDIR /srv/shiny-server
+
+# Copy renv configuration files FIRST (for Docker layer caching)
+# This layer only rebuilds when dependencies change
+COPY renv.lock renv.lock
+COPY .Rprofile .Rprofile
+COPY renv/activate.R renv/activate.R
+COPY renv/settings.json renv/settings.json
+
+# Configure renv cache for container environment
+ENV RENV_PATHS_LIBRARY renv/library
+ENV RENV_PATHS_CACHE /opt/renv/cache
+
+# Create cache directory and restore packages
+# This is the heavy operation that gets cached
+RUN mkdir -p /opt/renv/cache && \
+    R --quiet -e "renv::restore()"
+
+# Install TinyTeX for PDF generation (after renv restore)
 RUN R --quiet -e "tinytex::install_tinytex()"
 
 # Install LaTeX packages using secure CTAN mirror
 RUN tlmgr -repository https://mirror.ctan.org/systems/texlive/tlnet install threeparttable float booktabs
 
+# Copy application code LAST (changes most frequently)
+# This layer rebuilds on every code change but uses cached dependencies
+COPY --chown=shiny:shiny app.R app.R
+COPY --chown=shiny:shiny analysis-report.Rmd analysis-report.Rmd
+COPY --chown=shiny:shiny tests/ tests/
+
 USER shiny
 
-# Copy application files
-COPY --chown=shiny:shiny . /srv/shiny-server
+EXPOSE 3838
 
-# Initialize renv if renv.lock exists
-RUN if [ -f /srv/shiny-server/renv.lock ]; then \
-    cd /srv/shiny-server && R --quiet -e "renv::restore()"; \
-    fi
+CMD ["R", "-e", "shiny::runApp('/srv/shiny-server/app.R', host='0.0.0.0', port=3838)"]

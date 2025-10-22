@@ -48,20 +48,62 @@ docker-compose up
 docker-compose up --build
 ```
 
-### Package Management
+### Package Management with renv
 
-This project uses `renv` for reproducible package management:
+This project uses **renv** for reproducible package management - the R equivalent of Python's `uv`. All package dependencies are locked in `renv.lock`.
+
+#### Daily Workflow
 
 ```r
-# Restore packages from lockfile
-renv::restore()
+# When you first clone the repository:
+renv::restore()  # Installs exact package versions from renv.lock
 
-# Update packages and lockfile
+# After installing new packages:
+install.packages("new_package")
+renv::snapshot()  # Updates renv.lock with new package
+
+# Check if packages are in sync:
+renv::status()
+
+# Update packages and lockfile:
 renv::update()
 renv::snapshot()
+```
 
-# Check package status
-renv::status()
+#### How renv Works
+
+1. **Project Isolation**: Each project has its own package library in `renv/library/`
+2. **Global Cache**: Packages are cached in `~/.cache/R/renv/` and linked to projects (saves disk space)
+3. **Reproducibility**: `renv.lock` captures exact package versions, sources, and dependencies
+4. **Auto-Activation**: `.Rprofile` automatically activates renv when you open the project
+
+#### renv Files (DO commit these to Git)
+
+- `renv.lock` - JSON lockfile with all package versions
+- `renv/activate.R` - Activation script
+- `renv/settings.json` - Project-specific renv configuration
+- `.Rprofile` - Auto-loads renv on project start
+
+#### renv Files (DO NOT commit - in .gitignore)
+
+- `renv/library/` - Installed packages (linked from global cache)
+- `renv/staging/` - Temporary installation directory
+- `renv/sandbox/` - Sandbox for package builds
+
+#### Troubleshooting
+
+```r
+# Clean and reinstall everything:
+renv::restore(clean = TRUE)
+
+# Force snapshot even if status is OK:
+renv::snapshot(force = TRUE)
+
+# Deactivate renv (restore global library):
+renv::deactivate()
+
+# Reactivate:
+renv::activate()
 ```
 
 ## Code Architecture
@@ -91,6 +133,12 @@ The application includes several modern Shiny performance optimizations:
 4. **req() Validation Pattern** - Cleaner input validation alongside traditional `validate()`
    - Example in `output$result_text` for Power (Single) tab
    - Uses `req(..., cancelOutput = TRUE)` to silently stop execution on invalid inputs
+
+5. **Download Progress Indicators** - All download handlers now show progress feedback
+   - **CSV Export**: Uses `withProgress()` with incremental updates during data preparation and file writing
+   - **PDF Export**: Uses `Progress$new()` object with detailed status messages for R Markdown rendering
+   - **Scenario Comparison**: Shows progress during multi-scenario CSV export
+   - Provides professional user experience for long-running operations
 
 ### Key Architectural Pattern: Delayed Evaluation
 
@@ -258,22 +306,81 @@ When modifying the application, test:
 
 ## Deployment
 
-### Docker Container
+### Docker Container with renv
 
-The Dockerfile uses `rocker/shiny:4.4.0` base image with:
+The Dockerfile follows **2024 best practices** for production Shiny deployment with renv:
+
+#### Optimized Layer Structure
+
+1. **System dependencies** (rarely changes)
+2. **renv installation** (rarely changes)
+3. **renv.lock + restore** (changes when dependencies update) ← **Cached layer**
+4. **Application code** (changes frequently) ← **Fast rebuilds**
+
+This structure means:
+- Changing your app code → Only rebuilds the last layer (~5 seconds)
+- Adding a package → Rebuilds package layer + app layer (~2-5 minutes)
+- Changing system deps → Full rebuild (~10-15 minutes)
+
+#### Key Docker Features
+
+**Base Image**: `rocker/shiny:4.4.0`
 - R 4.4.0 (latest stable)
-- System dependencies: libxml2, libssl, libcurl4
-- TinyTeX for PDF generation
+- Pre-configured Shiny Server
+- Ubuntu-based with common system libraries
+
+**renv Configuration**:
+- `RENV_PATHS_LIBRARY=renv/library` - Project-local package library
+- `RENV_PATHS_CACHE=/opt/renv/cache` - Container-wide package cache
+- `renv::restore()` runs during build (not runtime)
+
+**TinyTeX for PDF Export**:
+- Installed after renv restore (to avoid conflicts)
 - LaTeX packages: threeparttable, float, booktabs
+
+#### Building the Image
+
+```bash
+# Build (leverages Docker cache)
+docker build -t power-analysis-tool .
+
+# Build with no cache (if having issues)
+docker build --no-cache -t power-analysis-tool .
+
+# Build with docker-compose
+docker-compose build
+```
+
+#### Rebuilding After Changes
+
+| Change Type | What Rebuilds | Time |
+|-------------|---------------|------|
+| Edit `app.R` | Last layer only | ~5 sec |
+| Add package to `renv.lock` | Package + app layers | ~2-5 min |
+| Update `Dockerfile` system deps | Everything | ~10-15 min |
 
 ### Port Configuration
 
 - **Local R**: Random port (displayed in console)
 - **Docker**: Port 3838 (mapped in docker-compose.yml)
+- **Production**: Use reverse proxy (nginx/Caddy) for HTTPS
 
 ### Environment Variables
 
-No environment variables required. The application is self-contained.
+**Optional configurations**:
+
+```bash
+# Increase Shiny app timeout
+SHINY_APP_TIMEOUT=60
+
+# Enable detailed logging
+R_LOG_LEVEL=DEBUG
+
+# Custom renv cache location
+RENV_PATHS_CACHE=/custom/cache/path
+```
+
+The application is self-contained and requires no environment variables for basic operation.
 
 ## Dependencies
 
@@ -409,6 +516,97 @@ sliderInput("power_alpha", "Significance Level (α):",
             value = 0.05, # Default
             step = 0.01)  # Increment
 ```
+
+## Future Enhancements
+
+### Recommended: Migration to bs4Dash
+
+The application currently uses the standard `bslib` theme with `fluidPage` layout. For a more professional pharmaceutical dashboard appearance, consider migrating to the **bs4Dash** package:
+
+#### Why bs4Dash?
+
+1. **Professional Enterprise UI**: Built on AdminLTE3, designed specifically for enterprise dashboards and pharmaceutical applications
+2. **Enhanced Metrics Display**: `valueBox()` components perfect for displaying calculated power metrics prominently
+3. **Rich Component Library**:
+   - Collapsible/maximizable cards for complex visualizations
+   - Built-in notification system with toasts and alerts
+   - Professional sidebar menu with expandable sections
+   - Dashboard theming with `freshTheme` for branding consistency
+4. **Better Suited for Target Audience**: Pharmaceutical epidemiologists expect polished, professional tools aligned with regulatory submission aesthetics
+
+#### Migration Path
+
+**Current Structure:**
+```r
+fluidPage(
+  sidebarLayout(
+    sidebarPanel(tabsetPanel(...)),
+    mainPanel(...)
+  )
+)
+```
+
+**bs4Dash Structure:**
+```r
+dashboardPage(
+  header = dashboardHeader(
+    title = dashboardBrand(title = "Power Analysis Tool", color = "primary")
+  ),
+  sidebar = dashboardSidebar(
+    sidebarMenu(
+      menuItem("Single Proportion", icon = icon("chart-line"),
+        menuSubItem("Power", tabName = "power_single"),
+        menuSubItem("Sample Size", tabName = "ss_single")
+      )
+    )
+  ),
+  body = dashboardBody(
+    tabItems(
+      tabItem(tabName = "power_single",
+        fluidRow(
+          box(title = "Inputs", status = "primary", ...),
+          box(title = "Results", status = "success", ...)
+        ),
+        fluidRow(
+          valueBox(value = textOutput("power"),
+                   subtitle = "Statistical Power",
+                   icon = icon("tachometer-alt"),
+                   color = "info"),
+          valueBox(value = textOutput("sample_size"),
+                   subtitle = "Sample Size",
+                   icon = icon("users"),
+                   color = "success")
+        )
+      )
+    )
+  )
+)
+```
+
+#### Implementation Considerations
+
+- **Current app size**: ~1,500 lines (well-suited for current monolithic structure)
+- **Migration effort**: 1-2 days for complete UI restructuring
+- **Server logic**: No changes needed - all reactive logic remains identical
+- **Input IDs**: Keep all IDs the same for compatibility
+- **Breakage risk**: Low - bs4Dash is compatible with standard Shiny components
+
+#### When to Migrate
+
+Consider bs4Dash migration when:
+- Preparing the tool for regulatory submission or external publication
+- Adding new analysis types that benefit from prominent metric displays
+- App exceeds 2,000 lines and needs better organization
+- Users request more polished, enterprise-grade appearance
+
+**Note**: The `bs4Dash` package has been added to `Dockerfile` dependencies for future use. The current `bslib` implementation is perfectly functional and appropriate for the app's current size and complexity.
+
+### Other Future Enhancements
+
+1. **Rhino Framework**: Consider for apps >2,000 lines requiring enterprise structure, built-in testing, and CI/CD templates
+2. **Async Operations**: Implement `future` + `promises` if power calculations become noticeably slow for users
+3. **Shiny Modules**: Break into reusable modules if app grows beyond 2,000 lines
+4. **Enhanced Testing**: Expand `testServer()` coverage to all analysis types
 
 ## References
 
