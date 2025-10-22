@@ -7,8 +7,10 @@ A comprehensive R Shiny application for calculating statistical power and sample
 This tool provides power and sample size calculations for:
 - **Single proportion analyses** (Rule of Three) - for rare event detection in post-marketing surveillance
 - **Two-group comparisons** - for cohort studies, case-control studies, and comparative effectiveness research
+- **Survival analysis** - for time-to-event outcomes using Cox regression
+- **Matched case-control studies** - accounting for matched pairs and correlation
 
-Developed by Merck Global Epidemiology for epidemiologists and non-statisticians conducting protocol development.
+Developed for epidemiologists and non-statisticians conducting pharmaceutical RWE research and protocol development.
 
 ---
 
@@ -46,7 +48,45 @@ Compare event rates between two independent groups (e.g., exposed vs. unexposed,
 - Relative Risk (RR)
 - Odds Ratio (OR)
 
-### Enhanced Features (NEW!)
+#### 3. Survival Analysis (TIER 2 - NEW!)
+Calculate power and sample size for time-to-event outcomes using Cox proportional hazards regression.
+
+**Use cases:**
+- Time to hospitalization
+- Time to disease progression
+- Time to treatment discontinuation
+- Overall survival analysis
+- Any time-to-event endpoint in RWE
+
+**Tabs:**
+- **Power (Survival)**: Calculate power given total sample size and hazard ratio
+- **Sample Size (Survival)**: Calculate required sample size for detecting a hazard ratio
+
+**Method**: Schoenfeld (1983) formula implemented via powerSurvEpi package
+
+**Inputs:**
+- Hazard ratio (HR)
+- Proportion exposed/treated
+- Overall event rate during follow-up
+- Significance level
+
+#### 4. Matched Case-Control Studies (TIER 2 - NEW!)
+Sample size calculations for matched study designs including propensity score matching.
+
+**Use cases:**
+- Propensity score matched cohorts
+- Traditional case-control matching (e.g., age, sex)
+- Matched retrospective studies
+- Nested case-control designs
+
+**Features:**
+- Accounts for correlation between matched pairs
+- Supports 1:1, 1:2, 1:3, etc. matching ratios
+- Calculates required cases and controls
+
+**Method**: epiR package implementation for matched designs
+
+### Enhanced Features (TIER 1)
 
 #### Adjustable Significance Level (α)
 - Previously fixed at 0.05
@@ -83,13 +123,13 @@ Compare event rates between two independent groups (e.g., exposed vs. unexposed,
 
 #### Prerequisites
 - R (≥ 3.6.1)
-- Required packages: `shiny`, `shinythemes`, `shinyBS`, `pwr`, `binom`, `kableExtra`, `tinytex`
+- Required packages: `shiny`, `shinythemes`, `shinyBS`, `pwr`, `binom`, `kableExtra`, `tinytex`, `powerSurvEpi`, `epiR`
 
 #### Installation
 ```r
 # Install required packages
 install.packages(c("shiny", "shinythemes", "shinyBS", "pwr", "binom",
-                   "kableExtra", "tinytex"))
+                   "kableExtra", "tinytex", "powerSurvEpi", "epiR"))
 
 # Run the app
 shiny::runApp("path/to/app.R")
@@ -229,11 +269,11 @@ Access at `http://localhost:3838`
 
 This calculator does NOT account for:
 - Clustering (use mixed models or design effect adjustments)
-- Matching (reduces degrees of freedom)
 - Multiple comparisons (requires Bonferroni or FDR correction)
-- Time-to-event analyses (use Cox regression power calculators)
 - Continuous outcomes (use t-test or ANOVA power calculators)
 - Non-inferiority/equivalence designs
+- Competing risks in survival analysis
+- Complex stratification beyond matching
 
 ---
 
@@ -242,7 +282,9 @@ This calculator does NOT account for:
 ### Dependencies
 - **R**: ≥ 3.6.1
 - **Shiny**: Web application framework
-- **pwr**: Power analysis functions
+- **pwr**: Power analysis functions for proportion tests
+- **powerSurvEpi**: Survival analysis power calculations (Schoenfeld method)
+- **epiR**: Epidemiological statistics including matched case-control designs
 - **binom**: Exact binomial confidence intervals
 - **shinyBS**: Bootstrap tooltips and popovers
 - **kableExtra**: Table formatting (PDF export)
@@ -268,9 +310,22 @@ This calculator does NOT account for:
 
 ## Changes in This Release
 
-### Version 2.0 (Current)
+### Version 3.0 - Tier 2 Enhancements (Current)
 
-**NEW FEATURES:**
+**NEW TIER 2 FEATURES:**
+1. ✅ **Survival Analysis** - Cox regression power/sample size calculations
+   - Power calculation given sample size and hazard ratio
+   - Sample size calculation for target power
+   - Schoenfeld (1983) method via powerSurvEpi
+   - Interactive power curves
+2. ✅ **Matched Case-Control Studies** - Sample size for matched designs
+   - Accounts for correlation in matched pairs
+   - Flexible matching ratios (1:1, 1:2, 1:3, etc.)
+   - Propensity score matching support
+3. ✅ **Extended CSV Export** - All analysis types now export to CSV
+4. ✅ **Extended Scenario Comparison** - Supports all new analysis types
+
+**TIER 1 FEATURES (Version 2.0):**
 1. ✅ Two-group proportion comparisons (cohort/case-control studies)
 2. ✅ Adjustable significance level (α)
 3. ✅ Input validation with helpful error messages
@@ -282,13 +337,15 @@ This calculator does NOT account for:
 9. ✅ Unequal allocation ratio support
 
 **IMPROVEMENTS:**
-- Enhanced UI with better organization
-- More informative results text
-- Expanded documentation
-- Updated package dependencies
+- Comprehensive RWE study design support
+- Enhanced statistical methods for modern epidemiology
+- FDA/EMA 2024 RWE guidance alignment
+- Expanded documentation with survival analysis examples
+- Updated package dependencies (powerSurvEpi, epiR)
 
 **BACKWARD COMPATIBILITY:**
 - All original single-proportion features preserved
+- All Version 2.0 two-group features preserved
 - Existing workflows unchanged
 - PDF export still available (single-proportion only)
 
@@ -319,22 +376,20 @@ This calculator does NOT account for:
   - R version and package versions
 
 ### Feature Requests
-Suggestions for future enhancements:
-- Survival analysis (Cox regression)
-- Matched study designs
+Suggestions for future enhancements (Tier 3):
+- ✅ ~~Survival analysis (Cox regression)~~ - COMPLETED in v3.0
+- ✅ ~~Matched study designs~~ - COMPLETED in v3.0
 - Stratified analyses
 - Multiple comparison adjustments
 - Sample size re-estimation (adaptive designs)
-
-### Contact
-Merck Global Epidemiology
-Original authors: Michael Batech, DrPH & Moritz Onken
+- Non-inferiority/equivalence designs
+- Propensity score weighting (IPTW) adjustments
 
 ---
 
 ## License
 
-Copyright © 2019-2025 Merck & Co., Inc.
+Open source for pharmaceutical RWE research
 
 ---
 
