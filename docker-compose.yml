@@ -6,5 +6,3 @@ services:
     ports: ['3838:3838']
     volumes:
       - '.:/srv/shiny-server'
-    environment:
-      BUCKET_NAME: ${BUCKET_NAME}

@@ -14,7 +14,7 @@ ui <- fluidPage(
     #shinythemes::themeSelector(),
     
     # Application title
-    titlePanel("Merck Global Epidemiology"),
+    titlePanel("Statistical Power Analysis Tool"),
     
     # Sidebar with a slider input for number of bins 
     sidebarLayout(
