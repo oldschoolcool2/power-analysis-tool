@@ -1,7 +1,7 @@
 # https://blogs.bmj.com/bmjebmspotlight/2017/11/14/rare-adverse-events-clinical-trials-understanding-rule-three/
 
 library(shiny)
-library(shinythemes)
+library(bslib)
 library(shinyBS)
 library(pwr)
 library(binom)
@@ -12,11 +12,17 @@ library(epiR)
 
 # Define UI
 ui <- fluidPage(
-    # SHINY Theme
-    theme = shinytheme("lumen"),
+    # Modern bslib theme for mobile responsiveness
+    theme = bs_theme(
+        version = 5,
+        bootswatch = "cosmo",
+        primary = "#3498db",
+        base_font = font_google("Open Sans"),
+        heading_font = font_google("Montserrat")
+    ),
 
     # Application title
-    titlePanel("Statistical Power Analysis Tool"),
+    titlePanel("Statistical Power Analysis Tool for Real-World Evidence"),
 
     # Sidebar with inputs
     sidebarLayout(
@@ -37,7 +43,10 @@ ui <- fluidPage(
                                  bsTooltip("power_discon", "Expected percentage of participants who will withdraw or discontinue", "right"),
 
                                  sliderInput("power_alpha", "Significance Level (α):", min = 0.01, max = 0.10, value = 0.05, step = 0.01),
-                                 bsTooltip("power_alpha", "Type I error rate (typically 0.05). Lower values are more conservative.", "right")
+                                 bsTooltip("power_alpha", "Type I error rate (typically 0.05). Lower values are more conservative.", "right"),
+                                 hr(),
+                                 actionButton("example_power_single", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
+                                 actionButton("reset_power_single", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
                         ),
 
                         # TAB 2: Single Proportion Sample Size
@@ -55,7 +64,10 @@ ui <- fluidPage(
                                  bsTooltip("ss_discon", "Expected percentage of participants who will withdraw or discontinue", "right"),
 
                                  sliderInput("ss_alpha", "Significance Level (α):", min = 0.01, max = 0.10, value = 0.05, step = 0.01),
-                                 bsTooltip("ss_alpha", "Type I error rate (typically 0.05). Lower values are more conservative.", "right")
+                                 bsTooltip("ss_alpha", "Type I error rate (typically 0.05). Lower values are more conservative.", "right"),
+                                 hr(),
+                                 actionButton("example_ss_single", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
+                                 actionButton("reset_ss_single", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
                         ),
 
                         # TAB 3: Two-Group Power
@@ -79,7 +91,10 @@ ui <- fluidPage(
                                  radioButtons("twogrp_pow_sided", "Test Type:",
                                              choices = c("Two-sided" = "two.sided", "One-sided" = "greater"),
                                              selected = "two.sided"),
-                                 bsTooltip("twogrp_pow_sided", "Two-sided: test if groups differ. One-sided: test if Group 1 > Group 2", "right")
+                                 bsTooltip("twogrp_pow_sided", "Two-sided: test if groups differ. One-sided: test if Group 1 > Group 2", "right"),
+                                 hr(),
+                                 actionButton("example_twogrp_pow", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
+                                 actionButton("reset_twogrp_pow", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
                         ),
 
                         # TAB 4: Two-Group Sample Size
@@ -103,7 +118,10 @@ ui <- fluidPage(
 
                                  radioButtons("twogrp_ss_sided", "Test Type:",
                                              choices = c("Two-sided" = "two.sided", "One-sided" = "greater"),
-                                             selected = "two.sided")
+                                             selected = "two.sided"),
+                                 hr(),
+                                 actionButton("example_twogrp_ss", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
+                                 actionButton("reset_twogrp_ss", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
                         ),
 
                         # TAB 5: Survival Analysis Power
@@ -124,7 +142,10 @@ ui <- fluidPage(
                                  bsTooltip("surv_pow_pE", "Expected proportion of participants experiencing the event during follow-up", "right"),
 
                                  sliderInput("surv_pow_alpha", "Significance Level (α):", min = 0.01, max = 0.10, value = 0.05, step = 0.01),
-                                 bsTooltip("surv_pow_alpha", "Type I error rate (typically 0.05)", "right")
+                                 bsTooltip("surv_pow_alpha", "Type I error rate (typically 0.05)", "right"),
+                                 hr(),
+                                 actionButton("example_surv_pow", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
+                                 actionButton("reset_surv_pow", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
                         ),
 
                         # TAB 6: Survival Analysis Sample Size
@@ -145,7 +166,10 @@ ui <- fluidPage(
                                  bsTooltip("surv_ss_pE", "Expected proportion of participants experiencing the event during follow-up", "right"),
 
                                  sliderInput("surv_ss_alpha", "Significance Level (α):", min = 0.01, max = 0.10, value = 0.05, step = 0.01),
-                                 bsTooltip("surv_ss_alpha", "Type I error rate (typically 0.05)", "right")
+                                 bsTooltip("surv_ss_alpha", "Type I error rate (typically 0.05)", "right"),
+                                 hr(),
+                                 actionButton("example_surv_ss", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
+                                 actionButton("reset_surv_ss", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
                         ),
 
                         # TAB 7: Matched Case-Control
@@ -171,7 +195,10 @@ ui <- fluidPage(
                                  radioButtons("match_sided", "Test Type:",
                                              choices = c("Two-sided" = "two.sided", "One-sided" = "one.sided"),
                                              selected = "two.sided"),
-                                 bsTooltip("match_sided", "Two-sided: test if groups differ. One-sided: test directional hypothesis", "right")
+                                 bsTooltip("match_sided", "Two-sided: test if groups differ. One-sided: test directional hypothesis", "right"),
+                                 hr(),
+                                 actionButton("example_match", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
+                                 actionButton("reset_match", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
                         )
             ),
             hr(),
@@ -195,22 +222,98 @@ ui <- fluidPage(
         # Main panel with results
         mainPanel(
             h1("About this tool"),
-            p("This tool provides power and sample size calculations for epidemiological studies, with a focus on real-world evidence (RWE) applications in pharmaceutical research."),
+            p("This tool provides power and sample size calculations for epidemiological studies, with a focus on real-world evidence (RWE) applications in pharmaceutical research. Use the sidebar tabs to select your study design and fill in the parameters."),
 
-            h3("Single Proportion Analysis (Rule of Three)"),
-            p("The 'Rule of Three' states that if a certain event did not occur in a sample with n participants, the interval from 0 to 3/n is a 95% confidence interval for the rate of occurrences in the population. When n is greater than 30, this is a good approximation. For example, if a drug is tested on 1500 participants and no adverse event is recorded, we can conclude with 95% confidence that fewer than 1 person in 500 (or 3/1500) will experience an adverse event."),
+            # Collapsible help sections using accordion
+            accordion(
+                id = "help_accordion",
+                multiple = TRUE,
+                accordion_panel(
+                    title = "Single Proportion Analysis (Rule of Three)",
+                    icon = icon("info-circle"),
+                    p("The 'Rule of Three' states that if a certain event did not occur in a sample with n participants, the interval from 0 to 3/n is a 95% confidence interval for the rate of occurrences in the population. When n is greater than 30, this is a good approximation."),
+                    p(strong("Example:"), "If a drug is tested on 1,500 participants and no adverse event is recorded, we can conclude with 95% confidence that fewer than 1 person in 500 (or 3/1500 = 0.2%) will experience an adverse event."),
+                    p(strong("Use cases:"), "Post-marketing surveillance, rare adverse event detection, safety studies."),
+                    p(a("Learn more in Hanley & Lippman-Hand (1983)", href = "Hanley-1983-1743.pdf", target = "_blank"))
+                ),
 
-            h3("Two-Group Comparisons"),
-            p("For comparative effectiveness research and observational studies, you can use the Two-Group tabs to compare event rates between exposed/unexposed groups or treatment/control groups. This is essential for cohort studies and case-control studies in real-world data analysis."),
+                accordion_panel(
+                    title = "Two-Group Comparisons",
+                    icon = icon("users"),
+                    p("For comparative effectiveness research and observational studies, use the Two-Group tabs to compare event rates between exposed/unexposed groups or treatment/control groups."),
+                    p(strong("Study designs:"), "Cohort studies (prospective or retrospective), comparative effectiveness studies, RCTs."),
+                    p(strong("Effect measures:"), "The tool calculates Risk Difference, Relative Risk (RR), and Odds Ratio (OR) to help interpret clinical significance."),
+                    p(strong("Example:"), "Comparing hospitalization rates between patients prescribed Drug A vs. Drug B using claims data.")
+                ),
 
-            h3("Survival Analysis (Cox Regression)"),
-            p("Survival analysis is used for time-to-event outcomes, which are extremely common in pharmaceutical RWE studies (e.g., time to hospitalization, time to disease progression). The Power/Sample Size (Survival) tabs use the Schoenfeld (1983) method implemented in the powerSurvEpi package to calculate power and sample size for Cox proportional hazards regression."),
+                accordion_panel(
+                    title = "Survival Analysis (Cox Regression)",
+                    icon = icon("chart-line"),
+                    p("Survival analysis is used for time-to-event outcomes, which are extremely common in pharmaceutical RWE studies (e.g., time to hospitalization, time to disease progression, time to death)."),
+                    p(strong("Method:"), "Uses the Schoenfeld (1983) method for Cox proportional hazards regression, implemented in the powerSurvEpi R package."),
+                    p(strong("Key inputs:"), "Hazard Ratio (HR), proportion exposed, overall event rate during follow-up."),
+                    p(strong("Example:"), "Estimating sample size to detect a 30% reduction in risk of cardiovascular events (HR = 0.7) in a cohort study.")
+                ),
 
-            h3("Matched Case-Control Studies"),
-            p("The Matched Case-Control tab provides sample size calculations for studies using matching (e.g., propensity score matching, traditional case-control matching). This accounts for the correlation between matched pairs and provides accurate sample size estimates for matched study designs commonly used in observational research."),
+                accordion_panel(
+                    title = "Matched Case-Control Studies",
+                    icon = icon("link"),
+                    p("The Matched Case-Control tab provides sample size calculations for studies using matching strategies, such as propensity score matching or traditional case-control matching."),
+                    p(strong("When to use:"), "When cases and controls are matched on confounding variables (age, sex, comorbidities, etc.)."),
+                    p(strong("Matching ratios:"), "Supports 1:1, 2:1, 3:1, or higher matching ratios (controls per case)."),
+                    p(strong("Example:"), "Matched case-control study examining association between statin use and liver injury, matching on age, sex, and diabetes status.")
+                ),
 
-            h6(a("Reference: Hanley JA, and Lippman-Hand A. If nothing goes wrong, is everything all right? Interpreting zero numerators. JAMA, 1983.",
-                target="_blank", href="Hanley-1983-1743.pdf")),
+                accordion_panel(
+                    title = "Regulatory Guidance & References",
+                    icon = icon("book"),
+                    h5("FDA/EMA Guidance on RWE"),
+                    tags$ul(
+                        tags$li(a("FDA - Real-World Evidence Framework",
+                                href = "https://www.fda.gov/science-research/science-and-research-special-topics/real-world-evidence",
+                                target = "_blank")),
+                        tags$li(a("FDA - Use of Real-World Evidence (2023)",
+                                href = "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/real-world-data-assessing-electronic-health-records-and-medical-claims-data-support-regulatory",
+                                target = "_blank")),
+                        tags$li(a("EMA - Real World Evidence Framework",
+                                href = "https://www.ema.europa.eu/en/about-us/how-we-work/big-data/real-world-evidence",
+                                target = "_blank"))
+                    ),
+                    h5("Key Statistical References"),
+                    tags$ul(
+                        tags$li("Hanley JA, Lippman-Hand A. If nothing goes wrong, is everything all right? Interpreting zero numerators. JAMA. 1983;249(13):1743-1745."),
+                        tags$li("Schoenfeld DA. Sample-size formula for the proportional-hazards regression model. Biometrics. 1983;39(2):499-503."),
+                        tags$li("Cohen J. Statistical Power Analysis for the Behavioral Sciences. 2nd ed. Routledge; 1988."),
+                        tags$li("Lachin JM. Introduction to sample size determination and power analysis for clinical trials. Control Clin Trials. 1981;2(2):93-113.")
+                    )
+                ),
+
+                accordion_panel(
+                    title = "Interpretation Guide",
+                    icon = icon("question-circle"),
+                    h5("Understanding Power"),
+                    p("Power is the probability of detecting a true effect when it exists. Conventionally:"),
+                    tags$ul(
+                        tags$li(strong("80% power:"), "Standard for most studies"),
+                        tags$li(strong("90% power:"), "Preferred for pivotal or confirmatory studies"),
+                        tags$li(strong("<70% power:"), "Generally considered inadequate")
+                    ),
+                    h5("Understanding Significance Level (α)"),
+                    tags$ul(
+                        tags$li(strong("α = 0.05:"), "Standard for most studies (5% false positive rate)"),
+                        tags$li(strong("α = 0.01:"), "More conservative, used for multiple testing or critical decisions"),
+                        tags$li(strong("α = 0.10:"), "Sometimes used in exploratory studies")
+                    ),
+                    h5("Effect Sizes"),
+                    tags$ul(
+                        tags$li(strong("Hazard Ratio (HR):"), "HR < 1 = protective, HR > 1 = increased risk, HR = 1 = no effect"),
+                        tags$li(strong("Odds Ratio (OR):"), "Similar interpretation to HR for rare outcomes"),
+                        tags$li(strong("Relative Risk (RR):"), "More intuitive than OR; directly interpretable as relative increase/decrease in risk")
+                    )
+                )
+            ),
+
+            hr(),
 
             # Results section
             uiOutput('result_text'),
@@ -293,6 +396,133 @@ server <- function(input, output, session) {
     # Reset analysis when switching tabs
     observeEvent(input$tabset, {
         v$doAnalysis <- FALSE
+    })
+
+    # Example button handlers - load common scenarios
+    observeEvent(input$example_power_single, {
+        updateNumericInput(session, "power_n", value = 1500)
+        updateNumericInput(session, "power_p", value = 500)
+        updateSliderInput(session, "power_discon", value = 15)
+        updateSliderInput(session, "power_alpha", value = 0.05)
+        showNotification("Example loaded: Rare adverse event study with 1,500 participants", type = "message", duration = 3)
+    })
+
+    observeEvent(input$example_ss_single, {
+        updateSliderInput(session, "ss_power", value = 90)
+        updateNumericInput(session, "ss_p", value = 200)
+        updateSliderInput(session, "ss_discon", value = 10)
+        updateSliderInput(session, "ss_alpha", value = 0.05)
+        showNotification("Example loaded: Sample size for rare event (1 in 200)", type = "message", duration = 3)
+    })
+
+    observeEvent(input$example_twogrp_pow, {
+        updateNumericInput(session, "twogrp_pow_n1", value = 500)
+        updateNumericInput(session, "twogrp_pow_n2", value = 500)
+        updateNumericInput(session, "twogrp_pow_p1", value = 15)
+        updateNumericInput(session, "twogrp_pow_p2", value = 10)
+        updateSliderInput(session, "twogrp_pow_alpha", value = 0.05)
+        showNotification("Example loaded: Cohort study comparing 15% vs 10% event rates", type = "message", duration = 3)
+    })
+
+    observeEvent(input$example_twogrp_ss, {
+        updateSliderInput(session, "twogrp_ss_power", value = 80)
+        updateNumericInput(session, "twogrp_ss_p1", value = 20)
+        updateNumericInput(session, "twogrp_ss_p2", value = 15)
+        updateNumericInput(session, "twogrp_ss_ratio", value = 1)
+        updateSliderInput(session, "twogrp_ss_alpha", value = 0.05)
+        showNotification("Example loaded: Sample size for 20% vs 15% comparison", type = "message", duration = 3)
+    })
+
+    observeEvent(input$example_surv_pow, {
+        updateNumericInput(session, "surv_pow_n", value = 800)
+        updateNumericInput(session, "surv_pow_hr", value = 0.75)
+        updateSliderInput(session, "surv_pow_k", value = 50)
+        updateSliderInput(session, "surv_pow_pE", value = 40)
+        updateSliderInput(session, "surv_pow_alpha", value = 0.05)
+        showNotification("Example loaded: Survival study with HR=0.75 and 40% event rate", type = "message", duration = 3)
+    })
+
+    observeEvent(input$example_surv_ss, {
+        updateSliderInput(session, "surv_ss_power", value = 85)
+        updateNumericInput(session, "surv_ss_hr", value = 0.70)
+        updateSliderInput(session, "surv_ss_k", value = 50)
+        updateSliderInput(session, "surv_ss_pE", value = 35)
+        updateSliderInput(session, "surv_ss_alpha", value = 0.05)
+        showNotification("Example loaded: Sample size for survival analysis (HR=0.70)", type = "message", duration = 3)
+    })
+
+    observeEvent(input$example_match, {
+        updateSliderInput(session, "match_power", value = 80)
+        updateNumericInput(session, "match_or", value = 2.5)
+        updateSliderInput(session, "match_p0", value = 25)
+        updateNumericInput(session, "match_ratio", value = 2)
+        updateSliderInput(session, "match_alpha", value = 0.05)
+        showNotification("Example loaded: 2:1 matched case-control with OR=2.5", type = "message", duration = 3)
+    })
+
+    # Reset button handlers - restore defaults
+    observeEvent(input$reset_power_single, {
+        updateNumericInput(session, "power_n", value = 230)
+        updateNumericInput(session, "power_p", value = 100)
+        updateSliderInput(session, "power_discon", value = 10)
+        updateSliderInput(session, "power_alpha", value = 0.05)
+        showNotification("Inputs reset to defaults", type = "warning", duration = 2)
+    })
+
+    observeEvent(input$reset_ss_single, {
+        updateSliderInput(session, "ss_power", value = 80)
+        updateNumericInput(session, "ss_p", value = 100)
+        updateSliderInput(session, "ss_discon", value = 10)
+        updateSliderInput(session, "ss_alpha", value = 0.05)
+        showNotification("Inputs reset to defaults", type = "warning", duration = 2)
+    })
+
+    observeEvent(input$reset_twogrp_pow, {
+        updateNumericInput(session, "twogrp_pow_n1", value = 200)
+        updateNumericInput(session, "twogrp_pow_n2", value = 200)
+        updateNumericInput(session, "twogrp_pow_p1", value = 10)
+        updateNumericInput(session, "twogrp_pow_p2", value = 5)
+        updateSliderInput(session, "twogrp_pow_alpha", value = 0.05)
+        updateRadioButtons(session, "twogrp_pow_sided", selected = "two.sided")
+        showNotification("Inputs reset to defaults", type = "warning", duration = 2)
+    })
+
+    observeEvent(input$reset_twogrp_ss, {
+        updateSliderInput(session, "twogrp_ss_power", value = 80)
+        updateNumericInput(session, "twogrp_ss_p1", value = 10)
+        updateNumericInput(session, "twogrp_ss_p2", value = 5)
+        updateNumericInput(session, "twogrp_ss_ratio", value = 1)
+        updateSliderInput(session, "twogrp_ss_alpha", value = 0.05)
+        updateRadioButtons(session, "twogrp_ss_sided", selected = "two.sided")
+        showNotification("Inputs reset to defaults", type = "warning", duration = 2)
+    })
+
+    observeEvent(input$reset_surv_pow, {
+        updateNumericInput(session, "surv_pow_n", value = 500)
+        updateNumericInput(session, "surv_pow_hr", value = 0.7)
+        updateSliderInput(session, "surv_pow_k", value = 50)
+        updateSliderInput(session, "surv_pow_pE", value = 30)
+        updateSliderInput(session, "surv_pow_alpha", value = 0.05)
+        showNotification("Inputs reset to defaults", type = "warning", duration = 2)
+    })
+
+    observeEvent(input$reset_surv_ss, {
+        updateSliderInput(session, "surv_ss_power", value = 80)
+        updateNumericInput(session, "surv_ss_hr", value = 0.7)
+        updateSliderInput(session, "surv_ss_k", value = 50)
+        updateSliderInput(session, "surv_ss_pE", value = 30)
+        updateSliderInput(session, "surv_ss_alpha", value = 0.05)
+        showNotification("Inputs reset to defaults", type = "warning", duration = 2)
+    })
+
+    observeEvent(input$reset_match, {
+        updateSliderInput(session, "match_power", value = 80)
+        updateNumericInput(session, "match_or", value = 2.0)
+        updateSliderInput(session, "match_p0", value = 20)
+        updateNumericInput(session, "match_ratio", value = 1)
+        updateSliderInput(session, "match_alpha", value = 0.05)
+        updateRadioButtons(session, "match_sided", selected = "two.sided")
+        showNotification("Inputs reset to defaults", type = "warning", duration = 2)
     })
 
     # Validation function
