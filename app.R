@@ -1,5 +1,10 @@
 # https://blogs.bmj.com/bmjebmspotlight/2017/11/14/rare-adverse-events-clinical-trials-understanding-rule-three/
 
+# Enable reactive logging for debugging (press Ctrl+F3 or Cmd+F3 in browser)
+if (interactive()) {
+    options(shiny.reactlog = TRUE)
+}
+
 library(shiny)
 library(bslib)
 library(shinyBS)
@@ -409,6 +414,9 @@ ui <- fluidPage(
 
             hr(),
 
+            # Live preview (debounced)
+            uiOutput('live_preview'),
+
             # Results section
             uiOutput('result_text'),
             uiOutput('effect_measures'),
@@ -752,12 +760,82 @@ server <- function(input, output, session) {
         }
     }
 
+    ################################################################################################## LIVE PREVIEW (DEBOUNCED)
+
+    # Create debounced preview reactive for quick feedback
+    preview_inputs <- reactive({
+        if (input$tabset == "Power (Single)") {
+            list(
+                tab = input$tabset,
+                n = input$power_n,
+                p = input$power_p,
+                alpha = input$power_alpha,
+                rate = 1/input$power_p
+            )
+        } else if (input$tabset == "Sample Size (Single)") {
+            list(
+                tab = input$tabset,
+                power = input$ss_power,
+                p = input$ss_p,
+                alpha = input$ss_alpha,
+                rate = 1/input$ss_p
+            )
+        } else if (input$tabset == "Power (Two-Group)") {
+            list(
+                tab = input$tabset,
+                n1 = input$twogrp_pow_n1,
+                n2 = input$twogrp_pow_n2,
+                p1 = input$twogrp_pow_p1,
+                p2 = input$twogrp_pow_p2
+            )
+        } else {
+            list(tab = input$tabset)
+        }
+    }) %>% debounce(1000)  # Wait 1 second after last input change
+
+    output$live_preview <- renderUI({
+        # Only show preview before Calculate is pressed
+        if (v$doAnalysis != FALSE) return()
+
+        prev <- preview_inputs()
+
+        # Create a lightweight preview message
+        preview_text <- if (prev$tab == "Power (Single)") {
+            paste0("Preview: Testing n=", prev$n, " participants for event rate 1 in ", prev$p,
+                   " (", round(prev$rate * 100, 2), "%) at α=", prev$alpha)
+        } else if (prev$tab == "Sample Size (Single)") {
+            paste0("Preview: Calculating sample size for ", prev$power, "% power, ",
+                   "event rate 1 in ", prev$p, " (", round(prev$rate * 100, 2), "%) at α=", prev$alpha)
+        } else if (prev$tab == "Power (Two-Group)") {
+            paste0("Preview: Comparing n1=", prev$n1, " vs n2=", prev$n2,
+                   " with rates ", prev$p1, "% vs ", prev$p2, "%")
+        } else {
+            "Fill in parameters and click Calculate"
+        }
+
+        div(
+            style = "background-color: #f0f8ff; border-left: 4px solid #3498db; padding: 10px; margin-bottom: 10px;",
+            icon("info-circle"),
+            strong(" Quick Preview: "),
+            preview_text,
+            br(),
+            em("(Click Calculate to run full analysis)")
+        )
+    })
+
     ################################################################################################## RESULT TEXT
 
     output$result_text <- renderUI({
         if (v$doAnalysis == FALSE) return()
 
         isolate({
+            # Use req() for cleaner validation (demonstrated for Power (Single) tab)
+            if (input$tabset == "Power (Single)") {
+                req(input$power_n > 0, cancelOutput = TRUE)
+                req(input$power_p > 0, cancelOutput = TRUE)
+                req(input$power_discon >= 0 && input$power_discon <= 100, cancelOutput = TRUE)
+            }
+
             validate_inputs()
 
             if (input$tabset == "Power (Single)") {
@@ -1218,7 +1296,23 @@ server <- function(input, output, session) {
                       col = c("blue", "red", "green"), lty = c(1, 2, 2), lwd = c(2, 1, 1))
             }
         })
-    }, width=600, height=400, res=100)
+    }, width=600, height=400, res=100) %>%
+        bindCache(
+            input$tabset,
+            # Single Proportion inputs
+            input$power_n, input$power_p, input$power_alpha,
+            input$ss_power, input$ss_p, input$ss_alpha,
+            # Two-Group inputs
+            input$twogrp_pow_n1, input$twogrp_pow_n2, input$twogrp_pow_p1, input$twogrp_pow_p2,
+            input$twogrp_pow_alpha, input$twogrp_pow_sided,
+            input$twogrp_ss_p1, input$twogrp_ss_p2, input$twogrp_ss_ratio,
+            input$twogrp_ss_alpha, input$twogrp_ss_sided, input$twogrp_ss_power,
+            # Survival inputs
+            input$surv_pow_n, input$surv_pow_hr, input$surv_pow_k, input$surv_pow_pE, input$surv_pow_alpha,
+            input$surv_ss_hr, input$surv_ss_k, input$surv_ss_pE, input$surv_ss_alpha, input$surv_ss_power,
+            # Include doAnalysis flag to invalidate cache when Calculate is pressed
+            v$doAnalysis
+        )
 
     ################################################################################################## TABLE TITLE
 
