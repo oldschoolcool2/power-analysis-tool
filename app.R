@@ -199,6 +199,82 @@ ui <- fluidPage(
                                  hr(),
                                  actionButton("example_match", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
                                  actionButton("reset_match", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
+                        ),
+
+                        # TAB 8: Continuous Outcomes - Power (TIER 4)
+                        tabPanel("Power (Continuous)",
+                                 h4("Continuous Outcomes (t-test)"),
+                                 helpText("Calculate power for comparing means between two groups (e.g., BMI, blood pressure, QoL scores)"),
+                                 hr(),
+                                 numericInput("cont_pow_n1", "Sample Size Group 1:", 100, min = 2, step = 1),
+                                 numericInput("cont_pow_n2", "Sample Size Group 2:", 100, min = 2, step = 1),
+                                 bsTooltip("cont_pow_n1", "Number of participants in treatment/exposed group", "right"),
+                                 bsTooltip("cont_pow_n2", "Number of participants in control/unexposed group", "right"),
+
+                                 numericInput("cont_pow_d", "Effect Size (Cohen's d):", 0.5, min = 0.01, max = 5, step = 0.1),
+                                 bsTooltip("cont_pow_d", "Standardized mean difference: Small=0.2, Medium=0.5, Large=0.8", "right"),
+
+                                 sliderInput("cont_pow_alpha", "Significance Level (α):", min = 0.01, max = 0.10, value = 0.05, step = 0.01),
+                                 bsTooltip("cont_pow_alpha", "Type I error rate (typically 0.05)", "right"),
+
+                                 radioButtons("cont_pow_sided", "Test Type:",
+                                             choices = c("Two-sided" = "two.sided", "One-sided (greater)" = "greater", "One-sided (less)" = "less"),
+                                             selected = "two.sided"),
+                                 bsTooltip("cont_pow_sided", "Two-sided: test if groups differ. One-sided: test directional hypothesis", "right"),
+                                 hr(),
+                                 actionButton("example_cont_pow", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
+                                 actionButton("reset_cont_pow", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
+                        ),
+
+                        # TAB 9: Continuous Outcomes - Sample Size (TIER 4)
+                        tabPanel("Sample Size (Continuous)",
+                                 h4("Continuous Outcomes (t-test)"),
+                                 helpText("Calculate required sample size to detect a difference in means"),
+                                 hr(),
+                                 sliderInput("cont_ss_power", "Desired Power (%):", min = 50, max = 99, value = 80, step = 1),
+                                 bsTooltip("cont_ss_power", "Probability of detecting the effect if it exists", "right"),
+
+                                 numericInput("cont_ss_d", "Effect Size (Cohen's d):", 0.5, min = 0.01, max = 5, step = 0.1),
+                                 bsTooltip("cont_ss_d", "Standardized mean difference: Small=0.2, Medium=0.5, Large=0.8", "right"),
+
+                                 numericInput("cont_ss_ratio", "Allocation Ratio (n2/n1):", 1, min = 0.1, max = 10, step = 0.1),
+                                 bsTooltip("cont_ss_ratio", "Ratio of Group 2 to Group 1 sample size. 1 = equal groups", "right"),
+
+                                 sliderInput("cont_ss_alpha", "Significance Level (α):", min = 0.01, max = 0.10, value = 0.05, step = 0.01),
+                                 bsTooltip("cont_ss_alpha", "Type I error rate (typically 0.05)", "right"),
+
+                                 radioButtons("cont_ss_sided", "Test Type:",
+                                             choices = c("Two-sided" = "two.sided", "One-sided (greater)" = "greater", "One-sided (less)" = "less"),
+                                             selected = "two.sided"),
+                                 hr(),
+                                 actionButton("example_cont_ss", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
+                                 actionButton("reset_cont_ss", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
+                        ),
+
+                        # TAB 10: Non-Inferiority Testing (TIER 4)
+                        tabPanel("Non-Inferiority",
+                                 h4("Non-Inferiority Testing"),
+                                 helpText("Calculate sample size for non-inferiority trials (common in generic/biosimilar studies)"),
+                                 hr(),
+                                 sliderInput("noninf_power", "Desired Power (%):", min = 50, max = 99, value = 80, step = 1),
+                                 bsTooltip("noninf_power", "Probability of demonstrating non-inferiority if true", "right"),
+
+                                 numericInput("noninf_p1", "Event Rate Test Group (%):", 10, min = 0, max = 100, step = 0.1),
+                                 numericInput("noninf_p2", "Event Rate Reference Group (%):", 10, min = 0, max = 100, step = 0.1),
+                                 bsTooltip("noninf_p1", "Expected event rate in test/generic group (as percentage)", "right"),
+                                 bsTooltip("noninf_p2", "Expected event rate in reference/branded group (as percentage)", "right"),
+
+                                 numericInput("noninf_margin", "Non-Inferiority Margin (%):", 5, min = 0.1, max = 50, step = 0.5),
+                                 bsTooltip("noninf_margin", "Maximum clinically acceptable difference (percentage points). Test is non-inferior if difference < margin.", "right"),
+
+                                 numericInput("noninf_ratio", "Allocation Ratio (n2/n1):", 1, min = 0.1, max = 10, step = 0.1),
+                                 bsTooltip("noninf_ratio", "Ratio of Reference to Test group size. 1 = equal groups", "right"),
+
+                                 sliderInput("noninf_alpha", "Significance Level (α):", min = 0.01, max = 0.10, value = 0.025, step = 0.005),
+                                 bsTooltip("noninf_alpha", "Type I error rate (typically 0.025 for one-sided non-inferiority test)", "right"),
+                                 hr(),
+                                 actionButton("example_noninf", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
+                                 actionButton("reset_noninf", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
                         )
             ),
             hr(),
@@ -262,6 +338,24 @@ ui <- fluidPage(
                     p(strong("When to use:"), "When cases and controls are matched on confounding variables (age, sex, comorbidities, etc.)."),
                     p(strong("Matching ratios:"), "Supports 1:1, 2:1, 3:1, or higher matching ratios (controls per case)."),
                     p(strong("Example:"), "Matched case-control study examining association between statin use and liver injury, matching on age, sex, and diabetes status.")
+                ),
+
+                accordion_panel(
+                    title = "Continuous Outcomes (TIER 4 - NEW!)",
+                    icon = icon("calculator"),
+                    p("The Continuous Outcomes tabs handle power and sample size calculations for comparing continuous endpoints between two groups using two-sample t-tests."),
+                    p(strong("Use cases:"), "Comparisons involving continuous measures such as BMI, blood pressure, lab values (HbA1c, cholesterol), quality of life scores, cognitive function tests, and biomarker levels."),
+                    p(strong("Effect size (Cohen's d):"), "Standardized mean difference. Conventionally: Small = 0.2, Medium = 0.5, Large = 0.8. Calculate as (mean1 - mean2) / pooled_SD."),
+                    p(strong("Example:"), "Comparing mean HbA1c reduction between two diabetes medications in an RWE study using EHR data.")
+                ),
+
+                accordion_panel(
+                    title = "Non-Inferiority Testing (TIER 4 - NEW!)",
+                    icon = icon("balance-scale"),
+                    p("Non-inferiority trials aim to demonstrate that a new treatment is 'not worse' than a reference treatment by more than a pre-specified margin. This is common in generic drug approval, biosimilar studies, and situations where superiority is not expected or ethical."),
+                    p(strong("Non-inferiority margin:"), "The maximum clinically acceptable difference in outcomes. Should be based on clinical judgment and regulatory guidance. Typically smaller than expected treatment effect of reference."),
+                    p(strong("Regulatory context:"), "FDA/EMA require pre-specification of non-inferiority margin with clinical justification. One-sided α=0.025 (equivalent to two-sided α=0.05) is standard."),
+                    p(strong("Example:"), "Demonstrating a generic formulation has adverse event rates no worse than branded drug +5 percentage points.")
                 ),
 
                 accordion_panel(
@@ -525,6 +619,65 @@ server <- function(input, output, session) {
         showNotification("Inputs reset to defaults", type = "warning", duration = 2)
     })
 
+    # Example/Reset for Continuous Outcomes Power (TIER 4)
+    observeEvent(input$example_cont_pow, {
+        updateNumericInput(session, "cont_pow_n1", value = 150)
+        updateNumericInput(session, "cont_pow_n2", value = 150)
+        updateNumericInput(session, "cont_pow_d", value = 0.5)
+        updateSliderInput(session, "cont_pow_alpha", value = 0.05)
+        updateRadioButtons(session, "cont_pow_sided", selected = "two.sided")
+        showNotification("Example loaded: Continuous outcome comparison (Cohen's d=0.5, n=150 per group)", type = "message", duration = 3)
+    })
+
+    observeEvent(input$reset_cont_pow, {
+        updateNumericInput(session, "cont_pow_n1", value = 100)
+        updateNumericInput(session, "cont_pow_n2", value = 100)
+        updateNumericInput(session, "cont_pow_d", value = 0.5)
+        updateSliderInput(session, "cont_pow_alpha", value = 0.05)
+        updateRadioButtons(session, "cont_pow_sided", selected = "two.sided")
+        showNotification("Inputs reset to defaults", type = "warning", duration = 2)
+    })
+
+    # Example/Reset for Continuous Outcomes Sample Size (TIER 4)
+    observeEvent(input$example_cont_ss, {
+        updateSliderInput(session, "cont_ss_power", value = 90)
+        updateNumericInput(session, "cont_ss_d", value = 0.4)
+        updateNumericInput(session, "cont_ss_ratio", value = 1)
+        updateSliderInput(session, "cont_ss_alpha", value = 0.05)
+        updateRadioButtons(session, "cont_ss_sided", selected = "two.sided")
+        showNotification("Example loaded: Sample size for moderate effect (d=0.4, 90% power)", type = "message", duration = 3)
+    })
+
+    observeEvent(input$reset_cont_ss, {
+        updateSliderInput(session, "cont_ss_power", value = 80)
+        updateNumericInput(session, "cont_ss_d", value = 0.5)
+        updateNumericInput(session, "cont_ss_ratio", value = 1)
+        updateSliderInput(session, "cont_ss_alpha", value = 0.05)
+        updateRadioButtons(session, "cont_ss_sided", selected = "two.sided")
+        showNotification("Inputs reset to defaults", type = "warning", duration = 2)
+    })
+
+    # Example/Reset for Non-Inferiority (TIER 4)
+    observeEvent(input$example_noninf, {
+        updateSliderInput(session, "noninf_power", value = 85)
+        updateNumericInput(session, "noninf_p1", value = 12)
+        updateNumericInput(session, "noninf_p2", value = 10)
+        updateNumericInput(session, "noninf_margin", value = 4)
+        updateNumericInput(session, "noninf_ratio", value = 1)
+        updateSliderInput(session, "noninf_alpha", value = 0.025)
+        showNotification("Example loaded: Non-inferiority test with 4% margin (generic vs. branded)", type = "message", duration = 3)
+    })
+
+    observeEvent(input$reset_noninf, {
+        updateSliderInput(session, "noninf_power", value = 80)
+        updateNumericInput(session, "noninf_p1", value = 10)
+        updateNumericInput(session, "noninf_p2", value = 10)
+        updateNumericInput(session, "noninf_margin", value = 5)
+        updateNumericInput(session, "noninf_ratio", value = 1)
+        updateSliderInput(session, "noninf_alpha", value = 0.025)
+        showNotification("Inputs reset to defaults", type = "warning", duration = 2)
+    })
+
     # Validation function
     validate_inputs <- function() {
         if (input$tabset == "Power (Single)") {
@@ -574,6 +727,27 @@ server <- function(input, output, session) {
                 need(input$match_p0 >= 0 && input$match_p0 <= 100, "Exposure probability must be between 0 and 100%"),
                 need(input$match_ratio >= 1, "Controls per case must be at least 1"),
                 need(input$match_or != 1, "Odds ratio must be different from 1 to calculate sample size")
+            )
+        } else if (input$tabset == "Power (Continuous)") {
+            validate(
+                need(input$cont_pow_n1 > 1, "Sample size Group 1 must be at least 2"),
+                need(input$cont_pow_n2 > 1, "Sample size Group 2 must be at least 2"),
+                need(input$cont_pow_d > 0, "Effect size (Cohen's d) must be positive"),
+                need(input$cont_pow_d != 0, "Effect size cannot be zero")
+            )
+        } else if (input$tabset == "Sample Size (Continuous)") {
+            validate(
+                need(input$cont_ss_d > 0, "Effect size (Cohen's d) must be positive"),
+                need(input$cont_ss_d != 0, "Effect size cannot be zero"),
+                need(input$cont_ss_ratio > 0, "Allocation ratio must be positive")
+            )
+        } else if (input$tabset == "Non-Inferiority") {
+            validate(
+                need(input$noninf_p1 >= 0 && input$noninf_p1 <= 100, "Event rate Test Group must be between 0 and 100%"),
+                need(input$noninf_p2 >= 0 && input$noninf_p2 <= 100, "Event rate Reference Group must be between 0 and 100%"),
+                need(input$noninf_margin > 0, "Non-inferiority margin must be positive"),
+                need(input$noninf_margin < 100, "Non-inferiority margin must be less than 100%"),
+                need(input$noninf_ratio > 0, "Allocation ratio must be positive")
             )
         }
     }
@@ -741,6 +915,128 @@ server <- function(input, output, session) {
                                 format(n_cases * m, digits=0, nsmall=0), " controls (total N = ",
                                 format(n_cases * (1 + m), digits=0, nsmall=0), " participants) at α = ",
                                 input$match_alpha, " (", input$match_sided, " test). This accounts for correlation between matched pairs."))
+                HTML(paste0(text0, text1, text2, text3))
+
+            } else if (input$tabset == "Power (Continuous)") {
+                n1 <- input$cont_pow_n1
+                n2 <- input$cont_pow_n2
+                d <- input$cont_pow_d
+
+                # Calculate power for t-test
+                power <- pwr.t2n.test(n1 = n1, n2 = n2, d = d,
+                                     sig.level = input$cont_pow_alpha,
+                                     alternative = input$cont_pow_sided)$power
+
+                text0 <- hr()
+                text1 <- h1("Results of this analysis")
+                text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+                text3 <- p(paste0("For a two-group comparison of continuous outcomes with sample sizes of n1 = ",
+                                n1, " and n2 = ", n2, ", and an expected effect size of Cohen's d = ",
+                                format(d, digits=2, nsmall=2), " (standardized mean difference), the study has ",
+                                format(power*100, digits=1, nsmall=1), "% power to detect this difference using a two-sample t-test at α = ",
+                                input$cont_pow_alpha, " (", input$cont_pow_sided, " test). ",
+                                "Cohen's d represents the difference in means divided by the pooled standard deviation."))
+                HTML(paste0(text0, text1, text2, text3))
+
+            } else if (input$tabset == "Sample Size (Continuous)") {
+                d <- input$cont_ss_d
+                power <- input$cont_ss_power/100
+                ratio <- input$cont_ss_ratio
+
+                # Calculate sample size for t-test (solve for n1)
+                # Using pwr.t.test for equal n, then adjust for ratio
+                if (ratio == 1) {
+                    n <- pwr.t.test(d = d, sig.level = input$cont_ss_alpha,
+                                   power = power, type = "two.sample",
+                                   alternative = input$cont_ss_sided)$n
+                    n1 <- n
+                    n2 <- n
+                } else {
+                    # For unequal allocation, use iterative approach
+                    f <- function(n1) {
+                        n2 <- n1 * ratio
+                        pwr.t2n.test(n1 = n1, n2 = n2, d = d,
+                                    sig.level = input$cont_ss_alpha,
+                                    alternative = input$cont_ss_sided)$power - power
+                    }
+                    n1 <- tryCatch({
+                        uniroot(f, c(2, 1e6), extendInt = "yes")$root
+                    }, error = function(e) {
+                        # Fallback
+                        pwr.t.test(d = d, sig.level = input$cont_ss_alpha,
+                                  power = power, type = "two.sample",
+                                  alternative = input$cont_ss_sided)$n
+                    })
+                    n2 <- n1 * ratio
+                }
+
+                text0 <- hr()
+                text1 <- h1("Results of this analysis")
+                text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+                text3 <- p(paste0("To detect an effect size of Cohen's d = ", format(d, digits=2, nsmall=2),
+                                " in a two-group comparison of continuous outcomes with ", format(power*100, digits=0, nsmall=0),
+                                "% power at α = ", input$cont_ss_alpha, " (", input$cont_ss_sided, " test), ",
+                                "the required sample sizes are: Group 1: n1 = ", format(ceiling(n1), digits=0, nsmall=0),
+                                ", Group 2: n2 = ", format(ceiling(n2), digits=0, nsmall=0), " (total N = ",
+                                format(ceiling(n1 + n2), digits=0, nsmall=0), "). ",
+                                "Cohen's d is the standardized mean difference (difference in means / pooled SD)."))
+                HTML(paste0(text0, text1, text2, text3))
+
+            } else if (input$tabset == "Non-Inferiority") {
+                p1 <- input$noninf_p1/100
+                p2 <- input$noninf_p2/100
+                margin <- input$noninf_margin/100
+                power <- input$noninf_power/100
+                ratio <- input$noninf_ratio
+
+                # Non-inferiority sample size calculation
+                # Based on difference in proportions with non-inferiority margin
+                # H0: p1 - p2 >= margin (inferior), H1: p1 - p2 < margin (non-inferior)
+                # Use one-sided test
+
+                # Calculate using pwr package with adjusted effect size
+                # For non-inferiority, we test against the margin, not zero
+                # Effective difference = true_diff - margin (must be < 0 for non-inferiority)
+                true_diff <- p1 - p2
+                effect_diff <- true_diff - margin  # This should be negative for non-inferiority
+
+                # Calculate effect size h for the margin test
+                h <- ES.h(p1, p2 + margin)
+
+                if (ratio == 1) {
+                    n <- pwr.2p.test(h = abs(h), sig.level = input$noninf_alpha,
+                                    power = power, alternative = "less")$n
+                    n1 <- n
+                    n2 <- n
+                } else {
+                    f <- function(n1) {
+                        n2 <- n1 * ratio
+                        pwr.2p2n.test(h = abs(h), n1 = n1, n2 = n2,
+                                     sig.level = input$noninf_alpha,
+                                     alternative = "less")$power - power
+                    }
+                    n1 <- tryCatch({
+                        uniroot(f, c(2, 1e6), extendInt = "yes")$root
+                    }, error = function(e) {
+                        pwr.2p.test(h = abs(h), sig.level = input$noninf_alpha,
+                                   power = power, alternative = "less")$n
+                    })
+                    n2 <- n1 * ratio
+                }
+
+                text0 <- hr()
+                text1 <- h1("Results of this analysis")
+                text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+                text3 <- p(paste0("For a non-inferiority trial comparing a test treatment (expected event rate: ",
+                                format(p1*100, digits=2, nsmall=1), "%) to a reference treatment (expected event rate: ",
+                                format(p2*100, digits=2, nsmall=1), "%) with a non-inferiority margin of ",
+                                format(margin*100, digits=2, nsmall=1), " percentage points, to demonstrate non-inferiority with ",
+                                format(power*100, digits=0, nsmall=0), "% power at α = ", input$noninf_alpha,
+                                " (one-sided test), the required sample sizes are: Test Group: n1 = ",
+                                format(ceiling(n1), digits=0, nsmall=0), ", Reference Group: n2 = ",
+                                format(ceiling(n2), digits=0, nsmall=0), " (total N = ",
+                                format(ceiling(n1 + n2), digits=0, nsmall=0), "). ",
+                                "Non-inferiority will be demonstrated if the upper bound of the confidence interval for the difference (Test - Reference) is less than the margin."))
                 HTML(paste0(text0, text1, text2, text3))
             }
         })
@@ -1151,6 +1447,101 @@ server <- function(input, output, session) {
                     Total_Sample_Size = n_cases * (1 + m),
                     Significance_Level = input$match_alpha,
                     Test_Type = input$match_sided,
+                    Date = Sys.Date()
+                )
+            } else if (input$tabset == "Power (Continuous)") {
+                n1 <- input$cont_pow_n1
+                n2 <- input$cont_pow_n2
+                d <- input$cont_pow_d
+                power <- pwr.t2n.test(n1 = n1, n2 = n2, d = d,
+                                     sig.level = input$cont_pow_alpha,
+                                     alternative = input$cont_pow_sided)$power
+                results <- data.frame(
+                    Analysis_Type = "Continuous Outcomes - Power Calculation",
+                    Sample_Size_Group1 = n1,
+                    Sample_Size_Group2 = n2,
+                    Effect_Size_Cohens_d = d,
+                    Power_Percent = power * 100,
+                    Significance_Level = input$cont_pow_alpha,
+                    Test_Type = input$cont_pow_sided,
+                    Date = Sys.Date()
+                )
+            } else if (input$tabset == "Sample Size (Continuous)") {
+                d <- input$cont_ss_d
+                power <- input$cont_ss_power/100
+                ratio <- input$cont_ss_ratio
+                if (ratio == 1) {
+                    n <- pwr.t.test(d = d, sig.level = input$cont_ss_alpha,
+                                   power = power, type = "two.sample",
+                                   alternative = input$cont_ss_sided)$n
+                    n1 <- n
+                    n2 <- n
+                } else {
+                    f <- function(n1) {
+                        n2 <- n1 * ratio
+                        pwr.t2n.test(n1 = n1, n2 = n2, d = d,
+                                    sig.level = input$cont_ss_alpha,
+                                    alternative = input$cont_ss_sided)$power - power
+                    }
+                    n1 <- tryCatch({
+                        uniroot(f, c(2, 1e6), extendInt = "yes")$root
+                    }, error = function(e) {
+                        pwr.t.test(d = d, sig.level = input$cont_ss_alpha,
+                                  power = power, type = "two.sample",
+                                  alternative = input$cont_ss_sided)$n
+                    })
+                    n2 <- n1 * ratio
+                }
+                results <- data.frame(
+                    Analysis_Type = "Continuous Outcomes - Sample Size Calculation",
+                    Desired_Power_Percent = input$cont_ss_power,
+                    Effect_Size_Cohens_d = d,
+                    Required_Sample_Size_Group1 = ceiling(n1),
+                    Required_Sample_Size_Group2 = ceiling(n2),
+                    Total_Sample_Size = ceiling(n1 + n2),
+                    Allocation_Ratio = ratio,
+                    Significance_Level = input$cont_ss_alpha,
+                    Test_Type = input$cont_ss_sided,
+                    Date = Sys.Date()
+                )
+            } else if (input$tabset == "Non-Inferiority") {
+                p1 <- input$noninf_p1/100
+                p2 <- input$noninf_p2/100
+                margin <- input$noninf_margin/100
+                power <- input$noninf_power/100
+                ratio <- input$noninf_ratio
+                h <- ES.h(p1, p2 + margin)
+                if (ratio == 1) {
+                    n <- pwr.2p.test(h = abs(h), sig.level = input$noninf_alpha,
+                                    power = power, alternative = "less")$n
+                    n1 <- n
+                    n2 <- n
+                } else {
+                    f <- function(n1) {
+                        n2 <- n1 * ratio
+                        pwr.2p2n.test(h = abs(h), n1 = n1, n2 = n2,
+                                     sig.level = input$noninf_alpha,
+                                     alternative = "less")$power - power
+                    }
+                    n1 <- tryCatch({
+                        uniroot(f, c(2, 1e6), extendInt = "yes")$root
+                    }, error = function(e) {
+                        pwr.2p.test(h = abs(h), sig.level = input$noninf_alpha,
+                                   power = power, alternative = "less")$n
+                    })
+                    n2 <- n1 * ratio
+                }
+                results <- data.frame(
+                    Analysis_Type = "Non-Inferiority - Sample Size Calculation",
+                    Desired_Power_Percent = input$noninf_power,
+                    Event_Rate_Test_Percent = input$noninf_p1,
+                    Event_Rate_Reference_Percent = input$noninf_p2,
+                    Non_Inferiority_Margin_Percent = input$noninf_margin,
+                    Required_Sample_Size_Test = ceiling(n1),
+                    Required_Sample_Size_Reference = ceiling(n2),
+                    Total_Sample_Size = ceiling(n1 + n2),
+                    Allocation_Ratio = ratio,
+                    Significance_Level = input$noninf_alpha,
                     Date = Sys.Date()
                 )
             }
