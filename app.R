@@ -231,6 +231,41 @@ ui <- fluidPage(
 # Define server logic
 server <- function(input, output, session) {
 
+    # Helper function: safely calculate effect measures (avoid division by zero)
+    calc_effect_measures <- function(p1, p2) {
+        risk_diff <- (p1 - p2) * 100
+
+        # Relative Risk: undefined when p2 = 0
+        relative_risk <- if (p2 == 0) NA_real_ else p1 / p2
+
+        # Odds Ratio: undefined when either rate is 0% or 100%
+        odds1 <- if (p1 %in% c(0, 1)) NA_real_ else p1 / (1 - p1)
+        odds2 <- if (p2 %in% c(0, 1)) NA_real_ else p2 / (1 - p2)
+        odds_ratio <- if (is.na(odds1) || is.na(odds2)) NA_real_ else odds1 / odds2
+
+        list(
+            risk_diff = risk_diff,
+            relative_risk = relative_risk,
+            odds_ratio = odds_ratio
+        )
+    }
+
+    # Helper function: solve for n1 given allocation ratio (for unequal groups)
+    solve_n1_for_ratio <- function(h, ratio, sig.level, power, alternative) {
+        f <- function(n1) {
+            n2 <- n1 * ratio
+            pwr.2p2n.test(h = h, n1 = n1, n2 = n2, sig.level = sig.level,
+                         alternative = alternative)$power - power
+        }
+        tryCatch({
+            uniroot(f, c(2, 1e6), extendInt = "yes")$root
+        }, error = function(e) {
+            # Fallback to equal-n approximation if root-finding fails
+            warning("Root-finding failed; using equal-n approximation")
+            pwr.2p.test(h = h, sig.level = sig.level, power = power, alternative = alternative)$n
+        })
+    }
+
     # Reactive values for tracking state
     v <- reactiveValues(
         doAnalysis = FALSE,
@@ -333,13 +368,13 @@ server <- function(input, output, session) {
                 text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
                 text3 <- p(paste0("Based on the Binomial distribution and a true event incidence rate of 1 in ",
                                 format(incidence_rate, digits=0, nsmall=0), " (or ",
-                                format(1/incidence_rate * 100, digits=2, nsmall=2), "%), ",
+                                format(1/incidence_rate * 100, digits=2, nsmall=2), "%), with ",
                                 format(ceiling(sample_size), digits=0, nsmall=0),
-                                " participants would be needed to observe at least one event with ",
-                                format(power*100, digits=0, nsmall=0), "% probability (α = ",
+                                " participants, the probability of observing at least one event is ",
+                                format(power*100, digits=0, nsmall=0), "% (α = ",
                                 input$power_alpha, "). Accounting for a possible withdrawal or discontinuation rate of ",
-                                format(discon*100, digits=0), "%, the target number of participants is set as ",
-                                format(ceiling((sample_size * (1+discon))), digits=0),"."))
+                                format(discon*100, digits=0), "%, the adjusted sample size is ",
+                                format(ceiling((sample_size * (1+discon))), digits=0)," to maintain this power."))
                 HTML(paste0(text0, text1, text2, text3))
 
             } else if (input$tabset == "Sample Size (Single)") {
@@ -389,9 +424,9 @@ server <- function(input, output, session) {
                 p2 <- input$twogrp_ss_p2/100
                 power <- input$twogrp_ss_power/100
 
-                # Calculate sample size for group 1
-                n1 <- pwr.2p.test(h = ES.h(p1, p2), sig.level = input$twogrp_ss_alpha,
-                                 power = power, alternative = input$twogrp_ss_sided)$n
+                # Calculate sample size for group 1 (ratio-aware for unequal allocation)
+                n1 <- solve_n1_for_ratio(ES.h(p1, p2), input$twogrp_ss_ratio,
+                                        input$twogrp_ss_alpha, power, input$twogrp_ss_sided)
                 n2 <- n1 * input$twogrp_ss_ratio
 
                 text0 <- hr()
@@ -499,18 +534,14 @@ server <- function(input, output, session) {
                     p2 <- input$twogrp_ss_p2/100
                 }
 
-                # Calculate effect measures
-                risk_diff <- (p1 - p2) * 100
-                relative_risk <- p1 / p2
-                odds1 <- p1 / (1 - p1)
-                odds2 <- p2 / (1 - p2)
-                odds_ratio <- odds1 / odds2
+                # Calculate effect measures safely
+                eff <- calc_effect_measures(p1, p2)
 
                 text1 <- h4("Effect Measures")
                 text2 <- p(paste0(
-                    "Risk Difference: ", format(risk_diff, digits=2, nsmall=2), " percentage points", br(),
-                    "Relative Risk: ", format(relative_risk, digits=3, nsmall=3), br(),
-                    "Odds Ratio: ", format(odds_ratio, digits=3, nsmall=3)
+                    "Risk Difference: ", format(eff$risk_diff, digits=2, nsmall=2), " percentage points", br(),
+                    "Relative Risk: ", if (is.na(eff$relative_risk)) "N/A (Group 2 rate = 0%)" else format(eff$relative_risk, digits=3, nsmall=3), br(),
+                    "Odds Ratio: ", if (is.na(eff$odds_ratio)) "N/A (rate = 0% or 100%)" else format(eff$odds_ratio, digits=3, nsmall=3)
                 ))
 
                 HTML(paste0(text1, text2))
@@ -549,7 +580,12 @@ server <- function(input, output, session) {
         isolate({
             text1 <- hr()
             if (grepl("Two-Group", input$tabset)) {
-                text2 <- h4("Estimated power at different sample sizes (equal allocation).")
+                if (input$tabset == "Power (Two-Group)") {
+                    ratio <- round(input$twogrp_pow_n2 / input$twogrp_pow_n1, 3)
+                } else {
+                    ratio <- input$twogrp_ss_ratio
+                }
+                text2 <- h4(paste0("Estimated power vs. n1 (Group 1 sample size) with allocation ratio n2/n1 = ", ratio, "."))
             } else if (grepl("Survival", input$tabset)) {
                 text2 <- h4("Power curve for survival analysis at different sample sizes.")
             } else {
@@ -577,17 +613,50 @@ server <- function(input, output, session) {
                                    h = ES.h(1/input$ss_p, 0), alt="greater", n = NULL)
                 plot(p.out)
             } else if (input$tabset == "Power (Two-Group)") {
+                # Ratio-aware plot for unequal allocation
                 p1 <- input$twogrp_pow_p1/100
                 p2 <- input$twogrp_pow_p2/100
-                p.out <- pwr.2p.test(h = ES.h(p1, p2), sig.level = input$twogrp_pow_alpha,
-                                    power = NULL, n = input$twogrp_pow_n1, alternative = input$twogrp_pow_sided)
-                plot(p.out)
+                ratio <- input$twogrp_pow_n2 / input$twogrp_pow_n1
+
+                # Generate power curve varying n1
+                n1_seq <- seq(max(5, floor(input$twogrp_pow_n1*0.25)),
+                             floor(input$twogrp_pow_n1*4), length.out = 100)
+                pow <- sapply(n1_seq, function(n1) {
+                    pwr.2p2n.test(h = ES.h(p1, p2), n1 = n1, n2 = n1*ratio,
+                                 sig.level = input$twogrp_pow_alpha,
+                                 alternative = input$twogrp_pow_sided)$power
+                })
+
+                plot(n1_seq, pow, type="l", lwd=2, col="darkblue",
+                     xlab="Sample Size n1 (Group 1)", ylab="Power",
+                     main=paste0("Power Analysis (n2/n1 = ", round(ratio, 3), ")"),
+                     ylim=c(0,1), las=1)
+                abline(h=0.8, col="red", lty=2)
+                abline(v=input$twogrp_pow_n1, col="darkgreen", lty=2)
+                grid()
+
             } else if (input$tabset == "Sample Size (Two-Group)") {
+                # Ratio-aware plot for sample size calculation
                 p1 <- input$twogrp_ss_p1/100
                 p2 <- input$twogrp_ss_p2/100
-                p.out <- pwr.2p.test(h = ES.h(p1, p2), sig.level = input$twogrp_ss_alpha,
-                                    power = input$twogrp_ss_power/100, alternative = input$twogrp_ss_sided)
-                plot(p.out)
+                ratio <- input$twogrp_ss_ratio
+                target <- input$twogrp_ss_power/100
+
+                # Generate power curve varying n1
+                n1_seq <- seq(5, 2000, length.out = 100)
+                pow <- sapply(n1_seq, function(n1) {
+                    pwr.2p2n.test(h = ES.h(p1, p2), n1 = n1, n2 = n1*ratio,
+                                 sig.level = input$twogrp_ss_alpha,
+                                 alternative = input$twogrp_ss_sided)$power
+                })
+
+                plot(n1_seq, pow, type="l", lwd=2, col="darkblue",
+                     xlab="Sample Size n1 (Group 1)", ylab="Power",
+                     main=paste0("Power Analysis (n2/n1 = ", round(ratio, 3), ")"),
+                     ylim=c(0,1), las=1)
+                abline(h=target, col="red", lty=2, lwd=2)
+                grid()
+
             } else if (grepl("Survival", input$tabset)) {
                 # Generate power curve for survival analysis
                 if (input$tabset == "Power (Survival)") {
@@ -758,6 +827,7 @@ server <- function(input, output, session) {
                 power <- pwr.2p2n.test(h = ES.h(p1, p2), n1 = input$twogrp_pow_n1, n2 = input$twogrp_pow_n2,
                                        sig.level = input$twogrp_pow_alpha,
                                        alternative = input$twogrp_pow_sided)$power
+                eff <- calc_effect_measures(p1, p2)
                 results <- data.frame(
                     Analysis_Type = "Two-Group Comparison - Power Calculation",
                     Sample_Size_Group1 = input$twogrp_pow_n1,
@@ -767,17 +837,19 @@ server <- function(input, output, session) {
                     Power_Percent = power * 100,
                     Significance_Level = input$twogrp_pow_alpha,
                     Test_Type = input$twogrp_pow_sided,
-                    Risk_Difference = (p1 - p2) * 100,
-                    Relative_Risk = p1/p2,
-                    Odds_Ratio = (p1/(1-p1))/(p2/(1-p2)),
+                    Risk_Difference = eff$risk_diff,
+                    Relative_Risk = eff$relative_risk,
+                    Odds_Ratio = eff$odds_ratio,
                     Date = Sys.Date()
                 )
             } else if (input$tabset == "Sample Size (Two-Group)") {
                 p1 <- input$twogrp_ss_p1/100
                 p2 <- input$twogrp_ss_p2/100
-                n1 <- pwr.2p.test(h = ES.h(p1, p2), sig.level = input$twogrp_ss_alpha,
-                                 power = input$twogrp_ss_power/100, alternative = input$twogrp_ss_sided)$n
+                n1 <- solve_n1_for_ratio(ES.h(p1, p2), input$twogrp_ss_ratio,
+                                        input$twogrp_ss_alpha, input$twogrp_ss_power/100,
+                                        input$twogrp_ss_sided)
                 n2 <- n1 * input$twogrp_ss_ratio
+                eff <- calc_effect_measures(p1, p2)
                 results <- data.frame(
                     Analysis_Type = "Two-Group Comparison - Sample Size Calculation",
                     Desired_Power_Percent = input$twogrp_ss_power,
@@ -789,9 +861,9 @@ server <- function(input, output, session) {
                     Allocation_Ratio = input$twogrp_ss_ratio,
                     Significance_Level = input$twogrp_ss_alpha,
                     Test_Type = input$twogrp_ss_sided,
-                    Risk_Difference = (p1 - p2) * 100,
-                    Relative_Risk = p1/p2,
-                    Odds_Ratio = (p1/(1-p1))/(p2/(1-p2)),
+                    Risk_Difference = eff$risk_diff,
+                    Relative_Risk = eff$relative_risk,
+                    Odds_Ratio = eff$odds_ratio,
                     Date = Sys.Date()
                 )
             } else if (input$tabset == "Power (Survival)") {
@@ -963,6 +1035,7 @@ server <- function(input, output, session) {
                 power <- pwr.2p2n.test(h = ES.h(p1, p2), n1 = input$twogrp_pow_n1, n2 = input$twogrp_pow_n2,
                                        sig.level = input$twogrp_pow_alpha,
                                        alternative = input$twogrp_pow_sided)$power
+                eff <- calc_effect_measures(p1, p2)
                 new_scenario <- data.frame(
                     Scenario = v$scenario_counter,
                     Type = "Two-Group - Power",
@@ -973,16 +1046,18 @@ server <- function(input, output, session) {
                     Power_Pct = round(power * 100, 1),
                     Alpha = input$twogrp_pow_alpha,
                     Test = input$twogrp_pow_sided,
-                    RR = round(p1/p2, 3),
-                    OR = round((p1/(1-p1))/(p2/(1-p2)), 3),
+                    RR = if (is.na(eff$relative_risk)) NA_real_ else round(eff$relative_risk, 3),
+                    OR = if (is.na(eff$odds_ratio)) NA_real_ else round(eff$odds_ratio, 3),
                     stringsAsFactors = FALSE
                 )
             } else if (input$tabset == "Sample Size (Two-Group)") {
                 p1 <- input$twogrp_ss_p1/100
                 p2 <- input$twogrp_ss_p2/100
-                n1 <- pwr.2p.test(h = ES.h(p1, p2), sig.level = input$twogrp_ss_alpha,
-                                 power = input$twogrp_ss_power/100, alternative = input$twogrp_ss_sided)$n
+                n1 <- solve_n1_for_ratio(ES.h(p1, p2), input$twogrp_ss_ratio,
+                                        input$twogrp_ss_alpha, input$twogrp_ss_power/100,
+                                        input$twogrp_ss_sided)
                 n2 <- n1 * input$twogrp_ss_ratio
+                eff <- calc_effect_measures(p1, p2)
                 new_scenario <- data.frame(
                     Scenario = v$scenario_counter,
                     Type = "Two-Group - SS",
@@ -993,8 +1068,8 @@ server <- function(input, output, session) {
                     Power_Pct = input$twogrp_ss_power,
                     Alpha = input$twogrp_ss_alpha,
                     Test = input$twogrp_ss_sided,
-                    RR = round(p1/p2, 3),
-                    OR = round((p1/(1-p1))/(p2/(1-p2)), 3),
+                    RR = if (is.na(eff$relative_risk)) NA_real_ else round(eff$relative_risk, 3),
+                    OR = if (is.na(eff$odds_ratio)) NA_real_ else round(eff$odds_ratio, 3),
                     stringsAsFactors = FALSE
                 )
             } else if (input$tabset == "Power (Survival)") {
@@ -1094,9 +1169,14 @@ server <- function(input, output, session) {
             hr(),
             h2("Saved Scenario Comparison"),
             p("Below are the scenarios you have saved for comparison:"),
-            renderTable({v$scenarios}),
+            tableOutput("scenario_table"),
             hr()
         )
+    })
+
+    # Render scenario table
+    output$scenario_table <- renderTable({
+        v$scenarios
     })
 
     # Download scenario comparison
