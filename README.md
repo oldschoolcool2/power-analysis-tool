@@ -115,6 +115,46 @@ Sample size calculations for matched study designs including propensity score ma
   - Study designs
 - **Export comparison table** as CSV for documentation
 
+### Professional Polish (TIER 3 - NEW!)
+
+#### Modern UI/UX Design
+- **Modern bslib theme**: Responsive Bootstrap 5 design with Google Fonts (Open Sans, Montserrat)
+- **Mobile-responsive**: Optimized for tablets and smartphones
+- **Example buttons**: Pre-fill common scenarios with realistic pharmaceutical RWE values
+  - Rare adverse event studies (single proportion)
+  - Cohort comparisons (two-group)
+  - Survival analysis examples (hazard ratios)
+  - Matched case-control designs
+- **Reset buttons**: Quickly restore default values for each analysis type
+- **Instant feedback**: Notification messages for user actions
+
+#### Educational Resources
+- **Collapsible help sections**: Interactive accordions with detailed explanations
+  - Single Proportion Analysis methodology
+  - Two-Group Comparisons use cases
+  - Survival Analysis (Cox regression) methods
+  - Matched Case-Control design considerations
+- **Regulatory guidance links**: Direct links to FDA/EMA RWE frameworks (2023-2024)
+  - FDA Real-World Evidence Framework
+  - FDA Guidance on RWD from EHRs and Claims
+  - EMA Real World Evidence Framework
+- **Statistical references**: Key citations for methods used
+  - Hanley & Lippman-Hand (1983) - Rule of Three
+  - Schoenfeld (1983) - Survival sample size
+  - Cohen (1988) - Effect sizes
+  - Lachin (1981) - Power analysis fundamentals
+- **Interpretation guide**: Practical guidance for non-statisticians
+  - Understanding power (80% vs 90% standards)
+  - Significance levels (α selection)
+  - Effect size interpretation (HR, OR, RR)
+
+#### Infrastructure Updates
+- **Updated R version**: R 4.4.0 (latest stable)
+- **Modern packages**: Latest versions of all dependencies
+- **renv support**: Package version management for reproducibility
+- **Improved Docker**: Updated base image and CTAN mirror
+- **Enhanced dependencies**: Better system library support
+
 ---
 
 ## Quick Start
@@ -122,14 +162,14 @@ Sample size calculations for matched study designs including propensity score ma
 ### Running Locally
 
 #### Prerequisites
-- R (≥ 3.6.1)
-- Required packages: `shiny`, `shinythemes`, `shinyBS`, `pwr`, `binom`, `kableExtra`, `tinytex`, `powerSurvEpi`, `epiR`
+- R (≥ 4.2.0, recommended 4.4.0)
+- Required packages: `shiny`, `bslib`, `shinyBS`, `pwr`, `binom`, `kableExtra`, `tinytex`, `powerSurvEpi`, `epiR`, `renv`
 
 #### Installation
 ```r
 # Install required packages
-install.packages(c("shiny", "shinythemes", "shinyBS", "pwr", "binom",
-                   "kableExtra", "tinytex", "powerSurvEpi", "epiR"))
+install.packages(c("shiny", "bslib", "shinyBS", "pwr", "binom",
+                   "kableExtra", "tinytex", "powerSurvEpi", "epiR", "renv"))
 
 # Run the app
 shiny::runApp("path/to/app.R")
@@ -280,8 +320,9 @@ This calculator does NOT account for:
 ## Technical Details
 
 ### Dependencies
-- **R**: ≥ 3.6.1
+- **R**: ≥ 4.2.0 (recommended 4.4.0)
 - **Shiny**: Web application framework
+- **bslib**: Modern Bootstrap 5 theming and responsive UI components
 - **pwr**: Power analysis functions for proportion tests
 - **powerSurvEpi**: Survival analysis power calculations (Schoenfeld method)
 - **epiR**: Epidemiological statistics including matched case-control designs
@@ -289,6 +330,7 @@ This calculator does NOT account for:
 - **shinyBS**: Bootstrap tooltips and popovers
 - **kableExtra**: Table formatting (PDF export)
 - **tinytex**: LaTeX support (PDF export)
+- **renv**: Package version management for reproducibility
 
 ### File Structure
 ```text
@@ -310,43 +352,63 @@ This calculator does NOT account for:
 
 ## Changes in This Release
 
-### Version 3.0 - Tier 2 Enhancements (Current)
+### Version 4.0 - Tier 3 Professional Polish (Current)
 
-**NEW TIER 2 FEATURES:**
-1. ✅ **Survival Analysis** - Cox regression power/sample size calculations
-   - Power calculation given sample size and hazard ratio
-   - Sample size calculation for target power
-   - Schoenfeld (1983) method via powerSurvEpi
-   - Interactive power curves
-2. ✅ **Matched Case-Control Studies** - Sample size for matched designs
-   - Accounts for correlation in matched pairs
-   - Flexible matching ratios (1:1, 1:2, 1:3, etc.)
-   - Propensity score matching support
-3. ✅ **Extended CSV Export** - All analysis types now export to CSV
-4. ✅ **Extended Scenario Comparison** - Supports all new analysis types
+**NEW TIER 3 FEATURES:**
+1. ✅ **Modern UI/UX Design** - Complete interface overhaul
+   - Modern bslib theme with Bootstrap 5
+   - Mobile-responsive design for tablets and phones
+   - Google Fonts integration (Open Sans, Montserrat)
+   - Professional color scheme optimized for readability
+2. ✅ **Example Buttons** - Pre-filled realistic scenarios
+   - One-click loading of common pharmaceutical RWE examples
+   - Rare adverse event studies (1 in 500 event rate)
+   - Cohort comparisons (15% vs 10% event rates)
+   - Survival analysis (HR=0.75, 40% event rate)
+   - Matched case-control (2:1 matching, OR=2.5)
+3. ✅ **Reset Functionality** - Quick restoration of defaults
+   - Reset buttons on every analysis tab
+   - Instant return to starting values
+   - Helpful notifications for user feedback
+4. ✅ **Educational Resources** - Comprehensive help system
+   - Collapsible accordion panels with detailed methodology
+   - Direct links to FDA/EMA RWE guidance (2023-2024)
+   - Key statistical references (Hanley, Schoenfeld, Cohen, Lachin)
+   - Interpretation guide for power, α, and effect sizes
+   - Use case examples for each analysis type
+5. ✅ **Infrastructure Updates** - Modern technical foundation
+   - Upgraded to R 4.4.0
+   - Updated to latest package versions
+   - renv support for reproducibility
+   - Improved Docker configuration
+   - Updated CTAN mirror for LaTeX
+
+**TIER 2 FEATURES (Version 3.0):**
+1. ✅ Survival Analysis (Cox regression)
+2. ✅ Matched Case-Control Studies
+3. ✅ Extended CSV Export
+4. ✅ Extended Scenario Comparison
 
 **TIER 1 FEATURES (Version 2.0):**
-1. ✅ Two-group proportion comparisons (cohort/case-control studies)
+1. ✅ Two-group proportion comparisons
 2. ✅ Adjustable significance level (α)
-3. ✅ Input validation with helpful error messages
-4. ✅ Tooltips explaining every input
-5. ✅ CSV export for all analyses
-6. ✅ Scenario comparison feature
-7. ✅ Effect measure calculations (RR, OR, RD)
-8. ✅ One-sided vs two-sided test options
-9. ✅ Unequal allocation ratio support
+3. ✅ Input validation and tooltips
+4. ✅ CSV export
+5. ✅ Scenario comparison
+6. ✅ Effect measure calculations (RR, OR, RD)
 
 **IMPROVEMENTS:**
-- Comprehensive RWE study design support
-- Enhanced statistical methods for modern epidemiology
-- FDA/EMA 2024 RWE guidance alignment
-- Expanded documentation with survival analysis examples
-- Updated package dependencies (powerSurvEpi, epiR)
+- Enhanced user experience with modern design patterns
+- Comprehensive educational content for non-statisticians
+- Regulatory guidance integration (FDA/EMA 2024)
+- Better mobile device support
+- Faster, more reliable infrastructure
+- Professional appearance suitable for presentations
 
 **BACKWARD COMPATIBILITY:**
-- All original single-proportion features preserved
-- All Version 2.0 two-group features preserved
+- All previous features fully preserved
 - Existing workflows unchanged
+- All calculations remain identical
 - PDF export still available (single-proportion only)
 
 ---
@@ -376,14 +438,18 @@ This calculator does NOT account for:
   - R version and package versions
 
 ### Feature Requests
-Suggestions for future enhancements (Tier 3):
+Suggestions for future enhancements:
 - ✅ ~~Survival analysis (Cox regression)~~ - COMPLETED in v3.0
 - ✅ ~~Matched study designs~~ - COMPLETED in v3.0
+- ✅ ~~Modern UI/UX with examples and reset buttons~~ - COMPLETED in v4.0
+- ✅ ~~Educational resources and regulatory guidance~~ - COMPLETED in v4.0
+- ✅ ~~Infrastructure updates (R 4.4, bslib, renv)~~ - COMPLETED in v4.0
 - Stratified analyses
 - Multiple comparison adjustments
 - Sample size re-estimation (adaptive designs)
 - Non-inferiority/equivalence designs
 - Propensity score weighting (IPTW) adjustments
+- Multilevel/clustered designs
 
 ---
 
