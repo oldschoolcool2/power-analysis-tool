@@ -7,6 +7,8 @@ library(pwr)
 library(binom)
 library(kableExtra)
 library(tinytex)
+library(powerSurvEpi)
+library(epiR)
 
 # Define UI
 ui <- fluidPage(
@@ -102,6 +104,74 @@ ui <- fluidPage(
                                  radioButtons("twogrp_ss_sided", "Test Type:",
                                              choices = c("Two-sided" = "two.sided", "One-sided" = "greater"),
                                              selected = "two.sided")
+                        ),
+
+                        # TAB 5: Survival Analysis Power
+                        tabPanel("Power (Survival)",
+                                 h4("Survival Analysis (Cox Regression)"),
+                                 helpText("Calculate power for time-to-event outcomes using Cox regression (common in RWE studies)"),
+                                 hr(),
+                                 numericInput("surv_pow_n", "Total Sample Size:", 500, min = 10, step = 10),
+                                 bsTooltip("surv_pow_n", "Total number of participants in the study", "right"),
+
+                                 numericInput("surv_pow_hr", "Hazard Ratio (HR):", 0.7, min = 0.01, max = 10, step = 0.05),
+                                 bsTooltip("surv_pow_hr", "Expected hazard ratio (HR < 1 indicates protective effect, HR > 1 indicates risk)", "right"),
+
+                                 sliderInput("surv_pow_k", "Proportion Exposed (%):", min = 10, max = 90, value = 50, step = 5),
+                                 bsTooltip("surv_pow_k", "Proportion of participants in the exposed/treatment group", "right"),
+
+                                 sliderInput("surv_pow_pE", "Overall Event Rate (%):", min = 5, max = 95, value = 30, step = 5),
+                                 bsTooltip("surv_pow_pE", "Expected proportion of participants experiencing the event during follow-up", "right"),
+
+                                 sliderInput("surv_pow_alpha", "Significance Level (α):", min = 0.01, max = 0.10, value = 0.05, step = 0.01),
+                                 bsTooltip("surv_pow_alpha", "Type I error rate (typically 0.05)", "right")
+                        ),
+
+                        # TAB 6: Survival Analysis Sample Size
+                        tabPanel("Sample Size (Survival)",
+                                 h4("Survival Analysis (Cox Regression)"),
+                                 helpText("Calculate required sample size for time-to-event analysis"),
+                                 hr(),
+                                 sliderInput("surv_ss_power", "Desired Power (%):", min = 50, max = 99, value = 80, step = 1),
+                                 bsTooltip("surv_ss_power", "Probability of detecting the effect if it exists", "right"),
+
+                                 numericInput("surv_ss_hr", "Hazard Ratio (HR):", 0.7, min = 0.01, max = 10, step = 0.05),
+                                 bsTooltip("surv_ss_hr", "Expected hazard ratio to detect", "right"),
+
+                                 sliderInput("surv_ss_k", "Proportion Exposed (%):", min = 10, max = 90, value = 50, step = 5),
+                                 bsTooltip("surv_ss_k", "Proportion of participants in the exposed/treatment group", "right"),
+
+                                 sliderInput("surv_ss_pE", "Overall Event Rate (%):", min = 5, max = 95, value = 30, step = 5),
+                                 bsTooltip("surv_ss_pE", "Expected proportion of participants experiencing the event during follow-up", "right"),
+
+                                 sliderInput("surv_ss_alpha", "Significance Level (α):", min = 0.01, max = 0.10, value = 0.05, step = 0.01),
+                                 bsTooltip("surv_ss_alpha", "Type I error rate (typically 0.05)", "right")
+                        ),
+
+                        # TAB 7: Matched Case-Control
+                        tabPanel("Matched Case-Control",
+                                 h4("Matched Case-Control Study"),
+                                 helpText("Calculate sample size for matched case-control studies (e.g., propensity score matching)"),
+                                 hr(),
+                                 sliderInput("match_power", "Desired Power (%):", min = 50, max = 99, value = 80, step = 1),
+                                 bsTooltip("match_power", "Probability of detecting the effect if it exists", "right"),
+
+                                 numericInput("match_or", "Odds Ratio (OR):", 2.0, min = 0.01, max = 20, step = 0.1),
+                                 bsTooltip("match_or", "Expected odds ratio to detect (OR < 1 protective, OR > 1 risk factor)", "right"),
+
+                                 sliderInput("match_p0", "Exposure Probability in Controls (%):", min = 5, max = 95, value = 20, step = 5),
+                                 bsTooltip("match_p0", "Expected proportion of controls exposed to the risk factor", "right"),
+
+                                 numericInput("match_ratio", "Controls per Case:", 1, min = 1, max = 5, step = 1),
+                                 bsTooltip("match_ratio", "Number of matched controls per case (typically 1:1, 2:1, or 3:1)", "right"),
+
+                                 sliderInput("match_alpha", "Significance Level (α):", min = 0.01, max = 0.10, value = 0.05, step = 0.01),
+                                 bsTooltip("match_alpha", "Type I error rate (typically 0.05)", "right"),
+
+                                 radioButtons("match_sided", "Test Type:",
+                                             choices = c("Two-sided" = "two.sided", "One-sided" = "one.sided"),
+                                             selected = "two.sided"),
+                                 bsTooltip("match_sided", "Two-sided: test if groups differ. One-sided: test directional hypothesis", "right")
                         )
             ),
             hr(),
@@ -132,6 +202,12 @@ ui <- fluidPage(
 
             h3("Two-Group Comparisons"),
             p("For comparative effectiveness research and observational studies, you can use the Two-Group tabs to compare event rates between exposed/unexposed groups or treatment/control groups. This is essential for cohort studies and case-control studies in real-world data analysis."),
+
+            h3("Survival Analysis (Cox Regression)"),
+            p("Survival analysis is used for time-to-event outcomes, which are extremely common in pharmaceutical RWE studies (e.g., time to hospitalization, time to disease progression). The Power/Sample Size (Survival) tabs use the Schoenfeld (1983) method implemented in the powerSurvEpi package to calculate power and sample size for Cox proportional hazards regression."),
+
+            h3("Matched Case-Control Studies"),
+            p("The Matched Case-Control tab provides sample size calculations for studies using matching (e.g., propensity score matching, traditional case-control matching). This accounts for the correlation between matched pairs and provides accurate sample size estimates for matched study designs commonly used in observational research."),
 
             h6(a("Reference: Hanley JA, and Lippman-Hand A. If nothing goes wrong, is everything all right? Interpreting zero numerators. JAMA, 1983.",
                 target="_blank", href="Hanley-1983-1743.pdf")),
@@ -211,6 +287,28 @@ server <- function(input, output, session) {
                 need(input$twogrp_ss_p2 >= 0 && input$twogrp_ss_p2 <= 100, "Event rate Group 2 must be between 0 and 100%"),
                 need(input$twogrp_ss_p1 != input$twogrp_ss_p2, "Event rates must be different to calculate sample size"),
                 need(input$twogrp_ss_ratio > 0, "Allocation ratio must be positive")
+            )
+        } else if (input$tabset == "Power (Survival)") {
+            validate(
+                need(input$surv_pow_n > 0, "Sample size must be positive"),
+                need(input$surv_pow_hr > 0, "Hazard ratio must be positive"),
+                need(input$surv_pow_k >= 0 && input$surv_pow_k <= 100, "Proportion exposed must be between 0 and 100%"),
+                need(input$surv_pow_pE >= 0 && input$surv_pow_pE <= 100, "Event rate must be between 0 and 100%"),
+                need(input$surv_pow_hr != 1, "Hazard ratio must be different from 1 to calculate power")
+            )
+        } else if (input$tabset == "Sample Size (Survival)") {
+            validate(
+                need(input$surv_ss_hr > 0, "Hazard ratio must be positive"),
+                need(input$surv_ss_k >= 0 && input$surv_ss_k <= 100, "Proportion exposed must be between 0 and 100%"),
+                need(input$surv_ss_pE >= 0 && input$surv_ss_pE <= 100, "Event rate must be between 0 and 100%"),
+                need(input$surv_ss_hr != 1, "Hazard ratio must be different from 1 to calculate sample size")
+            )
+        } else if (input$tabset == "Matched Case-Control") {
+            validate(
+                need(input$match_or > 0, "Odds ratio must be positive"),
+                need(input$match_p0 >= 0 && input$match_p0 <= 100, "Exposure probability must be between 0 and 100%"),
+                need(input$match_ratio >= 1, "Controls per case must be at least 1"),
+                need(input$match_or != 1, "Odds ratio must be different from 1 to calculate sample size")
             )
         }
     }
@@ -308,42 +406,137 @@ server <- function(input, output, session) {
                                 format(ceiling(n2), digits=0, nsmall=0), " (total N = ",
                                 format(ceiling(n1 + n2), digits=0, nsmall=0), ")."))
                 HTML(paste0(text0, text1, text2, text3))
+
+            } else if (input$tabset == "Power (Survival)") {
+                n <- input$surv_pow_n
+                hr <- input$surv_pow_hr
+                k <- input$surv_pow_k/100
+                pE <- input$surv_pow_pE/100
+
+                # Calculate power using powerSurvEpi
+                power <- powerEpi(n = n, theta = hr, k = k, pE = pE,
+                                 RR = hr, alpha = input$surv_pow_alpha)
+
+                text0 <- hr()
+                text1 <- h1("Results of this analysis")
+                text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+                text3 <- p(paste0("For a survival analysis with N = ", n, " total participants, ",
+                                format(k*100, digits=1, nsmall=0), "% exposed/treated, an overall event rate of ",
+                                format(pE*100, digits=1, nsmall=0), "%, and an expected hazard ratio of ",
+                                format(hr, digits=2, nsmall=2), ", the study has ",
+                                format(power*100, digits=1, nsmall=1), "% power to detect this effect using Cox regression at α = ",
+                                input$surv_pow_alpha, " (two-sided test). This calculation uses the Schoenfeld (1983) method for Cox proportional hazards models."))
+                HTML(paste0(text0, text1, text2, text3))
+
+            } else if (input$tabset == "Sample Size (Survival)") {
+                power <- input$surv_ss_power/100
+                hr <- input$surv_ss_hr
+                k <- input$surv_ss_k/100
+                pE <- input$surv_ss_pE/100
+
+                # Calculate sample size using powerSurvEpi
+                # We need to iterate to find the right sample size
+                n_est <- ssizeEpi(power = power, theta = hr, k = k, pE = pE,
+                                 RR = hr, alpha = input$surv_ss_alpha)
+
+                text0 <- hr()
+                text1 <- h1("Results of this analysis")
+                text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+                text3 <- p(paste0("To detect a hazard ratio of ", format(hr, digits=2, nsmall=2),
+                                " with ", format(power*100, digits=0, nsmall=0), "% power in a survival analysis using Cox regression, ",
+                                "with ", format(k*100, digits=1, nsmall=0), "% of participants exposed/treated and an overall event rate of ",
+                                format(pE*100, digits=1, nsmall=0), "%, the required total sample size is N = ",
+                                format(ceiling(n_est), digits=0, nsmall=0), " participants (α = ",
+                                input$surv_ss_alpha, ", two-sided test). This calculation uses the Schoenfeld (1983) method for Cox proportional hazards models."))
+                HTML(paste0(text0, text1, text2, text3))
+
+            } else if (input$tabset == "Matched Case-Control") {
+                or <- input$match_or
+                p0 <- input$match_p0/100
+                m <- input$match_ratio
+                power <- input$match_power/100
+
+                # Calculate sample size for matched case-control using epiR
+                sided_val <- ifelse(input$match_sided == "two.sided", 2, 1)
+
+                # Use epi.sscc for matched case-control
+                result <- epi.sscc(OR = or, p0 = p0, n = NA, power = power,
+                                  r = m, rho = 0, design = 1, sided.test = sided_val,
+                                  conf.level = 1 - input$match_alpha)
+                n_cases <- ceiling(result$n.total)
+
+                text0 <- hr()
+                text1 <- h1("Results of this analysis")
+                text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+                text3 <- p(paste0("For a matched case-control study to detect an odds ratio of ",
+                                format(or, digits=2, nsmall=2), " with ", format(power*100, digits=0, nsmall=0),
+                                "% power, assuming ", format(p0*100, digits=1, nsmall=0),
+                                "% exposure prevalence in controls, and a ", m, ":1 matching ratio (controls per case), ",
+                                "the required sample size is ", n_cases, " cases and ",
+                                format(n_cases * m, digits=0, nsmall=0), " controls (total N = ",
+                                format(n_cases * (1 + m), digits=0, nsmall=0), " participants) at α = ",
+                                input$match_alpha, " (", input$match_sided, " test). This accounts for correlation between matched pairs."))
+                HTML(paste0(text0, text1, text2, text3))
             }
         })
     })
 
-    ################################################################################################## EFFECT MEASURES (Two-Group only)
+    ################################################################################################## EFFECT MEASURES (Two-Group and Survival)
 
     output$effect_measures <- renderUI({
         if (v$doAnalysis == FALSE) return()
-        if (!grepl("Two-Group", input$tabset)) return()
+        if (!grepl("Two-Group|Survival", input$tabset)) return()
 
         isolate({
             validate_inputs()
 
-            if (input$tabset == "Power (Two-Group)") {
-                p1 <- input$twogrp_pow_p1/100
-                p2 <- input$twogrp_pow_p2/100
-            } else {
-                p1 <- input$twogrp_ss_p1/100
-                p2 <- input$twogrp_ss_p2/100
+            if (grepl("Two-Group", input$tabset)) {
+                if (input$tabset == "Power (Two-Group)") {
+                    p1 <- input$twogrp_pow_p1/100
+                    p2 <- input$twogrp_pow_p2/100
+                } else {
+                    p1 <- input$twogrp_ss_p1/100
+                    p2 <- input$twogrp_ss_p2/100
+                }
+
+                # Calculate effect measures
+                risk_diff <- (p1 - p2) * 100
+                relative_risk <- p1 / p2
+                odds1 <- p1 / (1 - p1)
+                odds2 <- p2 / (1 - p2)
+                odds_ratio <- odds1 / odds2
+
+                text1 <- h4("Effect Measures")
+                text2 <- p(paste0(
+                    "Risk Difference: ", format(risk_diff, digits=2, nsmall=2), " percentage points", br(),
+                    "Relative Risk: ", format(relative_risk, digits=3, nsmall=3), br(),
+                    "Odds Ratio: ", format(odds_ratio, digits=3, nsmall=3)
+                ))
+
+                HTML(paste0(text1, text2))
+            } else if (grepl("Survival", input$tabset)) {
+                if (input$tabset == "Power (Survival)") {
+                    hr <- input$surv_pow_hr
+                } else {
+                    hr <- input$surv_ss_hr
+                }
+
+                text1 <- h4("Effect Measure")
+                interpretation <- if (hr < 1) {
+                    "protective effect (reduced hazard)"
+                } else if (hr > 1) {
+                    "increased risk (elevated hazard)"
+                } else {
+                    "no effect"
+                }
+
+                text2 <- p(paste0(
+                    "Hazard Ratio (HR): ", format(hr, digits=3, nsmall=3), br(),
+                    "Interpretation: HR = ", format(hr, digits=3, nsmall=3), " indicates a ", interpretation
+                ))
+
+                HTML(paste0(text1, text2))
             }
-
-            # Calculate effect measures
-            risk_diff <- (p1 - p2) * 100
-            relative_risk <- p1 / p2
-            odds1 <- p1 / (1 - p1)
-            odds2 <- p2 / (1 - p2)
-            odds_ratio <- odds1 / odds2
-
-            text1 <- h4("Effect Measures")
-            text2 <- p(paste0(
-                "Risk Difference: ", format(risk_diff, digits=2, nsmall=2), " percentage points", br(),
-                "Relative Risk: ", format(relative_risk, digits=3, nsmall=3), br(),
-                "Odds Ratio: ", format(odds_ratio, digits=3, nsmall=3)
-            ))
-
-            HTML(paste0(text1, text2))
         })
     })
 
@@ -351,11 +544,14 @@ server <- function(input, output, session) {
 
     output$figure_title <- renderUI({
         if (v$doAnalysis == FALSE) return()
+        if (input$tabset == "Matched Case-Control") return()  # No plot for matched case-control
 
         isolate({
             text1 <- hr()
             if (grepl("Two-Group", input$tabset)) {
                 text2 <- h4("Estimated power at different sample sizes (equal allocation).")
+            } else if (grepl("Survival", input$tabset)) {
+                text2 <- h4("Power curve for survival analysis at different sample sizes.")
             } else {
                 text2 <- h4("Estimated power for the given conditions at different sample sizes.")
             }
@@ -367,6 +563,7 @@ server <- function(input, output, session) {
 
     output$power_plot <- renderPlot({
         if (v$doAnalysis == FALSE) return()
+        if (input$tabset == "Matched Case-Control") return()  # No plot for matched case-control
 
         isolate({
             validate_inputs()
@@ -374,22 +571,57 @@ server <- function(input, output, session) {
             if (input$tabset == "Power (Single)") {
                 p.out <- pwr.p.test(sig.level=input$power_alpha, power=NULL,
                                    h = ES.h(1/input$power_p, 0), alt="greater", n = input$power_n)
+                plot(p.out)
             } else if (input$tabset == "Sample Size (Single)") {
                 p.out <- pwr.p.test(sig.level=input$ss_alpha, power=input$ss_power/100,
                                    h = ES.h(1/input$ss_p, 0), alt="greater", n = NULL)
+                plot(p.out)
             } else if (input$tabset == "Power (Two-Group)") {
                 p1 <- input$twogrp_pow_p1/100
                 p2 <- input$twogrp_pow_p2/100
                 p.out <- pwr.2p.test(h = ES.h(p1, p2), sig.level = input$twogrp_pow_alpha,
                                     power = NULL, n = input$twogrp_pow_n1, alternative = input$twogrp_pow_sided)
+                plot(p.out)
             } else if (input$tabset == "Sample Size (Two-Group)") {
                 p1 <- input$twogrp_ss_p1/100
                 p2 <- input$twogrp_ss_p2/100
                 p.out <- pwr.2p.test(h = ES.h(p1, p2), sig.level = input$twogrp_ss_alpha,
                                     power = input$twogrp_ss_power/100, alternative = input$twogrp_ss_sided)
-            }
+                plot(p.out)
+            } else if (grepl("Survival", input$tabset)) {
+                # Generate power curve for survival analysis
+                if (input$tabset == "Power (Survival)") {
+                    hr <- input$surv_pow_hr
+                    k <- input$surv_pow_k/100
+                    pE <- input$surv_pow_pE/100
+                    alpha <- input$surv_pow_alpha
+                    current_n <- input$surv_pow_n
+                } else {
+                    hr <- input$surv_ss_hr
+                    k <- input$surv_ss_k/100
+                    pE <- input$surv_ss_pE/100
+                    alpha <- input$surv_ss_alpha
+                    current_n <- ssizeEpi(power = input$surv_ss_power/100, theta = hr, k = k,
+                                         pE = pE, RR = hr, alpha = alpha)
+                }
 
-            plot(p.out)
+                # Generate sample size range
+                n_range <- seq(from = max(50, current_n * 0.5), to = current_n * 2, length.out = 50)
+                power_vals <- sapply(n_range, function(n) {
+                    powerEpi(n = n, theta = hr, k = k, pE = pE, RR = hr, alpha = alpha)
+                })
+
+                # Create plot
+                plot(n_range, power_vals, type = "l", lwd = 2, col = "blue",
+                     xlab = "Total Sample Size (N)", ylab = "Power",
+                     main = "Power vs. Sample Size for Survival Analysis",
+                     ylim = c(0, 1), las = 1)
+                abline(h = 0.80, lty = 2, col = "red")
+                abline(v = current_n, lty = 2, col = "green")
+                grid()
+                legend("bottomright", legend = c("Power curve", "80% Power", "Current N"),
+                      col = c("blue", "red", "green"), lty = c(1, 2, 2), lwd = c(2, 1, 1))
+            }
         })
     }, width=600, height=400, res=100)
 
@@ -562,6 +794,63 @@ server <- function(input, output, session) {
                     Odds_Ratio = (p1/(1-p1))/(p2/(1-p2)),
                     Date = Sys.Date()
                 )
+            } else if (input$tabset == "Power (Survival)") {
+                n <- input$surv_pow_n
+                hr <- input$surv_pow_hr
+                k <- input$surv_pow_k/100
+                pE <- input$surv_pow_pE/100
+                power <- powerEpi(n = n, theta = hr, k = k, pE = pE, RR = hr, alpha = input$surv_pow_alpha)
+                results <- data.frame(
+                    Analysis_Type = "Survival Analysis - Power Calculation",
+                    Total_Sample_Size = n,
+                    Hazard_Ratio = hr,
+                    Proportion_Exposed_Percent = input$surv_pow_k,
+                    Overall_Event_Rate_Percent = input$surv_pow_pE,
+                    Power_Percent = power * 100,
+                    Significance_Level = input$surv_pow_alpha,
+                    Method = "Schoenfeld (1983)",
+                    Date = Sys.Date()
+                )
+            } else if (input$tabset == "Sample Size (Survival)") {
+                hr <- input$surv_ss_hr
+                k <- input$surv_ss_k/100
+                pE <- input$surv_ss_pE/100
+                power <- input$surv_ss_power/100
+                n_est <- ssizeEpi(power = power, theta = hr, k = k, pE = pE, RR = hr, alpha = input$surv_ss_alpha)
+                results <- data.frame(
+                    Analysis_Type = "Survival Analysis - Sample Size Calculation",
+                    Desired_Power_Percent = input$surv_ss_power,
+                    Hazard_Ratio = hr,
+                    Proportion_Exposed_Percent = input$surv_ss_k,
+                    Overall_Event_Rate_Percent = input$surv_ss_pE,
+                    Required_Total_Sample_Size = ceiling(n_est),
+                    Significance_Level = input$surv_ss_alpha,
+                    Method = "Schoenfeld (1983)",
+                    Date = Sys.Date()
+                )
+            } else if (input$tabset == "Matched Case-Control") {
+                or <- input$match_or
+                p0 <- input$match_p0/100
+                m <- input$match_ratio
+                power <- input$match_power/100
+                sided_val <- ifelse(input$match_sided == "two.sided", 2, 1)
+                result <- epi.sscc(OR = or, p0 = p0, n = NA, power = power,
+                                  r = m, rho = 0, design = 1, sided.test = sided_val,
+                                  conf.level = 1 - input$match_alpha)
+                n_cases <- ceiling(result$n.total)
+                results <- data.frame(
+                    Analysis_Type = "Matched Case-Control - Sample Size Calculation",
+                    Desired_Power_Percent = input$match_power * 100,
+                    Odds_Ratio = or,
+                    Exposure_Prob_Controls_Percent = input$match_p0,
+                    Controls_Per_Case = m,
+                    Required_Cases = n_cases,
+                    Required_Controls = n_cases * m,
+                    Total_Sample_Size = n_cases * (1 + m),
+                    Significance_Level = input$match_alpha,
+                    Test_Type = input$match_sided,
+                    Date = Sys.Date()
+                )
             }
 
             write.csv(results, file, row.names = FALSE)
@@ -706,6 +995,63 @@ server <- function(input, output, session) {
                     Test = input$twogrp_ss_sided,
                     RR = round(p1/p2, 3),
                     OR = round((p1/(1-p1))/(p2/(1-p2)), 3),
+                    stringsAsFactors = FALSE
+                )
+            } else if (input$tabset == "Power (Survival)") {
+                n <- input$surv_pow_n
+                hr <- input$surv_pow_hr
+                k <- input$surv_pow_k/100
+                pE <- input$surv_pow_pE/100
+                power <- powerEpi(n = n, theta = hr, k = k, pE = pE, RR = hr, alpha = input$surv_pow_alpha)
+                new_scenario <- data.frame(
+                    Scenario = v$scenario_counter,
+                    Type = "Survival - Power",
+                    Total_N = n,
+                    HR = hr,
+                    Prop_Exposed_Pct = input$surv_pow_k,
+                    Event_Rate_Pct = input$surv_pow_pE,
+                    Power_Pct = round(power * 100, 1),
+                    Alpha = input$surv_pow_alpha,
+                    stringsAsFactors = FALSE
+                )
+            } else if (input$tabset == "Sample Size (Survival)") {
+                hr <- input$surv_ss_hr
+                k <- input$surv_ss_k/100
+                pE <- input$surv_ss_pE/100
+                power <- input$surv_ss_power/100
+                n_est <- ssizeEpi(power = power, theta = hr, k = k, pE = pE, RR = hr, alpha = input$surv_ss_alpha)
+                new_scenario <- data.frame(
+                    Scenario = v$scenario_counter,
+                    Type = "Survival - SS",
+                    Total_N = ceiling(n_est),
+                    HR = hr,
+                    Prop_Exposed_Pct = input$surv_ss_k,
+                    Event_Rate_Pct = input$surv_ss_pE,
+                    Power_Pct = input$surv_ss_power,
+                    Alpha = input$surv_ss_alpha,
+                    stringsAsFactors = FALSE
+                )
+            } else if (input$tabset == "Matched Case-Control") {
+                or <- input$match_or
+                p0 <- input$match_p0/100
+                m <- input$match_ratio
+                power <- input$match_power/100
+                sided_val <- ifelse(input$match_sided == "two.sided", 2, 1)
+                result <- epi.sscc(OR = or, p0 = p0, n = NA, power = power,
+                                  r = m, rho = 0, design = 1, sided.test = sided_val,
+                                  conf.level = 1 - input$match_alpha)
+                n_cases <- ceiling(result$n.total)
+                new_scenario <- data.frame(
+                    Scenario = v$scenario_counter,
+                    Type = "Matched CC",
+                    OR = or,
+                    Exposure_Pct = input$match_p0,
+                    Controls_Per_Case = m,
+                    Cases = n_cases,
+                    Controls = n_cases * m,
+                    Total_N = n_cases * (1 + m),
+                    Power_Pct = input$match_power,
+                    Alpha = input$match_alpha,
                     stringsAsFactors = FALSE
                 )
             }
