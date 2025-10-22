@@ -471,6 +471,60 @@ server <- function(input, output, session) {
         })
     }
 
+    # Configuration for example and reset buttons (DRY refactoring)
+    button_configs <- list(
+        power_single = list(
+            example = list(power_n = 1500, power_p = 500, power_discon = 15, power_alpha = 0.05),
+            reset = list(power_n = 230, power_p = 100, power_discon = 10, power_alpha = 0.05),
+            example_msg = "Rare adverse event study with 1,500 participants"
+        ),
+        ss_single = list(
+            example = list(ss_power = 90, ss_p = 200, ss_discon = 10, ss_alpha = 0.05),
+            reset = list(ss_power = 80, ss_p = 100, ss_discon = 10, ss_alpha = 0.05),
+            example_msg = "Sample size for rare event (1 in 200)"
+        ),
+        twogrp_pow = list(
+            example = list(twogrp_pow_n1 = 500, twogrp_pow_n2 = 500, twogrp_pow_p1 = 15, twogrp_pow_p2 = 10, twogrp_pow_alpha = 0.05),
+            reset = list(twogrp_pow_n1 = 200, twogrp_pow_n2 = 200, twogrp_pow_p1 = 10, twogrp_pow_p2 = 5, twogrp_pow_alpha = 0.05, twogrp_pow_sided = "two.sided"),
+            example_msg = "Cohort study comparing 15% vs 10% event rates"
+        ),
+        twogrp_ss = list(
+            example = list(twogrp_ss_power = 80, twogrp_ss_p1 = 20, twogrp_ss_p2 = 15, twogrp_ss_ratio = 1, twogrp_ss_alpha = 0.05),
+            reset = list(twogrp_ss_power = 80, twogrp_ss_p1 = 10, twogrp_ss_p2 = 5, twogrp_ss_ratio = 1, twogrp_ss_alpha = 0.05, twogrp_ss_sided = "two.sided"),
+            example_msg = "Sample size for 20% vs 15% comparison"
+        ),
+        surv_pow = list(
+            example = list(surv_pow_n = 800, surv_pow_hr = 0.75, surv_pow_k = 50, surv_pow_pE = 40, surv_pow_alpha = 0.05),
+            reset = list(surv_pow_n = 500, surv_pow_hr = 0.7, surv_pow_k = 50, surv_pow_pE = 30, surv_pow_alpha = 0.05),
+            example_msg = "Survival study with HR=0.75 and 40% event rate"
+        ),
+        surv_ss = list(
+            example = list(surv_ss_power = 85, surv_ss_hr = 0.70, surv_ss_k = 50, surv_ss_pE = 35, surv_ss_alpha = 0.05),
+            reset = list(surv_ss_power = 80, surv_ss_hr = 0.7, surv_ss_k = 50, surv_ss_pE = 30, surv_ss_alpha = 0.05),
+            example_msg = "Sample size for survival analysis (HR=0.70)"
+        ),
+        match = list(
+            example = list(match_power = 80, match_or = 2.5, match_p0 = 25, match_ratio = 2, match_alpha = 0.05),
+            reset = list(match_power = 80, match_or = 2.0, match_p0 = 20, match_ratio = 1, match_alpha = 0.05, match_sided = "two.sided"),
+            example_msg = "2:1 matched case-control with OR=2.5"
+        ),
+        cont_pow = list(
+            example = list(cont_pow_n1 = 150, cont_pow_n2 = 150, cont_pow_d = 0.5, cont_pow_alpha = 0.05, cont_pow_sided = "two.sided"),
+            reset = list(cont_pow_n1 = 100, cont_pow_n2 = 100, cont_pow_d = 0.5, cont_pow_alpha = 0.05, cont_pow_sided = "two.sided"),
+            example_msg = "Continuous outcome comparison (Cohen's d=0.5, n=150 per group)"
+        ),
+        cont_ss = list(
+            example = list(cont_ss_power = 90, cont_ss_d = 0.4, cont_ss_ratio = 1, cont_ss_alpha = 0.05, cont_ss_sided = "two.sided"),
+            reset = list(cont_ss_power = 80, cont_ss_d = 0.5, cont_ss_ratio = 1, cont_ss_alpha = 0.05, cont_ss_sided = "two.sided"),
+            example_msg = "Sample size for moderate effect (d=0.4, 90% power)"
+        ),
+        noninf = list(
+            example = list(noninf_power = 85, noninf_p1 = 12, noninf_p2 = 10, noninf_margin = 4, noninf_ratio = 1, noninf_alpha = 0.025),
+            reset = list(noninf_power = 80, noninf_p1 = 10, noninf_p2 = 10, noninf_margin = 5, noninf_ratio = 1, noninf_alpha = 0.025),
+            example_msg = "Non-inferiority test with 4% margin (generic vs. branded)"
+        )
+    )
+
     # Reactive values for tracking state
     v <- reactiveValues(
         doAnalysis = FALSE,
@@ -500,190 +554,43 @@ server <- function(input, output, session) {
         v$doAnalysis <- FALSE
     })
 
-    # Example button handlers - load common scenarios
-    observeEvent(input$example_power_single, {
-        updateNumericInput(session, "power_n", value = 1500)
-        updateNumericInput(session, "power_p", value = 500)
-        updateSliderInput(session, "power_discon", value = 15)
-        updateSliderInput(session, "power_alpha", value = 0.05)
-        showNotification("Example loaded: Rare adverse event study with 1,500 participants", type = "message", duration = 3)
-    })
+    # Data-driven button handlers (DRY refactoring - replaces 183 lines of repetitive code)
+    # Generate example and reset handlers dynamically from configuration
+    lapply(names(button_configs), function(tab_key) {
+        config <- button_configs[[tab_key]]
 
-    observeEvent(input$example_ss_single, {
-        updateSliderInput(session, "ss_power", value = 90)
-        updateNumericInput(session, "ss_p", value = 200)
-        updateSliderInput(session, "ss_discon", value = 10)
-        updateSliderInput(session, "ss_alpha", value = 0.05)
-        showNotification("Example loaded: Sample size for rare event (1 in 200)", type = "message", duration = 3)
-    })
+        # Example button handler
+        observeEvent(input[[paste0("example_", tab_key)]], {
+            for (param in names(config$example)) {
+                value <- config$example[[param]]
+                # Determine input type and update accordingly
+                if (grepl("_sided$", param)) {
+                    updateRadioButtons(session, param, selected = value)
+                } else if (grepl("power|alpha|discon|k|pE|p0", param)) {
+                    updateSliderInput(session, param, value = value)
+                } else {
+                    updateNumericInput(session, param, value = value)
+                }
+            }
+            showNotification(paste("Example loaded:", config$example_msg),
+                           type = "message", duration = 3)
+        })
 
-    observeEvent(input$example_twogrp_pow, {
-        updateNumericInput(session, "twogrp_pow_n1", value = 500)
-        updateNumericInput(session, "twogrp_pow_n2", value = 500)
-        updateNumericInput(session, "twogrp_pow_p1", value = 15)
-        updateNumericInput(session, "twogrp_pow_p2", value = 10)
-        updateSliderInput(session, "twogrp_pow_alpha", value = 0.05)
-        showNotification("Example loaded: Cohort study comparing 15% vs 10% event rates", type = "message", duration = 3)
-    })
-
-    observeEvent(input$example_twogrp_ss, {
-        updateSliderInput(session, "twogrp_ss_power", value = 80)
-        updateNumericInput(session, "twogrp_ss_p1", value = 20)
-        updateNumericInput(session, "twogrp_ss_p2", value = 15)
-        updateNumericInput(session, "twogrp_ss_ratio", value = 1)
-        updateSliderInput(session, "twogrp_ss_alpha", value = 0.05)
-        showNotification("Example loaded: Sample size for 20% vs 15% comparison", type = "message", duration = 3)
-    })
-
-    observeEvent(input$example_surv_pow, {
-        updateNumericInput(session, "surv_pow_n", value = 800)
-        updateNumericInput(session, "surv_pow_hr", value = 0.75)
-        updateSliderInput(session, "surv_pow_k", value = 50)
-        updateSliderInput(session, "surv_pow_pE", value = 40)
-        updateSliderInput(session, "surv_pow_alpha", value = 0.05)
-        showNotification("Example loaded: Survival study with HR=0.75 and 40% event rate", type = "message", duration = 3)
-    })
-
-    observeEvent(input$example_surv_ss, {
-        updateSliderInput(session, "surv_ss_power", value = 85)
-        updateNumericInput(session, "surv_ss_hr", value = 0.70)
-        updateSliderInput(session, "surv_ss_k", value = 50)
-        updateSliderInput(session, "surv_ss_pE", value = 35)
-        updateSliderInput(session, "surv_ss_alpha", value = 0.05)
-        showNotification("Example loaded: Sample size for survival analysis (HR=0.70)", type = "message", duration = 3)
-    })
-
-    observeEvent(input$example_match, {
-        updateSliderInput(session, "match_power", value = 80)
-        updateNumericInput(session, "match_or", value = 2.5)
-        updateSliderInput(session, "match_p0", value = 25)
-        updateNumericInput(session, "match_ratio", value = 2)
-        updateSliderInput(session, "match_alpha", value = 0.05)
-        showNotification("Example loaded: 2:1 matched case-control with OR=2.5", type = "message", duration = 3)
-    })
-
-    # Reset button handlers - restore defaults
-    observeEvent(input$reset_power_single, {
-        updateNumericInput(session, "power_n", value = 230)
-        updateNumericInput(session, "power_p", value = 100)
-        updateSliderInput(session, "power_discon", value = 10)
-        updateSliderInput(session, "power_alpha", value = 0.05)
-        showNotification("Inputs reset to defaults", type = "warning", duration = 2)
-    })
-
-    observeEvent(input$reset_ss_single, {
-        updateSliderInput(session, "ss_power", value = 80)
-        updateNumericInput(session, "ss_p", value = 100)
-        updateSliderInput(session, "ss_discon", value = 10)
-        updateSliderInput(session, "ss_alpha", value = 0.05)
-        showNotification("Inputs reset to defaults", type = "warning", duration = 2)
-    })
-
-    observeEvent(input$reset_twogrp_pow, {
-        updateNumericInput(session, "twogrp_pow_n1", value = 200)
-        updateNumericInput(session, "twogrp_pow_n2", value = 200)
-        updateNumericInput(session, "twogrp_pow_p1", value = 10)
-        updateNumericInput(session, "twogrp_pow_p2", value = 5)
-        updateSliderInput(session, "twogrp_pow_alpha", value = 0.05)
-        updateRadioButtons(session, "twogrp_pow_sided", selected = "two.sided")
-        showNotification("Inputs reset to defaults", type = "warning", duration = 2)
-    })
-
-    observeEvent(input$reset_twogrp_ss, {
-        updateSliderInput(session, "twogrp_ss_power", value = 80)
-        updateNumericInput(session, "twogrp_ss_p1", value = 10)
-        updateNumericInput(session, "twogrp_ss_p2", value = 5)
-        updateNumericInput(session, "twogrp_ss_ratio", value = 1)
-        updateSliderInput(session, "twogrp_ss_alpha", value = 0.05)
-        updateRadioButtons(session, "twogrp_ss_sided", selected = "two.sided")
-        showNotification("Inputs reset to defaults", type = "warning", duration = 2)
-    })
-
-    observeEvent(input$reset_surv_pow, {
-        updateNumericInput(session, "surv_pow_n", value = 500)
-        updateNumericInput(session, "surv_pow_hr", value = 0.7)
-        updateSliderInput(session, "surv_pow_k", value = 50)
-        updateSliderInput(session, "surv_pow_pE", value = 30)
-        updateSliderInput(session, "surv_pow_alpha", value = 0.05)
-        showNotification("Inputs reset to defaults", type = "warning", duration = 2)
-    })
-
-    observeEvent(input$reset_surv_ss, {
-        updateSliderInput(session, "surv_ss_power", value = 80)
-        updateNumericInput(session, "surv_ss_hr", value = 0.7)
-        updateSliderInput(session, "surv_ss_k", value = 50)
-        updateSliderInput(session, "surv_ss_pE", value = 30)
-        updateSliderInput(session, "surv_ss_alpha", value = 0.05)
-        showNotification("Inputs reset to defaults", type = "warning", duration = 2)
-    })
-
-    observeEvent(input$reset_match, {
-        updateSliderInput(session, "match_power", value = 80)
-        updateNumericInput(session, "match_or", value = 2.0)
-        updateSliderInput(session, "match_p0", value = 20)
-        updateNumericInput(session, "match_ratio", value = 1)
-        updateSliderInput(session, "match_alpha", value = 0.05)
-        updateRadioButtons(session, "match_sided", selected = "two.sided")
-        showNotification("Inputs reset to defaults", type = "warning", duration = 2)
-    })
-
-    # Example/Reset for Continuous Outcomes Power (TIER 4)
-    observeEvent(input$example_cont_pow, {
-        updateNumericInput(session, "cont_pow_n1", value = 150)
-        updateNumericInput(session, "cont_pow_n2", value = 150)
-        updateNumericInput(session, "cont_pow_d", value = 0.5)
-        updateSliderInput(session, "cont_pow_alpha", value = 0.05)
-        updateRadioButtons(session, "cont_pow_sided", selected = "two.sided")
-        showNotification("Example loaded: Continuous outcome comparison (Cohen's d=0.5, n=150 per group)", type = "message", duration = 3)
-    })
-
-    observeEvent(input$reset_cont_pow, {
-        updateNumericInput(session, "cont_pow_n1", value = 100)
-        updateNumericInput(session, "cont_pow_n2", value = 100)
-        updateNumericInput(session, "cont_pow_d", value = 0.5)
-        updateSliderInput(session, "cont_pow_alpha", value = 0.05)
-        updateRadioButtons(session, "cont_pow_sided", selected = "two.sided")
-        showNotification("Inputs reset to defaults", type = "warning", duration = 2)
-    })
-
-    # Example/Reset for Continuous Outcomes Sample Size (TIER 4)
-    observeEvent(input$example_cont_ss, {
-        updateSliderInput(session, "cont_ss_power", value = 90)
-        updateNumericInput(session, "cont_ss_d", value = 0.4)
-        updateNumericInput(session, "cont_ss_ratio", value = 1)
-        updateSliderInput(session, "cont_ss_alpha", value = 0.05)
-        updateRadioButtons(session, "cont_ss_sided", selected = "two.sided")
-        showNotification("Example loaded: Sample size for moderate effect (d=0.4, 90% power)", type = "message", duration = 3)
-    })
-
-    observeEvent(input$reset_cont_ss, {
-        updateSliderInput(session, "cont_ss_power", value = 80)
-        updateNumericInput(session, "cont_ss_d", value = 0.5)
-        updateNumericInput(session, "cont_ss_ratio", value = 1)
-        updateSliderInput(session, "cont_ss_alpha", value = 0.05)
-        updateRadioButtons(session, "cont_ss_sided", selected = "two.sided")
-        showNotification("Inputs reset to defaults", type = "warning", duration = 2)
-    })
-
-    # Example/Reset for Non-Inferiority (TIER 4)
-    observeEvent(input$example_noninf, {
-        updateSliderInput(session, "noninf_power", value = 85)
-        updateNumericInput(session, "noninf_p1", value = 12)
-        updateNumericInput(session, "noninf_p2", value = 10)
-        updateNumericInput(session, "noninf_margin", value = 4)
-        updateNumericInput(session, "noninf_ratio", value = 1)
-        updateSliderInput(session, "noninf_alpha", value = 0.025)
-        showNotification("Example loaded: Non-inferiority test with 4% margin (generic vs. branded)", type = "message", duration = 3)
-    })
-
-    observeEvent(input$reset_noninf, {
-        updateSliderInput(session, "noninf_power", value = 80)
-        updateNumericInput(session, "noninf_p1", value = 10)
-        updateNumericInput(session, "noninf_p2", value = 10)
-        updateNumericInput(session, "noninf_margin", value = 5)
-        updateNumericInput(session, "noninf_ratio", value = 1)
-        updateSliderInput(session, "noninf_alpha", value = 0.025)
-        showNotification("Inputs reset to defaults", type = "warning", duration = 2)
+        # Reset button handler
+        observeEvent(input[[paste0("reset_", tab_key)]], {
+            for (param in names(config$reset)) {
+                value <- config$reset[[param]]
+                # Determine input type and update accordingly
+                if (grepl("_sided$", param)) {
+                    updateRadioButtons(session, param, selected = value)
+                } else if (grepl("power|alpha|discon|k|pE|p0", param)) {
+                    updateSliderInput(session, param, value = value)
+                } else {
+                    updateNumericInput(session, param, value = value)
+                }
+            }
+            showNotification("Inputs reset to defaults", type = "warning", duration = 2)
+        })
     })
 
     # Validation function
@@ -829,13 +736,6 @@ server <- function(input, output, session) {
         if (v$doAnalysis == FALSE) return()
 
         isolate({
-            # Use req() for cleaner validation (demonstrated for Power (Single) tab)
-            if (input$tabset == "Power (Single)") {
-                req(input$power_n > 0, cancelOutput = TRUE)
-                req(input$power_p > 0, cancelOutput = TRUE)
-                req(input$power_discon >= 0 && input$power_discon <= 100, cancelOutput = TRUE)
-            }
-
             validate_inputs()
 
             if (input$tabset == "Power (Single)") {
