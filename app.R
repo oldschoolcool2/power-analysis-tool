@@ -2,187 +2,443 @@
 
 library(shiny)
 library(shinythemes)
+library(shinyBS)
 library(pwr)
 library(binom)
 library(kableExtra)
 library(tinytex)
 
-# Define UI for application that draws a histogram
+# Define UI
 ui <- fluidPage(
     # SHINY Theme
     theme = shinytheme("lumen"),
-    #shinythemes::themeSelector(),
-    
+
     # Application title
     titlePanel("Statistical Power Analysis Tool"),
-    
-    # Sidebar with a slider input for number of bins 
+
+    # Sidebar with inputs
     sidebarLayout(
         sidebarPanel(
             tabsetPanel(id = "tabset",
-                        tabPanel("Power",
-                                 numericInput("power_n", "Please specify the available Sample Size:", 230),
-                                 # sliderInput("power_p", "Please specify frequency of the event of interest (1 in x):", min = 1, max = 10000, value = 100),
-                                 numericInput("power_p", "Please specify frequency of the event of interest (1 in x):", min = 1, max = 10000, value = 100),
-                                 sliderInput("power_discon", "Withdrawal or Discontinuation rate? (%):", min = 0, max = 20, value = 10)
+                        # TAB 1: Single Proportion Power
+                        tabPanel("Power (Single)",
+                                 h4("Single Proportion Analysis"),
+                                 helpText("Calculate power for detecting a single event rate (e.g., post-marketing surveillance)"),
+                                 hr(),
+                                 numericInput("power_n", "Available Sample Size:", 230, min = 1, step = 1),
+                                 bsTooltip("power_n", "Total number of participants available for the study", "right"),
+
+                                 numericInput("power_p", "Event Frequency (1 in x):", 100, min = 1, step = 1),
+                                 bsTooltip("power_p", "Expected frequency of the event. E.g., 100 means 1 event per 100 participants", "right"),
+
+                                 sliderInput("power_discon", "Withdrawal/Discontinuation Rate (%):", min = 0, max = 50, value = 10, step = 1),
+                                 bsTooltip("power_discon", "Expected percentage of participants who will withdraw or discontinue", "right"),
+
+                                 sliderInput("power_alpha", "Significance Level (α):", min = 0.01, max = 0.10, value = 0.05, step = 0.01),
+                                 bsTooltip("power_alpha", "Type I error rate (typically 0.05). Lower values are more conservative.", "right")
                         ),
-                        tabPanel("Sample Size",
-                                 sliderInput("ss_power", "Please specify desired power(%):", min = 50, max = 100, value = 80),
-                                 # sliderInput("ss_p", "Please specify frequency of the event of interest (1 in x):", min = 1, max = 10000, value = 100),
-                                 numericInput("ss_p", "Please specify frequency of the event of interest (1 in x):", min = 1, max = 10000, value = 100),
-                                 sliderInput("ss_discon", "Withdrawal or Discontinuation rate? (%):", min = 0, max = 20, value = 10)
+
+                        # TAB 2: Single Proportion Sample Size
+                        tabPanel("Sample Size (Single)",
+                                 h4("Single Proportion Analysis"),
+                                 helpText("Calculate required sample size to achieve desired power"),
+                                 hr(),
+                                 sliderInput("ss_power", "Desired Power (%):", min = 50, max = 99, value = 80, step = 1),
+                                 bsTooltip("ss_power", "Probability of detecting the effect if it exists (typically 80% or 90%)", "right"),
+
+                                 numericInput("ss_p", "Event Frequency (1 in x):", 100, min = 1, step = 1),
+                                 bsTooltip("ss_p", "Expected frequency of the event. E.g., 100 means 1 event per 100 participants", "right"),
+
+                                 sliderInput("ss_discon", "Withdrawal/Discontinuation Rate (%):", min = 0, max = 50, value = 10, step = 1),
+                                 bsTooltip("ss_discon", "Expected percentage of participants who will withdraw or discontinue", "right"),
+
+                                 sliderInput("ss_alpha", "Significance Level (α):", min = 0.01, max = 0.10, value = 0.05, step = 0.01),
+                                 bsTooltip("ss_alpha", "Type I error rate (typically 0.05). Lower values are more conservative.", "right")
+                        ),
+
+                        # TAB 3: Two-Group Power
+                        tabPanel("Power (Two-Group)",
+                                 h4("Two-Group Comparison"),
+                                 helpText("Calculate power for comparing two proportions (e.g., exposed vs. unexposed in cohort studies)"),
+                                 hr(),
+                                 numericInput("twogrp_pow_n1", "Sample Size Group 1:", 200, min = 1, step = 1),
+                                 numericInput("twogrp_pow_n2", "Sample Size Group 2:", 200, min = 1, step = 1),
+                                 bsTooltip("twogrp_pow_n1", "Number of participants in exposed/treatment group", "right"),
+                                 bsTooltip("twogrp_pow_n2", "Number of participants in unexposed/control group", "right"),
+
+                                 numericInput("twogrp_pow_p1", "Event Rate Group 1 (%):", 10, min = 0, max = 100, step = 0.1),
+                                 numericInput("twogrp_pow_p2", "Event Rate Group 2 (%):", 5, min = 0, max = 100, step = 0.1),
+                                 bsTooltip("twogrp_pow_p1", "Expected event rate in exposed/treatment group (as percentage)", "right"),
+                                 bsTooltip("twogrp_pow_p2", "Expected event rate in unexposed/control group (as percentage)", "right"),
+
+                                 sliderInput("twogrp_pow_alpha", "Significance Level (α):", min = 0.01, max = 0.10, value = 0.05, step = 0.01),
+                                 bsTooltip("twogrp_pow_alpha", "Type I error rate (typically 0.05)", "right"),
+
+                                 radioButtons("twogrp_pow_sided", "Test Type:",
+                                             choices = c("Two-sided" = "two.sided", "One-sided" = "greater"),
+                                             selected = "two.sided"),
+                                 bsTooltip("twogrp_pow_sided", "Two-sided: test if groups differ. One-sided: test if Group 1 > Group 2", "right")
+                        ),
+
+                        # TAB 4: Two-Group Sample Size
+                        tabPanel("Sample Size (Two-Group)",
+                                 h4("Two-Group Comparison"),
+                                 helpText("Calculate required sample size per group to achieve desired power"),
+                                 hr(),
+                                 sliderInput("twogrp_ss_power", "Desired Power (%):", min = 50, max = 99, value = 80, step = 1),
+                                 bsTooltip("twogrp_ss_power", "Probability of detecting the effect if it exists", "right"),
+
+                                 numericInput("twogrp_ss_p1", "Event Rate Group 1 (%):", 10, min = 0, max = 100, step = 0.1),
+                                 numericInput("twogrp_ss_p2", "Event Rate Group 2 (%):", 5, min = 0, max = 100, step = 0.1),
+                                 bsTooltip("twogrp_ss_p1", "Expected event rate in exposed/treatment group (as percentage)", "right"),
+                                 bsTooltip("twogrp_ss_p2", "Expected event rate in unexposed/control group (as percentage)", "right"),
+
+                                 numericInput("twogrp_ss_ratio", "Allocation Ratio (n2/n1):", 1, min = 0.1, max = 10, step = 0.1),
+                                 bsTooltip("twogrp_ss_ratio", "Ratio of Group 2 to Group 1 sample size. 1 = equal groups, 2 = twice as many in Group 2", "right"),
+
+                                 sliderInput("twogrp_ss_alpha", "Significance Level (α):", min = 0.01, max = 0.10, value = 0.05, step = 0.01),
+                                 bsTooltip("twogrp_ss_alpha", "Type I error rate (typically 0.05)", "right"),
+
+                                 radioButtons("twogrp_ss_sided", "Test Type:",
+                                             choices = c("Two-sided" = "two.sided", "One-sided" = "greater"),
+                                             selected = "two.sided")
                         )
+            ),
+            hr(),
+            actionButton("go", "Calculate", class = "btn-primary btn-lg"),
+            hr(),
+            # Scenario comparison buttons
+            conditionalPanel(
+                condition = "output.show_results",
+                actionButton("save_scenario", "Save Current Scenario", class = "btn-success"),
+                bsTooltip("save_scenario", "Save this analysis to compare with other scenarios", "right"),
+                br(), br(),
+                actionButton("clear_scenarios", "Clear Saved Scenarios", class = "btn-warning"),
+                conditionalPanel(
+                    condition = "output.has_scenarios",
+                    br(), br(),
+                    downloadButton("download_comparison", "Download Scenario Comparison (CSV)")
+                )
             )
-            ,actionButton("go", "Calculate")
         ),
-        # Show a plot of the generated distribution
+
+        # Main panel with results
         mainPanel(
             h1("About this tool"),
-            p("In statistical analysis, the 'Rule of Three' states that if a certain event did not occur in a sample with n participants, the interval from 0 to 3/n is a 95% confidence interval for the rate of occurrences in the population. When n is greater than 30, this is a good approximation of results from more sensitive tests. For example, a pain-relief drug is tested on 1500 human participants, and no adverse event is recorded. From the rule of three, it can be concluded with 95% confidence that fewer than 1 person in 500 (or 3/1500) will experience an adverse event."),
-            p("This is one of the recommended methods of estimating sample size or power for studies examining safety-event data, such as post-marketing surveillance (PMS) studies. It is also very useful in the interpretation of clinical trials generally, particularly in phase II or III trials where often there are limitations in duration or statistical power for safety assessment."),
-            h6(a("Reference: Hanley JA, and Lippman-Hand A. If nothing goes wrong, is everything all right? Interpreting zero numerators. JAMA, 1983.", target="_blank", href="Hanley-1983-1743.pdf")),
-            
+            p("This tool provides power and sample size calculations for epidemiological studies, with a focus on real-world evidence (RWE) applications in pharmaceutical research."),
+
+            h3("Single Proportion Analysis (Rule of Three)"),
+            p("The 'Rule of Three' states that if a certain event did not occur in a sample with n participants, the interval from 0 to 3/n is a 95% confidence interval for the rate of occurrences in the population. When n is greater than 30, this is a good approximation. For example, if a drug is tested on 1500 participants and no adverse event is recorded, we can conclude with 95% confidence that fewer than 1 person in 500 (or 3/1500) will experience an adverse event."),
+
+            h3("Two-Group Comparisons"),
+            p("For comparative effectiveness research and observational studies, you can use the Two-Group tabs to compare event rates between exposed/unexposed groups or treatment/control groups. This is essential for cohort studies and case-control studies in real-world data analysis."),
+
+            h6(a("Reference: Hanley JA, and Lippman-Hand A. If nothing goes wrong, is everything all right? Interpreting zero numerators. JAMA, 1983.",
+                target="_blank", href="Hanley-1983-1743.pdf")),
+
+            # Results section
             uiOutput('result_text'),
+            uiOutput('effect_measures'),
             uiOutput('figure_title'),
             plotOutput('power_plot'),
             uiOutput('table_title'),
             dataTableOutput('result_table'),
             uiOutput('table_footnotes'),
-            uiOutput('download_button')
-            # actionButton("resources", "Tell Me More")
+            uiOutput('download_buttons'),
+
+            # Scenario comparison section
+            uiOutput('scenario_comparison')
         )
     )
 )
 
-# Define server logic required to draw a histogram
-server <- function(input, output) {
-    v <- reactiveValues(doAnalysis = FALSE, doResources=FALSE)
-    
+# Define server logic
+server <- function(input, output, session) {
+
+    # Reactive values for tracking state
+    v <- reactiveValues(
+        doAnalysis = FALSE,
+        scenarios = data.frame(),
+        scenario_counter = 0
+    )
+
+    # Show results flag
+    output$show_results <- reactive({
+        v$doAnalysis != FALSE
+    })
+    outputOptions(output, "show_results", suspendWhenHidden = FALSE)
+
+    # Has scenarios flag
+    output$has_scenarios <- reactive({
+        nrow(v$scenarios) > 0
+    })
+    outputOptions(output, "has_scenarios", suspendWhenHidden = FALSE)
+
+    # Trigger analysis
     observeEvent(input$go, {
-        # 0 will be coerced to FALSE
-        # 1+ will be coerced to TRUE
         v$doAnalysis <- input$go
     })
-    
+
+    # Reset analysis when switching tabs
     observeEvent(input$tabset, {
         v$doAnalysis <- FALSE
     })
-    
-    observeEvent(input$resources, {
-        # 0 will be coerced to FALSE
-        # 1+ will be coerced to TRUE
-        v$doResources <- input$resources
-    })
-    
+
+    # Validation function
+    validate_inputs <- function() {
+        if (input$tabset == "Power (Single)") {
+            validate(
+                need(input$power_n > 0, "Sample size must be positive"),
+                need(input$power_p > 0, "Event frequency must be positive"),
+                need(input$power_discon >= 0 && input$power_discon <= 100, "Discontinuation rate must be between 0 and 100%")
+            )
+        } else if (input$tabset == "Sample Size (Single)") {
+            validate(
+                need(input$ss_p > 0, "Event frequency must be positive"),
+                need(input$ss_discon >= 0 && input$ss_discon <= 100, "Discontinuation rate must be between 0 and 100%")
+            )
+        } else if (input$tabset == "Power (Two-Group)") {
+            validate(
+                need(input$twogrp_pow_n1 > 0, "Sample size Group 1 must be positive"),
+                need(input$twogrp_pow_n2 > 0, "Sample size Group 2 must be positive"),
+                need(input$twogrp_pow_p1 >= 0 && input$twogrp_pow_p1 <= 100, "Event rate Group 1 must be between 0 and 100%"),
+                need(input$twogrp_pow_p2 >= 0 && input$twogrp_pow_p2 <= 100, "Event rate Group 2 must be between 0 and 100%"),
+                need(input$twogrp_pow_p1 != input$twogrp_pow_p2, "Event rates must be different to calculate power")
+            )
+        } else if (input$tabset == "Sample Size (Two-Group)") {
+            validate(
+                need(input$twogrp_ss_p1 >= 0 && input$twogrp_ss_p1 <= 100, "Event rate Group 1 must be between 0 and 100%"),
+                need(input$twogrp_ss_p2 >= 0 && input$twogrp_ss_p2 <= 100, "Event rate Group 2 must be between 0 and 100%"),
+                need(input$twogrp_ss_p1 != input$twogrp_ss_p2, "Event rates must be different to calculate sample size"),
+                need(input$twogrp_ss_ratio > 0, "Allocation ratio must be positive")
+            )
+        }
+    }
+
     ################################################################################################## RESULT TEXT
-    
+
     output$result_text <- renderUI({
         if (v$doAnalysis == FALSE) return()
-        
+
         isolate({
-            incidence_rate <- ifelse(input$tabset == "Power", input$power_p, input$ss_p)
-            sample_size <- if(input$tabset == "Power"){
-                input$power_n
+            validate_inputs()
+
+            if (input$tabset == "Power (Single)") {
+                incidence_rate <- input$power_p
+                sample_size <- input$power_n
+                power <- pwr.p.test(sig.level=input$power_alpha, power=NULL,
+                                  h = ES.h(1/input$power_p, 0), alt="greater", n = input$power_n)$power
+                discon <- input$power_discon/100
+
+                text0 <- hr()
+                text1 <- h1("Results of this analysis")
+                text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+                text3 <- p(paste0("Based on the Binomial distribution and a true event incidence rate of 1 in ",
+                                format(incidence_rate, digits=0, nsmall=0), " (or ",
+                                format(1/incidence_rate * 100, digits=2, nsmall=2), "%), ",
+                                format(ceiling(sample_size), digits=0, nsmall=0),
+                                " participants would be needed to observe at least one event with ",
+                                format(power*100, digits=0, nsmall=0), "% probability (α = ",
+                                input$power_alpha, "). Accounting for a possible withdrawal or discontinuation rate of ",
+                                format(discon*100, digits=0), "%, the target number of participants is set as ",
+                                format(ceiling((sample_size * (1+discon))), digits=0),"."))
+                HTML(paste0(text0, text1, text2, text3))
+
+            } else if (input$tabset == "Sample Size (Single)") {
+                incidence_rate <- input$ss_p
+                sample_size <- pwr.p.test(sig.level=input$ss_alpha, power=input$ss_power/100,
+                                         h = ES.h(1/input$ss_p, 0), alt="greater", n = NULL)$n
+                power <- input$ss_power/100
+                discon <- input$ss_discon/100
+
+                text0 <- hr()
+                text1 <- h1("Results of this analysis")
+                text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+                text3 <- p(paste0("Based on the Binomial distribution and a true event incidence rate of 1 in ",
+                                format(incidence_rate, digits=0, nsmall=0), " (or ",
+                                format(1/incidence_rate * 100, digits=2, nsmall=2), "%), ",
+                                format(ceiling(sample_size), digits=0, nsmall=0),
+                                " participants would be needed to observe at least one event with ",
+                                format(power*100, digits=0, nsmall=0), "% probability (α = ",
+                                input$ss_alpha, "). Accounting for a possible withdrawal or discontinuation rate of ",
+                                format(discon*100, digits=0), "%, the target number of participants is set as ",
+                                format(ceiling((sample_size * (1+discon))), digits=0),"."))
+                HTML(paste0(text0, text1, text2, text3))
+
+            } else if (input$tabset == "Power (Two-Group)") {
+                n1 <- input$twogrp_pow_n1
+                n2 <- input$twogrp_pow_n2
+                p1 <- input$twogrp_pow_p1/100
+                p2 <- input$twogrp_pow_p2/100
+
+                power <- pwr.2p2n.test(h = ES.h(p1, p2), n1 = n1, n2 = n2,
+                                       sig.level = input$twogrp_pow_alpha,
+                                       alternative = input$twogrp_pow_sided)$power
+
+                text0 <- hr()
+                text1 <- h1("Results of this analysis")
+                text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+                text3 <- p(paste0("For a two-group comparison with event rates of ",
+                                format(p1*100, digits=2, nsmall=1), "% in Group 1 and ",
+                                format(p2*100, digits=2, nsmall=1), "% in Group 2, with sample sizes of n1 = ",
+                                n1, " and n2 = ", n2, ", the study has ",
+                                format(power*100, digits=1, nsmall=1), "% power to detect this difference at α = ",
+                                input$twogrp_pow_alpha, " (", input$twogrp_pow_sided, " test)."))
+                HTML(paste0(text0, text1, text2, text3))
+
+            } else if (input$tabset == "Sample Size (Two-Group)") {
+                p1 <- input$twogrp_ss_p1/100
+                p2 <- input$twogrp_ss_p2/100
+                power <- input$twogrp_ss_power/100
+
+                # Calculate sample size for group 1
+                n1 <- pwr.2p.test(h = ES.h(p1, p2), sig.level = input$twogrp_ss_alpha,
+                                 power = power, alternative = input$twogrp_ss_sided)$n
+                n2 <- n1 * input$twogrp_ss_ratio
+
+                text0 <- hr()
+                text1 <- h1("Results of this analysis")
+                text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+                text3 <- p(paste0("To detect a difference in event rates from ",
+                                format(p2*100, digits=2, nsmall=1), "% in Group 2 (control) to ",
+                                format(p1*100, digits=2, nsmall=1), "% in Group 1 (exposed/treatment) with ",
+                                format(power*100, digits=0, nsmall=0), "% power at α = ",
+                                input$twogrp_ss_alpha, " (", input$twogrp_ss_sided, " test), the required sample sizes are: Group 1: n1 = ",
+                                format(ceiling(n1), digits=0, nsmall=0), ", Group 2: n2 = ",
+                                format(ceiling(n2), digits=0, nsmall=0), " (total N = ",
+                                format(ceiling(n1 + n2), digits=0, nsmall=0), ")."))
+                HTML(paste0(text0, text1, text2, text3))
             }
-            else {
-                pwr.p.test(sig.level=0.05, power=input$ss_power/100, h = ES.h(1/input$ss_p, 0), alt="greater", n = NULL)$n
-            }
-            
-            power <- if(input$tabset == "Power"){
-                pwr.p.test(sig.level=0.05, power=NULL, h = ES.h(1/input$power_p, 0), alt="greater", n = input$power_n)$power
-            }
-            else {
-                input$ss_power/100
-            }
-            
-            discon <- if(input$tabset == "Power"){
-                input$power_discon/100
-            }
-            else {
-                input$ss_discon/100
-            }
-            
-            text0 <- hr()
-            text1 <- h1("Results of this analysis")
-            text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
-            text3 <- p(paste0("Based on the Binominal distribution and a true event incidence rate of 1 in ", format(incidence_rate, digits=0, nsmall=0), " (or ", format(1/incidence_rate, digits=2, nsmall=2), "%), ", format(ceiling(sample_size), digits=0, nsmall=0), " participants would be needed to observe at least one event with ", format(power*100, digits=0, nsmall=0), "% probability. Accounting for a possible withdrawal or discontinuation rate of ", format(discon*100, digits=0), "%, the target number of participants is set as ",format(ceiling((sample_size * (1+discon))), digits=0),"."))
-            HTML(paste0(text0, text1, text2, text3))
         })
     })
-    
-    ################################################################################################## PLOT TITLE
-    
-    output$figure_title <- renderUI({
+
+    ################################################################################################## EFFECT MEASURES (Two-Group only)
+
+    output$effect_measures <- renderUI({
         if (v$doAnalysis == FALSE) return()
-        
+        if (!grepl("Two-Group", input$tabset)) return()
+
         isolate({
-            incidence_rate <- ifelse(input$tabset == "Power", input$power_p, input$ss_p)
-            sample_size <- if(input$tabset == "Power"){
-                input$power_n
+            validate_inputs()
+
+            if (input$tabset == "Power (Two-Group)") {
+                p1 <- input$twogrp_pow_p1/100
+                p2 <- input$twogrp_pow_p2/100
+            } else {
+                p1 <- input$twogrp_ss_p1/100
+                p2 <- input$twogrp_ss_p2/100
             }
-            else {
-                pwr.p.test(sig.level=0.05, power=input$ss_power/100, h = ES.h(1/input$ss_p, 0), alt="greater", n = NULL)$n
-            }
-            text1 <- hr()
-            text2 <- h4(paste0("Estimated power for the given conditions at different sample sizes."))
+
+            # Calculate effect measures
+            risk_diff <- (p1 - p2) * 100
+            relative_risk <- p1 / p2
+            odds1 <- p1 / (1 - p1)
+            odds2 <- p2 / (1 - p2)
+            odds_ratio <- odds1 / odds2
+
+            text1 <- h4("Effect Measures")
+            text2 <- p(paste0(
+                "Risk Difference: ", format(risk_diff, digits=2, nsmall=2), " percentage points", br(),
+                "Relative Risk: ", format(relative_risk, digits=3, nsmall=3), br(),
+                "Odds Ratio: ", format(odds_ratio, digits=3, nsmall=3)
+            ))
+
             HTML(paste0(text1, text2))
         })
     })
-    
+
+    ################################################################################################## PLOT TITLE
+
+    output$figure_title <- renderUI({
+        if (v$doAnalysis == FALSE) return()
+
+        isolate({
+            text1 <- hr()
+            if (grepl("Two-Group", input$tabset)) {
+                text2 <- h4("Estimated power at different sample sizes (equal allocation).")
+            } else {
+                text2 <- h4("Estimated power for the given conditions at different sample sizes.")
+            }
+            HTML(paste0(text1, text2))
+        })
+    })
+
     ################################################################################################## POWER VS. SAMPLE SIZE PLOT
-    
+
     output$power_plot <- renderPlot({
         if (v$doAnalysis == FALSE) return()
-        
+
         isolate({
-            p.out <- if(input$tabset == "Power"){
-                pwr.p.test(sig.level=0.05, power=NULL, h = ES.h(1/input$power_p, 0), alt="greater", n = input$power_n)
+            validate_inputs()
+
+            if (input$tabset == "Power (Single)") {
+                p.out <- pwr.p.test(sig.level=input$power_alpha, power=NULL,
+                                   h = ES.h(1/input$power_p, 0), alt="greater", n = input$power_n)
+            } else if (input$tabset == "Sample Size (Single)") {
+                p.out <- pwr.p.test(sig.level=input$ss_alpha, power=input$ss_power/100,
+                                   h = ES.h(1/input$ss_p, 0), alt="greater", n = NULL)
+            } else if (input$tabset == "Power (Two-Group)") {
+                p1 <- input$twogrp_pow_p1/100
+                p2 <- input$twogrp_pow_p2/100
+                p.out <- pwr.2p.test(h = ES.h(p1, p2), sig.level = input$twogrp_pow_alpha,
+                                    power = NULL, n = input$twogrp_pow_n1, alternative = input$twogrp_pow_sided)
+            } else if (input$tabset == "Sample Size (Two-Group)") {
+                p1 <- input$twogrp_ss_p1/100
+                p2 <- input$twogrp_ss_p2/100
+                p.out <- pwr.2p.test(h = ES.h(p1, p2), sig.level = input$twogrp_ss_alpha,
+                                    power = input$twogrp_ss_power/100, alternative = input$twogrp_ss_sided)
             }
-            else {
-                pwr.p.test(sig.level=0.05, power=input$ss_power/100, h = ES.h(1/input$ss_p, 0), alt="greater", n = NULL)
-            }
-            
+
             plot(p.out)
         })
     }, width=600, height=400, res=100)
-    
-    ################################################################################################## TABLE HELP TEXT + TITLE
-    
+
+    ################################################################################################## TABLE TITLE
+
     output$table_title <- renderUI({
         if (v$doAnalysis == FALSE) return()
-        
+        if (grepl("Two-Group", input$tabset)) return()  # Only show for single proportion
+
         isolate({
-            incidence_rate <- ifelse(input$tabset == "Power", input$power_p, input$ss_p)
-            sample_size <- if(input$tabset == "Power"){
-                input$power_n
+            validate_inputs()
+
+            if (input$tabset == "Power (Single)") {
+                sample_size <- input$power_n
+            } else {
+                sample_size <- pwr.p.test(sig.level=input$ss_alpha, power=input$ss_power/100,
+                                         h = ES.h(1/input$ss_p, 0), alt="greater", n = NULL)$n
             }
-            else {
-                pwr.p.test(sig.level=0.05, power=input$ss_power/100, h = ES.h(1/input$ss_p, 0), alt="greater", n = NULL)$n
-            }
+
             text1 <- hr()
             text2 <- h5("In addition, if ", ceiling(sample_size), " participants are included, the event rate would be estimated to an accuracy shown in the table below:")
-            text3 <- h4(paste0("95% Confidence Interval around expected event rate(s) with a sample size of ", ceiling(sample_size), " participants."))
+            text3 <- h4(paste0("95% Confidence Interval around expected event rate(s) with a sample size of ",
+                              ceiling(sample_size), " participants."))
             HTML(paste0(text1, text2, text3))
         })
     })
-    
-    ################################################################################################## SAMPLE SIZE BY INCIDENCE RATE TABLE CONTENTS
-    
+
+    ################################################################################################## CONFIDENCE INTERVAL TABLE
+
     output$result_table <- renderDataTable({
         if (v$doAnalysis == FALSE) return()
-        
+        if (grepl("Two-Group", input$tabset)) return()  # Only show for single proportion
+
         isolate({
-            sample_size <- if(input$tabset == "Power"){
-                input$power_n
+            validate_inputs()
+
+            if (input$tabset == "Power (Single)") {
+                sample_size <- input$power_n
+            } else {
+                sample_size <- pwr.p.test(sig.level=input$ss_alpha, power=input$ss_power/100,
+                                         h = ES.h(1/input$ss_p, 0), alt="greater", n = NULL)$n
             }
-            else {
-                pwr.p.test(sig.level=0.05, power=input$ss_power/100, h = ES.h(1/input$ss_p, 0), alt="greater", n = NULL)$n
-            }
-            sequence <- unique(c(seq(0, 5), seq(10, 25, by=5), seq(50, min(round(sample_size, 0), 1000), by=50), seq(min(round(sample_size, 0), 1000), min(round(sample_size, 0), 10000), by=1000)))
+
+            sequence <- unique(c(seq(0, 5), seq(10, 25, by=5), seq(50, min(round(sample_size, 0), 1000), by=50),
+                               seq(min(round(sample_size, 0), 1000), min(round(sample_size, 0), 10000), by=1000)))
             bb <- lapply(sequence, function(n) {
                 binom.confint(n, sample_size, conf.level = 0.95, methods = "exact")
             })
-            
+
             table <- do.call(rbind, bb)
             table$length <- table$upper - table$lower
             var <- c("mean", "lower", "upper", "length")
@@ -201,68 +457,162 @@ server <- function(input, output) {
         list(title = 'Length')
     ), paging=TRUE, searching=FALSE, processing=FALSE)
     )
-    
-    ################################################################################################## TABLE FOOTER
-    
+
+    ################################################################################################## TABLE FOOTNOTES
+
     output$table_footnotes <- renderUI({
         if (v$doAnalysis == FALSE) return()
-        
+        if (grepl("Two-Group", input$tabset)) return()  # Only show for single proportion
+
         isolate({
             text1 <- h6("(1) Event rate (%) is estimated as a crude rate, defined as the number of participants exposed and experiencing the event of interest divided by the total number of participants.")
-            text2 <- h6("(2) Confidence interval (%) based on exact Clopper-Pearson exact method for one proportion.")
+            text2 <- h6("(2) Confidence interval (%) based on exact Clopper-Pearson method for one proportion.")
             HTML(paste0(text1, text2))
         })
     })
-    
-    ################################################################################################## DOWNLOAD / SAVE ANALYSIS AS PDF
-    
-    output$download_button <- renderUI({
+
+    ################################################################################################## DOWNLOAD BUTTONS
+
+    output$download_buttons <- renderUI({
         if (v$doAnalysis == FALSE) return()
+
         isolate({
             text1 <- hr()
-            text2 <- downloadButton('report', "Download Analysis [Experimental]")
-            text3 <- hr()
-            HTML(paste0(text1, " ", text2, " ", text3))
+            text2 <- downloadButton('report_pdf', "Download Analysis (PDF) [Experimental]")
+            text3 <- downloadButton('report_csv', "Download Results (CSV)", class = "btn-info")
+            text4 <- hr()
+            HTML(paste0(text1, " ", text2, " ", text3, " ", text4))
         })
     })
-    
-    output$report <- downloadHandler(
-        filename = paste('Rule-of-3-Anlaysis-', Sys.Date(), '.pdf', sep=''),
+
+    ################################################################################################## CSV DOWNLOAD
+
+    output$report_csv <- downloadHandler(
+        filename = function() {
+            paste('Power-Analysis-', input$tabset, '-', Sys.Date(), '.csv', sep='')
+        },
         content = function(file) {
-            incidence_rate <- ifelse(input$tabset == "Power", input$power_p, input$ss_p)
-            sample_size <- if(input$tabset == "Power"){
+            if (input$tabset == "Power (Single)") {
+                results <- data.frame(
+                    Analysis_Type = "Single Proportion - Power Calculation",
+                    Sample_Size = input$power_n,
+                    Event_Frequency_1_in = input$power_p,
+                    Event_Rate_Percent = 100/input$power_p,
+                    Power_Percent = pwr.p.test(sig.level=input$power_alpha, power=NULL,
+                                              h = ES.h(1/input$power_p, 0), alt="greater",
+                                              n = input$power_n)$power * 100,
+                    Significance_Level = input$power_alpha,
+                    Discontinuation_Rate_Percent = input$power_discon,
+                    Adjusted_Sample_Size = ceiling(input$power_n * (1 + input$power_discon/100)),
+                    Date = Sys.Date()
+                )
+            } else if (input$tabset == "Sample Size (Single)") {
+                sample_size <- pwr.p.test(sig.level=input$ss_alpha, power=input$ss_power/100,
+                                         h = ES.h(1/input$ss_p, 0), alt="greater", n = NULL)$n
+                results <- data.frame(
+                    Analysis_Type = "Single Proportion - Sample Size Calculation",
+                    Desired_Power_Percent = input$ss_power,
+                    Event_Frequency_1_in = input$ss_p,
+                    Event_Rate_Percent = 100/input$ss_p,
+                    Required_Sample_Size = ceiling(sample_size),
+                    Significance_Level = input$ss_alpha,
+                    Discontinuation_Rate_Percent = input$ss_discon,
+                    Adjusted_Sample_Size = ceiling(sample_size * (1 + input$ss_discon/100)),
+                    Date = Sys.Date()
+                )
+            } else if (input$tabset == "Power (Two-Group)") {
+                p1 <- input$twogrp_pow_p1/100
+                p2 <- input$twogrp_pow_p2/100
+                power <- pwr.2p2n.test(h = ES.h(p1, p2), n1 = input$twogrp_pow_n1, n2 = input$twogrp_pow_n2,
+                                       sig.level = input$twogrp_pow_alpha,
+                                       alternative = input$twogrp_pow_sided)$power
+                results <- data.frame(
+                    Analysis_Type = "Two-Group Comparison - Power Calculation",
+                    Sample_Size_Group1 = input$twogrp_pow_n1,
+                    Sample_Size_Group2 = input$twogrp_pow_n2,
+                    Event_Rate_Group1_Percent = input$twogrp_pow_p1,
+                    Event_Rate_Group2_Percent = input$twogrp_pow_p2,
+                    Power_Percent = power * 100,
+                    Significance_Level = input$twogrp_pow_alpha,
+                    Test_Type = input$twogrp_pow_sided,
+                    Risk_Difference = (p1 - p2) * 100,
+                    Relative_Risk = p1/p2,
+                    Odds_Ratio = (p1/(1-p1))/(p2/(1-p2)),
+                    Date = Sys.Date()
+                )
+            } else if (input$tabset == "Sample Size (Two-Group)") {
+                p1 <- input$twogrp_ss_p1/100
+                p2 <- input$twogrp_ss_p2/100
+                n1 <- pwr.2p.test(h = ES.h(p1, p2), sig.level = input$twogrp_ss_alpha,
+                                 power = input$twogrp_ss_power/100, alternative = input$twogrp_ss_sided)$n
+                n2 <- n1 * input$twogrp_ss_ratio
+                results <- data.frame(
+                    Analysis_Type = "Two-Group Comparison - Sample Size Calculation",
+                    Desired_Power_Percent = input$twogrp_ss_power,
+                    Event_Rate_Group1_Percent = input$twogrp_ss_p1,
+                    Event_Rate_Group2_Percent = input$twogrp_ss_p2,
+                    Required_Sample_Size_Group1 = ceiling(n1),
+                    Required_Sample_Size_Group2 = ceiling(n2),
+                    Total_Sample_Size = ceiling(n1 + n2),
+                    Allocation_Ratio = input$twogrp_ss_ratio,
+                    Significance_Level = input$twogrp_ss_alpha,
+                    Test_Type = input$twogrp_ss_sided,
+                    Risk_Difference = (p1 - p2) * 100,
+                    Relative_Risk = p1/p2,
+                    Odds_Ratio = (p1/(1-p1))/(p2/(1-p2)),
+                    Date = Sys.Date()
+                )
+            }
+
+            write.csv(results, file, row.names = FALSE)
+        }
+    )
+
+    ################################################################################################## PDF DOWNLOAD (original)
+
+    output$report_pdf <- downloadHandler(
+        filename = paste('Rule-of-3-Analysis-', Sys.Date(), '.pdf', sep=''),
+        content = function(file) {
+            # Only works for single proportion analyses
+            if (grepl("Two-Group", input$tabset)) {
+                showNotification("PDF export not yet available for two-group analyses. Please use CSV export.",
+                               type = "warning", duration = 5)
+                return()
+            }
+
+            incidence_rate <- ifelse(input$tabset == "Power (Single)", input$power_p, input$ss_p)
+            sample_size <- if(input$tabset == "Power (Single)"){
                 input$power_n
             }
             else {
-                pwr.p.test(sig.level=0.05, power=input$ss_power/100, h = ES.h(1/input$ss_p, 0), alt="greater", n = NULL)$n
+                pwr.p.test(sig.level=input$ss_alpha, power=input$ss_power/100,
+                          h = ES.h(1/input$ss_p, 0), alt="greater", n = NULL)$n
             }
-            
-            power <- if(input$tabset == "Power"){
-                pwr.p.test(sig.level=0.05, power=NULL, h = ES.h(1/input$power_p, 0), alt="greater", n = input$power_n)$power
+
+            power <- if(input$tabset == "Power (Single)"){
+                pwr.p.test(sig.level=input$power_alpha, power=NULL,
+                          h = ES.h(1/input$power_p, 0), alt="greater", n = input$power_n)$power
             }
             else {
                 input$ss_power/100
             }
-            
-            discon <- if(input$tabset == "Power"){
+
+            discon <- if(input$tabset == "Power (Single)"){
                 input$power_discon/100
             }
             else {
                 input$ss_discon/100
             }
-            
-            # Copy the report file to a temporary directory before processing it, in
-            # case we don't have write permissions to the current working dir (which
-            # can happen when deployed).
+
+            # Copy the report file to a temporary directory
             tempReport <- file.path(tempdir(), "analysis-report.Rmd")
             file.copy("analysis-report.Rmd", tempReport, overwrite = TRUE)
-            
+
             # Create a Progress object
             progress <- shiny::Progress$new(style = "notification")
-            # Make sure it closes when we exit this reactive, even if there's an error
             on.exit(progress$close())
             progress$set(message = "Creating Analysis Report File", value = 0)
-            
+
             # Set up parameters to pass to Rmd document
             params <- list(tabset         = input$tabset,
                            incidence_rate = incidence_rate,
@@ -271,34 +621,148 @@ server <- function(input, output) {
                            discon         = discon,
                            adj_n          = 100,
                            progress       = progress)
-            
-            
-            # Knit the document, passing in the `params` list, and eval it in a
-            # child of the global environment (this isolates the code in the document
-            # from the code in this app).
+
+            # Knit the document
             rmarkdown::render(tempReport, output_file = file,
                               params = params,
                               envir = new.env(parent = globalenv())
             )
-            # Increment the progress bar, and update the detail text.
             progress$inc(1/6, detail = "Done!")
+        }
+    )
+
+    ################################################################################################## SCENARIO COMPARISON
+
+    # Save current scenario
+    observeEvent(input$save_scenario, {
+        isolate({
+            if (v$doAnalysis == FALSE) return()
+
+            v$scenario_counter <- v$scenario_counter + 1
+
+            if (input$tabset == "Power (Single)") {
+                new_scenario <- data.frame(
+                    Scenario = v$scenario_counter,
+                    Type = "Single Prop - Power",
+                    Sample_Size = input$power_n,
+                    Event_Freq = paste0("1 in ", input$power_p),
+                    Power_Pct = round(pwr.p.test(sig.level=input$power_alpha, power=NULL,
+                                                 h = ES.h(1/input$power_p, 0), alt="greater",
+                                                 n = input$power_n)$power * 100, 1),
+                    Alpha = input$power_alpha,
+                    Disc_Rate = paste0(input$power_discon, "%"),
+                    Adj_N = ceiling(input$power_n * (1 + input$power_discon/100)),
+                    stringsAsFactors = FALSE
+                )
+            } else if (input$tabset == "Sample Size (Single)") {
+                sample_size <- pwr.p.test(sig.level=input$ss_alpha, power=input$ss_power/100,
+                                         h = ES.h(1/input$ss_p, 0), alt="greater", n = NULL)$n
+                new_scenario <- data.frame(
+                    Scenario = v$scenario_counter,
+                    Type = "Single Prop - SS",
+                    Sample_Size = ceiling(sample_size),
+                    Event_Freq = paste0("1 in ", input$ss_p),
+                    Power_Pct = input$ss_power,
+                    Alpha = input$ss_alpha,
+                    Disc_Rate = paste0(input$ss_discon, "%"),
+                    Adj_N = ceiling(sample_size * (1 + input$ss_discon/100)),
+                    stringsAsFactors = FALSE
+                )
+            } else if (input$tabset == "Power (Two-Group)") {
+                p1 <- input$twogrp_pow_p1/100
+                p2 <- input$twogrp_pow_p2/100
+                power <- pwr.2p2n.test(h = ES.h(p1, p2), n1 = input$twogrp_pow_n1, n2 = input$twogrp_pow_n2,
+                                       sig.level = input$twogrp_pow_alpha,
+                                       alternative = input$twogrp_pow_sided)$power
+                new_scenario <- data.frame(
+                    Scenario = v$scenario_counter,
+                    Type = "Two-Group - Power",
+                    n1 = input$twogrp_pow_n1,
+                    n2 = input$twogrp_pow_n2,
+                    p1_Pct = input$twogrp_pow_p1,
+                    p2_Pct = input$twogrp_pow_p2,
+                    Power_Pct = round(power * 100, 1),
+                    Alpha = input$twogrp_pow_alpha,
+                    Test = input$twogrp_pow_sided,
+                    RR = round(p1/p2, 3),
+                    OR = round((p1/(1-p1))/(p2/(1-p2)), 3),
+                    stringsAsFactors = FALSE
+                )
+            } else if (input$tabset == "Sample Size (Two-Group)") {
+                p1 <- input$twogrp_ss_p1/100
+                p2 <- input$twogrp_ss_p2/100
+                n1 <- pwr.2p.test(h = ES.h(p1, p2), sig.level = input$twogrp_ss_alpha,
+                                 power = input$twogrp_ss_power/100, alternative = input$twogrp_ss_sided)$n
+                n2 <- n1 * input$twogrp_ss_ratio
+                new_scenario <- data.frame(
+                    Scenario = v$scenario_counter,
+                    Type = "Two-Group - SS",
+                    n1 = ceiling(n1),
+                    n2 = ceiling(n2),
+                    p1_Pct = input$twogrp_ss_p1,
+                    p2_Pct = input$twogrp_ss_p2,
+                    Power_Pct = input$twogrp_ss_power,
+                    Alpha = input$twogrp_ss_alpha,
+                    Test = input$twogrp_ss_sided,
+                    RR = round(p1/p2, 3),
+                    OR = round((p1/(1-p1))/(p2/(1-p2)), 3),
+                    stringsAsFactors = FALSE
+                )
+            }
+
+            # Add to scenarios dataframe
+            if (nrow(v$scenarios) == 0) {
+                v$scenarios <- new_scenario
+            } else {
+                # Check if columns match, if not create new structure
+                if (all(names(new_scenario) == names(v$scenarios))) {
+                    v$scenarios <- rbind(v$scenarios, new_scenario)
+                } else {
+                    # Different analysis types - merge with common columns
+                    all_cols <- union(names(v$scenarios), names(new_scenario))
+                    for (col in all_cols) {
+                        if (!(col %in% names(v$scenarios))) v$scenarios[[col]] <- NA
+                        if (!(col %in% names(new_scenario))) new_scenario[[col]] <- NA
+                    }
+                    v$scenarios <- rbind(v$scenarios, new_scenario[names(v$scenarios)])
+                }
+            }
+
+            showNotification("Scenario saved! You can now compare multiple scenarios.",
+                           type = "message", duration = 3)
+        })
+    })
+
+    # Clear scenarios
+    observeEvent(input$clear_scenarios, {
+        v$scenarios <- data.frame()
+        v$scenario_counter <- 0
+        showNotification("All saved scenarios cleared.", type = "warning", duration = 3)
+    })
+
+    # Display scenario comparison
+    output$scenario_comparison <- renderUI({
+        if (nrow(v$scenarios) == 0) return()
+
+        tagList(
+            hr(),
+            h2("Saved Scenario Comparison"),
+            p("Below are the scenarios you have saved for comparison:"),
+            renderTable({v$scenarios}),
+            hr()
+        )
+    })
+
+    # Download scenario comparison
+    output$download_comparison <- downloadHandler(
+        filename = function() {
+            paste('Scenario-Comparison-', Sys.Date(), '.csv', sep='')
+        },
+        content = function(file) {
+            write.csv(v$scenarios, file, row.names = FALSE)
         }
     )
 }
 
-# Run the application 
+# Run the application
 shinyApp(ui = ui, server = server)
-
-
-
-
-# NOTES
-# The function tells us we should flip the coin 22.55127 times, which we round up to 23. Always round sample size estimates up. If we’re correct that our coin lands heads 75% of the time, we need to flip it at least 23 times to have an 80% chance of correctly rejecting the null hypothesis at the 0.05 significance level.
-# 
-# Notice that since we wanted to determine sample size (n), we left it out of the function. Our effect size is entered in the h argument. The label h is due to Cohen (1988). The function ES.h is used to calculate a unitless effect size using the arcsine transformation. (More on effect size below.) sig.level is the argument for our desired significance level. This is also sometimes referred to as our tolerance for a Type I error (α). power is our desired power. It is sometimes referred to as 1 - β, where β is Type II error. The alternative argument says we think the alternative is “greater” than the null, not just different.
-# 
-# Type I error, α, is the probability of rejecting the null hypothesis when it is true. This is thinking we have found an effect where none exist. This is considered the more serious error. Our tolerance for Type I error is usually 0.05 or lower.
-# 
-# Type II error, β, is the probability of failing to reject the null hypothesis when it is false. This is thinking there is no effect when in fact there is. Our tolerance for Type II error is usually 0.20 or lower. Type II error is 1 - Power. If we desire a power of 0.90, then we implicitly specify a Type II error tolerance of 0.10.
-# 
-# The pwr package provides a generic plot function that allows us to see how power changes as we change our sample size. If you have the ggplot2 package installed, it will create a plot using ggplot. Otherwise base R graphics are used.
