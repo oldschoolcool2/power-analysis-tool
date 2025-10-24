@@ -75,7 +75,7 @@ lapply(names(button_configs), function(tab_key) {
 1. **Package Management** - renv with lockfile (industry standard)
 2. **Performance Optimization** - bindCache(), debounce(), reactlog enabled
 3. **Testing Infrastructure** - testServer() tests, helper function tests
-4. **Button Handlers** - Data-driven, configuration-based (NEW!)
+4. **Button Handlers** - Data-driven, configuration-based
 5. **Validation** - Single source of truth with validate_inputs()
 6. **Helper Functions** - Well-extracted (calc_effect_measures, solve_n1_for_ratio)
 7. **Documentation** - Comprehensive CLAUDE.md with workflows

@@ -321,7 +321,7 @@ ui <- fluidPage(
           p(strong("Example:"), "Matched case-control study examining association between statin use and liver injury, matching on age, sex, and diabetes status.")
         ),
         accordion_panel(
-          title = "Continuous Outcomes (TIER 4 - NEW!)",
+          title = "Continuous Outcomes",
           icon = icon("calculator"),
           p("The Continuous Outcomes tabs handle power and sample size calculations for comparing continuous endpoints between two groups using two-sample t-tests."),
           p(strong("Use cases:"), "Comparisons involving continuous measures such as BMI, blood pressure, lab values (HbA1c, cholesterol), quality of life scores, cognitive function tests, and biomarker levels."),
@@ -329,7 +329,7 @@ ui <- fluidPage(
           p(strong("Example:"), "Comparing mean HbA1c reduction between two diabetes medications in an RWE study using EHR data.")
         ),
         accordion_panel(
-          title = "Non-Inferiority Testing (TIER 4 - NEW!)",
+          title = "Non-Inferiority Testing",
           icon = icon("balance-scale"),
           p("Non-inferiority trials aim to demonstrate that a new treatment is 'not worse' than a reference treatment by more than a pre-specified margin. This is common in generic drug approval, biosimilar studies, and situations where superiority is not expected or ethical."),
           p(strong("Non-inferiority margin:"), "The maximum clinically acceptable difference in outcomes. Should be based on clinical judgment and regulatory guidance. Typically smaller than expected treatment effect of reference."),
@@ -1178,13 +1178,13 @@ server <- function(input, output, session) {
             floor(input$twogrp_pow_n1 * 4),
             length.out = 100
           )
-          pow <- sapply(n1_seq, function(n1) {
+          pow <- vapply(n1_seq, function(n1) {
             pwr.2p2n.test(
               h = ES.h(p1, p2), n1 = n1, n2 = n1 * ratio,
               sig.level = input$twogrp_pow_alpha,
               alternative = input$twogrp_pow_sided
             )$power
-          })
+          }, FUN.VALUE = numeric(1))
 
           plot(n1_seq, pow,
             type = "l", lwd = 2, col = "darkblue",
@@ -1204,13 +1204,13 @@ server <- function(input, output, session) {
 
           # Generate power curve varying n1
           n1_seq <- seq(5, 2000, length.out = 100)
-          pow <- sapply(n1_seq, function(n1) {
+          pow <- vapply(n1_seq, function(n1) {
             pwr.2p2n.test(
               h = ES.h(p1, p2), n1 = n1, n2 = n1 * ratio,
               sig.level = input$twogrp_ss_alpha,
               alternative = input$twogrp_ss_sided
             )$power
-          })
+          }, FUN.VALUE = numeric(1))
 
           plot(n1_seq, pow,
             type = "l", lwd = 2, col = "darkblue",
@@ -1241,9 +1241,9 @@ server <- function(input, output, session) {
 
           # Generate sample size range
           n_range <- seq(from = max(50, current_n * 0.5), to = current_n * 2, length.out = 50)
-          power_vals <- sapply(n_range, function(n) {
+          power_vals <- vapply(n_range, function(n) {
             powerEpi(n = n, theta = hr, k = k, pE = pE, RR = hr, alpha = alpha)
-          })
+          }, FUN.VALUE = numeric(1))
 
           # Create plot
           plot(n_range, power_vals,

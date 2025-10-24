@@ -10,8 +10,8 @@ A comprehensive R Shiny application for calculating statistical power and sample
 2. **Two-Group Comparisons** - Cohort studies, case-control studies, comparative effectiveness
 3. **Survival Analysis** (Cox Regression) - Time-to-event outcomes using Schoenfeld method
 4. **Matched Case-Control** - Propensity score matching, traditional matching designs
-5. **Continuous Outcomes** (t-tests) - **TIER 4 NEW!** Lab values, biomarkers, QoL scores
-6. **Non-Inferiority Testing** - **TIER 4 NEW!** Generic approval, biosimilar studies
+5. **Continuous Outcomes** (t-tests) - Lab values, biomarkers, QoL scores
+6. **Non-Inferiority Testing** - Generic approval, biosimilar studies
 
 ### Key Capabilities
 
@@ -109,7 +109,7 @@ shiny::runApp("app.R")
 
 ### Version 5.0 - Tier 4 Advanced Statistical Methods (Current)
 
-**NEW TIER 4 FEATURES:**
+**KEY FEATURES:**
 1. ✅ **Continuous Outcomes (t-tests)** - Two new tabs
    - Power calculation for continuous endpoints
    - Sample size calculation with unequal allocation
