@@ -80,6 +80,24 @@
       "Version": "3.2.1.1",
       "Source": "Repository",
       "Repository": "CRAN"
+    },
+    "plotly": {
+      "Package": "plotly",
+      "Version": "4.10.4",
+      "Source": "Repository",
+      "Repository": "CRAN"
+    },
+    "ggplot2": {
+      "Package": "ggplot2",
+      "Version": "3.5.1",
+      "Source": "Repository",
+      "Repository": "CRAN"
+    },
+    "PSweight": {
+      "Package": "PSweight",
+      "Version": "1.1.8",
+      "Source": "Repository",
+      "Repository": "CRAN"
     }
   }
 }
