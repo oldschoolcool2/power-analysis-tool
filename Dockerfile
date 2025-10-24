@@ -3,17 +3,13 @@ FROM rocker/shiny:4.4.0
 USER root
 
 # Install system dependencies for building R packages
+# Only including dependencies actually needed by packages in renv.lock
 RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libssl-dev \
     libcurl4-openssl-dev \
     libharfbuzz-dev \
     libfribidi-dev \
-    libabsl-dev \
-    libudunits2-dev \
-    libgdal-dev \
-    libgeos-dev \
-    libproj-dev \
     cmake \
     && rm -rf /var/lib/apt/lists/*
 
@@ -58,6 +54,8 @@ RUN mkdir -p /srv/shiny-server/app_cache && \
 # This layer rebuilds on every code change but uses cached dependencies
 COPY --chown=shiny:shiny app.R app.R
 COPY --chown=shiny:shiny analysis-report.Rmd analysis-report.Rmd
+COPY --chown=shiny:shiny R/ R/
+COPY --chown=shiny:shiny www/ www/
 COPY --chown=shiny:shiny tests/ tests/
 
 USER shiny

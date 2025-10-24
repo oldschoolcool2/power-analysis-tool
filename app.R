@@ -17,6 +17,10 @@ library(epiR)
 library(plotly)
 library(ggplot2)
 
+# Source UI helper functions
+source("R/sidebar_ui.R")
+source("R/input_components.R")
+
 # Define UI
 ui <- fluidPage(
   # Modern bslib theme for mobile responsiveness
@@ -32,392 +36,631 @@ ui <- fluidPage(
   tags$head(
     tags$link(rel = "stylesheet", type = "text/css", href = "css/design-tokens.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "css/modern-theme.css"),
-    tags$link(rel = "stylesheet", type = "text/css", href = "css/responsive.css")
+    tags$link(rel = "stylesheet", type = "text/css", href = "css/input-components.css"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "css/responsive.css"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "css/sidebar.css"),
+    tags$script(src = "js/sidebar-navigation.js"),
+    tags$style(HTML("
+      /* Button group enhancements */
+      .btn-group-custom {
+        display: flex;
+        gap: var(--space-2);
+        margin-top: var(--space-3);
+      }
+      .btn-group-custom .btn {
+        flex: 1;
+      }
+
+      /* Content card styling */
+      .content-card {
+        background: var(--bg-card);
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--shadow-md);
+        padding: var(--space-6);
+        margin-bottom: var(--space-6);
+      }
+
+      /* Page title */
+      .page-title {
+        font-size: var(--font-size-2xl);
+        font-weight: var(--font-weight-bold);
+        color: var(--text-primary);
+        margin-bottom: var(--space-6);
+        padding-bottom: var(--space-4);
+        border-bottom: var(--border-subtle);
+      }
+    "))
   ),
 
-  # Application title
-  titlePanel("Statistical Power Analysis Tool for Real-World Evidence"),
+  # App Container with Sidebar + Main Content
+  div(class = "app-container",
 
-  # Sidebar with inputs
-  sidebarLayout(
-    sidebarPanel(
-      tabsetPanel(
-        id = "tabset",
-        # TAB 1: Single Proportion Power
-        tabPanel(
-          "Power (Single)",
-          h4("Single Proportion Analysis"),
-          helpText("Calculate power for detecting a single event rate (e.g., post-marketing surveillance)"),
-          hr(),
-          numericInput("power_n", "Available Sample Size:", 230, min = 1, step = 1),
-          bsTooltip("power_n", "Total number of participants available for the study", "right"),
-          numericInput("power_p", "Event Frequency (1 in x):", 100, min = 1, step = 1),
-          bsTooltip("power_p", "Expected frequency of the event. E.g., 100 means 1 event per 100 participants", "right"),
-          sliderInput("power_discon", "Withdrawal/Discontinuation Rate (%):", min = 0, max = 50, value = 10, step = 1),
-          bsTooltip("power_discon", "Expected percentage of participants who will withdraw or discontinue", "right"),
-          sliderInput("power_alpha", "Significance Level (α):", min = 0.01, max = 0.10, value = 0.05, step = 0.01),
-          bsTooltip("power_alpha", "Type I error rate (typically 0.05). Lower values are more conservative.", "right"),
-          hr(),
-          actionButton("example_power_single", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
-          actionButton("reset_power_single", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
-        ),
+    # Hierarchical Sidebar Navigation
+    create_sidebar_nav(),
 
-        # TAB 2: Single Proportion Sample Size
-        tabPanel(
-          "Sample Size (Single)",
-          h4("Single Proportion Analysis"),
-          helpText("Calculate required sample size to achieve desired power"),
-          hr(),
-          sliderInput("ss_power", "Desired Power (%):", min = 50, max = 99, value = 80, step = 1),
-          bsTooltip("ss_power", "Probability of detecting the effect if it exists (typically 80% or 90%)", "right"),
-          numericInput("ss_p", "Event Frequency (1 in x):", 100, min = 1, step = 1),
-          bsTooltip("ss_p", "Expected frequency of the event. E.g., 100 means 1 event per 100 participants", "right"),
-          sliderInput("ss_discon", "Withdrawal/Discontinuation Rate (%):", min = 0, max = 50, value = 10, step = 1),
-          bsTooltip("ss_discon", "Expected percentage of participants who will withdraw or discontinue", "right"),
-          sliderInput("ss_alpha", "Significance Level (α):", min = 0.01, max = 0.10, value = 0.05, step = 0.01),
-          bsTooltip("ss_alpha", "Type I error rate (typically 0.05). Lower values are more conservative.", "right"),
-          hr(),
-          actionButton("example_ss_single", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
-          actionButton("reset_ss_single", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
-        ),
+    # Main Content Wrapper
+    div(class = "main-content-wrapper",
+      div(class = "main-content",
 
-        # TAB 3: Two-Group Power
-        tabPanel(
-          "Power (Two-Group)",
-          h4("Two-Group Comparison"),
-          helpText("Calculate power for comparing two proportions (e.g., exposed vs. unexposed in cohort studies)"),
-          hr(),
-          numericInput("twogrp_pow_n1", "Sample Size Group 1:", 200, min = 1, step = 1),
-          numericInput("twogrp_pow_n2", "Sample Size Group 2:", 200, min = 1, step = 1),
-          bsTooltip("twogrp_pow_n1", "Number of participants in exposed/treatment group", "right"),
-          bsTooltip("twogrp_pow_n2", "Number of participants in unexposed/control group", "right"),
-          numericInput("twogrp_pow_p1", "Event Rate Group 1 (%):", 10, min = 0, max = 100, step = 0.1),
-          numericInput("twogrp_pow_p2", "Event Rate Group 2 (%):", 5, min = 0, max = 100, step = 0.1),
-          bsTooltip("twogrp_pow_p1", "Expected event rate in exposed/treatment group (as percentage)", "right"),
-          bsTooltip("twogrp_pow_p2", "Expected event rate in unexposed/control group (as percentage)", "right"),
-          sliderInput("twogrp_pow_alpha", "Significance Level (α):", min = 0.01, max = 0.10, value = 0.05, step = 0.01),
-          bsTooltip("twogrp_pow_alpha", "Type I error rate (typically 0.05)", "right"),
-          radioButtons("twogrp_pow_sided", "Test Type:",
-            choices = c("Two-sided" = "two.sided", "One-sided" = "greater"),
-            selected = "two.sided"
+        # ============================================================
+        # INPUT PANELS (Conditional based on sidebar selection)
+        # ============================================================
+
+        div(class = "content-card",
+
+          # PAGE 1: Single Proportion - Power Analysis
+          conditionalPanel(
+            condition = "input.sidebar_page == 'power_single' || input.sidebar_page == null",
+            h2(class = "page-title", "Single Proportion: Power Analysis"),
+            helpText("Calculate power for detecting a single event rate (e.g., post-marketing surveillance)"),
+            hr(),
+            numericInput("power_n", "Available Sample Size:", 230, min = 1, step = 1),
+            bsTooltip("power_n", "Total number of participants available for the study", "right"),
+            numericInput("power_p", "Event Frequency (1 in x):", 100, min = 1, step = 1),
+            bsTooltip("power_p", "Expected frequency of the event. E.g., 100 means 1 event per 100 participants", "right"),
+            create_enhanced_slider("power_discon", "Withdrawal/Discontinuation Rate (%):",
+                                  min = 0, max = 50, value = 10, step = 1, post = "%",
+                                  tooltip = "Expected percentage of participants who will withdraw or discontinue"),
+            create_segmented_alpha("power_alpha", "Significance Level (α):",
+                                  selected = 0.05,
+                                  tooltip = "Type I error rate (typically 0.05). Lower values are more conservative."),
+            hr(),
+            div(class = "btn-group-custom",
+              actionButton("example_power_single", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
+              actionButton("reset_power_single", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
+            )
           ),
-          bsTooltip("twogrp_pow_sided", "Two-sided: test if groups differ. One-sided: test if Group 1 > Group 2", "right"),
-          hr(),
-          actionButton("example_twogrp_pow", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
-          actionButton("reset_twogrp_pow", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
-        ),
 
-        # TAB 4: Two-Group Sample Size
-        tabPanel(
-          "Sample Size (Two-Group)",
-          h4("Two-Group Comparison"),
-          helpText("Calculate required sample size per group to achieve desired power"),
-          hr(),
-          sliderInput("twogrp_ss_power", "Desired Power (%):", min = 50, max = 99, value = 80, step = 1),
-          bsTooltip("twogrp_ss_power", "Probability of detecting the effect if it exists", "right"),
-          numericInput("twogrp_ss_p1", "Event Rate Group 1 (%):", 10, min = 0, max = 100, step = 0.1),
-          numericInput("twogrp_ss_p2", "Event Rate Group 2 (%):", 5, min = 0, max = 100, step = 0.1),
-          bsTooltip("twogrp_ss_p1", "Expected event rate in exposed/treatment group (as percentage)", "right"),
-          bsTooltip("twogrp_ss_p2", "Expected event rate in unexposed/control group (as percentage)", "right"),
-          numericInput("twogrp_ss_ratio", "Allocation Ratio (n2/n1):", 1, min = 0.1, max = 10, step = 0.1),
-          bsTooltip("twogrp_ss_ratio", "Ratio of Group 2 to Group 1 sample size. 1 = equal groups, 2 = twice as many in Group 2", "right"),
-          sliderInput("twogrp_ss_alpha", "Significance Level (α):", min = 0.01, max = 0.10, value = 0.05, step = 0.01),
-          bsTooltip("twogrp_ss_alpha", "Type I error rate (typically 0.05)", "right"),
-          radioButtons("twogrp_ss_sided", "Test Type:",
-            choices = c("Two-sided" = "two.sided", "One-sided" = "greater"),
-            selected = "two.sided"
+          # PAGE 2: Single Proportion - Sample Size
+          conditionalPanel(
+            condition = "input.sidebar_page == 'ss_single'",
+            h2(class = "page-title", "Single Proportion: Sample Size Calculation"),
+            helpText("Calculate required sample size OR minimal detectable effect size"),
+            hr(),
+            radioButtons("ss_single_calc_mode",
+              "Calculation Mode:",
+              choices = c(
+                "Calculate Sample Size (given effect size)" = "calc_n",
+                "Calculate Effect Size (given sample size)" = "calc_effect"
+              ),
+              selected = "calc_n"
+            ),
+            bsTooltip("ss_single_calc_mode",
+              "Choose whether to calculate required sample size or minimal detectable effect size",
+              "right"
+            ),
+            hr(),
+            create_segmented_power("ss_power", "Desired Power:",
+                                  selected = 80,
+                                  tooltip = "Probability of detecting the effect if it exists (typically 80% or 90%)"),
+            conditionalPanel(
+              condition = "input.ss_single_calc_mode == 'calc_n'",
+              numericInput("ss_p", "Event Frequency (1 in x):", 100, min = 1, step = 1),
+              bsTooltip("ss_p", "Expected frequency of the event. E.g., 100 means 1 event per 100 participants", "right")
+            ),
+            conditionalPanel(
+              condition = "input.ss_single_calc_mode == 'calc_effect'",
+              numericInput("ss_n_fixed", "Available Sample Size:", 500, min = 10, step = 1),
+              bsTooltip("ss_n_fixed", "Fixed sample size available for the study", "right")
+            ),
+            create_enhanced_slider("ss_discon", "Withdrawal/Discontinuation Rate (%):",
+                                  min = 0, max = 50, value = 10, step = 1, post = "%",
+                                  tooltip = "Expected percentage of participants who will withdraw or discontinue"),
+            create_segmented_alpha("ss_alpha", "Significance Level (α):",
+                                  selected = 0.05,
+                                  tooltip = "Type I error rate (typically 0.05). Lower values are more conservative."),
+            hr(),
+            checkboxInput("adjust_missing_ss_single", "Adjust for Missing Data", value = FALSE),
+            conditionalPanel(
+              condition = "input.adjust_missing_ss_single",
+              create_enhanced_slider("missing_pct_ss_single", "Expected Missingness (%):",
+                                    min = 5, max = 50, value = 20, step = 5, post = "%",
+                                    tooltip = "Percentage of participants with missing exposure, outcome, or covariate data"),
+              radioButtons("missing_mechanism_ss_single",
+                "Missing Data Mechanism:",
+                choices = c(
+                  "MCAR (Missing Completely At Random)" = "mcar",
+                  "MAR (Missing At Random)" = "mar",
+                  "MNAR (Missing Not At Random)" = "mnar"
+                ),
+                selected = "mar"
+              ),
+              bsTooltip("missing_mechanism_ss_single",
+                "MCAR: minimal bias. MAR: controllable with observed data. MNAR: potential substantial bias",
+                "right"
+              )
+            ),
+            hr(),
+            div(class = "btn-group-custom",
+              actionButton("example_ss_single", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
+              actionButton("reset_ss_single", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
+            )
           ),
-          hr(),
-          actionButton("example_twogrp_ss", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
-          actionButton("reset_twogrp_ss", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
-        ),
 
-        # TAB 5: Survival Analysis Power
-        tabPanel(
-          "Power (Survival)",
-          h4("Survival Analysis (Cox Regression)"),
-          helpText("Calculate power for time-to-event outcomes using Cox regression (common in RWE studies)"),
-          hr(),
-          numericInput("surv_pow_n", "Total Sample Size:", 500, min = 10, step = 10),
-          bsTooltip("surv_pow_n", "Total number of participants in the study", "right"),
-          numericInput("surv_pow_hr", "Hazard Ratio (HR):", 0.7, min = 0.01, max = 10, step = 0.05),
-          bsTooltip("surv_pow_hr", "Expected hazard ratio (HR < 1 indicates protective effect, HR > 1 indicates risk)", "right"),
-          sliderInput("surv_pow_k", "Proportion Exposed (%):", min = 10, max = 90, value = 50, step = 5),
-          bsTooltip("surv_pow_k", "Proportion of participants in the exposed/treatment group", "right"),
-          sliderInput("surv_pow_pE", "Overall Event Rate (%):", min = 5, max = 95, value = 30, step = 5),
-          bsTooltip("surv_pow_pE", "Expected proportion of participants experiencing the event during follow-up", "right"),
-          sliderInput("surv_pow_alpha", "Significance Level (α):", min = 0.01, max = 0.10, value = 0.05, step = 0.01),
-          bsTooltip("surv_pow_alpha", "Type I error rate (typically 0.05)", "right"),
-          hr(),
-          actionButton("example_surv_pow", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
-          actionButton("reset_surv_pow", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
-        ),
-
-        # TAB 6: Survival Analysis Sample Size
-        tabPanel(
-          "Sample Size (Survival)",
-          h4("Survival Analysis (Cox Regression)"),
-          helpText("Calculate required sample size for time-to-event analysis"),
-          hr(),
-          sliderInput("surv_ss_power", "Desired Power (%):", min = 50, max = 99, value = 80, step = 1),
-          bsTooltip("surv_ss_power", "Probability of detecting the effect if it exists", "right"),
-          numericInput("surv_ss_hr", "Hazard Ratio (HR):", 0.7, min = 0.01, max = 10, step = 0.05),
-          bsTooltip("surv_ss_hr", "Expected hazard ratio to detect", "right"),
-          sliderInput("surv_ss_k", "Proportion Exposed (%):", min = 10, max = 90, value = 50, step = 5),
-          bsTooltip("surv_ss_k", "Proportion of participants in the exposed/treatment group", "right"),
-          sliderInput("surv_ss_pE", "Overall Event Rate (%):", min = 5, max = 95, value = 30, step = 5),
-          bsTooltip("surv_ss_pE", "Expected proportion of participants experiencing the event during follow-up", "right"),
-          sliderInput("surv_ss_alpha", "Significance Level (α):", min = 0.01, max = 0.10, value = 0.05, step = 0.01),
-          bsTooltip("surv_ss_alpha", "Type I error rate (typically 0.05)", "right"),
-          hr(),
-          actionButton("example_surv_ss", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
-          actionButton("reset_surv_ss", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
-        ),
-
-        # TAB 7: Matched Case-Control
-        tabPanel(
-          "Matched Case-Control",
-          h4("Matched Case-Control Study"),
-          helpText("Calculate sample size for matched case-control studies (e.g., propensity score matching)"),
-          hr(),
-          sliderInput("match_power", "Desired Power (%):", min = 50, max = 99, value = 80, step = 1),
-          bsTooltip("match_power", "Probability of detecting the effect if it exists", "right"),
-          numericInput("match_or", "Odds Ratio (OR):", 2.0, min = 0.01, max = 20, step = 0.1),
-          bsTooltip("match_or", "Expected odds ratio to detect (OR < 1 protective, OR > 1 risk factor)", "right"),
-          sliderInput("match_p0", "Exposure Probability in Controls (%):", min = 5, max = 95, value = 20, step = 5),
-          bsTooltip("match_p0", "Expected proportion of controls exposed to the risk factor", "right"),
-          numericInput("match_ratio", "Controls per Case:", 1, min = 1, max = 5, step = 1),
-          bsTooltip("match_ratio", "Number of matched controls per case (typically 1:1, 2:1, or 3:1)", "right"),
-          sliderInput("match_alpha", "Significance Level (α):", min = 0.01, max = 0.10, value = 0.05, step = 0.01),
-          bsTooltip("match_alpha", "Type I error rate (typically 0.05)", "right"),
-          radioButtons("match_sided", "Test Type:",
-            choices = c("Two-sided" = "two.sided", "One-sided" = "one.sided"),
-            selected = "two.sided"
+          # PAGE 3: Two-Group - Power Analysis
+          conditionalPanel(
+            condition = "input.sidebar_page == 'power_twogrp'",
+            h2(class = "page-title", "Two-Group Comparison: Power Analysis"),
+            helpText("Calculate power for comparing two proportions (e.g., exposed vs. unexposed in cohort studies)"),
+            hr(),
+            numericInput("twogrp_pow_n1", "Sample Size Group 1:", 200, min = 1, step = 1),
+            numericInput("twogrp_pow_n2", "Sample Size Group 2:", 200, min = 1, step = 1),
+            bsTooltip("twogrp_pow_n1", "Number of participants in exposed/treatment group", "right"),
+            bsTooltip("twogrp_pow_n2", "Number of participants in unexposed/control group", "right"),
+            numericInput("twogrp_pow_p1", "Event Rate Group 1 (%):", 10, min = 0, max = 100, step = 0.1),
+            numericInput("twogrp_pow_p2", "Event Rate Group 2 (%):", 5, min = 0, max = 100, step = 0.1),
+            bsTooltip("twogrp_pow_p1", "Expected event rate in exposed/treatment group (as percentage)", "right"),
+            bsTooltip("twogrp_pow_p2", "Expected event rate in unexposed/control group (as percentage)", "right"),
+            create_segmented_alpha("twogrp_pow_alpha", "Significance Level (α):",
+                                  selected = 0.05,
+                                  tooltip = "Type I error rate (typically 0.05)"),
+            radioButtons("twogrp_pow_sided", "Test Type:",
+              choices = c("Two-sided" = "two.sided", "One-sided" = "greater"),
+              selected = "two.sided"
+            ),
+            bsTooltip("twogrp_pow_sided", "Two-sided: test if groups differ. One-sided: test if Group 1 > Group 2", "right"),
+            hr(),
+            div(class = "btn-group-custom",
+              actionButton("example_twogrp_pow", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
+              actionButton("reset_twogrp_pow", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
+            )
           ),
-          bsTooltip("match_sided", "Two-sided: test if groups differ. One-sided: test directional hypothesis", "right"),
-          hr(),
-          actionButton("example_match", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
-          actionButton("reset_match", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
-        ),
 
-        # TAB 8: Continuous Outcomes - Power (TIER 4)
-        tabPanel(
-          "Power (Continuous)",
-          h4("Continuous Outcomes (t-test)"),
-          helpText("Calculate power for comparing means between two groups (e.g., BMI, blood pressure, QoL scores)"),
-          hr(),
-          numericInput("cont_pow_n1", "Sample Size Group 1:", 100, min = 2, step = 1),
-          numericInput("cont_pow_n2", "Sample Size Group 2:", 100, min = 2, step = 1),
-          bsTooltip("cont_pow_n1", "Number of participants in treatment/exposed group", "right"),
-          bsTooltip("cont_pow_n2", "Number of participants in control/unexposed group", "right"),
-          numericInput("cont_pow_d", "Effect Size (Cohen's d):", 0.5, min = 0.01, max = 5, step = 0.1),
-          bsTooltip("cont_pow_d", "Standardized mean difference: Small=0.2, Medium=0.5, Large=0.8", "right"),
-          sliderInput("cont_pow_alpha", "Significance Level (α):", min = 0.01, max = 0.10, value = 0.05, step = 0.01),
-          bsTooltip("cont_pow_alpha", "Type I error rate (typically 0.05)", "right"),
-          radioButtons("cont_pow_sided", "Test Type:",
-            choices = c("Two-sided" = "two.sided", "One-sided (greater)" = "greater", "One-sided (less)" = "less"),
-            selected = "two.sided"
+          # PAGE 4: Two-Group - Sample Size
+          conditionalPanel(
+            condition = "input.sidebar_page == 'ss_twogrp'",
+            h2(class = "page-title", "Two-Group Comparison: Sample Size Calculation"),
+            helpText("Calculate required sample size per group to achieve desired power"),
+            hr(),
+            create_segmented_power("twogrp_ss_power", "Desired Power:",
+                                  selected = 80,
+                                  tooltip = "Probability of detecting the effect if it exists"),
+            numericInput("twogrp_ss_p1", "Event Rate Group 1 (%):", 10, min = 0, max = 100, step = 0.1),
+            numericInput("twogrp_ss_p2", "Event Rate Group 2 (%):", 5, min = 0, max = 100, step = 0.1),
+            bsTooltip("twogrp_ss_p1", "Expected event rate in exposed/treatment group (as percentage)", "right"),
+            bsTooltip("twogrp_ss_p2", "Expected event rate in unexposed/control group (as percentage)", "right"),
+            numericInput("twogrp_ss_ratio", "Allocation Ratio (n2/n1):", 1, min = 0.1, max = 10, step = 0.1),
+            bsTooltip("twogrp_ss_ratio", "Ratio of Group 2 to Group 1 sample size. 1 = equal groups, 2 = twice as many in Group 2", "right"),
+            create_segmented_alpha("twogrp_ss_alpha", "Significance Level (α):",
+                                  selected = 0.05,
+                                  tooltip = "Type I error rate (typically 0.05)"),
+            radioButtons("twogrp_ss_sided", "Test Type:",
+              choices = c("Two-sided" = "two.sided", "One-sided" = "greater"),
+              selected = "two.sided"
+            ),
+            hr(),
+            checkboxInput("adjust_missing_twogrp_ss", "Adjust for Missing Data", value = FALSE),
+            conditionalPanel(
+              condition = "input.adjust_missing_twogrp_ss",
+              create_enhanced_slider("missing_pct_twogrp_ss", "Expected Missingness (%):",
+                                    min = 5, max = 50, value = 20, step = 5, post = "%",
+                                    tooltip = "Percentage of participants with missing exposure, outcome, or covariate data"),
+              radioButtons("missing_mechanism_twogrp_ss",
+                "Missing Data Mechanism:",
+                choices = c(
+                  "MCAR (Missing Completely At Random)" = "mcar",
+                  "MAR (Missing At Random)" = "mar",
+                  "MNAR (Missing Not At Random)" = "mnar"
+                ),
+                selected = "mar"
+              ),
+              bsTooltip("missing_mechanism_twogrp_ss",
+                "MCAR: minimal bias. MAR: controllable with observed data. MNAR: potential substantial bias",
+                "right"
+              )
+            ),
+            hr(),
+            div(class = "btn-group-custom",
+              actionButton("example_twogrp_ss", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
+              actionButton("reset_twogrp_ss", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
+            )
           ),
-          bsTooltip("cont_pow_sided", "Two-sided: test if groups differ. One-sided: test directional hypothesis", "right"),
-          hr(),
-          actionButton("example_cont_pow", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
-          actionButton("reset_cont_pow", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
-        ),
 
-        # TAB 9: Continuous Outcomes - Sample Size (TIER 4)
-        tabPanel(
-          "Sample Size (Continuous)",
-          h4("Continuous Outcomes (t-test)"),
-          helpText("Calculate required sample size to detect a difference in means"),
-          hr(),
-          sliderInput("cont_ss_power", "Desired Power (%):", min = 50, max = 99, value = 80, step = 1),
-          bsTooltip("cont_ss_power", "Probability of detecting the effect if it exists", "right"),
-          numericInput("cont_ss_d", "Effect Size (Cohen's d):", 0.5, min = 0.01, max = 5, step = 0.1),
-          bsTooltip("cont_ss_d", "Standardized mean difference: Small=0.2, Medium=0.5, Large=0.8", "right"),
-          numericInput("cont_ss_ratio", "Allocation Ratio (n2/n1):", 1, min = 0.1, max = 10, step = 0.1),
-          bsTooltip("cont_ss_ratio", "Ratio of Group 2 to Group 1 sample size. 1 = equal groups", "right"),
-          sliderInput("cont_ss_alpha", "Significance Level (α):", min = 0.01, max = 0.10, value = 0.05, step = 0.01),
-          bsTooltip("cont_ss_alpha", "Type I error rate (typically 0.05)", "right"),
-          radioButtons("cont_ss_sided", "Test Type:",
-            choices = c("Two-sided" = "two.sided", "One-sided (greater)" = "greater", "One-sided (less)" = "less"),
-            selected = "two.sided"
+          # PAGE 5: Survival Analysis - Power Analysis
+          conditionalPanel(
+            condition = "input.sidebar_page == 'power_survival'",
+            h2(class = "page-title", "Survival Analysis (Cox): Power Analysis"),
+            helpText("Calculate power for time-to-event outcomes using Cox regression (common in RWE studies)"),
+            hr(),
+            numericInput("surv_pow_n", "Total Sample Size:", 500, min = 10, step = 10),
+            bsTooltip("surv_pow_n", "Total number of participants in the study", "right"),
+            numericInput("surv_pow_hr", "Hazard Ratio (HR):", 0.7, min = 0.01, max = 10, step = 0.05),
+            bsTooltip("surv_pow_hr", "Expected hazard ratio (HR < 1 indicates protective effect, HR > 1 indicates risk)", "right"),
+            create_enhanced_slider("surv_pow_k", "Proportion Exposed (%):",
+                                  min = 10, max = 90, value = 50, step = 5, post = "%",
+                                  tooltip = "Proportion of participants in the exposed/treatment group"),
+            create_enhanced_slider("surv_pow_pE", "Overall Event Rate (%):",
+                                  min = 5, max = 95, value = 30, step = 5, post = "%",
+                                  tooltip = "Expected proportion of participants experiencing the event during follow-up"),
+            create_segmented_alpha("surv_pow_alpha", "Significance Level (α):",
+                                  selected = 0.05,
+                                  tooltip = "Type I error rate (typically 0.05)"),
+            hr(),
+            div(class = "btn-group-custom",
+              actionButton("example_surv_pow", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
+              actionButton("reset_surv_pow", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
+            )
           ),
-          hr(),
-          actionButton("example_cont_ss", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
-          actionButton("reset_cont_ss", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
-        ),
 
-        # TAB 10: Non-Inferiority Testing (TIER 4)
-        tabPanel(
-          "Non-Inferiority",
-          h4("Non-Inferiority Testing"),
-          helpText("Calculate sample size for non-inferiority trials (common in generic/biosimilar studies)"),
-          hr(),
-          sliderInput("noninf_power", "Desired Power (%):", min = 50, max = 99, value = 80, step = 1),
-          bsTooltip("noninf_power", "Probability of demonstrating non-inferiority if true", "right"),
-          numericInput("noninf_p1", "Event Rate Test Group (%):", 10, min = 0, max = 100, step = 0.1),
-          numericInput("noninf_p2", "Event Rate Reference Group (%):", 10, min = 0, max = 100, step = 0.1),
-          bsTooltip("noninf_p1", "Expected event rate in test/generic group (as percentage)", "right"),
-          bsTooltip("noninf_p2", "Expected event rate in reference/branded group (as percentage)", "right"),
-          numericInput("noninf_margin", "Non-Inferiority Margin (%):", 5, min = 0.1, max = 50, step = 0.5),
-          bsTooltip("noninf_margin", "Maximum clinically acceptable difference (percentage points). Test is non-inferior if difference < margin.", "right"),
-          numericInput("noninf_ratio", "Allocation Ratio (n2/n1):", 1, min = 0.1, max = 10, step = 0.1),
-          bsTooltip("noninf_ratio", "Ratio of Reference to Test group size. 1 = equal groups", "right"),
-          sliderInput("noninf_alpha", "Significance Level (α):", min = 0.01, max = 0.10, value = 0.025, step = 0.005),
-          bsTooltip("noninf_alpha", "Type I error rate (typically 0.025 for one-sided non-inferiority test)", "right"),
-          hr(),
-          actionButton("example_noninf", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
-          actionButton("reset_noninf", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
-        )
-      ),
-      hr(),
-      actionButton("go", "Calculate", class = "btn-primary btn-lg"),
-      hr(),
-      # Scenario comparison buttons
-      conditionalPanel(
-        condition = "output.show_results",
-        actionButton("save_scenario", "Save Current Scenario", class = "btn-success"),
-        bsTooltip("save_scenario", "Save this analysis to compare with other scenarios", "right"),
-        br(), br(),
-        actionButton("clear_scenarios", "Clear Saved Scenarios", class = "btn-warning"),
-        conditionalPanel(
-          condition = "output.has_scenarios",
-          br(), br(),
-          downloadButton("download_comparison", "Download Scenario Comparison (CSV)")
-        )
-      )
-    ),
-
-    # Main panel with results
-    mainPanel(
-      h1("About this tool"),
-      p("This tool provides power and sample size calculations for epidemiological studies, with a focus on real-world evidence (RWE) applications in pharmaceutical research. Use the sidebar tabs to select your study design and fill in the parameters."),
-
-      # Collapsible help sections using accordion
-      accordion(
-        id = "help_accordion",
-        multiple = TRUE,
-        accordion_panel(
-          title = "Single Proportion Analysis (Rule of Three)",
-          icon = icon("info-circle"),
-          p("The 'Rule of Three' states that if a certain event did not occur in a sample with n participants, the interval from 0 to 3/n is a 95% confidence interval for the rate of occurrences in the population. When n is greater than 30, this is a good approximation."),
-          p(strong("Example:"), "If a drug is tested on 1,500 participants and no adverse event is recorded, we can conclude with 95% confidence that fewer than 1 person in 500 (or 3/1500 = 0.2%) will experience an adverse event."),
-          p(strong("Use cases:"), "Post-marketing surveillance, rare adverse event detection, safety studies."),
-          p(a("Learn more in Hanley & Lippman-Hand (1983)", href = "Hanley-1983-1743.pdf", target = "_blank"))
-        ),
-        accordion_panel(
-          title = "Two-Group Comparisons",
-          icon = icon("users"),
-          p("For comparative effectiveness research and observational studies, use the Two-Group tabs to compare event rates between exposed/unexposed groups or treatment/control groups."),
-          p(strong("Study designs:"), "Cohort studies (prospective or retrospective), comparative effectiveness studies, RCTs."),
-          p(strong("Effect measures:"), "The tool calculates Risk Difference, Relative Risk (RR), and Odds Ratio (OR) to help interpret clinical significance."),
-          p(strong("Example:"), "Comparing hospitalization rates between patients prescribed Drug A vs. Drug B using claims data.")
-        ),
-        accordion_panel(
-          title = "Survival Analysis (Cox Regression)",
-          icon = icon("chart-line"),
-          p("Survival analysis is used for time-to-event outcomes, which are extremely common in pharmaceutical RWE studies (e.g., time to hospitalization, time to disease progression, time to death)."),
-          p(strong("Method:"), "Uses the Schoenfeld (1983) method for Cox proportional hazards regression, implemented in the powerSurvEpi R package."),
-          p(strong("Key inputs:"), "Hazard Ratio (HR), proportion exposed, overall event rate during follow-up."),
-          p(strong("Example:"), "Estimating sample size to detect a 30% reduction in risk of cardiovascular events (HR = 0.7) in a cohort study.")
-        ),
-        accordion_panel(
-          title = "Matched Case-Control Studies",
-          icon = icon("link"),
-          p("The Matched Case-Control tab provides sample size calculations for studies using matching strategies, such as propensity score matching or traditional case-control matching."),
-          p(strong("When to use:"), "When cases and controls are matched on confounding variables (age, sex, comorbidities, etc.)."),
-          p(strong("Matching ratios:"), "Supports 1:1, 2:1, 3:1, or higher matching ratios (controls per case)."),
-          p(strong("Example:"), "Matched case-control study examining association between statin use and liver injury, matching on age, sex, and diabetes status.")
-        ),
-        accordion_panel(
-          title = "Continuous Outcomes",
-          icon = icon("calculator"),
-          p("The Continuous Outcomes tabs handle power and sample size calculations for comparing continuous endpoints between two groups using two-sample t-tests."),
-          p(strong("Use cases:"), "Comparisons involving continuous measures such as BMI, blood pressure, lab values (HbA1c, cholesterol), quality of life scores, cognitive function tests, and biomarker levels."),
-          p(strong("Effect size (Cohen's d):"), "Standardized mean difference. Conventionally: Small = 0.2, Medium = 0.5, Large = 0.8. Calculate as (mean1 - mean2) / pooled_SD."),
-          p(strong("Example:"), "Comparing mean HbA1c reduction between two diabetes medications in an RWE study using EHR data.")
-        ),
-        accordion_panel(
-          title = "Non-Inferiority Testing",
-          icon = icon("balance-scale"),
-          p("Non-inferiority trials aim to demonstrate that a new treatment is 'not worse' than a reference treatment by more than a pre-specified margin. This is common in generic drug approval, biosimilar studies, and situations where superiority is not expected or ethical."),
-          p(strong("Non-inferiority margin:"), "The maximum clinically acceptable difference in outcomes. Should be based on clinical judgment and regulatory guidance. Typically smaller than expected treatment effect of reference."),
-          p(strong("Regulatory context:"), "FDA/EMA require pre-specification of non-inferiority margin with clinical justification. One-sided α=0.025 (equivalent to two-sided α=0.05) is standard."),
-          p(strong("Example:"), "Demonstrating a generic formulation has adverse event rates no worse than branded drug +5 percentage points.")
-        ),
-        accordion_panel(
-          title = "Regulatory Guidance & References",
-          icon = icon("book"),
-          h5("FDA/EMA Guidance on RWE"),
-          tags$ul(
-            tags$li(a("FDA - Real-World Evidence Framework",
-              href = "https://www.fda.gov/science-research/science-and-research-special-topics/real-world-evidence",
-              target = "_blank"
-            )),
-            tags$li(a("FDA - Use of Real-World Evidence (2023)",
-              href = "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/real-world-data-assessing-electronic-health-records-and-medical-claims-data-support-regulatory",
-              target = "_blank"
-            )),
-            tags$li(a("EMA - Real World Evidence Framework",
-              href = "https://www.ema.europa.eu/en/about-us/how-we-work/big-data/real-world-evidence",
-              target = "_blank"
-            ))
+          # PAGE 6: Survival Analysis - Sample Size
+          conditionalPanel(
+            condition = "input.sidebar_page == 'ss_survival'",
+            h2(class = "page-title", "Survival Analysis (Cox): Sample Size Calculation"),
+            helpText("Calculate required sample size for time-to-event analysis"),
+            hr(),
+            create_segmented_power("surv_ss_power", "Desired Power:",
+                                  selected = 80,
+                                  tooltip = "Probability of detecting the effect if it exists"),
+            numericInput("surv_ss_hr", "Hazard Ratio (HR):", 0.7, min = 0.01, max = 10, step = 0.05),
+            bsTooltip("surv_ss_hr", "Expected hazard ratio to detect", "right"),
+            create_enhanced_slider("surv_ss_k", "Proportion Exposed (%):",
+                                  min = 10, max = 90, value = 50, step = 5, post = "%",
+                                  tooltip = "Proportion of participants in the exposed/treatment group"),
+            create_enhanced_slider("surv_ss_pE", "Overall Event Rate (%):",
+                                  min = 5, max = 95, value = 30, step = 5, post = "%",
+                                  tooltip = "Expected proportion of participants experiencing the event during follow-up"),
+            create_segmented_alpha("surv_ss_alpha", "Significance Level (α):",
+                                  selected = 0.05,
+                                  tooltip = "Type I error rate (typically 0.05)"),
+            hr(),
+            checkboxInput("adjust_missing_surv_ss", "Adjust for Missing Data", value = FALSE),
+            conditionalPanel(
+              condition = "input.adjust_missing_surv_ss",
+              create_enhanced_slider("missing_pct_surv_ss", "Expected Missingness (%):",
+                                    min = 5, max = 50, value = 20, step = 5, post = "%",
+                                    tooltip = "Percentage of participants with missing exposure, outcome, or covariate data"),
+              radioButtons("missing_mechanism_surv_ss",
+                "Missing Data Mechanism:",
+                choices = c(
+                  "MCAR (Missing Completely At Random)" = "mcar",
+                  "MAR (Missing At Random)" = "mar",
+                  "MNAR (Missing Not At Random)" = "mnar"
+                ),
+                selected = "mar"
+              ),
+              bsTooltip("missing_mechanism_surv_ss",
+                "MCAR: minimal bias. MAR: controllable with observed data. MNAR: potential substantial bias",
+                "right"
+              )
+            ),
+            hr(),
+            div(class = "btn-group-custom",
+              actionButton("example_surv_ss", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
+              actionButton("reset_surv_ss", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
+            )
           ),
-          h5("Key Statistical References"),
-          tags$ul(
-            tags$li("Hanley JA, Lippman-Hand A. If nothing goes wrong, is everything all right? Interpreting zero numerators. JAMA. 1983;249(13):1743-1745."),
-            tags$li("Schoenfeld DA. Sample-size formula for the proportional-hazards regression model. Biometrics. 1983;39(2):499-503."),
-            tags$li("Cohen J. Statistical Power Analysis for the Behavioral Sciences. 2nd ed. Routledge; 1988."),
-            tags$li("Lachin JM. Introduction to sample size determination and power analysis for clinical trials. Control Clin Trials. 1981;2(2):93-113.")
+
+          # PAGE 7: Matched Case-Control
+          conditionalPanel(
+            condition = "input.sidebar_page == 'match_casecontrol'",
+            h2(class = "page-title", "Matched Case-Control Study"),
+            helpText("Calculate sample size for matched case-control studies (e.g., propensity score matching)"),
+            hr(),
+            create_segmented_power("match_power", "Desired Power:",
+                                  selected = 80,
+                                  tooltip = "Probability of detecting the effect if it exists"),
+            numericInput("match_or", "Odds Ratio (OR):", 2.0, min = 0.01, max = 20, step = 0.1),
+            bsTooltip("match_or", "Expected odds ratio to detect (OR < 1 protective, OR > 1 risk factor)", "right"),
+            create_enhanced_slider("match_p0", "Exposure Probability in Controls (%):",
+                                  min = 5, max = 95, value = 20, step = 5, post = "%",
+                                  tooltip = "Expected proportion of controls exposed to the risk factor"),
+            numericInput("match_ratio", "Controls per Case:", 1, min = 1, max = 5, step = 1),
+            bsTooltip("match_ratio", "Number of matched controls per case (typically 1:1, 2:1, or 3:1)", "right"),
+            create_segmented_alpha("match_alpha", "Significance Level (α):",
+                                  selected = 0.05,
+                                  tooltip = "Type I error rate (typically 0.05)"),
+            radioButtons("match_sided", "Test Type:",
+              choices = c("Two-sided" = "two.sided", "One-sided" = "one.sided"),
+              selected = "two.sided"
+            ),
+            bsTooltip("match_sided", "Two-sided: test if groups differ. One-sided: test directional hypothesis", "right"),
+            hr(),
+            checkboxInput("adjust_missing_match", "Adjust for Missing Data", value = FALSE),
+            conditionalPanel(
+              condition = "input.adjust_missing_match",
+              create_enhanced_slider("missing_pct_match", "Expected Missingness (%):",
+                                    min = 5, max = 50, value = 20, step = 5, post = "%",
+                                    tooltip = "Percentage of participants with missing exposure, outcome, or covariate data"),
+              radioButtons("missing_mechanism_match",
+                "Missing Data Mechanism:",
+                choices = c(
+                  "MCAR (Missing Completely At Random)" = "mcar",
+                  "MAR (Missing At Random)" = "mar",
+                  "MNAR (Missing Not At Random)" = "mnar"
+                ),
+                selected = "mar"
+              ),
+              bsTooltip("missing_mechanism_match",
+                "MCAR: minimal bias. MAR: controllable with observed data. MNAR: potential substantial bias",
+                "right"
+              )
+            ),
+            hr(),
+            div(class = "btn-group-custom",
+              actionButton("example_match", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
+              actionButton("reset_match", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
+            )
+          ),
+
+          # PAGE 8: Continuous Outcomes - Power Analysis
+          conditionalPanel(
+            condition = "input.sidebar_page == 'power_continuous'",
+            h2(class = "page-title", "Continuous Outcomes (t-test): Power Analysis"),
+            helpText("Calculate power for comparing means between two groups (e.g., BMI, blood pressure, QoL scores)"),
+            hr(),
+            numericInput("cont_pow_n1", "Sample Size Group 1:", 100, min = 2, step = 1),
+            numericInput("cont_pow_n2", "Sample Size Group 2:", 100, min = 2, step = 1),
+            bsTooltip("cont_pow_n1", "Number of participants in treatment/exposed group", "right"),
+            bsTooltip("cont_pow_n2", "Number of participants in control/unexposed group", "right"),
+            numericInput("cont_pow_d", "Effect Size (Cohen's d):", 0.5, min = 0.01, max = 5, step = 0.1),
+            bsTooltip("cont_pow_d", "Standardized mean difference: Small=0.2, Medium=0.5, Large=0.8", "right"),
+            create_segmented_alpha("cont_pow_alpha", "Significance Level (α):",
+                                  selected = 0.05,
+                                  tooltip = "Type I error rate (typically 0.05)"),
+            radioButtons("cont_pow_sided", "Test Type:",
+              choices = c("Two-sided" = "two.sided", "One-sided (greater)" = "greater", "One-sided (less)" = "less"),
+              selected = "two.sided"
+            ),
+            bsTooltip("cont_pow_sided", "Two-sided: test if groups differ. One-sided: test directional hypothesis", "right"),
+            hr(),
+            div(class = "btn-group-custom",
+              actionButton("example_cont_pow", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
+              actionButton("reset_cont_pow", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
+            )
+          ),
+
+          # PAGE 9: Continuous Outcomes - Sample Size
+          conditionalPanel(
+            condition = "input.sidebar_page == 'ss_continuous'",
+            h2(class = "page-title", "Continuous Outcomes (t-test): Sample Size Calculation"),
+            helpText("Calculate required sample size to detect a difference in means"),
+            hr(),
+            create_segmented_power("cont_ss_power", "Desired Power:",
+                                  selected = 80,
+                                  tooltip = "Probability of detecting the effect if it exists"),
+            numericInput("cont_ss_d", "Effect Size (Cohen's d):", 0.5, min = 0.01, max = 5, step = 0.1),
+            bsTooltip("cont_ss_d", "Standardized mean difference: Small=0.2, Medium=0.5, Large=0.8", "right"),
+            numericInput("cont_ss_ratio", "Allocation Ratio (n2/n1):", 1, min = 0.1, max = 10, step = 0.1),
+            bsTooltip("cont_ss_ratio", "Ratio of Group 2 to Group 1 sample size. 1 = equal groups", "right"),
+            create_segmented_alpha("cont_ss_alpha", "Significance Level (α):",
+                                  selected = 0.05,
+                                  tooltip = "Type I error rate (typically 0.05)"),
+            radioButtons("cont_ss_sided", "Test Type:",
+              choices = c("Two-sided" = "two.sided", "One-sided (greater)" = "greater", "One-sided (less)" = "less"),
+              selected = "two.sided"
+            ),
+            hr(),
+            checkboxInput("adjust_missing_cont_ss", "Adjust for Missing Data", value = FALSE),
+            conditionalPanel(
+              condition = "input.adjust_missing_cont_ss",
+              create_enhanced_slider("missing_pct_cont_ss", "Expected Missingness (%):",
+                                    min = 5, max = 50, value = 20, step = 5, post = "%",
+                                    tooltip = "Percentage of participants with missing exposure, outcome, or covariate data"),
+              radioButtons("missing_mechanism_cont_ss",
+                "Missing Data Mechanism:",
+                choices = c(
+                  "MCAR (Missing Completely At Random)" = "mcar",
+                  "MAR (Missing At Random)" = "mar",
+                  "MNAR (Missing Not At Random)" = "mnar"
+                ),
+                selected = "mar"
+              ),
+              bsTooltip("missing_mechanism_cont_ss",
+                "MCAR: minimal bias. MAR: controllable with observed data. MNAR: potential substantial bias",
+                "right"
+              )
+            ),
+            hr(),
+            div(class = "btn-group-custom",
+              actionButton("example_cont_ss", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
+              actionButton("reset_cont_ss", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
+            )
+          ),
+
+          # PAGE 10: Non-Inferiority Testing
+          conditionalPanel(
+            condition = "input.sidebar_page == 'noninf'",
+            h2(class = "page-title", "Non-Inferiority Testing"),
+            helpText("Calculate sample size for non-inferiority trials (common in generic/biosimilar studies)"),
+            hr(),
+            create_segmented_power("noninf_power", "Desired Power:",
+                                  selected = 80,
+                                  tooltip = "Probability of demonstrating non-inferiority if true"),
+            numericInput("noninf_p1", "Event Rate Test Group (%):", 10, min = 0, max = 100, step = 0.1),
+            numericInput("noninf_p2", "Event Rate Reference Group (%):", 10, min = 0, max = 100, step = 0.1),
+            bsTooltip("noninf_p1", "Expected event rate in test/generic group (as percentage)", "right"),
+            bsTooltip("noninf_p2", "Expected event rate in reference/branded group (as percentage)", "right"),
+            numericInput("noninf_margin", "Non-Inferiority Margin (%):", 5, min = 0.1, max = 50, step = 0.5),
+            bsTooltip("noninf_margin", "Maximum clinically acceptable difference (percentage points). Test is non-inferior if difference < margin.", "right"),
+            numericInput("noninf_ratio", "Allocation Ratio (n2/n1):", 1, min = 0.1, max = 10, step = 0.1),
+            bsTooltip("noninf_ratio", "Ratio of Reference to Test group size. 1 = equal groups", "right"),
+            create_segmented_alpha("noninf_alpha", "Significance Level (α):",
+                                  choices = c("0.01" = 0.01, "0.025" = 0.025, "0.05" = 0.05, "0.10" = 0.10),
+                                  selected = 0.025,
+                                  tooltip = "Type I error rate (typically 0.025 for one-sided non-inferiority test)"),
+            hr(),
+            checkboxInput("adjust_missing_noninf", "Adjust for Missing Data", value = FALSE),
+            conditionalPanel(
+              condition = "input.adjust_missing_noninf",
+              create_enhanced_slider("missing_pct_noninf", "Expected Missingness (%):",
+                                    min = 5, max = 50, value = 20, step = 5, post = "%",
+                                    tooltip = "Percentage of participants with missing exposure, outcome, or covariate data"),
+              radioButtons("missing_mechanism_noninf",
+                "Missing Data Mechanism:",
+                choices = c(
+                  "MCAR (Missing Completely At Random)" = "mcar",
+                  "MAR (Missing At Random)" = "mar",
+                  "MNAR (Missing Not At Random)" = "mnar"
+                ),
+                selected = "mar"
+              ),
+              bsTooltip("missing_mechanism_noninf",
+                "MCAR: minimal bias. MAR: controllable with observed data. MNAR: potential substantial bias",
+                "right"
+              )
+            ),
+            hr(),
+            div(class = "btn-group-custom",
+              actionButton("example_noninf", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
+              actionButton("reset_noninf", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
+            )
+          )
+
+        ), # End of input cards
+
+        # ============================================================
+        # CALCULATE BUTTON (always visible)
+        # ============================================================
+
+        hr(),
+        actionButton("go", "Calculate", icon = icon("calculator"), class = "btn-primary btn-lg w-100"),
+        hr(),
+
+        # ============================================================
+        # HELP SECTIONS & RESULTS (always visible)
+        # ============================================================
+
+        h1("About this tool"),
+        p("This tool provides power and sample size calculations for epidemiological studies, with a focus on real-world evidence (RWE) applications in pharmaceutical research. Use the sidebar navigation to select your study design and fill in the parameters."),
+
+        # Collapsible help sections using accordion
+        accordion(
+          id = "help_accordion",
+          multiple = TRUE,
+          accordion_panel(
+            title = "Single Proportion Analysis (Rule of Three)",
+            icon = icon("info-circle"),
+            p("The 'Rule of Three' states that if a certain event did not occur in a sample with n participants, the interval from 0 to 3/n is a 95% confidence interval for the rate of occurrences in the population. When n is greater than 30, this is a good approximation."),
+            p(strong("Example:"), "If a drug is tested on 1,500 participants and no adverse event is recorded, we can conclude with 95% confidence that fewer than 1 person in 500 (or 3/1500 = 0.2%) will experience an adverse event."),
+            p(strong("Use cases:"), "Post-marketing surveillance, rare adverse event detection, safety studies."),
+            p(a("Learn more in Hanley & Lippman-Hand (1983)", href = "Hanley-1983-1743.pdf", target = "_blank"))
+          ),
+          accordion_panel(
+            title = "Two-Group Comparisons",
+            icon = icon("users"),
+            p("For comparative effectiveness research and observational studies, use the Two-Group tabs to compare event rates between exposed/unexposed groups or treatment/control groups."),
+            p(strong("Study designs:"), "Cohort studies (prospective or retrospective), comparative effectiveness studies, RCTs."),
+            p(strong("Effect measures:"), "The tool calculates Risk Difference, Relative Risk (RR), and Odds Ratio (OR) to help interpret clinical significance."),
+            p(strong("Example:"), "Comparing hospitalization rates between patients prescribed Drug A vs. Drug B using claims data.")
+          ),
+          accordion_panel(
+            title = "Survival Analysis (Cox Regression)",
+            icon = icon("chart-line"),
+            p("Survival analysis is used for time-to-event outcomes, which are extremely common in pharmaceutical RWE studies (e.g., time to hospitalization, time to disease progression, time to death)."),
+            p(strong("Method:"), "Uses the Schoenfeld (1983) method for Cox proportional hazards regression, implemented in the powerSurvEpi R package."),
+            p(strong("Key inputs:"), "Hazard Ratio (HR), proportion exposed, overall event rate during follow-up."),
+            p(strong("Example:"), "Estimating sample size to detect a 30% reduction in risk of cardiovascular events (HR = 0.7) in a cohort study.")
+          ),
+          accordion_panel(
+            title = "Matched Case-Control Studies",
+            icon = icon("link"),
+            p("The Matched Case-Control tab provides sample size calculations for studies using matching strategies, such as propensity score matching or traditional case-control matching."),
+            p(strong("When to use:"), "When cases and controls are matched on confounding variables (age, sex, comorbidities, etc.)."),
+            p(strong("Matching ratios:"), "Supports 1:1, 2:1, 3:1, or higher matching ratios (controls per case)."),
+            p(strong("Example:"), "Matched case-control study examining association between statin use and liver injury, matching on age, sex, and diabetes status.")
+          ),
+          accordion_panel(
+            title = "Continuous Outcomes",
+            icon = icon("calculator"),
+            p("The Continuous Outcomes tabs handle power and sample size calculations for comparing continuous endpoints between two groups using two-sample t-tests."),
+            p(strong("Use cases:"), "Comparisons involving continuous measures such as BMI, blood pressure, lab values (HbA1c, cholesterol), quality of life scores, cognitive function tests, and biomarker levels."),
+            p(strong("Effect size (Cohen's d):"), "Standardized mean difference. Conventionally: Small = 0.2, Medium = 0.5, Large = 0.8. Calculate as (mean1 - mean2) / pooled_SD."),
+            p(strong("Example:"), "Comparing mean HbA1c reduction between two diabetes medications in an RWE study using EHR data.")
+          ),
+          accordion_panel(
+            title = "Non-Inferiority Testing",
+            icon = icon("balance-scale"),
+            p("Non-inferiority trials aim to demonstrate that a new treatment is 'not worse' than a reference treatment by more than a pre-specified margin. This is common in generic drug approval, biosimilar studies, and situations where superiority is not expected or ethical."),
+            p(strong("Non-inferiority margin:"), "The maximum clinically acceptable difference in outcomes. Should be based on clinical judgment and regulatory guidance. Typically smaller than expected treatment effect of reference."),
+            p(strong("Regulatory context:"), "FDA/EMA require pre-specification of non-inferiority margin with clinical justification. One-sided α=0.025 (equivalent to two-sided α=0.05) is standard."),
+            p(strong("Example:"), "Demonstrating a generic formulation has adverse event rates no worse than branded drug +5 percentage points.")
+          ),
+          accordion_panel(
+            title = "Regulatory Guidance & References",
+            icon = icon("book"),
+            h5("FDA/EMA Guidance on RWE"),
+            tags$ul(
+              tags$li(a("FDA - Real-World Evidence Framework",
+                href = "https://www.fda.gov/science-research/science-and-research-special-topics/real-world-evidence",
+                target = "_blank"
+              )),
+              tags$li(a("FDA - Use of Real-World Evidence (2023)",
+                href = "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/real-world-data-assessing-electronic-health-records-and-medical-claims-data-support-regulatory",
+                target = "_blank"
+              )),
+              tags$li(a("EMA - Real World Evidence Framework",
+                href = "https://www.ema.europa.eu/en/about-us/how-we-work/big-data/real-world-evidence",
+                target = "_blank"
+              ))
+            ),
+            h5("Key Statistical References"),
+            tags$ul(
+              tags$li("Hanley JA, Lippman-Hand A. If nothing goes wrong, is everything all right? Interpreting zero numerators. JAMA. 1983;249(13):1743-1745."),
+              tags$li("Schoenfeld DA. Sample-size formula for the proportional-hazards regression model. Biometrics. 1983;39(2):499-503."),
+              tags$li("Cohen J. Statistical Power Analysis for the Behavioral Sciences. 2nd ed. Routledge; 1988."),
+              tags$li("Lachin JM. Introduction to sample size determination and power analysis for clinical trials. Control Clin Trials. 1981;2(2):93-113.")
+            )
+          ),
+          accordion_panel(
+            title = "Interpretation Guide",
+            icon = icon("question-circle"),
+            h5("Understanding Power"),
+            p("Power is the probability of detecting a true effect when it exists. Conventionally:"),
+            tags$ul(
+              tags$li(strong("80% power:"), "Standard for most studies"),
+              tags$li(strong("90% power:"), "Preferred for pivotal or confirmatory studies"),
+              tags$li(strong("<70% power:"), "Generally considered inadequate")
+            ),
+            h5("Understanding Significance Level (α)"),
+            tags$ul(
+              tags$li(strong("α = 0.05:"), "Standard for most studies (5% false positive rate)"),
+              tags$li(strong("α = 0.01:"), "More conservative, used for multiple testing or critical decisions"),
+              tags$li(strong("α = 0.10:"), "Sometimes used in exploratory studies")
+            ),
+            h5("Effect Sizes"),
+            tags$ul(
+              tags$li(strong("Hazard Ratio (HR):"), "HR < 1 = protective, HR > 1 = increased risk, HR = 1 = no effect"),
+              tags$li(strong("Odds Ratio (OR):"), "Similar interpretation to HR for rare outcomes"),
+              tags$li(strong("Relative Risk (RR):"), "More intuitive than OR; directly interpretable as relative increase/decrease in risk")
+            )
           )
         ),
-        accordion_panel(
-          title = "Interpretation Guide",
-          icon = icon("question-circle"),
-          h5("Understanding Power"),
-          p("Power is the probability of detecting a true effect when it exists. Conventionally:"),
-          tags$ul(
-            tags$li(strong("80% power:"), "Standard for most studies"),
-            tags$li(strong("90% power:"), "Preferred for pivotal or confirmatory studies"),
-            tags$li(strong("<70% power:"), "Generally considered inadequate")
-          ),
-          h5("Understanding Significance Level (α)"),
-          tags$ul(
-            tags$li(strong("α = 0.05:"), "Standard for most studies (5% false positive rate)"),
-            tags$li(strong("α = 0.01:"), "More conservative, used for multiple testing or critical decisions"),
-            tags$li(strong("α = 0.10:"), "Sometimes used in exploratory studies")
-          ),
-          h5("Effect Sizes"),
-          tags$ul(
-            tags$li(strong("Hazard Ratio (HR):"), "HR < 1 = protective, HR > 1 = increased risk, HR = 1 = no effect"),
-            tags$li(strong("Odds Ratio (OR):"), "Similar interpretation to HR for rare outcomes"),
-            tags$li(strong("Relative Risk (RR):"), "More intuitive than OR; directly interpretable as relative increase/decrease in risk")
-          )
-        )
-      ),
-      hr(),
+        hr(),
 
-      # Live preview (debounced)
-      uiOutput("live_preview"),
+        # Live preview (debounced)
+        uiOutput("live_preview"),
 
-      # Results section
-      uiOutput("result_text"),
-      uiOutput("effect_measures"),
-      uiOutput("figure_title"),
-      plotOutput("power_plot"),
-      uiOutput("table_title"),
-      dataTableOutput("result_table"),
-      uiOutput("table_footnotes"),
-      uiOutput("download_buttons"),
+        # Results section
+        uiOutput("result_text"),
+        uiOutput("effect_measures"),
+        uiOutput("figure_title"),
+        plotlyOutput("power_plot", height = "500px"),
+        uiOutput("table_title"),
+        dataTableOutput("result_table"),
+        uiOutput("table_footnotes"),
+        uiOutput("download_buttons"),
 
-      # Scenario comparison section
-      uiOutput("scenario_comparison")
-    )
-  )
+        # Scenario comparison section
+        uiOutput("scenario_comparison")
+      ) # End of main-content
+    ) # End of main-content-wrapper
+  ) # End of app-container
 )
 
 # Define server logic
 server <- function(input, output, session) {
+
+  # ============================================================
+  # Sidebar Navigation Initialization
+  # ============================================================
+
+  # Initialize sidebar page to default (power_single)
+  observe({
+    if (is.null(input$sidebar_page)) {
+      session$sendCustomMessage("set_active_page", "power_single")
+    }
+  })
+
   # Helper function: safely calculate effect measures (avoid division by zero)
   calc_effect_measures <- function(p1, p2) {
     risk_diff <- (p1 - p2) * 100
@@ -455,6 +698,48 @@ server <- function(input, output, session) {
         warning("Root-finding failed; using equal-n approximation")
         pwr.2p.test(h = h, sig.level = sig.level, power = power, alternative = alternative)$n
       }
+    )
+  }
+
+  # Helper function: inflate sample size for missing data (Tier 1 Enhancement)
+  calc_missing_data_inflation <- function(n_required, missing_pct, mechanism = "mar") {
+    if (missing_pct == 0) {
+      return(list(
+        n_inflated = n_required,
+        inflation_factor = 1.0,
+        n_increase = 0,
+        pct_increase = 0,
+        interpretation = "No adjustment needed (0% missingness assumed)"
+      ))
+    }
+
+    p_missing <- missing_pct / 100
+
+    # Complete case analysis: conservative inflation
+    inflation_factor <- 1 / (1 - p_missing)
+    n_inflated <- ceiling(n_required * inflation_factor)
+    n_increase <- n_inflated - n_required
+    pct_increase <- round((inflation_factor - 1) * 100, 1)
+
+    # Interpretation text based on mechanism
+    mechanism_text <- switch(mechanism,
+      "mcar" = "MCAR (minimal bias expected)",
+      "mar" = "MAR (bias controllable with observed covariates)",
+      "mnar" = "MNAR (potential for substantial bias; sensitivity analysis recommended)",
+      "MAR"  # default
+    )
+
+    interpretation <- sprintf(
+      "Assuming %s%% missingness (%s), inflate sample size by %s%% (add %s participants) to ensure adequate complete-case sample.",
+      missing_pct, mechanism_text, pct_increase, n_increase
+    )
+
+    list(
+      n_inflated = n_inflated,
+      inflation_factor = round(inflation_factor, 3),
+      n_increase = n_increase,
+      pct_increase = pct_increase,
+      interpretation = interpretation
     )
   }
 
@@ -761,29 +1046,124 @@ server <- function(input, output, session) {
         ))
         HTML(paste0(text0, text1, text2, text3))
       } else if (input$tabset == "Sample Size (Single)") {
-        incidence_rate <- input$ss_p
-        sample_size <- pwr.p.test(
-          sig.level = input$ss_alpha, power = input$ss_power / 100,
-          h = ES.h(1 / input$ss_p, 0), alt = "greater", n = NULL
-        )$n
+        # Feature 2: Minimal Detectable Effect Size Calculator
+        calc_mode <- input$ss_single_calc_mode
         power <- input$ss_power / 100
         discon <- input$ss_discon / 100
 
-        text0 <- hr()
-        text1 <- h1("Results of this analysis")
-        text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
-        text3 <- p(paste0(
-          "Based on the Binomial distribution and a true event incidence rate of 1 in ",
-          format(incidence_rate, digits = 0, nsmall = 0), " (or ",
-          format(1 / incidence_rate * 100, digits = 2, nsmall = 2), "%), ",
-          format(ceiling(sample_size), digits = 0, nsmall = 0),
-          " participants would be needed to observe at least one event with ",
-          format(power * 100, digits = 0, nsmall = 0), "% probability (α = ",
-          input$ss_alpha, "). Accounting for a possible withdrawal or discontinuation rate of ",
-          format(discon * 100, digits = 0), "%, the target number of participants is set as ",
-          format(ceiling((sample_size * (1 + discon))), digits = 0), "."
-        ))
-        HTML(paste0(text0, text1, text2, text3))
+        if (calc_mode == "calc_n") {
+          # Calculate Sample Size (original functionality)
+          incidence_rate <- input$ss_p
+          sample_size_base <- pwr.p.test(
+            sig.level = input$ss_alpha, power = power,
+            h = ES.h(1 / input$ss_p, 0), alt = "greater", n = NULL
+          )$n
+
+          # Apply discontinuation adjustment
+          sample_size_after_discon <- ceiling(sample_size_base * (1 + discon))
+
+          # Apply missing data adjustment if enabled (Tier 1 Enhancement)
+          if (input$adjust_missing_ss_single) {
+            missing_adj <- calc_missing_data_inflation(
+              sample_size_after_discon,
+              input$missing_pct_ss_single,
+              input$missing_mechanism_ss_single
+            )
+            sample_size_final <- missing_adj$n_inflated
+            missing_data_text <- HTML(paste0(
+              "<p style='background-color: #fff3cd; border-left: 4px solid #f39c12; padding: 10px; margin-top: 15px;'>",
+              "<strong>Missing Data Adjustment (Tier 1 Enhancement):</strong> ",
+              missing_adj$interpretation,
+              "<br><strong>Sample size before missing data adjustment:</strong> ",
+              sample_size_after_discon,
+              "<br><strong>Inflation factor:</strong> ", missing_adj$inflation_factor,
+              "<br><strong>Additional participants needed:</strong> ", missing_adj$n_increase,
+              "</p>"
+            ))
+          } else {
+            sample_size_final <- sample_size_after_discon
+            missing_data_text <- HTML("")
+          }
+
+          text0 <- hr()
+          text1 <- h1("Results of this analysis")
+          text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+          text3 <- p(paste0(
+            "Based on the Binomial distribution and a true event incidence rate of 1 in ",
+            format(incidence_rate, digits = 0, nsmall = 0), " (or ",
+            format(1 / incidence_rate * 100, digits = 2, nsmall = 2), "%), ",
+            format(ceiling(sample_size_base), digits = 0, nsmall = 0),
+            " participants would be needed to observe at least one event with ",
+            format(power * 100, digits = 0, nsmall = 0), "% probability (α = ",
+            input$ss_alpha, "). Accounting for a possible withdrawal or discontinuation rate of ",
+            format(discon * 100, digits = 0), "%, the target number of participants is set as ",
+            format(sample_size_after_discon, digits = 0), ".",
+            if (input$adjust_missing_ss_single) {
+              paste0(" <strong>After adjusting for ", input$missing_pct_ss_single,
+                     "% missing data, the final target sample size is ",
+                     format(sample_size_final, digits = 0), " participants.</strong>")
+            } else {
+              ""
+            }
+          ))
+          HTML(paste0(text0, text1, text2, text3, missing_data_text))
+
+        } else {
+          # Calculate Effect Size (Feature 2: Tier 1 Enhancement)
+          # Account for discontinuation and missing data to get effective sample size
+          n_nominal <- input$ss_n_fixed
+          n_after_discon <- ceiling(n_nominal * (1 - discon))
+
+          if (input$adjust_missing_ss_single) {
+            p_missing <- input$missing_pct_ss_single / 100
+            n_effective <- ceiling(n_after_discon * (1 - p_missing))
+            missing_note <- paste0(" After accounting for ",
+              input$missing_pct_ss_single, "% missing data (",
+              tolower(substr(input$missing_mechanism_ss_single, 1, 4)), "), ",
+              "the effective sample size is ", n_effective, " participants.")
+          } else {
+            n_effective <- n_after_discon
+            missing_note <- ""
+          }
+
+          # Solve for minimal detectable h
+          h_min <- pwr.p.test(
+            sig.level = input$ss_alpha, power = power,
+            h = NULL, alt = "greater", n = n_effective
+          )$h
+
+          # Convert h back to proportion: h = 2*asin(sqrt(p1)) - 2*asin(sqrt(0)) = 2*asin(sqrt(p1))
+          # Therefore: p1 = sin²(h/2)
+          p_detectable <- sin(h_min / 2)^2
+          incidence_rate_detectable <- 1 / p_detectable
+
+          text0 <- hr()
+          text1 <- h1("Results of this analysis")
+          text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+          text3 <- p(paste0(
+            "<strong>Minimal Detectable Effect Size Analysis (Tier 1 Enhancement)</strong><br>",
+            "With an available sample size of ", n_nominal, " participants, ",
+            "accounting for a ", format(discon * 100, digits = 0), "% discontinuation rate, ",
+            "the effective sample size is ", n_after_discon, " participants.",
+            missing_note,
+            " With ", format(power * 100, digits = 0), "% power and α = ", input$ss_alpha,
+            ", the <strong>minimal detectable event incidence rate is 1 in ",
+            format(round(incidence_rate_detectable), digits = 0), " (or ",
+            format(p_detectable * 100, digits = 2, nsmall = 2), "%)</strong>. ",
+            "This is the smallest event rate that can be reliably detected with this sample size."
+          ))
+
+          effect_size_box <- HTML(paste0(
+            "<p style='background-color: #d4edda; border-left: 4px solid #28a745; padding: 10px; margin-top: 15px;'>",
+            "<strong>Minimal Detectable Effect (Tier 1 Enhancement):</strong><br>",
+            "<strong>Event Incidence Rate:</strong> 1 in ", format(round(incidence_rate_detectable), digits = 0),
+            " (", format(p_detectable * 100, digits = 2, nsmall = 2), "%)<br>",
+            "<strong>Cohen's h:</strong> ", format(h_min, digits = 3),
+            "</p>"
+          ))
+
+          HTML(paste0(text0, text1, text2, text3, effect_size_box))
+        }
       } else if (input$tabset == "Power (Two-Group)") {
         n1 <- input$twogrp_pow_n1
         n2 <- input$twogrp_pow_n2
@@ -809,31 +1189,141 @@ server <- function(input, output, session) {
         ))
         HTML(paste0(text0, text1, text2, text3))
       } else if (input$tabset == "Sample Size (Two-Group)") {
-        p1 <- input$twogrp_ss_p1 / 100
-        p2 <- input$twogrp_ss_p2 / 100
+        # Feature 2: Minimal Detectable Effect Size Calculator
+        calc_mode <- input$twogrp_ss_calc_mode
         power <- input$twogrp_ss_power / 100
 
-        # Calculate sample size for group 1 (ratio-aware for unequal allocation)
-        n1 <- solve_n1_for_ratio(
-          ES.h(p1, p2), input$twogrp_ss_ratio,
-          input$twogrp_ss_alpha, power, input$twogrp_ss_sided
-        )
-        n2 <- n1 * input$twogrp_ss_ratio
+        if (calc_mode == "calc_n") {
+          # Calculate Sample Size (original functionality)
+          p1 <- input$twogrp_ss_p1 / 100
+          p2 <- input$twogrp_ss_p2 / 100
 
-        text0 <- hr()
-        text1 <- h1("Results of this analysis")
-        text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
-        text3 <- p(paste0(
-          "To detect a difference in event rates from ",
-          format(p2 * 100, digits = 2, nsmall = 1), "% in Group 2 (control) to ",
-          format(p1 * 100, digits = 2, nsmall = 1), "% in Group 1 (exposed/treatment) with ",
-          format(power * 100, digits = 0, nsmall = 0), "% power at α = ",
-          input$twogrp_ss_alpha, " (", input$twogrp_ss_sided, " test), the required sample sizes are: Group 1: n1 = ",
-          format(ceiling(n1), digits = 0, nsmall = 0), ", Group 2: n2 = ",
-          format(ceiling(n2), digits = 0, nsmall = 0), " (total N = ",
-          format(ceiling(n1 + n2), digits = 0, nsmall = 0), ")."
-        ))
-        HTML(paste0(text0, text1, text2, text3))
+          # Calculate base sample size for group 1 (ratio-aware for unequal allocation)
+          n1_base <- solve_n1_for_ratio(
+            ES.h(p1, p2), input$twogrp_ss_ratio,
+            input$twogrp_ss_alpha, power, input$twogrp_ss_sided
+          )
+          n2_base <- n1_base * input$twogrp_ss_ratio
+          n_total_base <- ceiling(n1_base + n2_base)
+
+          # Apply missing data adjustment if enabled (Tier 1 Enhancement)
+          if (input$adjust_missing_twogrp_ss) {
+            missing_adj <- calc_missing_data_inflation(
+              n_total_base,
+              input$missing_pct_twogrp_ss,
+              input$missing_mechanism_twogrp_ss
+            )
+            n_total_final <- missing_adj$n_inflated
+            # Maintain allocation ratio after adjustment
+            n1_final <- ceiling(n_total_final / (1 + input$twogrp_ss_ratio))
+            n2_final <- n_total_final - n1_final
+
+            missing_data_text <- HTML(paste0(
+              "<p style='background-color: #fff3cd; border-left: 4px solid #f39c12; padding: 10px; margin-top: 15px;'>",
+              "<strong>Missing Data Adjustment (Tier 1 Enhancement):</strong> ",
+              missing_adj$interpretation,
+              "<br><strong>Total sample size before adjustment:</strong> ", n_total_base,
+              "<br><strong>Inflation factor:</strong> ", missing_adj$inflation_factor,
+              "<br><strong>Additional participants needed:</strong> ", missing_adj$n_increase,
+              "</p>"
+            ))
+          } else {
+            n1_final <- ceiling(n1_base)
+            n2_final <- ceiling(n2_base)
+            n_total_final <- n1_final + n2_final
+            missing_data_text <- HTML("")
+          }
+
+          text0 <- hr()
+          text1 <- h1("Results of this analysis")
+          text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+          text3 <- p(paste0(
+            "To detect a difference in event rates from ",
+            format(p2 * 100, digits = 2, nsmall = 1), "% in Group 2 (control) to ",
+            format(p1 * 100, digits = 2, nsmall = 1), "% in Group 1 (exposed/treatment) with ",
+            format(power * 100, digits = 0, nsmall = 0), "% power at α = ",
+            input$twogrp_ss_alpha, " (", input$twogrp_ss_sided, " test), the required sample sizes are: Group 1: n1 = ",
+            format(n1_final, digits = 0, nsmall = 0), ", Group 2: n2 = ",
+            format(n2_final, digits = 0, nsmall = 0), " (total N = ",
+            format(n_total_final, digits = 0, nsmall = 0), ").",
+            if (input$adjust_missing_twogrp_ss) {
+              paste0(" <strong>After adjusting for ", input$missing_pct_twogrp_ss,
+                     "% missing data, the final total sample size is ",
+                     format(n_total_final, digits = 0), " participants (n1=", n1_final, ", n2=", n2_final, ").</strong>")
+            } else {
+              ""
+            }
+          ))
+          HTML(paste0(text0, text1, text2, text3, missing_data_text))
+
+        } else {
+          # Calculate Effect Size (Feature 2: Tier 1 Enhancement)
+          n1_nominal <- input$twogrp_ss_n1_fixed
+          n2_nominal <- n1_nominal * input$twogrp_ss_ratio
+          p2 <- input$twogrp_ss_p2_baseline / 100
+
+          # Account for missing data to get effective sample sizes
+          if (input$adjust_missing_twogrp_ss) {
+            p_missing <- input$missing_pct_twogrp_ss / 100
+            n1_effective <- ceiling(n1_nominal * (1 - p_missing))
+            n2_effective <- ceiling(n2_nominal * (1 - p_missing))
+            missing_note <- paste0(" After accounting for ", input$missing_pct_twogrp_ss,
+              "% missing data (", tolower(substr(input$missing_mechanism_twogrp_ss, 1, 4)),
+              "), effective sample sizes are n1=", n1_effective, ", n2=", n2_effective, ".")
+          } else {
+            n1_effective <- n1_nominal
+            n2_effective <- n2_nominal
+            missing_note <- ""
+          }
+
+          # Solve for minimal detectable h
+          h_min <- pwr.2p2n.test(
+            h = NULL, n1 = n1_effective, n2 = n2_effective,
+            sig.level = input$twogrp_ss_alpha, power = power,
+            alternative = input$twogrp_ss_sided
+          )$h
+
+          # Convert h to p1 given p2
+          # h = 2*asin(sqrt(p1)) - 2*asin(sqrt(p2))
+          # Therefore: p1 = sin²((h + 2*asin(sqrt(p2)))/2)
+          p1_detectable <- sin((h_min + 2 * asin(sqrt(p2))) / 2)^2
+
+          # Calculate effect sizes
+          risk_diff <- (p1_detectable - p2) * 100
+          relative_risk <- ifelse(p2 > 0, p1_detectable / p2, NA)
+          odds_ratio <- ifelse(p2 < 1 && p1_detectable < 1,
+            (p1_detectable / (1 - p1_detectable)) / (p2 / (1 - p2)), NA)
+
+          text0 <- hr()
+          text1 <- h1("Results of this analysis")
+          text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+          text3 <- p(paste0(
+            "<strong>Minimal Detectable Effect Size Analysis (Tier 1 Enhancement)</strong><br>",
+            "With available sample sizes of n1=", n1_nominal, " (Group 1) and n2=",
+            round(n2_nominal), " (Group 2, ratio=", input$twogrp_ss_ratio, "),",
+            missing_note,
+            " With ", format(power * 100, digits = 0), "% power and α = ", input$twogrp_ss_alpha,
+            " (", input$twogrp_ss_sided, " test), given a baseline event rate of ",
+            format(p2 * 100, digits = 2), "% in Group 2, ",
+            "the <strong>minimal detectable event rate in Group 1 is ",
+            format(p1_detectable * 100, digits = 2), "%</strong> (risk difference: ",
+            format(abs(risk_diff), digits = 2), " percentage points)."
+          ))
+
+          effect_size_box <- HTML(paste0(
+            "<p style='background-color: #d4edda; border-left: 4px solid #28a745; padding: 10px; margin-top: 15px;'>",
+            "<strong>Minimal Detectable Effect (Tier 1 Enhancement):</strong><br>",
+            "<strong>Group 1 Event Rate:</strong> ", format(p1_detectable * 100, digits = 2), "%<br>",
+            "<strong>Group 2 Event Rate:</strong> ", format(p2 * 100, digits = 2), "%<br>",
+            "<strong>Risk Difference:</strong> ", format(abs(risk_diff), digits = 2), " percentage points<br>",
+            "<strong>Relative Risk:</strong> ", ifelse(is.na(relative_risk), "N/A", format(relative_risk, digits = 3)), "<br>",
+            "<strong>Odds Ratio:</strong> ", ifelse(is.na(odds_ratio), "N/A", format(odds_ratio, digits = 3)), "<br>",
+            "<strong>Cohen's h:</strong> ", format(h_min, digits = 3),
+            "</p>"
+          ))
+
+          HTML(paste0(text0, text1, text2, text3, effect_size_box))
+        }
       } else if (input$tabset == "Power (Survival)") {
         n <- input$surv_pow_n
         hr <- input$surv_pow_hr
@@ -859,61 +1349,305 @@ server <- function(input, output, session) {
         ))
         HTML(paste0(text0, text1, text2, text3))
       } else if (input$tabset == "Sample Size (Survival)") {
+        # Feature 2: Minimal Detectable Effect Size Calculator
+        calc_mode <- input$surv_ss_calc_mode
         power <- input$surv_ss_power / 100
-        hr <- input$surv_ss_hr
         k <- input$surv_ss_k / 100
         pE <- input$surv_ss_pE / 100
 
-        # Calculate sample size using powerSurvEpi
-        # We need to iterate to find the right sample size
-        n_est <- ssizeEpi(
-          power = power, theta = hr, k = k, pE = pE,
-          RR = hr, alpha = input$surv_ss_alpha
-        )
+        if (calc_mode == "calc_n") {
+          # Calculate Sample Size (original functionality)
+          hr <- input$surv_ss_hr
 
-        text0 <- hr()
-        text1 <- h1("Results of this analysis")
-        text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
-        text3 <- p(paste0(
-          "To detect a hazard ratio of ", format(hr, digits = 2, nsmall = 2),
-          " with ", format(power * 100, digits = 0, nsmall = 0), "% power in a survival analysis using Cox regression, ",
-          "with ", format(k * 100, digits = 1, nsmall = 0), "% of participants exposed/treated and an overall event rate of ",
-          format(pE * 100, digits = 1, nsmall = 0), "%, the required total sample size is N = ",
-          format(ceiling(n_est), digits = 0, nsmall = 0), " participants (α = ",
-          input$surv_ss_alpha, ", two-sided test). This calculation uses the Schoenfeld (1983) method for Cox proportional hazards models."
-        ))
-        HTML(paste0(text0, text1, text2, text3))
+          # Calculate base sample size using powerSurvEpi
+          n_base <- ssizeEpi(
+            power = power, theta = hr, k = k, pE = pE,
+            RR = hr, alpha = input$surv_ss_alpha
+          )
+
+          # Apply missing data adjustment if enabled (Tier 1 Enhancement)
+          if (input$adjust_missing_surv_ss) {
+            missing_adj <- calc_missing_data_inflation(
+              n_base,
+              input$missing_pct_surv_ss,
+              input$missing_mechanism_surv_ss
+            )
+            n_final <- missing_adj$n_inflated
+            missing_data_text <- HTML(paste0(
+              "<p style='background-color: #fff3cd; border-left: 4px solid #f39c12; padding: 10px; margin-top: 15px;'>",
+              "<strong>Missing Data Adjustment (Tier 1 Enhancement):</strong> ",
+              missing_adj$interpretation,
+              "<br><strong>Sample size before adjustment:</strong> ", ceiling(n_base),
+              "<br><strong>Inflation factor:</strong> ", missing_adj$inflation_factor,
+              "<br><strong>Additional participants needed:</strong> ", missing_adj$n_increase,
+              "</p>"
+            ))
+          } else {
+            n_final <- n_base
+            missing_data_text <- HTML("")
+          }
+
+          text0 <- hr()
+          text1 <- h1("Results of this analysis")
+          text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+          text3 <- p(paste0(
+            "To detect a hazard ratio of ", format(hr, digits = 2, nsmall = 2),
+            " with ", format(power * 100, digits = 0, nsmall = 0), "% power in a survival analysis using Cox regression, ",
+            "with ", format(k * 100, digits = 1, nsmall = 0), "% of participants exposed/treated and an overall event rate of ",
+            format(pE * 100, digits = 1, nsmall = 0), "%, the required total sample size is N = ",
+            format(ceiling(n_final), digits = 0, nsmall = 0), " participants (α = ",
+            input$surv_ss_alpha, ", two-sided test).",
+            if (input$adjust_missing_surv_ss) {
+              paste0(" <strong>This includes adjustment for ", input$missing_pct_surv_ss,
+                     "% missing data.</strong>")
+            } else {
+              ""
+            },
+            " This calculation uses the Schoenfeld (1983) method for Cox proportional hazards models."
+          ))
+          HTML(paste0(text0, text1, text2, text3, missing_data_text))
+
+        } else {
+          # Calculate Hazard Ratio (Feature 2: Tier 1 Enhancement)
+          n_nominal <- input$surv_ss_n_fixed
+
+          # Account for missing data to get effective sample size
+          if (input$adjust_missing_surv_ss) {
+            p_missing <- input$missing_pct_surv_ss / 100
+            n_effective <- ceiling(n_nominal * (1 - p_missing))
+            missing_note <- paste0(" After accounting for ", input$missing_pct_surv_ss,
+              "% missing data (", tolower(substr(input$missing_mechanism_surv_ss, 1, 4)),
+              "), the effective sample size is ", n_effective, " participants.")
+          } else {
+            n_effective <- n_nominal
+            missing_note <- ""
+          }
+
+          # Solve for minimal detectable HR using binary search
+          # Search range: HR from 0.01 to 10
+          hr_lower <- 0.01
+          hr_upper <- 10.0
+          tolerance <- 0.001
+          max_iter <- 100
+
+          for (i in 1:max_iter) {
+            hr_mid <- (hr_lower + hr_upper) / 2
+            power_achieved <- powerEpi(
+              n = n_effective, theta = hr_mid, k = k, pE = pE,
+              RR = hr_mid, alpha = input$surv_ss_alpha
+            )
+
+            if (abs(power_achieved - power) < 0.001) {
+              break
+            } else if (power_achieved > power) {
+              # HR too far from 1, need to move closer to 1
+              if (hr_mid < 1) {
+                hr_lower <- hr_mid
+              } else {
+                hr_upper <- hr_mid
+              }
+            } else {
+              # HR too close to 1, need to move farther from 1
+              if (hr_mid < 1) {
+                hr_upper <- hr_mid
+              } else {
+                hr_lower <- hr_mid
+              }
+            }
+          }
+
+          hr_detectable <- hr_mid
+
+          text0 <- hr()
+          text1 <- h1("Results of this analysis")
+          text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+          text3 <- p(paste0(
+            "<strong>Minimal Detectable Effect Size Analysis (Tier 1 Enhancement)</strong><br>",
+            "With an available sample size of N=", n_nominal, " participants,",
+            missing_note,
+            " With ", format(power * 100, digits = 0), "% power, α = ", input$surv_ss_alpha,
+            ", ", format(k * 100, digits = 1), "% exposed/treated, and ",
+            format(pE * 100, digits = 1), "% overall event rate, ",
+            "the <strong>minimal detectable hazard ratio is HR = ",
+            format(hr_detectable, digits = 3), "</strong>. ",
+            "This is the smallest hazard ratio that can be reliably detected with this sample size using Cox regression. ",
+            "This calculation uses the Schoenfeld (1983) method for Cox proportional hazards models."
+          ))
+
+          effect_size_box <- HTML(paste0(
+            "<p style='background-color: #d4edda; border-left: 4px solid #28a745; padding: 10px; margin-top: 15px;'>",
+            "<strong>Minimal Detectable Effect (Tier 1 Enhancement):</strong><br>",
+            "<strong>Hazard Ratio (HR):</strong> ", format(hr_detectable, digits = 3), "<br>",
+            "<strong>Interpretation:</strong> ",
+            ifelse(hr_detectable < 1,
+              paste0("Can detect protective effects with HR ≤ ", format(hr_detectable, digits = 3)),
+              paste0("Can detect risk increases with HR ≥ ", format(hr_detectable, digits = 3))),
+            "</p>"
+          ))
+
+          HTML(paste0(text0, text1, text2, text3, effect_size_box))
+        }
       } else if (input$tabset == "Matched Case-Control") {
-        or <- input$match_or
+        # Feature 2: Minimal Detectable Effect Size Calculator
+        calc_mode <- input$match_calc_mode
         p0 <- input$match_p0 / 100
         m <- input$match_ratio
         power <- input$match_power / 100
-
-        # Calculate sample size for matched case-control using epiR
         sided_val <- ifelse(input$match_sided == "two.sided", 2, 1)
 
-        # Use epi.sscc for matched case-control
-        result <- epi.sscc(
-          OR = or, p0 = p0, n = NA, power = power,
-          r = m, rho = 0, design = 1, sided.test = sided_val,
-          conf.level = 1 - input$match_alpha
-        )
-        n_cases <- ceiling(result$n.total)
+        if (calc_mode == "calc_n") {
+          # Calculate Sample Size (original functionality)
+          or <- input$match_or
 
-        text0 <- hr()
-        text1 <- h1("Results of this analysis")
-        text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
-        text3 <- p(paste0(
-          "For a matched case-control study to detect an odds ratio of ",
-          format(or, digits = 2, nsmall = 2), " with ", format(power * 100, digits = 0, nsmall = 0),
-          "% power, assuming ", format(p0 * 100, digits = 1, nsmall = 0),
-          "% exposure prevalence in controls, and a ", m, ":1 matching ratio (controls per case), ",
-          "the required sample size is ", n_cases, " cases and ",
-          format(n_cases * m, digits = 0, nsmall = 0), " controls (total N = ",
-          format(n_cases * (1 + m), digits = 0, nsmall = 0), " participants) at α = ",
-          input$match_alpha, " (", input$match_sided, " test). This accounts for correlation between matched pairs."
-        ))
-        HTML(paste0(text0, text1, text2, text3))
+          # Calculate base sample size for matched case-control using epiR
+          result <- epi.sscc(
+            OR = or, p0 = p0, n = NA, power = power,
+            r = m, rho = 0, design = 1, sided.test = sided_val,
+            conf.level = 1 - input$match_alpha
+          )
+          n_cases_base <- ceiling(result$n.total)
+          n_controls_base <- n_cases_base * m
+          n_total_base <- n_cases_base * (1 + m)
+
+          # Apply missing data adjustment if enabled (Tier 1 Enhancement)
+          if (input$adjust_missing_match) {
+            missing_adj <- calc_missing_data_inflation(
+              n_total_base,
+              input$missing_pct_match,
+              input$missing_mechanism_match
+            )
+            n_total_final <- missing_adj$n_inflated
+            # Maintain matching ratio
+            n_cases_final <- ceiling(n_total_final / (1 + m))
+            n_controls_final <- n_cases_final * m
+
+            missing_data_text <- HTML(paste0(
+              "<p style='background-color: #fff3cd; border-left: 4px solid #f39c12; padding: 10px; margin-top: 15px;'>",
+              "<strong>Missing Data Adjustment (Tier 1 Enhancement):</strong> ",
+              missing_adj$interpretation,
+              "<br><strong>Total sample size before adjustment:</strong> ", n_total_base,
+              "<br><strong>Inflation factor:</strong> ", missing_adj$inflation_factor,
+              "<br><strong>Additional participants needed:</strong> ", missing_adj$n_increase,
+              "</p>"
+            ))
+          } else {
+            n_cases_final <- n_cases_base
+            n_controls_final <- n_controls_base
+            n_total_final <- n_total_base
+            missing_data_text <- HTML("")
+          }
+
+          text0 <- hr()
+          text1 <- h1("Results of this analysis")
+          text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+          text3 <- p(paste0(
+            "For a matched case-control study to detect an odds ratio of ",
+            format(or, digits = 2, nsmall = 2), " with ", format(power * 100, digits = 0, nsmall = 0),
+            "% power, assuming ", format(p0 * 100, digits = 1, nsmall = 0),
+            "% exposure prevalence in controls, and a ", m, ":1 matching ratio (controls per case), ",
+            "the required sample size is ", n_cases_final, " cases and ",
+            format(n_controls_final, digits = 0, nsmall = 0), " controls (total N = ",
+            format(n_total_final, digits = 0, nsmall = 0), " participants) at α = ",
+            input$match_alpha, " (", input$match_sided, " test).",
+            if (input$adjust_missing_match) {
+              paste0(" <strong>After adjusting for ", input$missing_pct_match,
+                     "% missing data.</strong>")
+            } else {
+              ""
+            },
+            " This accounts for correlation between matched pairs."
+          ))
+          HTML(paste0(text0, text1, text2, text3, missing_data_text))
+
+        } else {
+          # Calculate Odds Ratio (Feature 2: Tier 1 Enhancement)
+          n_cases_nominal <- input$match_n_cases_fixed
+          n_controls_nominal <- n_cases_nominal * m
+          n_total_nominal <- n_cases_nominal * (1 + m)
+
+          # Account for missing data to get effective sample sizes
+          if (input$adjust_missing_match) {
+            p_missing <- input$missing_pct_match / 100
+            n_cases_effective <- ceiling(n_cases_nominal * (1 - p_missing))
+            missing_note <- paste0(" After accounting for ", input$missing_pct_match,
+              "% missing data (", tolower(substr(input$missing_mechanism_match, 1, 4)),
+              "), the effective number of cases is ", n_cases_effective, ".")
+          } else {
+            n_cases_effective <- n_cases_nominal
+            missing_note <- ""
+          }
+
+          # Solve for minimal detectable OR using binary search
+          # Search range: OR from 0.1 to 10
+          or_lower <- 0.1
+          or_upper <- 10.0
+          tolerance <- 0.01
+          max_iter <- 100
+
+          for (i in 1:max_iter) {
+            or_mid <- (or_lower + or_upper) / 2
+            result <- tryCatch({
+              epi.sscc(
+                OR = or_mid, p0 = p0, n = n_cases_effective, power = NA,
+                r = m, rho = 0, design = 1, sided.test = sided_val,
+                conf.level = 1 - input$match_alpha
+              )
+            }, error = function(e) list(power = 0))
+
+            power_achieved <- result$power
+            if (is.null(power_achieved) || is.na(power_achieved)) power_achieved <- 0
+
+            if (abs(power_achieved - power) < 0.01) {
+              break
+            } else if (power_achieved > power) {
+              # OR too far from 1, need to move closer to 1
+              if (or_mid < 1) {
+                or_lower <- or_mid
+              } else {
+                or_upper <- or_mid
+              }
+            } else {
+              # OR too close to 1, need to move farther from 1
+              if (or_mid < 1) {
+                or_upper <- or_mid
+              } else {
+                or_lower <- or_mid
+              }
+            }
+          }
+
+          or_detectable <- or_mid
+
+          text0 <- hr()
+          text1 <- h1("Results of this analysis")
+          text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+          text3 <- p(paste0(
+            "<strong>Minimal Detectable Effect Size Analysis (Tier 1 Enhancement)</strong><br>",
+            "With ", n_cases_nominal, " available cases and a ", m, ":1 matching ratio (",
+            format(n_controls_nominal, digits = 0), " controls),",
+            missing_note,
+            " With ", format(power * 100, digits = 0), "% power and α = ", input$match_alpha,
+            " (", input$match_sided, " test), assuming ",
+            format(p0 * 100, digits = 1), "% exposure prevalence in controls, ",
+            "the <strong>minimal detectable odds ratio is OR = ",
+            format(or_detectable, digits = 3), "</strong>. ",
+            "This is the smallest odds ratio that can be reliably detected with this sample size. ",
+            "This accounts for correlation between matched pairs."
+          ))
+
+          effect_size_box <- HTML(paste0(
+            "<p style='background-color: #d4edda; border-left: 4px solid #28a745; padding: 10px; margin-top: 15px;'>",
+            "<strong>Minimal Detectable Effect (Tier 1 Enhancement):</strong><br>",
+            "<strong>Odds Ratio (OR):</strong> ", format(or_detectable, digits = 3), "<br>",
+            "<strong>Interpretation:</strong> ",
+            ifelse(or_detectable < 1,
+              paste0("Can detect protective effects with OR ≤ ", format(or_detectable, digits = 3)),
+              paste0("Can detect risk increases with OR ≥ ", format(or_detectable, digits = 3))),
+            "</p>"
+          ))
+
+          HTML(paste0(text0, text1, text2, text3, effect_size_box))
+        }
       } else if (input$tabset == "Power (Continuous)") {
         n1 <- input$cont_pow_n1
         n2 <- input$cont_pow_n2
@@ -939,126 +1673,334 @@ server <- function(input, output, session) {
         ))
         HTML(paste0(text0, text1, text2, text3))
       } else if (input$tabset == "Sample Size (Continuous)") {
-        d <- input$cont_ss_d
+        # Feature 2: Minimal Detectable Effect Size Calculator
+        calc_mode <- input$cont_ss_calc_mode
         power <- input$cont_ss_power / 100
         ratio <- input$cont_ss_ratio
 
-        # Calculate sample size for t-test (solve for n1)
-        # Using pwr.t.test for equal n, then adjust for ratio
-        if (ratio == 1) {
-          n <- pwr.t.test(
-            d = d, sig.level = input$cont_ss_alpha,
-            power = power, type = "two.sample",
-            alternative = input$cont_ss_sided
-          )$n
-          n1 <- n
-          n2 <- n
-        } else {
-          # For unequal allocation, use iterative approach
-          f <- function(n1) {
-            n2 <- n1 * ratio
-            pwr.t2n.test(
-              n1 = n1, n2 = n2, d = d,
-              sig.level = input$cont_ss_alpha,
-              alternative = input$cont_ss_sided
-            )$power - power
-          }
-          n1 <- tryCatch(
-            {
-              uniroot(f, c(2, 1e6), extendInt = "yes")$root
-            },
-            error = function(e) {
-              # Fallback
-              pwr.t.test(
-                d = d, sig.level = input$cont_ss_alpha,
-                power = power, type = "two.sample",
-                alternative = input$cont_ss_sided
-              )$n
-            }
-          )
-          n2 <- n1 * ratio
-        }
+        if (calc_mode == "calc_n") {
+          # Calculate Sample Size (original functionality)
+          d <- input$cont_ss_d
 
-        text0 <- hr()
-        text1 <- h1("Results of this analysis")
-        text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
-        text3 <- p(paste0(
-          "To detect an effect size of Cohen's d = ", format(d, digits = 2, nsmall = 2),
-          " in a two-group comparison of continuous outcomes with ", format(power * 100, digits = 0, nsmall = 0),
-          "% power at α = ", input$cont_ss_alpha, " (", input$cont_ss_sided, " test), ",
-          "the required sample sizes are: Group 1: n1 = ", format(ceiling(n1), digits = 0, nsmall = 0),
-          ", Group 2: n2 = ", format(ceiling(n2), digits = 0, nsmall = 0), " (total N = ",
-          format(ceiling(n1 + n2), digits = 0, nsmall = 0), "). ",
-          "Cohen's d is the standardized mean difference (difference in means / pooled SD)."
-        ))
-        HTML(paste0(text0, text1, text2, text3))
+          # Calculate base sample size for t-test (solve for n1)
+          if (ratio == 1) {
+            n <- pwr.t.test(
+              d = d, sig.level = input$cont_ss_alpha,
+              power = power, type = "two.sample",
+              alternative = input$cont_ss_sided
+            )$n
+            n1_base <- n
+            n2_base <- n
+          } else {
+            # For unequal allocation, use iterative approach
+            f <- function(n1) {
+              n2 <- n1 * ratio
+              pwr.t2n.test(
+                n1 = n1, n2 = n2, d = d,
+                sig.level = input$cont_ss_alpha,
+                alternative = input$cont_ss_sided
+              )$power - power
+            }
+            n1_base <- tryCatch(
+              {
+                uniroot(f, c(2, 1e6), extendInt = "yes")$root
+              },
+              error = function(e) {
+                # Fallback
+                pwr.t.test(
+                  d = d, sig.level = input$cont_ss_alpha,
+                  power = power, type = "two.sample",
+                  alternative = input$cont_ss_sided
+                )$n
+              }
+            )
+            n2_base <- n1_base * ratio
+          }
+          n_total_base <- ceiling(n1_base + n2_base)
+
+          # Apply missing data adjustment if enabled (Tier 1 Enhancement)
+          if (input$adjust_missing_cont_ss) {
+            missing_adj <- calc_missing_data_inflation(
+              n_total_base,
+              input$missing_pct_cont_ss,
+              input$missing_mechanism_cont_ss
+            )
+            n_total_final <- missing_adj$n_inflated
+            # Maintain allocation ratio
+            n1_final <- ceiling(n_total_final / (1 + ratio))
+            n2_final <- n_total_final - n1_final
+
+            missing_data_text <- HTML(paste0(
+              "<p style='background-color: #fff3cd; border-left: 4px solid #f39c12; padding: 10px; margin-top: 15px;'>",
+              "<strong>Missing Data Adjustment (Tier 1 Enhancement):</strong> ",
+              missing_adj$interpretation,
+              "<br><strong>Total sample size before adjustment:</strong> ", n_total_base,
+              "<br><strong>Inflation factor:</strong> ", missing_adj$inflation_factor,
+              "<br><strong>Additional participants needed:</strong> ", missing_adj$n_increase,
+              "</p>"
+            ))
+          } else {
+            n1_final <- ceiling(n1_base)
+            n2_final <- ceiling(n2_base)
+            n_total_final <- n1_final + n2_final
+            missing_data_text <- HTML("")
+          }
+
+          text0 <- hr()
+          text1 <- h1("Results of this analysis")
+          text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+          text3 <- p(paste0(
+            "To detect an effect size of Cohen's d = ", format(d, digits = 2, nsmall = 2),
+            " in a two-group comparison of continuous outcomes with ", format(power * 100, digits = 0, nsmall = 0),
+            "% power at α = ", input$cont_ss_alpha, " (", input$cont_ss_sided, " test), ",
+            "the required sample sizes are: Group 1: n1 = ", format(n1_final, digits = 0, nsmall = 0),
+            ", Group 2: n2 = ", format(n2_final, digits = 0, nsmall = 0), " (total N = ",
+            format(n_total_final, digits = 0, nsmall = 0), ").",
+            if (input$adjust_missing_cont_ss) {
+              paste0(" <strong>After adjusting for ", input$missing_pct_cont_ss,
+                     "% missing data.</strong>")
+            } else {
+              ""
+            },
+            " Cohen's d is the standardized mean difference (difference in means / pooled SD)."
+          ))
+          HTML(paste0(text0, text1, text2, text3, missing_data_text))
+
+        } else {
+          # Calculate Effect Size (Feature 2: Tier 1 Enhancement)
+          n1_nominal <- input$cont_ss_n1_fixed
+          n2_nominal <- n1_nominal * ratio
+
+          # Account for missing data to get effective sample sizes
+          if (input$adjust_missing_cont_ss) {
+            p_missing <- input$missing_pct_cont_ss / 100
+            n1_effective <- ceiling(n1_nominal * (1 - p_missing))
+            n2_effective <- ceiling(n2_nominal * (1 - p_missing))
+            missing_note <- paste0(" After accounting for ", input$missing_pct_cont_ss,
+              "% missing data (", tolower(substr(input$missing_mechanism_cont_ss, 1, 4)),
+              "), effective sample sizes are n1=", n1_effective, ", n2=", n2_effective, ".")
+          } else {
+            n1_effective <- n1_nominal
+            n2_effective <- n2_nominal
+            missing_note <- ""
+          }
+
+          # Solve for minimal detectable d
+          d_detectable <- pwr.t2n.test(
+            n1 = n1_effective, n2 = n2_effective, d = NULL,
+            sig.level = input$cont_ss_alpha, power = power,
+            alternative = input$cont_ss_sided
+          )$d
+
+          text0 <- hr()
+          text1 <- h1("Results of this analysis")
+          text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+          text3 <- p(paste0(
+            "<strong>Minimal Detectable Effect Size Analysis (Tier 1 Enhancement)</strong><br>",
+            "With available sample sizes of n1=", n1_nominal, " (Group 1) and n2=",
+            round(n2_nominal), " (Group 2, ratio=", ratio, "),",
+            missing_note,
+            " With ", format(power * 100, digits = 0), "% power and α = ", input$cont_ss_alpha,
+            " (", input$cont_ss_sided, " test), ",
+            "the <strong>minimal detectable effect size is Cohen's d = ",
+            format(d_detectable, digits = 3), "</strong>. ",
+            "This is the smallest standardized mean difference that can be reliably detected with this sample size. ",
+            "Cohen's d is the standardized mean difference (difference in means / pooled SD)."
+          ))
+
+          effect_size_box <- HTML(paste0(
+            "<p style='background-color: #d4edda; border-left: 4px solid #28a745; padding: 10px; margin-top: 15px;'>",
+            "<strong>Minimal Detectable Effect (Tier 1 Enhancement):</strong><br>",
+            "<strong>Cohen's d:</strong> ", format(d_detectable, digits = 3), "<br>",
+            "<strong>Interpretation:</strong> ",
+            ifelse(d_detectable < 0.2, "Very small effect",
+              ifelse(d_detectable < 0.5, "Small effect",
+                ifelse(d_detectable < 0.8, "Medium effect", "Large effect"))),
+            " (Cohen 1988 guidelines: 0.2=small, 0.5=medium, 0.8=large)",
+            "</p>"
+          ))
+
+          HTML(paste0(text0, text1, text2, text3, effect_size_box))
+        }
       } else if (input$tabset == "Non-Inferiority") {
+        # Feature 2: Minimal Detectable Effect Size Calculator
+        calc_mode <- input$noninf_calc_mode
         p1 <- input$noninf_p1 / 100
         p2 <- input$noninf_p2 / 100
-        margin <- input$noninf_margin / 100
         power <- input$noninf_power / 100
         ratio <- input$noninf_ratio
 
-        # Non-inferiority sample size calculation
-        # Based on difference in proportions with non-inferiority margin
-        # H0: p1 - p2 >= margin (inferior), H1: p1 - p2 < margin (non-inferior)
-        # Use one-sided test
+        if (calc_mode == "calc_n") {
+          # Calculate Sample Size (original functionality)
+          margin <- input$noninf_margin / 100
 
-        # Calculate using pwr package with adjusted effect size
-        # For non-inferiority, we test against the margin, not zero
-        # Effective difference = true_diff - margin (must be < 0 for non-inferiority)
-        true_diff <- p1 - p2
-        effect_diff <- true_diff - margin # This should be negative for non-inferiority
+          # Non-inferiority sample size calculation
+          # H0: p1 - p2 >= margin (inferior), H1: p1 - p2 < margin (non-inferior)
+          # Use one-sided test
 
-        # Calculate effect size h for the margin test
-        h <- ES.h(p1, p2 + margin)
+          # Calculate effect size h for the margin test
+          h <- ES.h(p1, p2 + margin)
 
-        if (ratio == 1) {
-          n <- pwr.2p.test(
-            h = abs(h), sig.level = input$noninf_alpha,
-            power = power, alternative = "less"
-          )$n
-          n1 <- n
-          n2 <- n
+          if (ratio == 1) {
+            n <- pwr.2p.test(
+              h = abs(h), sig.level = input$noninf_alpha,
+              power = power, alternative = "less"
+            )$n
+            n1_base <- n
+            n2_base <- n
+          } else {
+            f <- function(n1) {
+              n2 <- n1 * ratio
+              pwr.2p2n.test(
+                h = abs(h), n1 = n1, n2 = n2,
+                sig.level = input$noninf_alpha,
+                alternative = "less"
+              )$power - power
+            }
+            n1_base <- tryCatch(
+              {
+                uniroot(f, c(2, 1e6), extendInt = "yes")$root
+              },
+              error = function(e) {
+                pwr.2p.test(
+                  h = abs(h), sig.level = input$noninf_alpha,
+                  power = power, alternative = "less"
+                )$n
+              }
+            )
+            n2_base <- n1_base * ratio
+          }
+          n_total_base <- ceiling(n1_base + n2_base)
+
+          # Apply missing data adjustment if enabled (Tier 1 Enhancement)
+          if (input$adjust_missing_noninf) {
+            missing_adj <- calc_missing_data_inflation(
+              n_total_base,
+              input$missing_pct_noninf,
+              input$missing_mechanism_noninf
+            )
+            n_total_final <- missing_adj$n_inflated
+            # Maintain allocation ratio
+            n1_final <- ceiling(n_total_final / (1 + ratio))
+            n2_final <- n_total_final - n1_final
+
+            missing_data_text <- HTML(paste0(
+              "<p style='background-color: #fff3cd; border-left: 4px solid #f39c12; padding: 10px; margin-top: 15px;'>",
+              "<strong>Missing Data Adjustment (Tier 1 Enhancement):</strong> ",
+              missing_adj$interpretation,
+              "<br><strong>Total sample size before adjustment:</strong> ", n_total_base,
+              "<br><strong>Inflation factor:</strong> ", missing_adj$inflation_factor,
+              "<br><strong>Additional participants needed:</strong> ", missing_adj$n_increase,
+              "</p>"
+            ))
+          } else {
+            n1_final <- ceiling(n1_base)
+            n2_final <- ceiling(n2_base)
+            n_total_final <- n1_final + n2_final
+            missing_data_text <- HTML("")
+          }
+
+          text0 <- hr()
+          text1 <- h1("Results of this analysis")
+          text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+          text3 <- p(paste0(
+            "For a non-inferiority trial comparing a test treatment (expected event rate: ",
+            format(p1 * 100, digits = 2, nsmall = 1), "%) to a reference treatment (expected event rate: ",
+            format(p2 * 100, digits = 2, nsmall = 1), "%) with a non-inferiority margin of ",
+            format(margin * 100, digits = 2, nsmall = 1), " percentage points, to demonstrate non-inferiority with ",
+            format(power * 100, digits = 0, nsmall = 0), "% power at α = ", input$noninf_alpha,
+            " (one-sided test), the required sample sizes are: Test Group: n1 = ",
+            format(n1_final, digits = 0, nsmall = 0), ", Reference Group: n2 = ",
+            format(n2_final, digits = 0, nsmall = 0), " (total N = ",
+            format(n_total_final, digits = 0, nsmall = 0), ").",
+            if (input$adjust_missing_noninf) {
+              paste0(" <strong>After adjusting for ", input$missing_pct_noninf,
+                     "% missing data.</strong>")
+            } else {
+              ""
+            },
+            " Non-inferiority will be demonstrated if the upper bound of the confidence interval for the difference (Test - Reference) is less than the margin."
+          ))
+          HTML(paste0(text0, text1, text2, text3, missing_data_text))
+
         } else {
-          f <- function(n1) {
-            n2 <- n1 * ratio
-            pwr.2p2n.test(
-              h = abs(h), n1 = n1, n2 = n2,
+          # Calculate Margin (Feature 2: Tier 1 Enhancement)
+          n1_nominal <- input$noninf_n1_fixed
+          n2_nominal <- n1_nominal * ratio
+
+          # Account for missing data to get effective sample sizes
+          if (input$adjust_missing_noninf) {
+            p_missing <- input$missing_pct_noninf / 100
+            n1_effective <- ceiling(n1_nominal * (1 - p_missing))
+            n2_effective <- ceiling(n2_nominal * (1 - p_missing))
+            missing_note <- paste0(" After accounting for ", input$missing_pct_noninf,
+              "% missing data (", tolower(substr(input$missing_mechanism_noninf, 1, 4)),
+              "), effective sample sizes are n1=", n1_effective, ", n2=", n2_effective, ".")
+          } else {
+            n1_effective <- n1_nominal
+            n2_effective <- n2_nominal
+            missing_note <- ""
+          }
+
+          # Solve for minimal detectable margin using binary search
+          # Search range: margin from 0.001 to 0.5 (0.1% to 50%)
+          margin_lower <- 0.001
+          margin_upper <- 0.5
+          tolerance <- 0.001
+          max_iter <- 100
+
+          for (i in 1:max_iter) {
+            margin_mid <- (margin_lower + margin_upper) / 2
+            h <- ES.h(p1, p2 + margin_mid)
+
+            power_achieved <- pwr.2p2n.test(
+              h = abs(h), n1 = n1_effective, n2 = n2_effective,
               sig.level = input$noninf_alpha,
               alternative = "less"
-            )$power - power
-          }
-          n1 <- tryCatch(
-            {
-              uniroot(f, c(2, 1e6), extendInt = "yes")$root
-            },
-            error = function(e) {
-              pwr.2p.test(
-                h = abs(h), sig.level = input$noninf_alpha,
-                power = power, alternative = "less"
-              )$n
-            }
-          )
-          n2 <- n1 * ratio
-        }
+            )$power
 
-        text0 <- hr()
-        text1 <- h1("Results of this analysis")
-        text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
-        text3 <- p(paste0(
-          "For a non-inferiority trial comparing a test treatment (expected event rate: ",
-          format(p1 * 100, digits = 2, nsmall = 1), "%) to a reference treatment (expected event rate: ",
-          format(p2 * 100, digits = 2, nsmall = 1), "%) with a non-inferiority margin of ",
-          format(margin * 100, digits = 2, nsmall = 1), " percentage points, to demonstrate non-inferiority with ",
-          format(power * 100, digits = 0, nsmall = 0), "% power at α = ", input$noninf_alpha,
-          " (one-sided test), the required sample sizes are: Test Group: n1 = ",
-          format(ceiling(n1), digits = 0, nsmall = 0), ", Reference Group: n2 = ",
-          format(ceiling(n2), digits = 0, nsmall = 0), " (total N = ",
-          format(ceiling(n1 + n2), digits = 0, nsmall = 0), "). ",
-          "Non-inferiority will be demonstrated if the upper bound of the confidence interval for the difference (Test - Reference) is less than the margin."
-        ))
-        HTML(paste0(text0, text1, text2, text3))
+            if (abs(power_achieved - power) < 0.01) {
+              break
+            } else if (power_achieved > power) {
+              # Margin too large, decrease it
+              margin_upper <- margin_mid
+            } else {
+              # Margin too small, increase it
+              margin_lower <- margin_mid
+            }
+          }
+
+          margin_detectable <- margin_mid
+
+          text0 <- hr()
+          text1 <- h1("Results of this analysis")
+          text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+          text3 <- p(paste0(
+            "<strong>Minimal Detectable Margin Analysis (Tier 1 Enhancement)</strong><br>",
+            "With available sample sizes of n1=", n1_nominal, " (Test Group) and n2=",
+            round(n2_nominal), " (Reference Group, ratio=", ratio, "),",
+            missing_note,
+            " With ", format(power * 100, digits = 0), "% power and α = ", input$noninf_alpha,
+            " (one-sided test), for a non-inferiority trial comparing test treatment (expected event rate: ",
+            format(p1 * 100, digits = 2), "%) to reference treatment (expected event rate: ",
+            format(p2 * 100, digits = 2), "%), ",
+            "the <strong>minimal detectable non-inferiority margin is ",
+            format(margin_detectable * 100, digits = 2), " percentage points</strong>. ",
+            "This is the largest margin that can be reliably tested for non-inferiority with this sample size. ",
+            "Non-inferiority will be demonstrated if the upper bound of the confidence interval for the difference (Test - Reference) is less than this margin."
+          ))
+
+          effect_size_box <- HTML(paste0(
+            "<p style='background-color: #d4edda; border-left: 4px solid #28a745; padding: 10px; margin-top: 15px;'>",
+            "<strong>Minimal Detectable Margin (Tier 1 Enhancement):</strong><br>",
+            "<strong>Non-Inferiority Margin:</strong> ", format(margin_detectable * 100, digits = 2), " percentage points<br>",
+            "<strong>Interpretation:</strong> Can demonstrate non-inferiority if the true difference (Test - Reference) is less than ",
+            format(margin_detectable * 100, digits = 2), " percentage points",
+            "</p>"
+          ))
+
+          HTML(paste0(text0, text1, text2, text3, effect_size_box))
+        }
       }
     })
   })
@@ -1150,9 +2092,9 @@ server <- function(input, output, session) {
     })
   })
 
-  ################################################################################################## POWER VS. SAMPLE SIZE PLOT
+  ################################################################################################## POWER VS. SAMPLE SIZE PLOT (Feature 3: Interactive Power Curves)
 
-  output$power_plot <- renderPlot(
+  output$power_plot <- renderPlotly(
     {
       if (!v$doAnalysis) {
         return()
@@ -1165,26 +2107,120 @@ server <- function(input, output, session) {
         validate_inputs()
 
         if (input$tabset == "Power (Single)") {
-          p.out <- pwr.p.test(
-            sig.level = input$power_alpha, power = NULL,
-            h = ES.h(1 / input$power_p, 0), alt = "greater", n = input$power_n
+          # Generate power curve data
+          n_current <- input$power_n
+          n_seq <- seq(max(10, floor(n_current * 0.25)),
+            floor(n_current * 4),
+            length.out = 100
           )
-          plot(p.out)
+          pow <- vapply(n_seq, function(n) {
+            pwr.p.test(
+              sig.level = input$power_alpha, power = NULL,
+              h = ES.h(1 / input$power_p, 0), alt = "greater", n = n
+            )$power
+          }, FUN.VALUE = numeric(1))
+
+          # Create interactive plotly
+          plot_ly() %>%
+            add_trace(
+              x = n_seq, y = pow, type = "scatter", mode = "lines",
+              line = list(color = "#2B5876", width = 3),
+              name = "Power Curve",
+              hovertemplate = paste0(
+                "<b>Sample Size:</b> %{x:.0f}<br>",
+                "<b>Power:</b> %{y:.3f}<br>",
+                "<extra></extra>"
+              )
+            ) %>%
+            add_trace(
+              x = range(n_seq), y = c(0.8, 0.8),
+              type = "scatter", mode = "lines",
+              line = list(color = "red", width = 2, dash = "dash"),
+              name = "80% Power Target",
+              hovertemplate = "<b>Target Power:</b> 80%<extra></extra>"
+            ) %>%
+            add_trace(
+              x = c(n_current, n_current), y = c(0, 1),
+              type = "scatter", mode = "lines",
+              line = list(color = "green", width = 2, dash = "dot"),
+              name = "Current N",
+              hovertemplate = paste0("<b>Current N:</b> ", n_current, "<extra></extra>")
+            ) %>%
+            layout(
+              title = list(text = "Interactive Power Curve (Tier 1 Enhancement)", font = list(size = 16)),
+              xaxis = list(title = "Sample Size (N)", gridcolor = "#e0e0e0"),
+              yaxis = list(title = "Power", range = c(0, 1), gridcolor = "#e0e0e0"),
+              hovermode = "closest",
+              plot_bgcolor = "#f8f9fa",
+              paper_bgcolor = "white",
+              legend = list(x = 0.7, y = 0.2)
+            ) %>%
+            config(displayModeBar = TRUE, displaylogo = FALSE)
+
         } else if (input$tabset == "Sample Size (Single)") {
-          p.out <- pwr.p.test(
-            sig.level = input$ss_alpha, power = input$ss_power / 100,
+          # Generate power curve data
+          target_power <- input$ss_power / 100
+          n_required <- pwr.p.test(
+            sig.level = input$ss_alpha, power = target_power,
             h = ES.h(1 / input$ss_p, 0), alt = "greater", n = NULL
+          )$n
+          n_seq <- seq(max(10, floor(n_required * 0.25)),
+            floor(n_required * 3),
+            length.out = 100
           )
-          plot(p.out)
+          pow <- vapply(n_seq, function(n) {
+            pwr.p.test(
+              sig.level = input$ss_alpha, power = NULL,
+              h = ES.h(1 / input$ss_p, 0), alt = "greater", n = n
+            )$power
+          }, FUN.VALUE = numeric(1))
+
+          # Create interactive plotly
+          plot_ly() %>%
+            add_trace(
+              x = n_seq, y = pow, type = "scatter", mode = "lines",
+              line = list(color = "#2B5876", width = 3),
+              name = "Power Curve",
+              hovertemplate = paste0(
+                "<b>Sample Size:</b> %{x:.0f}<br>",
+                "<b>Power:</b> %{y:.3f}<br>",
+                "<extra></extra>"
+              )
+            ) %>%
+            add_trace(
+              x = range(n_seq), y = c(target_power, target_power),
+              type = "scatter", mode = "lines",
+              line = list(color = "red", width = 2, dash = "dash"),
+              name = paste0("Target Power (", round(target_power * 100), "%)"),
+              hovertemplate = paste0("<b>Target Power:</b> ", round(target_power * 100), "%<extra></extra>")
+            ) %>%
+            add_trace(
+              x = c(n_required, n_required), y = c(0, 1),
+              type = "scatter", mode = "lines",
+              line = list(color = "green", width = 2, dash = "dot"),
+              name = "Required N",
+              hovertemplate = paste0("<b>Required N:</b> ", round(n_required), "<extra></extra>")
+            ) %>%
+            layout(
+              title = list(text = "Interactive Power Curve (Tier 1 Enhancement)", font = list(size = 16)),
+              xaxis = list(title = "Sample Size (N)", gridcolor = "#e0e0e0"),
+              yaxis = list(title = "Power", range = c(0, 1), gridcolor = "#e0e0e0"),
+              hovermode = "closest",
+              plot_bgcolor = "#f8f9fa",
+              paper_bgcolor = "white",
+              legend = list(x = 0.7, y = 0.2)
+            ) %>%
+            config(displayModeBar = TRUE, displaylogo = FALSE)
         } else if (input$tabset == "Power (Two-Group)") {
-          # Ratio-aware plot for unequal allocation
+          # Ratio-aware interactive plot for unequal allocation
           p1 <- input$twogrp_pow_p1 / 100
           p2 <- input$twogrp_pow_p2 / 100
           ratio <- input$twogrp_pow_n2 / input$twogrp_pow_n1
+          n1_current <- input$twogrp_pow_n1
 
           # Generate power curve varying n1
-          n1_seq <- seq(max(5, floor(input$twogrp_pow_n1 * 0.25)),
-            floor(input$twogrp_pow_n1 * 4),
+          n1_seq <- seq(max(5, floor(n1_current * 0.25)),
+            floor(n1_current * 4),
             length.out = 100
           )
           pow <- vapply(n1_seq, function(n1) {
@@ -1195,24 +2231,59 @@ server <- function(input, output, session) {
             )$power
           }, FUN.VALUE = numeric(1))
 
-          plot(n1_seq, pow,
-            type = "l", lwd = 2, col = "darkblue",
-            xlab = "Sample Size n1 (Group 1)", ylab = "Power",
-            main = paste0("Power Analysis (n2/n1 = ", round(ratio, 3), ")"),
-            ylim = c(0, 1), las = 1
-          )
-          abline(h = 0.8, col = "red", lty = 2)
-          abline(v = input$twogrp_pow_n1, col = "darkgreen", lty = 2)
-          grid()
+          # Create interactive plotly
+          plot_ly() %>%
+            add_trace(
+              x = n1_seq, y = pow, type = "scatter", mode = "lines",
+              line = list(color = "#2B5876", width = 3),
+              name = "Power Curve",
+              hovertemplate = paste0(
+                "<b>n1 (Group 1):</b> %{x:.0f}<br>",
+                "<b>n2 (Group 2):</b> ", round(n1_seq * ratio, 0), "<br>",
+                "<b>Power:</b> %{y:.3f}<br>",
+                "<extra></extra>"
+              )
+            ) %>%
+            add_trace(
+              x = range(n1_seq), y = c(0.8, 0.8),
+              type = "scatter", mode = "lines",
+              line = list(color = "red", width = 2, dash = "dash"),
+              name = "80% Power Target",
+              hovertemplate = "<b>Target Power:</b> 80%<extra></extra>"
+            ) %>%
+            add_trace(
+              x = c(n1_current, n1_current), y = c(0, 1),
+              type = "scatter", mode = "lines",
+              line = list(color = "green", width = 2, dash = "dot"),
+              name = "Current n1",
+              hovertemplate = paste0("<b>Current n1:</b> ", n1_current, "<extra></extra>")
+            ) %>%
+            layout(
+              title = list(text = paste0("Interactive Power Curve (n2/n1 = ", round(ratio, 3), ")"), font = list(size = 16)),
+              xaxis = list(title = "Sample Size n1 (Group 1)", gridcolor = "#e0e0e0"),
+              yaxis = list(title = "Power", range = c(0, 1), gridcolor = "#e0e0e0"),
+              hovermode = "closest",
+              plot_bgcolor = "#f8f9fa",
+              paper_bgcolor = "white",
+              legend = list(x = 0.7, y = 0.2)
+            ) %>%
+            config(displayModeBar = TRUE, displaylogo = FALSE)
+
         } else if (input$tabset == "Sample Size (Two-Group)") {
-          # Ratio-aware plot for sample size calculation
+          # Ratio-aware interactive plot for sample size calculation
           p1 <- input$twogrp_ss_p1 / 100
           p2 <- input$twogrp_ss_p2 / 100
           ratio <- input$twogrp_ss_ratio
           target <- input$twogrp_ss_power / 100
 
+          # Calculate required n1
+          n1_required <- solve_n1_for_ratio(
+            ES.h(p1, p2), ratio,
+            input$twogrp_ss_alpha, target, input$twogrp_ss_sided
+          )
+
           # Generate power curve varying n1
-          n1_seq <- seq(5, 2000, length.out = 100)
+          n1_seq <- seq(max(5, floor(n1_required * 0.25)), floor(n1_required * 3), length.out = 100)
           pow <- vapply(n1_seq, function(n1) {
             pwr.2p2n.test(
               h = ES.h(p1, p2), n1 = n1, n2 = n1 * ratio,
@@ -1221,14 +2292,43 @@ server <- function(input, output, session) {
             )$power
           }, FUN.VALUE = numeric(1))
 
-          plot(n1_seq, pow,
-            type = "l", lwd = 2, col = "darkblue",
-            xlab = "Sample Size n1 (Group 1)", ylab = "Power",
-            main = paste0("Power Analysis (n2/n1 = ", round(ratio, 3), ")"),
-            ylim = c(0, 1), las = 1
-          )
-          abline(h = target, col = "red", lty = 2, lwd = 2)
-          grid()
+          # Create interactive plotly
+          plot_ly() %>%
+            add_trace(
+              x = n1_seq, y = pow, type = "scatter", mode = "lines",
+              line = list(color = "#2B5876", width = 3),
+              name = "Power Curve",
+              hovertemplate = paste0(
+                "<b>n1 (Group 1):</b> %{x:.0f}<br>",
+                "<b>n2 (Group 2):</b> ", round(n1_seq * ratio, 0), "<br>",
+                "<b>Power:</b> %{y:.3f}<br>",
+                "<extra></extra>"
+              )
+            ) %>%
+            add_trace(
+              x = range(n1_seq), y = c(target, target),
+              type = "scatter", mode = "lines",
+              line = list(color = "red", width = 2, dash = "dash"),
+              name = paste0("Target Power (", round(target * 100), "%)"),
+              hovertemplate = paste0("<b>Target Power:</b> ", round(target * 100), "%<extra></extra>")
+            ) %>%
+            add_trace(
+              x = c(n1_required, n1_required), y = c(0, 1),
+              type = "scatter", mode = "lines",
+              line = list(color = "green", width = 2, dash = "dot"),
+              name = "Required n1",
+              hovertemplate = paste0("<b>Required n1:</b> ", round(n1_required), "<extra></extra>")
+            ) %>%
+            layout(
+              title = list(text = paste0("Interactive Power Curve (n2/n1 = ", round(ratio, 3), ")"), font = list(size = 16)),
+              xaxis = list(title = "Sample Size n1 (Group 1)", gridcolor = "#e0e0e0"),
+              yaxis = list(title = "Power", range = c(0, 1), gridcolor = "#e0e0e0"),
+              hovermode = "closest",
+              plot_bgcolor = "#f8f9fa",
+              paper_bgcolor = "white",
+              legend = list(x = 0.7, y = 0.2)
+            ) %>%
+            config(displayModeBar = TRUE, displaylogo = FALSE)
         } else if (grepl("Survival", input$tabset)) {
           # Generate power curve for survival analysis
           if (input$tabset == "Power (Survival)") {

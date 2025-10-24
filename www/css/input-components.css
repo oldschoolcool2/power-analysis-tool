@@ -1,0 +1,270 @@
+/**
+ * Input Component Enhancements
+ * Statistical Power Analysis Tool
+ *
+ * Enhanced styling for segmented controls, sliders, and other input components
+ */
+
+/* ========================================================================
+   SEGMENTED CONTROL ENHANCEMENTS
+   ======================================================================== */
+
+/* Wrapper for segmented control */
+.segmented-control-wrapper {
+  margin-bottom: var(--space-5);
+}
+
+.segmented-control-wrapper .control-label {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-3);
+}
+
+/* The segmented control container */
+.segmented-control {
+  display: inline-flex;
+  background: var(--color-neutral-100);
+  border-radius: var(--border-radius-md);
+  padding: var(--space-1);
+  gap: var(--space-1);
+  width: auto;
+}
+
+/* Hide the default radio button input */
+.segmented-control .radio {
+  margin: 0;
+  display: inline-flex;
+}
+
+.segmented-control input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Style the labels as buttons */
+.segmented-control label {
+  margin: 0;
+  padding: var(--space-2) var(--space-5);
+  min-width: 64px;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  user-select: none;
+}
+
+.segmented-control label:hover {
+  background: var(--color-neutral-200);
+  color: var(--text-primary);
+}
+
+/* Active/selected state */
+.segmented-control input[type="radio"]:checked + label {
+  background: var(--bg-card);
+  color: var(--color-primary-700);
+  font-weight: var(--font-weight-semibold);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Focus state for accessibility */
+.segmented-control input[type="radio"]:focus + label {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-primary-100);
+}
+
+/* For Shiny radio button container */
+.segmented-control .shiny-input-radiogroup {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.segmented-control .shiny-input-radiogroup .radio {
+  display: inline-flex;
+  margin: 0;
+}
+
+/* ========================================================================
+   ENHANCED SLIDER WRAPPER
+   ======================================================================== */
+
+.enhanced-slider-wrapper {
+  margin-bottom: var(--space-5);
+}
+
+.enhanced-slider-wrapper .control-label {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-3);
+}
+
+/* Slider value display */
+.enhanced-slider-wrapper .irs-single {
+  background: var(--color-primary-600);
+  color: var(--text-inverse);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--border-radius-md);
+  top: -40px;
+}
+
+/* ========================================================================
+   NUMERIC INPUT ENHANCEMENTS
+   ======================================================================== */
+
+/* Modern numeric input wrapper */
+.modern-numeric-input {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.modern-numeric-input label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.modern-numeric-input input {
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  background: var(--bg-input);
+  border: var(--border-default);
+  border-radius: var(--border-radius-md);
+  padding: var(--space-3) var(--space-4);
+  transition: all var(--transition-base);
+}
+
+.modern-numeric-input input:focus {
+  outline: none;
+  border-color: var(--color-primary-600);
+  box-shadow: var(--shadow-focus);
+}
+
+.modern-numeric-input input:disabled {
+  background: var(--bg-input-disabled);
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+
+/* ========================================================================
+   BUTTON ENHANCEMENTS
+   ======================================================================== */
+
+/* Calculate button wrapper */
+.calculate-button-wrapper {
+  margin-top: var(--space-6);
+  margin-bottom: var(--space-4);
+}
+
+/* Button group for secondary actions */
+.btn-group-custom {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.btn-group-custom .btn {
+  flex: 1;
+}
+
+/* ========================================================================
+   FORM SECTION SEPARATORS
+   ======================================================================== */
+
+/* Horizontal rule styling within forms */
+.content-card hr {
+  border: none;
+  border-top: var(--border-subtle);
+  margin: var(--space-6) 0;
+}
+
+/* Section headers within input cards */
+.input-section-header {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin-top: var(--space-6);
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: var(--border-subtle);
+}
+
+/* ========================================================================
+   CHECKBOX ENHANCEMENTS
+   ======================================================================== */
+
+.checkbox label,
+.radio label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-normal);
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.checkbox input[type="checkbox"],
+.radio input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--color-primary-600);
+}
+
+/* ========================================================================
+   HELP TEXT ENHANCEMENTS
+   ======================================================================== */
+
+.help-block,
+.shiny-input-container .help-block {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+  margin-top: var(--space-2);
+  margin-bottom: var(--space-4);
+  line-height: var(--line-height-relaxed);
+}
+
+/* ========================================================================
+   RESPONSIVE ADJUSTMENTS
+   ======================================================================== */
+
+/* Mobile: Stack segmented control vertically if too many options */
+@media (max-width: 640px) {
+  .segmented-control {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .segmented-control label {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .btn-group-custom {
+    flex-direction: column;
+  }
+
+  .btn-group-custom .btn {
+    width: 100%;
+  }
+}

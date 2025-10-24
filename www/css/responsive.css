@@ -1,0 +1,451 @@
+/**
+ * Responsive Design - Media Queries
+ * Statistical Power Analysis Tool
+ *
+ * Mobile-first approach with breakpoints for different device sizes
+ * Breakpoints: sm (640px), md (768px), lg (1024px), xl (1280px), 2xl (1536px)
+ */
+
+/* ========================================================================
+   BASE - Mobile First (< 640px)
+   ======================================================================== */
+
+/* Default styles are mobile-first, defined in modern-theme.css */
+
+/* Ensure content doesn't overflow on small screens */
+body {
+  overflow-x: hidden;
+}
+
+.container-fluid {
+  padding-left: var(--space-4);
+  padding-right: var(--space-4);
+}
+
+/* ========================================================================
+   SMALL DEVICES - Phones in landscape, small tablets (≥ 640px)
+   ======================================================================== */
+
+@media (min-width: 640px) {
+  .container-fluid {
+    padding-left: var(--space-6);
+    padding-right: var(--space-6);
+  }
+
+  /* Slightly larger text on larger phones */
+  h1 {
+    font-size: var(--font-size-3xl);
+  }
+
+  /* Button groups can be side by side */
+  .btn-group {
+    flex-direction: row;
+  }
+
+  /* Content cards get more padding */
+  .content-card {
+    padding: var(--space-6);
+  }
+}
+
+/* ========================================================================
+   MEDIUM DEVICES - Tablets (≥ 768px)
+   ======================================================================== */
+
+@media (min-width: 768px) {
+  /* Sidebar layout adjustments */
+  .col-sm-4,
+  .col-md-4 {
+    padding-right: var(--space-6);
+  }
+
+  .col-sm-8,
+  .col-md-8 {
+    padding-left: var(--space-6);
+  }
+
+  /* Tables can show more columns */
+  .dataTable {
+    font-size: var(--font-size-base);
+  }
+
+  /* Form layouts can be more compact */
+  .form-inline {
+    display: flex;
+    gap: var(--space-4);
+    align-items: flex-end;
+  }
+
+  .form-inline .form-group {
+    flex: 1;
+  }
+}
+
+/* ========================================================================
+   LARGE DEVICES - Desktops (≥ 1024px)
+   ======================================================================== */
+
+@media (min-width: 1024px) {
+  /* More spacious layout */
+  .container-fluid {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  /* Larger content cards */
+  .content-card {
+    padding: var(--space-8);
+  }
+
+  /* Main panel gets better spacing */
+  .main-panel {
+    padding: var(--space-8);
+  }
+
+  /* Sidebar well gets better spacing */
+  .well {
+    padding: var(--space-8);
+  }
+
+  /* Typography scales up */
+  h1 {
+    font-size: var(--font-size-4xl);
+  }
+
+  h2 {
+    font-size: var(--font-size-2xl);
+  }
+
+  /* Buttons can be larger */
+  .btn-primary.btn-lg {
+    padding: var(--space-5) var(--space-10);
+    font-size: var(--font-size-lg);
+  }
+
+  /* Tables get better spacing */
+  .dataTable thead th,
+  .dataTable tbody td {
+    padding: var(--space-4) var(--space-5);
+  }
+
+  /* Accordions get more breathing room */
+  .accordion-button,
+  .panel-title a {
+    padding: var(--space-5) var(--space-8);
+  }
+
+  .accordion-body,
+  .panel-body {
+    padding: 0 var(--space-8) var(--space-8) var(--space-8);
+  }
+}
+
+/* ========================================================================
+   EXTRA LARGE DEVICES - Large desktops (≥ 1280px)
+   ======================================================================== */
+
+@media (min-width: 1280px) {
+  /* Maximum width constraint for readability */
+  .main-panel {
+    max-width: var(--content-max-width);
+    margin: 0 auto;
+    padding: var(--space-10);
+  }
+
+  /* Even more spacious cards */
+  .content-card {
+    padding: var(--space-10);
+  }
+}
+
+/* ========================================================================
+   2XL DEVICES - Very large screens (≥ 1536px)
+   ======================================================================== */
+
+@media (min-width: 1536px) {
+  /* Comfortable reading width */
+  .container-fluid {
+    max-width: 1600px;
+  }
+
+  /* Typography can scale further */
+  body {
+    font-size: 18px; /* Base size increases */
+  }
+}
+
+/* ========================================================================
+   PRINT STYLES
+   ======================================================================== */
+
+@media print {
+  /* Hide interactive elements */
+  .btn,
+  button,
+  .quick-preview-footer,
+  .app-header,
+  .nav-tabs {
+    display: none !important;
+  }
+
+  /* Ensure content is visible */
+  .content-card {
+    box-shadow: none;
+    border: var(--border-default);
+    page-break-inside: avoid;
+  }
+
+  /* Better typography for print */
+  body {
+    color: #000;
+    background: #fff;
+  }
+
+  a {
+    text-decoration: underline;
+    color: #000;
+  }
+
+  /* Show link URLs after link text */
+  a[href]:after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+    font-style: italic;
+  }
+
+  /* Remove shadows and backgrounds */
+  * {
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  /* Ensure tables fit */
+  table {
+    font-size: 0.9em;
+  }
+
+  /* Page breaks */
+  h1, h2, h3 {
+    page-break-after: avoid;
+  }
+}
+
+/* ========================================================================
+   MOBILE SPECIFIC - Max width queries
+   ======================================================================== */
+
+/* Extra small devices (phones, < 640px) */
+@media (max-width: 639px) {
+  /* Stack layouts vertically */
+  .row {
+    flex-direction: column;
+  }
+
+  /* Full width columns on mobile */
+  .col-sm-4,
+  .col-sm-8,
+  .col-md-4,
+  .col-md-8 {
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+  }
+
+  /* Sidebar becomes top panel on mobile */
+  .well {
+    margin-bottom: var(--space-4);
+  }
+
+  /* Smaller padding for mobile */
+  .content-card {
+    padding: var(--space-4);
+    margin-bottom: var(--space-4);
+  }
+
+  /* Compact forms */
+  .form-group {
+    margin-bottom: var(--space-3);
+  }
+
+  /* Smaller buttons on mobile */
+  .btn-primary.btn-lg {
+    padding: var(--space-3) var(--space-6);
+    font-size: var(--font-size-base);
+  }
+
+  /* Stack button groups */
+  .btn-group {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .btn-group .btn {
+    width: 100%;
+  }
+
+  /* Compact tables on mobile */
+  .dataTable {
+    font-size: var(--font-size-sm);
+  }
+
+  .dataTable thead th,
+  .dataTable tbody td {
+    padding: var(--space-2) var(--space-3);
+  }
+
+  /* Scrollable tables */
+  .dataTables_wrapper {
+    overflow-x: auto;
+  }
+
+  /* Smaller accordions */
+  .accordion-button,
+  .panel-title a {
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--font-size-sm);
+  }
+
+  .accordion-body,
+  .panel-body {
+    padding: 0 var(--space-4) var(--space-4) var(--space-4);
+    font-size: var(--font-size-sm);
+  }
+
+  /* Compact tabs */
+  .nav-tabs .nav-link {
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--font-size-sm);
+  }
+
+  /* Hide or abbreviate footer text on very small screens */
+  .quick-preview-footer {
+    padding: 0 var(--space-4);
+  }
+
+  .quick-preview-text {
+    font-size: var(--font-size-xs);
+  }
+
+  .quick-preview-cta {
+    display: none; /* Hide "(Click Calculate...)" on mobile */
+  }
+
+  /* Header adjustments for mobile */
+  .app-header {
+    padding: 0 var(--space-4);
+  }
+
+  .app-header-title-main {
+    font-size: var(--font-size-base);
+  }
+
+  .app-header-title-sub {
+    display: none; /* Hide subtitle on small screens */
+  }
+}
+
+/* Landscape phones (< 768px height) */
+@media (max-height: 768px) and (orientation: landscape) {
+  /* Reduce vertical spacing in landscape */
+  .content-card {
+    padding: var(--space-4);
+    margin-bottom: var(--space-4);
+  }
+
+  .form-group {
+    margin-bottom: var(--space-2);
+  }
+}
+
+/* ========================================================================
+   ACCESSIBILITY - Reduced motion
+   ======================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ========================================================================
+   HIGH CONTRAST MODE
+   ======================================================================== */
+
+@media (prefers-contrast: high) {
+  /* Increase border contrast */
+  .content-card,
+  .form-control,
+  .btn {
+    border: 2px solid currentColor;
+  }
+
+  /* Stronger shadows */
+  .content-card {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Higher contrast text */
+  body {
+    color: #000;
+  }
+
+  a {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+  }
+}
+
+/* ========================================================================
+   UTILITIES - Responsive display helpers
+   ======================================================================== */
+
+/* Hide on mobile */
+@media (max-width: 639px) {
+  .d-none-mobile {
+    display: none !important;
+  }
+}
+
+/* Hide on tablet */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .d-none-tablet {
+    display: none !important;
+  }
+}
+
+/* Hide on desktop */
+@media (min-width: 1024px) {
+  .d-none-desktop {
+    display: none !important;
+  }
+}
+
+/* Show only on mobile */
+@media (min-width: 640px) {
+  .d-mobile-only {
+    display: none !important;
+  }
+}
+
+/* Show only on tablet */
+.d-tablet-only {
+  display: none !important;
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .d-tablet-only {
+    display: block !important;
+  }
+}
+
+/* Show only on desktop */
+@media (max-width: 1023px) {
+  .d-desktop-only {
+    display: none !important;
+  }
+}

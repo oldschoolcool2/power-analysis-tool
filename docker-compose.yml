@@ -9,4 +9,6 @@ services:
       # Mount only application code for hot reloading (not renv or system libraries)
       - './app.R:/srv/shiny-server/app.R:ro'
       - './analysis-report.Rmd:/srv/shiny-server/analysis-report.Rmd:ro'
+      - './R:/srv/shiny-server/R:ro'
       - './tests:/srv/shiny-server/tests:ro'
+      - './www:/srv/shiny-server/www:ro'

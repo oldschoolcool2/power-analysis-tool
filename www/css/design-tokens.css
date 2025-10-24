@@ -1,0 +1,363 @@
+/**
+ * Design Tokens - Semantic CSS Variables
+ * Statistical Power Analysis Tool
+ *
+ * This file contains all design tokens (semantic CSS variables) for the application.
+ * All colors, typography, spacing, shadows, and other design values should reference
+ * these tokens for consistency and maintainability.
+ *
+ * Usage: var(--token-name)
+ * Example: background-color: var(--bg-card);
+ */
+
+:root {
+  /* ========================================================================
+     PRIMARY COLORS - Deep Teal/Slate Professional Palette
+     ======================================================================== */
+
+  --color-primary-900: #0F2A3F;     /* Darkest - headers, primary text */
+  --color-primary-800: #1A3A52;     /* Dark - navigation background */
+  --color-primary-700: #2B5876;     /* Main primary - active states */
+  --color-primary-600: #4E7FA0;     /* Medium - buttons, links */
+  --color-primary-500: #6B9EC7;     /* Light - hover states */
+  --color-primary-400: #8FB5D9;     /* Lighter - borders */
+  --color-primary-300: #B3CDEB;     /* Very light - backgrounds */
+  --color-primary-200: #D6E7F7;     /* Subtle backgrounds */
+  --color-primary-100: #EBF4FC;     /* Whisper - section backgrounds */
+
+  /* ========================================================================
+     ACCENT COLORS - Warm Amber/Orange for Warnings & CTAs
+     ======================================================================== */
+
+  --color-accent-700: #D97706;      /* Dark amber */
+  --color-accent-600: #F59E0B;      /* Main accent */
+  --color-accent-500: #FBBF24;      /* Light amber */
+  --color-accent-400: #FCD34D;      /* Very light */
+
+  /* ========================================================================
+     NEUTRAL GRAYS - Soft, Professional
+     ======================================================================== */
+
+  --color-neutral-900: #1D2A39;     /* Off-black for text */
+  --color-neutral-800: #2D3748;     /* Dark gray */
+  --color-neutral-700: #4A5568;     /* Medium gray */
+  --color-neutral-600: #718096;     /* Label gray */
+  --color-neutral-500: #A0AEC0;     /* Placeholder gray */
+  --color-neutral-400: #CBD5E0;     /* Border gray */
+  --color-neutral-300: #E2E8F0;     /* Light border */
+  --color-neutral-200: #EDF2F7;     /* Subtle background */
+  --color-neutral-100: #F7FAFC;     /* Whisper background */
+  --color-neutral-50: #F8F9FA;      /* Base background (NOT pure white) */
+  --color-white: #FFFFFF;           /* Card backgrounds */
+
+  /* ========================================================================
+     SEMANTIC COLORS - Status & Feedback
+     ======================================================================== */
+
+  /* Success */
+  --color-success-700: #047857;
+  --color-success-600: #059669;
+  --color-success-500: #10B981;
+  --color-success-100: #D1FAE5;
+
+  /* Warning */
+  --color-warning-700: #B45309;
+  --color-warning-600: #D97706;
+  --color-warning-500: #F59E0B;
+  --color-warning-100: #FEF3C7;
+
+  /* Error */
+  --color-error-700: #B91C1C;
+  --color-error-600: #DC2626;
+  --color-error-500: #EF4444;
+  --color-error-100: #FEE2E2;
+
+  /* Info */
+  --color-info-700: #1D4ED8;
+  --color-info-600: #2563EB;
+  --color-info-500: #3B82F6;
+  --color-info-100: #DBEAFE;
+
+  /* ========================================================================
+     SEMANTIC APPLICATION TOKENS - Backgrounds
+     ======================================================================== */
+
+  --bg-app: var(--color-neutral-50);           /* Main app background */
+  --bg-card: var(--color-white);               /* Content cards/panels */
+  --bg-sidebar: var(--color-primary-800);      /* Navigation sidebar */
+  --bg-header: var(--color-white);             /* App header */
+  --bg-footer: var(--color-primary-100);       /* Quick preview footer */
+  --bg-input: var(--color-white);              /* Input fields */
+  --bg-input-hover: var(--color-neutral-50);   /* Input hover state */
+  --bg-input-focus: var(--color-white);        /* Input focus state */
+  --bg-input-disabled: var(--color-neutral-100);
+  --bg-overlay: rgba(0, 0, 0, 0.5);            /* Modal overlays */
+
+  /* ========================================================================
+     SEMANTIC APPLICATION TOKENS - Text Colors
+     ======================================================================== */
+
+  --text-primary: var(--color-neutral-900);    /* Main body text */
+  --text-secondary: var(--color-neutral-700);  /* Secondary text */
+  --text-tertiary: var(--color-neutral-600);   /* Labels, captions */
+  --text-placeholder: var(--color-neutral-500);
+  --text-disabled: var(--color-neutral-400);
+  --text-inverse: var(--color-white);          /* On dark backgrounds */
+  --text-link: var(--color-primary-600);
+  --text-link-hover: var(--color-primary-700);
+  --text-success: var(--color-success-600);
+  --text-warning: var(--color-warning-600);
+  --text-error: var(--color-error-600);
+  --text-info: var(--color-info-600);
+
+  /* ========================================================================
+     BORDERS
+     ======================================================================== */
+
+  --border-color-subtle: var(--color-neutral-200);
+  --border-color-default: var(--color-neutral-300);
+  --border-color-strong: var(--color-neutral-400);
+  --border-color-primary: var(--color-primary-600);
+
+  --border-subtle: 1px solid var(--border-color-subtle);
+  --border-default: 1px solid var(--border-color-default);
+  --border-strong: 1px solid var(--border-color-strong);
+
+  --border-radius-sm: 4px;
+  --border-radius-md: 6px;
+  --border-radius-lg: 8px;
+  --border-radius-xl: 12px;
+  --border-radius-2xl: 16px;
+  --border-radius-full: 9999px;
+
+  /* ========================================================================
+     SHADOWS - Subtle Depth
+     ======================================================================== */
+
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+
+  /* Focus shadow with primary color */
+  --shadow-focus: 0 0 0 3px var(--color-primary-100);
+  --shadow-focus-error: 0 0 0 3px var(--color-error-100);
+
+  /* ========================================================================
+     SPACING SYSTEM (8px base)
+     ======================================================================== */
+
+  --space-0: 0;
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-7: 1.75rem;   /* 28px */
+  --space-8: 2rem;      /* 32px */
+  --space-9: 2.25rem;   /* 36px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-11: 2.75rem;  /* 44px */
+  --space-12: 3rem;     /* 48px */
+  --space-14: 3.5rem;   /* 56px */
+  --space-16: 4rem;     /* 64px */
+  --space-20: 5rem;     /* 80px */
+  --space-24: 6rem;     /* 96px */
+
+  /* ========================================================================
+     TYPOGRAPHY
+     ======================================================================== */
+
+  /* Font Families */
+  --font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  --font-family-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace;
+
+  /* Font Sizes - Type Scale */
+  --font-size-xs: 0.75rem;     /* 12px */
+  --font-size-sm: 0.875rem;    /* 14px */
+  --font-size-base: 1rem;      /* 16px */
+  --font-size-lg: 1.125rem;    /* 18px */
+  --font-size-xl: 1.25rem;     /* 20px */
+  --font-size-2xl: 1.5rem;     /* 24px */
+  --font-size-3xl: 1.875rem;   /* 30px */
+  --font-size-4xl: 2.25rem;    /* 36px */
+  --font-size-5xl: 3rem;       /* 48px */
+
+  /* Font Weights */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  /* Line Heights */
+  --line-height-none: 1;
+  --line-height-tight: 1.25;
+  --line-height-snug: 1.375;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.625;
+  --line-height-loose: 2;
+
+  /* Letter Spacing */
+  --letter-spacing-tighter: -0.05em;
+  --letter-spacing-tight: -0.025em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.025em;
+  --letter-spacing-wider: 0.05em;
+  --letter-spacing-widest: 0.1em;
+
+  /* ========================================================================
+     Z-INDEX SCALE - Layering
+     ======================================================================== */
+
+  --z-index-base: 0;
+  --z-index-dropdown: 1000;
+  --z-index-sticky: 1020;
+  --z-index-fixed: 1030;
+  --z-index-modal-backdrop: 1040;
+  --z-index-modal: 1050;
+  --z-index-popover: 1060;
+  --z-index-tooltip: 1070;
+
+  /* ========================================================================
+     TRANSITIONS & ANIMATIONS
+     ======================================================================== */
+
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slower: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ========================================================================
+     LAYOUT DIMENSIONS
+     ======================================================================== */
+
+  --sidebar-width: 280px;
+  --sidebar-width-collapsed: 64px;
+  --header-height: 60px;
+  --footer-height: 40px;
+  --content-max-width: 1200px;
+
+  /* Breakpoints (for use in media queries) */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+}
+
+/* ========================================================================
+   DARK MODE
+   ======================================================================== */
+
+/* Dark mode when user toggles it manually */
+[data-theme="dark"] {
+  /* Primary Colors - Adjusted for dark backgrounds */
+  --color-primary-900: #D6E7F7;     /* Lightest in dark mode */
+  --color-primary-800: #B3CDEB;
+  --color-primary-700: #8FB5D9;
+  --color-primary-600: #6B9EC7;     /* Main primary */
+  --color-primary-500: #4E7FA0;
+  --color-primary-400: #2B5876;
+  --color-primary-300: #1A3A52;
+  --color-primary-200: #0F2A3F;
+  --color-primary-100: #0A1F2E;     /* Darkest in dark mode */
+
+  /* Accent Colors - Slightly desaturated for dark mode */
+  --color-accent-700: #FBBF24;
+  --color-accent-600: #F59E0B;
+  --color-accent-500: #D97706;
+  --color-accent-400: #B45309;
+
+  /* Neutral Grays - Inverted for dark mode */
+  --color-neutral-900: #F8F9FA;     /* Almost white for text */
+  --color-neutral-800: #F7FAFC;
+  --color-neutral-700: #EDF2F7;     /* Light gray for text */
+  --color-neutral-600: #E2E8F0;     /* Secondary text */
+  --color-neutral-500: #CBD5E0;     /* Placeholder */
+  --color-neutral-400: #A0AEC0;     /* Border */
+  --color-neutral-300: #718096;     /* Light border */
+  --color-neutral-200: #4A5568;     /* Subtle background */
+  --color-neutral-100: #2D3748;     /* Whisper background */
+  --color-neutral-50: #1A202C;      /* Base background */
+  --color-white: #0F172A;           /* Card backgrounds (dark) */
+
+  /* Semantic Colors - Adjusted for readability */
+  --color-success-700: #4ADE80;
+  --color-success-600: #22C55E;
+  --color-success-500: #16A34A;
+  --color-success-100: #14532D;
+
+  --color-warning-700: #FCD34D;
+  --color-warning-600: #FBBF24;
+  --color-warning-500: #F59E0B;
+  --color-warning-100: #78350F;
+
+  --color-error-700: #F87171;
+  --color-error-600: #EF4444;
+  --color-error-500: #DC2626;
+  --color-error-100: #7F1D1D;
+
+  --color-info-700: #60A5FA;
+  --color-info-600: #3B82F6;
+  --color-info-500: #2563EB;
+  --color-info-100: #1E3A8A;
+
+  /* Semantic Application Tokens - Dark Mode */
+  --bg-app: #0F172A;                       /* Dark slate background */
+  --bg-card: #1E293B;                      /* Lighter dark for cards */
+  --bg-sidebar: #0A1219;                   /* Darker sidebar */
+  --bg-header: #1E293B;                    /* Dark header */
+  --bg-footer: #1A2332;                    /* Dark footer */
+  --bg-input: #1E293B;                     /* Dark input fields */
+  --bg-input-hover: #2D3748;               /* Input hover */
+  --bg-input-focus: #1E293B;               /* Input focus */
+  --bg-input-disabled: #0F172A;
+  --bg-overlay: rgba(0, 0, 0, 0.75);       /* Darker overlay */
+
+  /* Text Colors - Dark Mode */
+  --text-primary: #F8F9FA;                 /* Almost white */
+  --text-secondary: #CBD5E0;               /* Light gray */
+  --text-tertiary: #A0AEC0;                /* Medium gray */
+  --text-placeholder: #718096;
+  --text-disabled: #4A5568;
+  --text-inverse: #1A202C;                 /* Dark text on light bg */
+  --text-link: #6B9EC7;
+  --text-link-hover: #8FB5D9;
+  --text-success: #4ADE80;
+  --text-warning: #FBBF24;
+  --text-error: #F87171;
+  --text-info: #60A5FA;
+
+  /* Borders - Dark Mode */
+  --border-color-subtle: #2D3748;
+  --border-color-default: #4A5568;
+  --border-color-strong: #718096;
+  --border-color-primary: #6B9EC7;
+
+  /* Shadows - Deeper for dark mode */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.3);
+
+  --shadow-focus: 0 0 0 3px rgba(107, 158, 199, 0.3);
+  --shadow-focus-error: 0 0 0 3px rgba(248, 113, 113, 0.3);
+}
+
+/* Auto dark mode based on system preference (optional) */
+@media (prefers-color-scheme: dark) {
+  /* Users can enable this by removing data-theme attribute */
+  /* :root { ... copy dark mode tokens here ... } */
+}
