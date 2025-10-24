@@ -14,6 +14,8 @@ library(kableExtra)
 library(tinytex)
 library(powerSurvEpi)
 library(epiR)
+library(plotly)
+library(ggplot2)
 
 # Define UI
 ui <- fluidPage(
