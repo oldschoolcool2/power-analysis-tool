@@ -5,3 +5,8 @@ services:
     dns:
       - 8.8.8.8
       - 8.8.4.4
+    volumes:
+      # Mount only application code for hot reloading (not renv or system libraries)
+      - './app.R:/srv/shiny-server/app.R:ro'
+      - './analysis-report.Rmd:/srv/shiny-server/analysis-report.Rmd:ro'
+      - './tests:/srv/shiny-server/tests:ro'
