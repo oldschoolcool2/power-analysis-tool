@@ -1,6 +1,6 @@
 # Documentation Index
 
-Welcome to the Power Analysis Tool documentation! This directory contains all project documentation organized by purpose.
+Welcome to the Power Analysis Tool documentation! This directory follows the **[Diataxis documentation framework](https://diataxis.fr/)** for systematic, user-centered documentation.
 
 ---
 
@@ -10,13 +10,14 @@ Welcome to the Power Analysis Tool documentation! This directory contains all pr
 👉 **[Main README](../README.md)** - Application overview, features, quick start, and usage examples
 
 ### For Developers
-👉 **[Developer Guide (CLAUDE.md)](development/CLAUDE.md)** - Comprehensive developer documentation (Diataxis framework)
-👉 **[Contributing Guidelines (CONTRIBUTING.md)](development/CONTRIBUTING.md)** - How to contribute to the project
-👉 **[Code Quality Standards (CODE_QUALITY.md)](development/CODE_QUALITY.md)** - Coding standards and quality tools
+
+**Learning to develop?** → [Tutorials](001-tutorials/)
+**Solving a specific problem?** → [How-To Guides](002-how-to-guides/)
+**Looking up technical details?** → [Reference](003-reference/)
+**Understanding design decisions?** → [Explanation](004-explanation/)
 
 ### For Project History
-👉 **[Enhancement Reports](reports/enhancements/)** - Feature implementation summaries
-👉 **[Quality Reports](reports/quality/)** - Code quality audits and analysis
+👉 **[Reports](reports/)** - Historical enhancement and quality reports
 
 ---
 
@@ -25,50 +26,49 @@ Welcome to the Power Analysis Tool documentation! This directory contains all pr
 ```
 docs/
 ├── README.md (this file)          # Documentation index
-├── development/                   # Developer documentation
-│   ├── CLAUDE.md                  # Comprehensive dev guide (Diataxis framework)
-│   ├── CONTRIBUTING.md            # Contribution guidelines
-│   └── CODE_QUALITY.md           # Code quality standards
+├── 001-tutorials/                 # Learning-oriented guides
+│   └── (link to 003-reference/003-developer-guide.md#getting-started-tutorials)
+├── 002-how-to-guides/             # Task-oriented instructions
+│   ├── 001-contributing.md        # How to contribute to the project
+│   ├── 002-tier1-implementation.md # Implementation guide
+│   └── 003-quick-start-guide.md   # Quick start for development
+├── 003-reference/                 # Information-oriented specifications
+│   ├── 001-code-quality-tools.md  # Code quality tools reference
+│   ├── 002-antipatterns-guide.md  # Antipatterns reference
+│   └── 003-developer-guide.md     # Comprehensive developer guide (Diataxis)
+├── 004-explanation/               # Understanding-oriented discussions
+│   ├── 001-feature-proposals.md   # Feature enhancement ideas
+│   └── 002-ui-ux-modernization.md # UI/UX design rationale
 └── reports/                       # Historical reports & analysis
     ├── enhancements/              # Feature implementation reports
-    │   ├── TIER3_ENHANCEMENTS.md
-    │   ├── TIER4_ENHANCEMENTS.md
-    │   └── IMPLEMENTATION_SUMMARY.txt
     └── quality/                   # Code quality reports
-        ├── DRY_SOLID_AUDIT.md
-        ├── DRY_SOLID_SUMMARY.md
-        ├── LINTR_ANALYSIS.md
-        └── QUALITY_TOOLS_IMPLEMENTATION.md
 ```
 
 ---
 
-## 🎯 Documentation by Purpose
+## 🎯 The Diataxis Framework
 
-### Development Documentation
+This documentation follows the **[Diataxis framework](https://diataxis.fr/)**, which organizes content into four distinct types based on user needs:
 
-| Document | Purpose | Audience |
-|----------|---------|----------|
-| [CLAUDE.md](development/CLAUDE.md) | Comprehensive developer guide with tutorials, how-tos, reference, and architectural explanations. Follows Diataxis framework. | Developers (new and experienced) |
-| [CONTRIBUTING.md](development/CONTRIBUTING.md) | Guidelines for contributing: setup, code style, testing, PR process | Contributors |
-| [CODE_QUALITY.md](development/CODE_QUALITY.md) | Code quality standards, tools (lintr, pre-commit), and best practices | Developers |
+### 1. 📚 Tutorials (Learning-Oriented)
+**What:** Practical lessons that teach through hands-on experience
+**When to use:** You're new and want to learn by doing
+**Example:** "Your First Development Session"
 
-### Enhancement Reports
+### 2. 🛠️ How-To Guides (Task-Oriented)
+**What:** Step-by-step instructions for specific tasks
+**When to use:** You have a specific problem to solve
+**Example:** "How to Add a New Analysis Type"
 
-| Document | Purpose | Created |
-|----------|---------|---------|
-| [TIER3_ENHANCEMENTS.md](reports/enhancements/TIER3_ENHANCEMENTS.md) | Version 4.0 features: Modern UI, Bootstrap 5, example buttons, help system | Tier 3 |
-| [TIER4_ENHANCEMENTS.md](reports/enhancements/TIER4_ENHANCEMENTS.md) | Version 5.0 features: Continuous outcomes, non-inferiority testing | Tier 4 |
-| [IMPLEMENTATION_SUMMARY.txt](reports/enhancements/IMPLEMENTATION_SUMMARY.txt) | Overall implementation summary and feature list | Current |
+### 3. 📖 Reference (Information-Oriented)
+**What:** Technical specifications and API documentation
+**When to use:** You need to look up specific details
+**Example:** "Helper Functions API", "Input Naming Conventions"
 
-### Quality Reports
-
-| Document | Purpose | Created |
-|----------|---------|---------|
-| [DRY_SOLID_AUDIT.md](reports/quality/DRY_SOLID_AUDIT.md) | Detailed audit of DRY/SOLID principles implementation | Quality initiative |
-| [DRY_SOLID_SUMMARY.md](reports/quality/DRY_SOLID_SUMMARY.md) | Summary of DRY/SOLID refactoring (eliminated 131 lines of repetition) | Quality initiative |
-| [LINTR_ANALYSIS.md](reports/quality/LINTR_ANALYSIS.md) | Lintr code analysis results and recommendations | Quality initiative |
-| [QUALITY_TOOLS_IMPLEMENTATION.md](reports/quality/QUALITY_TOOLS_IMPLEMENTATION.md) | Documentation of quality tooling setup (pre-commit, lintr, etc.) | Quality initiative |
+### 4. 💡 Explanation (Understanding-Oriented)
+**What:** Discussion of design decisions and concepts
+**When to use:** You want to understand why things work the way they do
+**Example:** "Why Monolithic app.R Structure?", "Why Delayed Evaluation Pattern?"
 
 ---
 
@@ -80,36 +80,91 @@ docs/
 3. Try the usage examples
 
 ### "I want to contribute code"
-1. Read [CONTRIBUTING.md](development/CONTRIBUTING.md) for setup and guidelines
-2. Read [CLAUDE.md - Getting Started Tutorials](development/CLAUDE.md#getting-started-tutorials) for hands-on lessons
-3. Follow the development workflow in CONTRIBUTING.md
+1. Read [Contributing Guide](002-how-to-guides/001-contributing.md) for setup and guidelines
+2. Read [Developer Guide - Tutorials](003-reference/003-developer-guide.md#getting-started-tutorials) for hands-on lessons
+3. Follow the development workflow
 
 ### "I want to understand the architecture"
-1. Read [CLAUDE.md - Reference](development/CLAUDE.md#reference) for technical specifications
-2. Read [CLAUDE.md - Explanation](development/CLAUDE.md#explanation) for design decisions
+1. Read [Developer Guide - Reference](003-reference/003-developer-guide.md#reference) for technical specifications
+2. Read [Developer Guide - Explanation](003-reference/003-developer-guide.md#explanation) for design decisions
 3. Review [Enhancement Reports](reports/enhancements/) for feature history
 
 ### "I want to understand code quality"
-1. Read [CODE_QUALITY.md](development/CODE_QUALITY.md) for standards
-2. Review [Quality Reports](reports/quality/) for analysis
-3. Check [QUALITY_TOOLS_IMPLEMENTATION.md](reports/quality/QUALITY_TOOLS_IMPLEMENTATION.md) for tooling
+1. Read [Code Quality Tools Reference](003-reference/001-code-quality-tools.md) for standards
+2. Read [Antipatterns Guide](003-reference/002-antipatterns-guide.md) for common mistakes
+3. Review [Quality Reports](reports/quality/) for analysis
 
 ---
 
-## 📖 About the Documentation Framework
+## 📝 Documentation Standards
 
-This project's developer documentation follows the **[Diataxis documentation framework](https://diataxis.fr/)**, a systematic approach to technical documentation that organizes content into four distinct types:
+### File Naming Convention
 
-1. **Tutorials** (learning-oriented) - Practical lessons that teach skills
-2. **How-to Guides** (task-oriented) - Directions for specific tasks
-3. **Reference** (information-oriented) - Complete technical specifications
-4. **Explanation** (understanding-oriented) - Context and design rationale
+All documentation files follow this naming pattern:
+```
+###-document-name.md
+```
 
-This structure ensures developers can quickly find the right information for their current need, whether they're learning, working on specific tasks, looking up details, or seeking deeper understanding.
+Where:
+- `###` = Three-digit number with leading zeros (e.g., `001`, `002`, `010`)
+- `document-name` = Kebab-case descriptive name
+- `.md` = Markdown extension
+
+**Examples:**
+- ✅ `001-contributing.md`
+- ✅ `002-antipatterns-guide.md`
+- ✅ `010-advanced-features.md`
+- ❌ `1-contributing.md` (missing leading zeros)
+- ❌ `contributing.md` (missing number prefix)
+- ❌ `001_contributing.md` (wrong separator)
+
+### Numbering System
+
+Files are numbered within each Diataxis category:
+- **tutorials/**: `001-*`, `002-*`, ...
+- **how-to-guides/**: `001-*`, `002-*`, ...
+- **reference/**: `001-*`, `002-*`, ...
+- **explanation/**: `001-*`, `002-*`, ...
+
+Numbers indicate reading order or logical grouping, not strict sequence. Leave gaps (e.g., `001`, `010`, `020`) to allow future insertions.
+
+### Content Guidelines
+
+- **Format:** Markdown (.md) for all documentation
+- **Style:** Clear, concise, with code examples
+- **Structure:** Follow Diataxis principles (see category above)
+- **Links:** Use relative links within documentation
+- **Code blocks:** Always specify language (```r, ```bash, etc.)
+- **Tone:** Professional but approachable
+- **Headers:** Use sentence case (not title case)
+- **Lists:** Consistent bullet style (- not *)
 
 ---
 
 ## 🔄 Documentation Maintenance
+
+### When to Add Documentation
+
+**Tutorials:**
+- Adding a new getting-started workflow
+- Creating hands-on learning materials
+- Documenting a step-by-step lesson
+
+**How-To Guides:**
+- Documenting a specific task or procedure
+- Adding deployment or configuration instructions
+- Creating troubleshooting guides
+
+**Reference:**
+- Documenting APIs, functions, or components
+- Creating configuration references
+- Adding tool or package documentation
+
+**Explanation:**
+- Documenting design decisions
+- Explaining architectural choices
+- Discussing trade-offs and alternatives
+- Proposing new features
 
 ### When to Update Documentation
 
@@ -118,43 +173,140 @@ This structure ensures developers can quickly find the right information for the
 - Updating installation/deployment instructions
 - Changing statistical methods or analysis types
 
-**CLAUDE.md:**
+**Reference documentation:**
 - Adding new architectural patterns
 - Changing helper functions or core logic
 - Adding dependencies
-- Modifying development workflow
+- Modifying API or configuration
 
-**CONTRIBUTING.md:**
+**How-to guides:**
 - Changing contribution process
 - Updating code style guidelines
 - Adding new testing requirements
+- Modifying workflows
 
 ### Documentation Workflow
 
 1. **During development:** Update relevant docs in the same PR as code changes
-2. **For new features:** Update Main README + CLAUDE.md + create report in reports/enhancements/
-3. **For refactoring:** Create report in reports/quality/
+2. **For new features:** Update Main README + reference docs + create enhancement report
+3. **For refactoring:** Create quality report in reports/quality/
 4. **For documentation itself:** Update this index (docs/README.md) if structure changes
+5. **Before commit:** Ensure file names follow the naming convention
 
 ---
 
-## 📝 Documentation Standards
+## 📄 Adding New Documentation
 
-- **Format:** Markdown (.md) for all documentation except legacy .txt files
-- **Style:** Clear, concise, with code examples
-- **Structure:** Follow Diataxis principles (see CLAUDE.md)
-- **Links:** Use relative links within documentation
-- **Code blocks:** Always specify language (```r, ```bash, etc.)
-- **Tone:** Professional but approachable
+### Step 1: Determine the Category
+
+Ask yourself:
+- **Am I teaching someone?** → 001-tutorials/
+- **Am I solving a specific problem?** → 002-how-to-guides/
+- **Am I documenting technical details?** → 003-reference/
+- **Am I explaining "why"?** → 004-explanation/
+
+### Step 2: Choose a Number
+
+1. Look at existing files in the category
+2. Choose the next available number (or leave gaps for flexibility)
+3. Use three digits with leading zeros
+
+### Step 3: Name the File
+
+```bash
+# Format: ###-document-name.md
+# Examples:
+docs/002-how-to-guides/004-deploy-to-production.md
+docs/004-explanation/003-performance-optimization-strategy.md
+docs/003-reference/004-api-endpoints.md
+```
+
+### Step 4: Create the File
+
+Use this template:
+
+```markdown
+# Document Title
+
+**Type:** [Tutorial | How-To | Reference | Explanation]
+**Audience:** [Developers | Contributors | Architects]
+**Last Updated:** YYYY-MM-DD
+
+## Overview
+
+Brief description of what this document covers and who should read it.
+
+## [Main Content Sections]
+
+[Your content here]
+
+---
+
+**Related Documentation:**
+- [Link to related docs]
+
+**References:**
+- [External references if applicable]
+```
+
+### Step 5: Update the Index
+
+Add your document to this README.md in the appropriate section.
+
+### Step 6: Use Git History Preservation
+
+If moving/renaming existing files, use `git mv` to preserve history:
+
+```bash
+git mv old-path/file.md docs/###-category/###-new-name.md
+```
+
+---
+
+## 🔍 Finding Documentation
+
+### By Search
+
+```bash
+# Search all documentation
+grep -r "search term" docs/
+
+# Search specific category
+grep -r "search term" docs/002-how-to-guides/
+
+# Search excluding reports
+grep -r "search term" docs/ --exclude-dir=reports
+```
+
+### By Category
+
+| I want to... | Go to |
+|--------------|-------|
+| Learn how to develop | [001-tutorials/](001-tutorials/) or [Developer Guide Tutorials](003-reference/003-developer-guide.md#getting-started-tutorials) |
+| Solve a specific problem | [002-how-to-guides/](002-how-to-guides/) |
+| Look up technical details | [003-reference/](003-reference/) |
+| Understand design decisions | [004-explanation/](004-explanation/) |
+| View historical reports | [reports/](reports/) |
+
+### By Topic
+
+| Topic | Location |
+|-------|----------|
+| Contributing to the project | [002-how-to-guides/001-contributing.md](002-how-to-guides/001-contributing.md) |
+| Code quality tools | [003-reference/001-code-quality-tools.md](003-reference/001-code-quality-tools.md) |
+| Antipatterns | [003-reference/002-antipatterns-guide.md](003-reference/002-antipatterns-guide.md) |
+| Developer guide (comprehensive) | [003-reference/003-developer-guide.md](003-reference/003-developer-guide.md) |
+| Feature proposals | [004-explanation/001-feature-proposals.md](004-explanation/001-feature-proposals.md) |
+| UI/UX design | [004-explanation/002-ui-ux-modernization.md](004-explanation/002-ui-ux-modernization.md) |
 
 ---
 
 ## 🆘 Need Help?
 
 - **User questions:** See [Main README](../README.md)
-- **Development questions:** See [CLAUDE.md](development/CLAUDE.md)
-- **Contributing questions:** See [CONTRIBUTING.md](development/CONTRIBUTING.md)
-- **Can't find something:** Check this index or search within docs/
+- **Development questions:** See [Developer Guide](003-reference/003-developer-guide.md)
+- **Contributing questions:** See [Contributing Guide](002-how-to-guides/001-contributing.md)
+- **Can't find something:** Search within docs/ or check this index
 
 ---
 
@@ -171,3 +323,4 @@ See [Enhancement Reports](reports/enhancements/) for detailed version documentat
 
 **Last Updated:** 2025-10-24
 **Documentation Framework:** [Diataxis](https://diataxis.fr/)
+**Maintained By:** Development Team
