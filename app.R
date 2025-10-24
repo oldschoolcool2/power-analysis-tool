@@ -23,9 +23,16 @@ ui <- fluidPage(
   theme = bs_theme(
     version = 5,
     bootswatch = "cosmo",
-    primary = "#3498db",
-    base_font = font_google("Open Sans"),
-    heading_font = font_google("Montserrat")
+    primary = "#2B5876",  # Updated to professional teal/slate
+    base_font = font_google("Inter"),
+    heading_font = font_google("Inter")
+  ),
+
+  # Link custom CSS files for modern design system
+  tags$head(
+    tags$link(rel = "stylesheet", type = "text/css", href = "css/design-tokens.css"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "css/modern-theme.css"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "css/responsive.css")
   ),
 
   # Application title
@@ -514,7 +521,7 @@ server <- function(input, output, session) {
 
   # Show results flag
   output$show_results <- reactive({
-    v$doAnalysis != FALSE
+    v$doAnalysis
   })
   outputOptions(output, "show_results", suspendWhenHidden = FALSE)
 
@@ -683,7 +690,7 @@ server <- function(input, output, session) {
 
   output$live_preview <- renderUI({
     # Only show preview before Calculate is pressed
-    if (v$doAnalysis != FALSE) {
+    if (v$doAnalysis) {
       return()
     }
 
@@ -722,7 +729,7 @@ server <- function(input, output, session) {
   ################################################################################################## RESULT TEXT
 
   output$result_text <- renderUI({
-    if (v$doAnalysis == FALSE) {
+    if (!v$doAnalysis) {
       return()
     }
 
@@ -1059,7 +1066,7 @@ server <- function(input, output, session) {
   ################################################################################################## EFFECT MEASURES (Two-Group and Survival)
 
   output$effect_measures <- renderUI({
-    if (v$doAnalysis == FALSE) {
+    if (!v$doAnalysis) {
       return()
     }
     if (!grepl("Two-Group|Survival", input$tabset)) {
@@ -1118,7 +1125,7 @@ server <- function(input, output, session) {
   ################################################################################################## PLOT TITLE
 
   output$figure_title <- renderUI({
-    if (v$doAnalysis == FALSE) {
+    if (!v$doAnalysis) {
       return()
     }
     if (input$tabset == "Matched Case-Control") {
@@ -1147,7 +1154,7 @@ server <- function(input, output, session) {
 
   output$power_plot <- renderPlot(
     {
-      if (v$doAnalysis == FALSE) {
+      if (!v$doAnalysis) {
         return()
       }
       if (input$tabset == "Matched Case-Control") {
@@ -1288,7 +1295,7 @@ server <- function(input, output, session) {
   ################################################################################################## TABLE TITLE
 
   output$table_title <- renderUI({
-    if (v$doAnalysis == FALSE) {
+    if (!v$doAnalysis) {
       return()
     }
     if (grepl("Two-Group", input$tabset)) {
@@ -1321,7 +1328,7 @@ server <- function(input, output, session) {
 
   output$result_table <- renderDataTable(
     {
-      if (v$doAnalysis == FALSE) {
+      if (!v$doAnalysis) {
         return()
       }
       if (grepl("Two-Group", input$tabset)) {
@@ -1370,7 +1377,7 @@ server <- function(input, output, session) {
   ################################################################################################## TABLE FOOTNOTES
 
   output$table_footnotes <- renderUI({
-    if (v$doAnalysis == FALSE) {
+    if (!v$doAnalysis) {
       return()
     }
     if (grepl("Two-Group", input$tabset)) {
@@ -1387,7 +1394,7 @@ server <- function(input, output, session) {
   ################################################################################################## DOWNLOAD BUTTONS
 
   output$download_buttons <- renderUI({
-    if (v$doAnalysis == FALSE) {
+    if (!v$doAnalysis) {
       return()
     }
 
@@ -1741,7 +1748,7 @@ server <- function(input, output, session) {
   # Save current scenario
   observeEvent(input$save_scenario, {
     isolate({
-      if (v$doAnalysis == FALSE) {
+      if (!v$doAnalysis) {
         return()
       }
 

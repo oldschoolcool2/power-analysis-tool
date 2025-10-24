@@ -1,3 +1,114 @@
-linters: linters_with_tags(tags = c("best_practices", "common_mistakes", "readability", "correctness"), object_length_linter = NULL, line_length_linter = NULL, indentation_linter = NULL, T_and_F_symbol_linter = NULL, cyclocomp_linter = NULL, implicit_integer_linter = NULL, redundant_equals_linter = NULL, fixed_regex_linter = NULL, paste_linter = NULL)
+linters: linters_with_tags(
+    tags = c("best_practices", "common_mistakes", "readability", "correctness", "robustness"),
+
+    # ===== DISABLED LINTERS (Noise/Style Preferences) =====
+    # These are disabled to reduce noise and focus on real issues
+    object_length_linter = NULL,        # Variable name length - style preference
+    line_length_linter = NULL,          # 80-char limit - too strict for R
+    indentation_linter = NULL,          # Handled by styler
+    cyclocomp_linter = NULL,            # Complexity - contextual
+    implicit_integer_linter = NULL,     # 604 false positives - R handles coercion
+    redundant_equals_linter = NULL,     # Low priority style issue
+    fixed_regex_linter = NULL,          # Micro-optimization
+    paste_linter = NULL,                # Style preference
+
+    # ===== ENABLED CRITICAL LINTERS =====
+    # These catch real bugs and antipatterns
+
+    # ANTIPATTERN: Object overwrites (shadowing base R functions)
+    # Priority: HIGH - Can cause subtle bugs
+    object_overwrite_linter = lintr::object_overwrite_linter(),
+
+    # ANTIPATTERN: Nonportable paths (hardcoded / or \)
+    # Priority: MEDIUM - Breaks cross-platform compatibility
+    nonportable_path_linter = lintr::nonportable_path_linter(lax = FALSE),
+
+    # ANTIPATTERN: Undesirable functions (sapply, setwd, etc.)
+    # Priority: MEDIUM - Type-unsafe or side-effect heavy
+    undesirable_function_linter = lintr::undesirable_function_linter(
+      fun = lintr::default_undesirable_functions
+    ),
+
+    # ANTIPATTERN: T/F instead of TRUE/FALSE
+    # Priority: MEDIUM - T and F are variables, not constants
+    T_and_F_symbol_linter = lintr::T_and_F_symbol_linter(),
+
+    # ANTIPATTERN: Comparing class with == instead of inherits()
+    # Priority: HIGH - Brittle, breaks with S3/S4 classes
+    class_equals_linter = lintr::class_equals_linter(),
+
+    # ANTIPATTERN: Missing package checks before use
+    # Priority: HIGH - Causes runtime errors
+    package_hooks_linter = lintr::package_hooks_linter(),
+
+    # ANTIPATTERN: Unreachable code after return/stop
+    # Priority: HIGH - Dead code indicates logic error
+    unreachable_code_linter = lintr::unreachable_code_linter(),
+
+    # ANTIPATTERN: Duplicate argument names
+    # Priority: HIGH - Last value silently overwrites
+    duplicate_argument_linter = lintr::duplicate_argument_linter(),
+
+    # ANTIPATTERN: Missing space after commas
+    # Priority: LOW - Readability
+    commas_linter = lintr::commas_linter(),
+
+    # ANTIPATTERN: Inconsistent assignment operators
+    # Priority: LOW - Use <- not =
+    assignment_linter = lintr::assignment_linter(),
+
+    # ANTIPATTERN: Infix operator spacing
+    # Priority: LOW - Readability (x+y should be x + y)
+    infix_spaces_linter = lintr::infix_spaces_linter(),
+
+    # ANTIPATTERN: Semicolons (not idiomatic R)
+    # Priority: LOW - Style
+    semicolon_linter = lintr::semicolon_linter(),
+
+    # ANTIPATTERN: Trailing blank lines
+    # Priority: LOW - Style
+    trailing_blank_lines_linter = lintr::trailing_blank_lines_linter(),
+
+    # ANTIPATTERN: Trailing whitespace
+    # Priority: LOW - Style (but can cause git diff noise)
+    trailing_whitespace_linter = lintr::trailing_whitespace_linter(),
+
+    # ANTIPATTERN: Single quotes instead of double quotes
+    # Priority: LOW - tidyverse style prefers double quotes
+    quotes_linter = lintr::quotes_linter(),
+
+    # ANTIPATTERN: Absolute paths in code
+    # Priority: HIGH - Breaks reproducibility
+    absolute_path_linter = lintr::absolute_path_linter(
+      lax = FALSE
+    ),
+
+    # ANTIPATTERN: Nested ifelse (hard to read)
+    # Priority: MEDIUM - Use dplyr::case_when or switch
+    nested_ifelse_linter = lintr::nested_ifelse_linter(),
+
+    # ANTIPATTERN: Any duplicated code
+    # Priority: MEDIUM - DRY principle violation
+    any_duplicated_linter = lintr::any_duplicated_linter(),
+
+    # ANTIPATTERN: Using attach() - global namespace pollution
+    # Priority: HIGH - Dangerous practice
+    # (Covered by undesirable_function_linter)
+
+    # ANTIPATTERN: Using <<- outside of closures
+    # Priority: MEDIUM - Global state modification
+    # Note: Shiny reactiveValues use is acceptable
+    outer_negation_linter = lintr::outer_negation_linter()
+  )
+
 encoding: "UTF-8"
-exclusions: list("tests/testthat.R", "renv/", "renv.lock", "analysis-report.Rmd")
+
+exclusions: list(
+  "tests/testthat.R",
+  "renv/",
+  "renv.lock",
+  "analysis-report.Rmd",
+  # Exclude third-party code if any
+  "inst/",
+  "data-raw/"
+)

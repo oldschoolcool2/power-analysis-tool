@@ -1,0 +1,110 @@
+name: Antipattern Detection
+
+on:
+  push:
+    branches: [master, main, develop]
+  pull_request:
+    branches: [master, main]
+  workflow_dispatch:
+
+jobs:
+  antipattern-detection:
+    runs-on: ubuntu-latest
+    name: Check for R & Shiny Antipatterns
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.4.0'
+
+      - name: Cache R packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.local/share/renv
+          key: ${{ runner.os }}-renv-${{ hashFiles('**/renv.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-renv-
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libcurl4-openssl-dev \
+            libxml2-dev \
+            libssl-dev
+
+      - name: Install R dependencies
+        run: |
+          install.packages(c("lintr", "styler"))
+        shell: Rscript {0}
+
+      - name: Run lintr
+        run: |
+          library(lintr)
+          lints <- lint_dir(".", exclusions = list("renv/", "tests/testthat.R"))
+
+          # Print all lints
+          print(lints)
+
+          # Count by severity
+          lint_count <- length(lints)
+
+          if (lint_count > 0) {
+            cat("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
+            cat(sprintf("Found %d linting issues\n", lint_count))
+            cat("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n")
+
+            # Group by linter type
+            linter_table <- table(sapply(lints, function(x) class(x)[1]))
+            print(linter_table)
+
+            # Fail if there are issues (make this blocking)
+            quit(status = 1)
+          } else {
+            cat("✓ No linting issues found!\n")
+          }
+        shell: Rscript {0}
+        continue-on-error: false  # Make lintr blocking
+
+      - name: Run custom antipattern checks
+        run: |
+          chmod +x check_antipatterns.R
+          Rscript check_antipatterns.R --file app.R
+        continue-on-error: true  # Warning only for now
+
+      - name: Check code style
+        run: |
+          library(styler)
+          # Check if code needs styling (dry run)
+          needs_styling <- styler::style_dir(".", dry = "on")
+
+          changed_files <- needs_styling[needs_styling$changed, ]
+
+          if (nrow(changed_files) > 0) {
+            cat("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
+            cat("The following files need styling:\n")
+            cat("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n")
+            print(changed_files$file)
+            cat("\nRun 'styler::style_dir()' locally to fix.\n")
+
+            # Warning only, don't fail
+            quit(status = 0)
+          } else {
+            cat("✓ All files follow tidyverse style!\n")
+          }
+        shell: Rscript {0}
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Antipattern Detection Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✓ Checked for common R and Shiny antipatterns" >> $GITHUB_STEP_SUMMARY
+          echo "✓ Validated code style compliance" >> $GITHUB_STEP_SUMMARY
+          echo "✓ Linted codebase with enhanced rules" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "See job logs for details." >> $GITHUB_STEP_SUMMARY

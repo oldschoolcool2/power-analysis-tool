@@ -52,3 +52,15 @@ repos:
     hooks:
       - id: hadolint-docker
         name: Lint Dockerfile
+
+  # Custom antipattern detection
+  - repo: local
+    hooks:
+      - id: check-antipatterns
+        name: Check for R & Shiny antipatterns
+        entry: Rscript check_antipatterns.R --file
+        language: system
+        files: \.R$
+        pass_filenames: true
+        # Warning only - don't block commits
+        verbose: true
