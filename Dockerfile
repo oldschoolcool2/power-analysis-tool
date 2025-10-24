@@ -50,6 +50,10 @@ RUN R --quiet -e "tinytex::tlmgr_install(c('threeparttable', 'float', 'booktabs'
 # These are development dependencies, not in renv.lock
 RUN R --quiet -e "install.packages(c('lintr', 'styler', 'precommit'), repos = 'https://cloud.r-project.org')"
 
+# Create cache directory with proper permissions for shiny user
+RUN mkdir -p /srv/shiny-server/app_cache && \
+    chown -R shiny:shiny /srv/shiny-server/app_cache
+
 # Copy application code LAST (changes most frequently)
 # This layer rebuilds on every code change but uses cached dependencies
 COPY --chown=shiny:shiny app.R app.R

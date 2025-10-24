@@ -1,8 +1,7 @@
-version: '3.7'
-
 services:
   shiny:
     build: .
     ports: ['3838:3838']
-    volumes:
-      - '.:/srv/shiny-server'
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
