@@ -1,0 +1,54 @@
+# Pre-commit hooks for R Shiny project
+# See https://pre-commit.com for more information
+# See https://github.com/lorenzwalthert/precommit for R-specific hooks
+
+repos:
+  # General pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-merge-conflict
+      - id: detect-private-key
+
+  # R-specific hooks (requires R and packages)
+  - repo: https://github.com/lorenzwalthert/precommit
+    rev: v0.4.3
+    hooks:
+      - id: style-files
+        name: Style R files with styler
+        args: [--style_pkg=styler, --style_fun=tidyverse_style]
+        exclude: '^renv/'
+      - id: lintr
+        name: Lint R files
+        exclude: '^(renv/|tests/testthat\.R)'
+        # Use warning_only initially to avoid blocking commits
+        # Remove this arg once code is clean
+        args: [--warn_only]
+      - id: parsable-R
+        name: Check R files are parsable
+        exclude: '^renv/'
+      - id: no-browser-statement
+        name: Prevent browser() statements
+      - id: no-debug-statement
+        name: Prevent debug() statements
+      - id: readme-rmd-rendered
+        name: Ensure README.Rmd is rendered
+        # Skip if no README.Rmd exists
+        exclude: '.*'
+      - id: deps-in-desc
+        name: Check dependencies in DESCRIPTION
+        # Skip for Shiny apps (no DESCRIPTION file)
+        exclude: '.*'
+
+  # Docker hooks
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.13.1-beta
+    hooks:
+      - id: hadolint-docker
+        name: Lint Dockerfile

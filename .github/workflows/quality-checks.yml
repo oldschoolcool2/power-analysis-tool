@@ -1,0 +1,108 @@
+name: R Code Quality Checks
+
+on:
+  pull_request:
+    branches: [master, main]
+  push:
+    branches: [master, main]
+  workflow_dispatch:
+
+jobs:
+  lint-and-style:
+    name: Lint and Style Check
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.4.0'
+          use-public-rspm: true
+
+      - name: Setup renv
+        uses: r-lib/actions/setup-renv@v2
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxml2-dev libcurl4-openssl-dev libssl-dev
+
+      - name: Install lintr and styler
+        run: |
+          install.packages(c("lintr", "styler"), repos = "https://cloud.r-project.org")
+        shell: Rscript {0}
+
+      - name: Check code style with styler
+        run: |
+          styled <- styler::style_dir(".", exclude_dirs = c("renv", "tests"), dry = "on")
+          if (any(styled$changed)) {
+            cat("❌ The following files need styling:\n")
+            print(styled[styled$changed, "file"])
+            cat("\nRun styler::style_dir('.') locally to fix.\n")
+            quit(status = 1)
+          } else {
+            cat("✅ All files are properly styled!\n")
+          }
+        shell: Rscript {0}
+
+      - name: Lint R code
+        run: |
+          lints <- lintr::lint_dir(".", exclusions = list("renv/", "tests/testthat.R"))
+          print(lints)
+          if (length(lints) > 0) {
+            cat("❌ Found", length(lints), "linting issues\n")
+            quit(status = 1)
+          } else {
+            cat("✅ No linting issues found!\n")
+          }
+        shell: Rscript {0}
+        continue-on-error: true
+
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.4.0'
+          use-public-rspm: true
+
+      - name: Setup renv
+        uses: r-lib/actions/setup-renv@v2
+
+      - name: Run tests
+        run: |
+          testthat::test_dir("tests/testthat")
+        shell: Rscript {0}
+
+  docker-build:
+    name: Docker Build Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: power-analysis-tool:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

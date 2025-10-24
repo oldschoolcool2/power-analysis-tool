@@ -7,12 +7,18 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libssl-dev \
     libcurl4-openssl-dev \
+    libharfbuzz-dev \
+    libfribidi-dev \
+    libabsl-dev \
+    libudunits2-dev \
+    libgdal-dev \
+    libgeos-dev \
+    libproj-dev \
+    cmake \
     && rm -rf /var/lib/apt/lists/*
 
 # Install renv for package management
-ENV RENV_VERSION 1.0.7
-RUN R --quiet -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.org'))" && \
-    R --quiet -e "remotes::install_github('rstudio/renv@${RENV_VERSION}')"
+RUN R --quiet -e "install.packages('renv', repos = c(CRAN = 'https://cloud.r-project.org'))"
 
 # Set working directory
 WORKDIR /srv/shiny-server
@@ -24,9 +30,10 @@ COPY .Rprofile .Rprofile
 COPY renv/activate.R renv/activate.R
 COPY renv/settings.json renv/settings.json
 
-# Configure renv cache for container environment
-ENV RENV_PATHS_LIBRARY renv/library
-ENV RENV_PATHS_CACHE /opt/renv/cache
+# Configure renv to use system library (avoids permission issues)
+ENV RENV_CONFIG_SANDBOX_ENABLED=FALSE
+ENV RENV_PATHS_LIBRARY=/usr/local/lib/R/site-library
+ENV RENV_PATHS_CACHE=/opt/renv/cache
 
 # Create cache directory and restore packages
 # This is the heavy operation that gets cached
@@ -36,8 +43,12 @@ RUN mkdir -p /opt/renv/cache && \
 # Install TinyTeX for PDF generation (after renv restore)
 RUN R --quiet -e "tinytex::install_tinytex()"
 
-# Install LaTeX packages using secure CTAN mirror
-RUN tlmgr -repository https://mirror.ctan.org/systems/texlive/tlnet install threeparttable float booktabs
+# Install LaTeX packages using R/tinytex (avoids PATH issues)
+RUN R --quiet -e "tinytex::tlmgr_install(c('threeparttable', 'float', 'booktabs'))"
+
+# Install code quality tools (lintr, styler, precommit)
+# These are development dependencies, not in renv.lock
+RUN R --quiet -e "install.packages(c('lintr', 'styler', 'precommit'), repos = 'https://cloud.r-project.org')"
 
 # Copy application code LAST (changes most frequently)
 # This layer rebuilds on every code change but uses cached dependencies

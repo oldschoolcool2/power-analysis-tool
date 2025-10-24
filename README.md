@@ -209,9 +209,21 @@ This calculator does **NOT** handle:
 ├── analysis-report.Rmd     # PDF export template
 ├── Dockerfile              # Container configuration (R 4.4.0)
 ├── docker-compose.yml      # Local development
-├── TIER3_ENHANCEMENTS.md   # Tier 3 documentation
-├── TIER4_ENHANCEMENTS.md   # Tier 4 documentation
-└── README.md               # This file
+├── README.md               # This file (user documentation)
+├── tests/                  # Test suite
+│   └── testthat/
+│       └── test-power-analysis.R
+├── renv/                   # Package management (renv)
+│   └── renv.lock           # Package versions
+└── docs/                   # All developer & project documentation
+    ├── README.md           # Documentation index
+    ├── development/        # Developer guides
+    │   ├── CLAUDE.md       # Comprehensive dev guide (Diataxis)
+    │   ├── CONTRIBUTING.md # Contribution guidelines
+    │   └── CODE_QUALITY.md # Code quality standards
+    └── reports/            # Historical reports
+        ├── enhancements/   # Feature implementation reports
+        └── quality/        # Code quality audits
 ```
 
 ---
@@ -226,6 +238,27 @@ This calculator does **NOT** handle:
 
 ---
 
+## Documentation
+
+### For End Users
+This README provides all information needed to use the application.
+
+### For Developers & Contributors
+All developer documentation is organized in the `docs/` directory:
+
+- **[Documentation Index](docs/README.md)** - Complete documentation map
+- **[Developer Guide](docs/development/CLAUDE.md)** - Comprehensive guide (tutorials, how-tos, reference, architecture)
+- **[Contributing Guidelines](docs/development/CONTRIBUTING.md)** - How to contribute
+- **[Code Quality Standards](docs/development/CODE_QUALITY.md)** - Coding standards and tools
+
+### Quick Links
+- 📚 [Get started with development](docs/development/CLAUDE.md#getting-started-tutorials)
+- 🛠️ [Submit a pull request](docs/development/CONTRIBUTING.md#pull-request-process)
+- 📊 [View enhancement history](docs/reports/enhancements/)
+- 🔍 [View quality reports](docs/reports/quality/)
+
+---
+
 ## Support & Contributing
 
 ### Reporting Issues
@@ -233,6 +266,8 @@ This calculator does **NOT** handle:
 - Expected vs. actual behavior
 - Screenshots if applicable
 - R version and package versions
+
+See [Contributing Guidelines](docs/development/CONTRIBUTING.md) for detailed instructions.
 
 ### Feature Requests
 All major feature categories now implemented:

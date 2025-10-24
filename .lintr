@@ -1,0 +1,3 @@
+linters: linters_with_tags(tags = c("best_practices", "common_mistakes", "readability", "correctness"), object_length_linter = NULL, line_length_linter = NULL, indentation_linter = NULL, T_and_F_symbol_linter = NULL, cyclocomp_linter = NULL, implicit_integer_linter = NULL, redundant_equals_linter = NULL, fixed_regex_linter = NULL, paste_linter = NULL)
+encoding: "UTF-8"
+exclusions: list("tests/testthat.R", "renv/", "renv.lock", "analysis-report.Rmd")
