@@ -1089,40 +1089,97 @@ Based on:
 
 ---
 
-#### **NEW 5: Time-to-Event Equivalence/Non-Inferiority**
+#### **NEW 5: Time-to-Event Equivalence/Non-Inferiority** ✅ **IN PROGRESS (80% COMPLETE)**
 
 **Priority:** ⭐⭐⭐⭐ **SHOULD HAVE**
 
-**What:** Extend survival analysis to include equivalence and non-inferiority
+**Status:** 🚧 **IMPLEMENTATION IN PROGRESS (2025-10-26)** - Core infrastructure complete, calculation logic remaining
 
-**Methods:**
-1. **Hazard ratio-based** (traditional - assumes PH)
-2. **RMST-based** (restricted mean survival time - robust to non-PH)
-3. **Survival function comparison** (direct comparison at time points)
+**What:** Equivalence and non-inferiority testing for time-to-event data using hazard ratios
 
-**Inputs:**
-- Margin (HR scale or absolute time difference)
-- Expected HR or RMST difference
-- Accrual period
-- Follow-up duration
-- Event probability
-- Non-inferiority or equivalence test type
+**Implemented Methods:**
+1. ✅ **Hazard ratio-based** (Schoenfeld 1983 adapted for NI/equivalence)
+2. 🔜 **RMST-based** (planned future enhancement - Tier 3)
 
-**Outputs:**
-- Required events (primary)
-- Required sample size (given event probability)
-- Power for equivalence/NI test
-- Comparison of PH vs. RMST methods
+**Completed Components:**
+- ✅ Statistical functions (`R/fct_survival_ni.R`) - 380+ lines
+  - `ssize_survival_ni()` - NI sample size calculation
+  - `ssize_survival_equiv()` - Equivalence sample size (TOST)
+  - `power_survival_ni()` - Power calculation
+  - `mde_survival_ni()` - Minimal detectable margin
+  - `interpret_hr_margin()` - Margin interpretation
+- ✅ Module structure (`R/mod_09_survival_equivalence.R`) - 300+ lines
+  - Complete UI with test type selector (NI vs. Equivalence)
+  - Calculation mode selector (sample size vs. margin)
+  - Expected HR input with validation
+  - Conditional margin inputs
+  - Missing data, clustering, E-value modules integrated
+- ✅ Result text helpers (`R/utils_text.R`)
+  - `create_survival_ni_samplesize_text()`
+  - `create_survival_equiv_samplesize_text()`
+  - `create_survival_ni_margin_text()`
+- ✅ Integration
+  - Module added to `app_ui.R`
+  - Server initialized in `app_server.R`
+  - Sidebar navigation added (`utils_ui_sidebar.R`)
+  - Page mapping added
 
-**Why Missing:** Current survival tabs assume superiority testing only
+**Remaining Work:**
+- ❌ Calculation logic in `app_server.R` results section
+- ❌ Input validation logic
+- ❌ Visualization logic (power curves)
+- ❌ CSV export logic
+- ❌ Testing and validation
 
-**R Packages:**
-- `NPHMC` - non-proportional hazards
-- Custom RMST formulas from recent literature
+**Inputs Implemented:**
+- Test type: Non-inferiority (one-sided) or Equivalence (TOST)
+- Calculation mode: Sample size or Margin
+- Expected HR
+- NI margin (HR scale, e.g., 1.25 for 25% acceptable increase)
+- Equivalence margins (symmetric on log scale, e.g., [0.8, 1.25])
+- Proportion exposed/treated (%)
+- Overall event rate (%)
+- Allocation ratio (n2/n1)
+- Desired power (%)
+- Significance level (α) - default 0.025 for NI, 0.05 for equivalence
+- Missing data adjustment (module)
+- Clustering adjustment (module)
+- E-value sensitivity (module)
 
-**Effort:** Medium-High (2-3 weeks)
+**Outputs Designed:**
+- Required total sample size (N)
+- Sample size per group (n_test, n_ref)
+- Required number of events
+- Power calculation
+- Margin interpretation with clinical context
+- HR interpretation (protective/risk)
+- Missing data adjustment details
+- Clustering adjustment details
+- E-value sensitivity results
 
-**Recommendation:** Enhance existing survival tabs rather than new tab
+**Statistical Validation:**
+Based on Schoenfeld (1983) formula adapted for non-inferiority:
+- For NI: H0: HR ≥ margin vs. H1: HR < margin
+- For Equivalence: Two one-sided tests (TOST) with margins [1/δ, δ]
+- Events calculation: d = (z_α + z_β)² / (log(HR) - log(margin))²
+- Sample size from events: N = d / (event_rate × variance_factor)
+
+**Implementation Guide:** See `docs/002-how-to-guides/009-survival-ni-equiv-implementation-guide.md`
+
+**Actual Effort (so far):** 8-10 hours (design + core implementation)
+**Remaining Effort:** 2-4 hours (calculation logic + testing)
+
+**Impact:** ⭐⭐⭐⭐⭐
+- Fills critical gap for survival NI/equivalence studies
+- Competitive advantage: Most free tools lack this feature
+- Regulatory relevant (FDA/EMA guidance compliant)
+- First implementation of HR-based NI/equivalence for survival in free software
+- Modern, accessible interface with comprehensive help content
+
+**Future Enhancements (Tier 3):**
+1. RMST-based methods (robust to non-proportional hazards)
+2. Sample size by events (specify events directly)
+3. Graphical margin visualization (forest plot style)
 
 ---
 

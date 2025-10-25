@@ -23,3 +23,5 @@ CLAUDE.md
 vignettes/*.html
 vignettes/.build.timestamp
 inst/doc/
+/doc/
+/Meta/

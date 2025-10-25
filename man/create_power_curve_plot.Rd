@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils_plot.R
 \name{create_power_curve_plot}
 \alias{create_power_curve_plot}
-\title{Create Standard Power Curve Plot}
+\title{Create Enhanced Power Curve Plot}
 \usage{
 create_power_curve_plot(
   n_seq,
@@ -11,7 +11,8 @@ create_power_curve_plot(
   target_power = 0.8,
   plot_title = "Interactive Power Curve",
   xaxis_title = "Sample Size (N)",
-  n_reference_label = "Current N"
+  n_reference_label = "Current N",
+  show_annotations = TRUE
 )
 }
 \arguments{
@@ -28,14 +29,16 @@ create_power_curve_plot(
 \item{xaxis_title}{Title for x-axis (default "Sample Size (N)")}
 
 \item{n_reference_label}{Label for the vertical reference line}
+
+\item{show_annotations}{Whether to show auto-generated annotations (default TRUE)}
 }
 \value{
 A plotly object
 }
 \description{
 Generates a standardized interactive Plotly power curve with consistent
-styling across all analysis types. Replaces ~80 lines of duplicated
-code per analysis type.
+styling, annotations, and key point markers across all analysis types.
+Enhanced with auto-labeled key points and better visual feedback.
 }
 \examples{
 n_seq <- seq(50, 500, length.out = 100)

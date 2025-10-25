@@ -239,6 +239,20 @@ create_sidebar_nav <- function() {
         )
       ),
 
+      # Group 9: Time-to-Event Equivalence/NI (single item)
+      tags$div(
+        class = "nav-group",
+        tags$a(
+          href = "#",
+          class = "nav-item-single",
+          `data-page` = "survival_ni_equiv",
+          role = "button",
+          tabindex = "0",
+          tags$span(class = "nav-group-icon", icon("heartbeat")),
+          tags$span(class = "nav-group-label", "Time-to-Event Equivalence/NI")
+        )
+      ),
+
       # Divider before Resources section
       tags$hr(class = "sidebar-divider"),
 

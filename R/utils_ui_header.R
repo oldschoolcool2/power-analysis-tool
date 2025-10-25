@@ -52,17 +52,6 @@ create_app_header <- function() {
         title = "Toggle theme (Ctrl+Shift+D)",
         tags$span(class = "theme-toggle-icon", icon("moon")),
         tags$span(class = "theme-toggle-text", "Dark")
-      ),
-
-      # Help Button - triggers modal
-      actionButton(
-        "show_help_modal",
-        label = tags$span(
-          icon("question-circle"),
-          tags$span(class = "btn-text", "Help")
-        ),
-        class = "app-header-action-btn",
-        `aria-label` = "Show help documentation"
       )
     )
   )

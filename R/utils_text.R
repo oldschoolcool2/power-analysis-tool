@@ -474,3 +474,175 @@ create_continuous_power_result_text <- function(n1, n2, d, power, alpha, sided) 
     format_cohens_d(d)
   )
 }
+
+
+#' Create Time-to-Event NI Sample Size Result Text
+#'
+#' Generates formatted result text for time-to-event non-inferiority sample size calculations.
+#'
+#' @param n_total Total sample size required
+#' @param n_test Sample size for test group
+#' @param n_ref Sample size for reference group
+#' @param d_events Number of events required
+#' @param hr_expected Expected hazard ratio
+#' @param hr_margin Non-inferiority margin
+#' @param power Desired power (as proportion)
+#' @param alpha Significance level
+#' @param prop_exposed Proportion in exposed/treatment group (as proportion)
+#' @param event_rate Overall event rate (as proportion)
+#'
+#' @return HTML formatted text
+create_survival_ni_samplesize_text <- function(n_total, n_test, n_ref, d_events,
+                                                hr_expected, hr_margin, power, alpha,
+                                                prop_exposed, event_rate) {
+  # Calculate percent increase acceptable
+  pct_increase <- round((hr_margin - 1) * 100, 1)
+
+  tagList(
+    create_result_header(),
+    p(paste0(
+      "For a time-to-event non-inferiority study with an expected hazard ratio of HR = ",
+      format_numeric(hr_expected, digits = 3), " and a non-inferiority margin of HR = ",
+      format_numeric(hr_margin, digits = 3), " (accepting up to ", pct_increase,
+      "% increase in hazard as 'non-inferior'), the required total sample size is <strong>N = ",
+      n_total, "</strong> participants (",
+      n_test, " in test group, ",
+      n_ref, " in reference group) to achieve ",
+      format_numeric(power, as_percent = TRUE, digits = 1), " power at α = ",
+      alpha, " (one-sided test). "
+    )),
+    p(paste0(
+      "This calculation assumes an overall event rate of ",
+      format_numeric(event_rate, as_percent = TRUE, digits = 1), "% during the study follow-up period, ",
+      "which translates to approximately <strong>", d_events,
+      " events</strong> needed to achieve the target power. ",
+      "The method is based on the Schoenfeld (1983) approach adapted for non-inferiority testing."
+    )),
+    format_hazard_ratio(hr_expected),
+    HTML(paste0(
+      "<div style='background-color: #e3f2fd; border-left: 4px solid #2196f3; padding: 10px; margin: 15px 0;'>",
+      "<strong>Non-Inferiority Margin Interpretation:</strong><br>",
+      "A margin of HR = ", format_numeric(hr_margin, digits = 3),
+      " means you will declare the test treatment 'non-inferior' if the upper bound ",
+      "of the 95% confidence interval for HR is below ", format_numeric(hr_margin, digits = 3), ". ",
+      "This margin should be justified based on clinical importance and regulatory guidance.",
+      "</div>"
+    ))
+  )
+}
+
+
+#' Create Time-to-Event Equivalence Sample Size Result Text
+#'
+#' Generates formatted result text for time-to-event equivalence sample size calculations.
+#'
+#' @param n_total Total sample size required
+#' @param n_test Sample size for test group
+#' @param n_ref Sample size for reference group
+#' @param d_events Number of events required
+#' @param hr_expected Expected hazard ratio
+#' @param hr_lower Lower equivalence margin
+#' @param hr_upper Upper equivalence margin
+#' @param power Desired power (as proportion)
+#' @param alpha Significance level
+#' @param prop_exposed Proportion in exposed/treatment group (as proportion)
+#' @param event_rate Overall event rate (as proportion)
+#'
+#' @return HTML formatted text
+create_survival_equiv_samplesize_text <- function(n_total, n_test, n_ref, d_events,
+                                                   hr_expected, hr_lower, hr_upper,
+                                                   power, alpha, prop_exposed, event_rate) {
+  tagList(
+    create_result_header(),
+    p(paste0(
+      "For a time-to-event equivalence study with an expected hazard ratio of HR = ",
+      format_numeric(hr_expected, digits = 3), " and equivalence margins of [",
+      format_numeric(hr_lower, digits = 3), ", ",
+      format_numeric(hr_upper, digits = 3), "], the required total sample size is <strong>N = ",
+      n_total, "</strong> participants (",
+      n_test, " in test group, ",
+      n_ref, " in reference group) to achieve ",
+      format_numeric(power, as_percent = TRUE, digits = 1), " power at α = ",
+      alpha, " (two one-sided tests - TOST procedure). "
+    )),
+    p(paste0(
+      "This calculation assumes an overall event rate of ",
+      format_numeric(event_rate, as_percent = TRUE, digits = 1), "% during the study follow-up period, ",
+      "which translates to approximately <strong>", d_events,
+      " events</strong> needed. ",
+      "Equivalence will be declared if the 90% confidence interval for HR lies entirely within [",
+      format_numeric(hr_lower, digits = 3), ", ",
+      format_numeric(hr_upper, digits = 3), "]."
+    )),
+    format_hazard_ratio(hr_expected),
+    HTML(paste0(
+      "<div style='background-color: #e8f5e9; border-left: 4px solid #4caf50; padding: 10px; margin: 15px 0;'>",
+      "<strong>Equivalence Margins Interpretation:</strong><br>",
+      "Equivalence margins of [", format_numeric(hr_lower, digits = 3), ", ",
+      format_numeric(hr_upper, digits = 3), "] define the region where treatments are considered 'equivalent'. ",
+      "The true HR must lie within this range with high confidence to declare equivalence. ",
+      "These margins should be justified based on clinical importance.",
+      "</div>"
+    ))
+  )
+}
+
+
+#' Create Time-to-Event NI Margin Calculation Result Text
+#'
+#' Generates formatted result text for minimal detectable NI margin calculations.
+#'
+#' @param margin_detectable Minimal detectable margin (HR)
+#' @param n_total Total sample size
+#' @param hr_expected Expected hazard ratio
+#' @param power Desired power (as proportion)
+#' @param alpha Significance level
+#' @param event_rate Overall event rate (as proportion)
+#'
+#' @return HTML formatted text
+create_survival_ni_margin_text <- function(margin_detectable, n_total, hr_expected,
+                                            power, alpha, event_rate) {
+  # Calculate percent increase
+  pct_increase <- round((margin_detectable - 1) * 100, 1)
+
+  # Determine interpretation
+  if (margin_detectable < 1.15) {
+    interpretation <- "very stringent"
+    color <- "#2e7d32"
+  } else if (margin_detectable < 1.25) {
+    interpretation <- "stringent"
+    color <- "#66bb6a"
+  } else if (margin_detectable < 1.50) {
+    interpretation <- "moderate"
+    color <- "#ff9800"
+  } else {
+    interpretation <- "liberal"
+    color <- "#d32f2f"
+  }
+
+  tagList(
+    create_result_header(),
+    p(paste0(
+      "With a fixed total sample size of N = ", n_total, " participants, ",
+      "an expected hazard ratio of HR = ", format_numeric(hr_expected, digits = 3), ", ",
+      "and ", format_numeric(power, as_percent = TRUE, digits = 1), " power at α = ",
+      alpha, " (one-sided), the <strong>minimal detectable non-inferiority margin is HR = ",
+      format_numeric(margin_detectable, digits = 3), "</strong>."
+    )),
+    p(paste0(
+      "This means with this sample size, you can demonstrate non-inferiority if the true HR ",
+      "is better than (lower than) ", format_numeric(margin_detectable, digits = 3),
+      " with the specified power. This margin represents accepting up to a ",
+      pct_increase, "% increase in hazard rate as 'non-inferior', which is considered a ",
+      "<strong style='color: ", color, ";'>", interpretation, "</strong> margin."
+    )),
+    HTML(paste0(
+      "<div style='background-color: #d4edda; border-left: 4px solid #28a745; padding: 10px; margin: 15px 0;'>",
+      "<strong>Feasibility Assessment:</strong><br>",
+      "Consider whether this detectable margin (HR = ", format_numeric(margin_detectable, digits = 3),
+      ") is clinically acceptable for your research question. If this margin is too liberal, ",
+      "you may need to increase your sample size.",
+      "</div>"
+    ))
+  )
+}

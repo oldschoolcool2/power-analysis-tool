@@ -278,6 +278,9 @@ create_button_group <- function(buttons) {
 #'
 #' @return A tagList containing numericInput and optional tooltip
 #'
+#' @importFrom shiny numericInput tagList
+#' @importFrom shinyBS bsTooltip
+#'
 #' @examples
 #' create_numeric_input_with_tooltip(
 #'   "sample_size", "Sample Size:", 230, min = 1, step = 1,
@@ -300,14 +303,18 @@ create_numeric_input_with_tooltip <- function(inputId,
                                               help_content = NULL) {
 
   # Create the numeric input
-  input_element <- numericInput(
+  # Build arguments list, only including min/max if not NULL
+  input_args <- list(
     inputId = inputId,
     label = label,
     value = value,
-    min = min,
-    max = max,
     step = step
   )
+  
+  if (!is.null(min)) input_args$min <- min
+  if (!is.null(max)) input_args$max <- max
+  
+  input_element <- do.call(numericInput, input_args)
 
   # Add validation attribute if validation type is specified
   if (!is.null(validation_type)) {

@@ -3,16 +3,18 @@
 #' @param request Internal parameter for `{shiny}`. DO NOT REMOVE.
 #' @noRd
 #' 
-#' @importFrom shiny fluidPage tags
+#' @importFrom shiny fluidPage tags actionButton icon conditionalPanel uiOutput dataTableOutput tagList div p HTML
 #' @importFrom bslib bs_theme font_google
 #' @importFrom shinyBS bsModal
+#' @importFrom shinyjs useShinyjs
+#' @importFrom plotly plotlyOutput
 app_ui <- function(request) {
   tagList(
     # Leave this function for adding external resources
     golem_add_external_resources(),
     
     # Your application UI logic
-    
+    fluidPage(
   # Modern bslib theme for mobile responsiveness
   theme = bs_theme(
     version = 5,
@@ -118,30 +120,6 @@ app_ui <- function(request) {
   # App Header
   create_app_header(),
 
-  # Global Help Modal
-  bsModal(
-    id = "help_modal",
-    title = tags$div(
-      class = "modal-header-title",
-      icon("book", class = "me-2"),
-      "Help & Documentation"
-    ),
-    trigger = "show_help_modal",
-    size = "large",
-    
-    # Introduction
-    tags$div(
-      class = "modal-intro",
-      p("This tool provides power and sample size calculations for epidemiological studies, with a focus on real-world evidence (RWE) applications in pharmaceutical research."),
-      p(strong("How to use:"), "Select your study design from the sidebar navigation, enter your parameters, and click Calculate. Contextual help for each analysis type is available below the results.")
-    ),
-    
-    hr(),
-    
-    # Global help content (Regulatory Guidance & Interpretation)
-    create_global_help()
-  ),
-
   # App Container with Sidebar + Main Content
   div(class = "app-container",
 
@@ -212,7 +190,12 @@ app_ui <- function(request) {
           # ==============================================================================
           # TAB 8: MEDIATION ANALYSIS [MODULARIZED]
           # ==============================================================================
-          mod_08_mediation_ui("tab8")
+          mod_08_mediation_ui("tab8"),
+
+          # ==============================================================================
+          # TAB 9: TIME-TO-EVENT EQUIVALENCE/NON-INFERIORITY [MODULARIZED]
+          # ==============================================================================
+          mod_09_survival_equivalence_ui("tab9")
 
         ), # End of input cards
 
@@ -330,7 +313,8 @@ app_ui <- function(request) {
       )
     )
   )
-)
+  ) # End of fluidPage()
+) # End of tagList()
 }
 
 #' Add external Resources to the Application

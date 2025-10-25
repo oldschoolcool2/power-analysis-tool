@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Power Analysis Tool Development Team" />
+
+<meta name="date" content="2025-10-26" />
+
+<title>Understanding Propensity Score Sample Size Calculations</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Understanding Propensity Score Sample Size
+Calculations</h1>
+<h4 class="author">Power Analysis Tool Development Team</h4>
+<h4 class="date">2025-10-26</h4>
+
+
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>When planning observational studies that use propensity score
+weighting to adjust for confounding, sample size calculations become
+more complex than randomized controlled trials (RCTs). Two key
+challenges arise:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Propensity score overlap</strong>: Poor overlap between
+treatment and control groups inflates variance</li>
+<li><strong>Confounder-outcome association</strong>: Stronger
+confounding requires larger samples to achieve adequate power</li>
+</ol>
+<p>This vignette explains two cutting-edge methods for propensity score
+sample size calculations:</p>
+<ul>
+<li><strong>Austin (2021)</strong>: Variance Inflation Factor (VIF)
+approach based on propensity score overlap</li>
+<li><strong>Li et al. (2025)</strong>: Extended approach accounting for
+both overlap AND confounder-outcome strength</li>
+</ul>
+</div>
+<div id="why-observational-studies-need-larger-samples" class="section level2">
+<h2>Why Observational Studies Need Larger Samples</h2>
+<p>In an RCT, randomization ensures balance between treatment groups. In
+observational studies, propensity score weighting attempts to recreate
+this balance, but at a cost:</p>
+<ul>
+<li><strong>Increased variance</strong>: Weighting observations by
+inverse probability increases variance</li>
+<li><strong>Loss of effective sample size</strong>: Not all observations
+contribute equally</li>
+<li><strong>Confounding strength</strong>: Stronger confounding requires
+more data to adjust properly</li>
+</ul>
+<p><strong>Key insight from Li et al. (2025)</strong>: Previous methods
+(including Austin 2021) only accounted for overlap, ignoring the
+strength of confounder-outcome association. This can lead to
+underpowered studies.</p>
+</div>
+<div id="method-1-austin-2021-vif-approach" class="section level2">
+<h2>Method 1: Austin (2021) VIF Approach</h2>
+<div id="overview" class="section level3">
+<h3>Overview</h3>
+<p>Austin (2021) showed that sample size requirements for propensity
+score-weighted studies can be approximated by:</p>
+<p><span class="math display">\[
+N_{PS} = N_{RCT} \times VIF
+\]</span></p>
+<p>where the Variance Inflation Factor (VIF) depends on:</p>
+<ul>
+<li><strong>C-statistic</strong> of the propensity score model (higher =
+better discrimination = more separation)</li>
+<li><strong>Treatment prevalence</strong> (balanced groups = lower
+VIF)</li>
+<li><strong>Weight type</strong> (ATE, ATT, ATO, ATM, ATEN)</li>
+</ul>
+</div>
+<div id="weight-types-explained" class="section level3">
+<h3>Weight Types Explained</h3>
+<table>
+<caption>Propensity Score Weighting Methods</caption>
+<colgroup>
+<col width="7%" />
+<col width="31%" />
+<col width="37%" />
+<col width="23%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Weight</th>
+<th align="left">Name</th>
+<th align="left">Target</th>
+<th align="left">Efficiency</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">ATE</td>
+<td align="left">Average Treatment Effect</td>
+<td align="left">Full population</td>
+<td align="left">Lowest (highest VIF)</td>
+</tr>
+<tr class="even">
+<td align="left">ATT</td>
+<td align="left">Average Treatment on Treated</td>
+<td align="left">Treated population only</td>
+<td align="left">Moderate</td>
+</tr>
+<tr class="odd">
+<td align="left">ATO</td>
+<td align="left">Average Treatment on Overlap</td>
+<td align="left">Overlap population (best balance)</td>
+<td align="left">Highest (lowest VIF)</td>
+</tr>
+<tr class="even">
+<td align="left">ATM</td>
+<td align="left">Matching Weights</td>
+<td align="left">Matched subset</td>
+<td align="left">High</td>
+</tr>
+<tr class="odd">
+<td align="left">ATEN</td>
+<td align="left">Entropy Weights</td>
+<td align="left">Entropy-weighted subset</td>
+<td align="left">High</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="example-austin-vif-calculation" class="section level3">
+<h3>Example: Austin VIF Calculation</h3>
+<p>Suppose we’re planning an observational study comparing a new drug to
+standard care. From a pilot study or literature:</p>
+<ul>
+<li>RCT would require <strong>N = 400</strong> for 80% power</li>
+<li>Treatment prevalence: <strong>30%</strong></li>
+<li>Propensity score model C-statistic: <strong>0.75</strong></li>
+<li>Using <strong>ATE weights</strong> (target full population
+effect)</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(PowerAnalysisTool)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="co"># Calculate VIF using Austin (2021) method</span></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>vif_austin <span class="ot">&lt;-</span> <span class="fu">estimate_vif_propensity_score</span>(</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>  <span class="at">c_statistic =</span> <span class="fl">0.75</span>,</span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>  <span class="at">prevalence_pct =</span> <span class="dv">30</span>,</span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>  <span class="at">weight_type =</span> <span class="st">&quot;ATE&quot;</span></span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>)</span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a><span class="co"># Required sample size for observational study</span></span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a>n_observational <span class="ot">&lt;-</span> <span class="dv">400</span> <span class="sc">*</span> vif_austin</span>
+<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;VIF:&quot;</span>, vif_austin, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Required N:&quot;</span>, <span class="fu">ceiling</span>(n_observational), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Increase vs RCT:&quot;</span>, <span class="fu">paste0</span>(<span class="st">&quot;+&quot;</span>, <span class="fu">round</span>((vif_austin <span class="sc">-</span> <span class="dv">1</span>) <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">1</span>), <span class="st">&quot;%</span><span class="sc">\n</span><span class="st">&quot;</span>))</span></code></pre></div>
+<p><strong>Typical output</strong>: VIF ≈ 1.8, requiring N ≈ 720 (+80%
+vs RCT)</p>
+</div>
+<div id="interpreting-vif-values" class="section level3">
+<h3>Interpreting VIF Values</h3>
+<table>
+<caption>VIF Interpretation Guide</caption>
+<colgroup>
+<col width="10%" />
+<col width="28%" />
+<col width="61%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">VIF_Range</th>
+<th align="left">Interpretation</th>
+<th align="left">Recommendation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">&lt; 1.3</td>
+<td align="left">Low efficiency loss</td>
+<td align="left">PS weighting highly efficient</td>
+</tr>
+<tr class="even">
+<td align="left">1.3 - 2.0</td>
+<td align="left">Moderate efficiency loss</td>
+<td align="left">PS weighting acceptable; consider ATO for better
+efficiency</td>
+</tr>
+<tr class="odd">
+<td align="left">2.0 - 3.0</td>
+<td align="left">Substantial efficiency loss</td>
+<td align="left">Use overlap weights (ATO) or matching weights
+(ATM)</td>
+</tr>
+<tr class="even">
+<td align="left">&gt; 3.0</td>
+<td align="left">Severe efficiency loss</td>
+<td align="left">PS weighting may not be feasible; consider
+alternatives</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="limitations-of-austins-approach" class="section level3">
+<h3>Limitations of Austin’s Approach</h3>
+<p>Austin’s VIF method has a key limitation: <strong>it does not account
+for confounder-outcome strength</strong>.</p>
+<p>Consider two scenarios with identical propensity score overlap
+(C-statistic = 0.75):</p>
+<ol style="list-style-type: decimal">
+<li><strong>Weak confounding</strong>: Confounder explains 5% of outcome
+variance (R² = 0.05)</li>
+<li><strong>Strong confounding</strong>: Confounder explains 35% of
+outcome variance (R² = 0.35)</li>
+</ol>
+<p>Austin’s VIF would be identical for both scenarios, but the strong
+confounding scenario requires a much larger sample to achieve adequate
+power after adjustment.</p>
+<p><strong>This is where Li et al. (2025) extends the
+methodology.</strong></p>
+</div>
+</div>
+<div id="method-2-li-et-al.-2025-extended-approach" class="section level2">
+<h2>Method 2: Li et al. (2025) Extended Approach</h2>
+<div id="overview-1" class="section level3">
+<h3>Overview</h3>
+<p>Li et al. (2025) published a groundbreaking method that accounts for
+<strong>both</strong> overlap and confounding strength:</p>
+<p><span class="math display">\[
+N_{PS} = \frac{V_{adjusted} (z_{1-\alpha/2} + z_{\beta})^2}{\tau^2}
+\]</span></p>
+<p>where <span class="math inline">\(V_{adjusted}\)</span>
+incorporates:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Baseline variance</strong> (like RCT)</li>
+<li><strong>Overlap penalty</strong> (like Austin)</li>
+<li><strong>Confounding penalty</strong> (NEW: based on
+confounder-outcome R²)</li>
+</ol>
+</div>
+<div id="key-innovation-confounder-outcome-r²" class="section level3">
+<h3>Key Innovation: Confounder-Outcome R²</h3>
+<p>The confounding penalty is:</p>
+<p><span class="math display">\[
+\text{Confounding Penalty} = \frac{1}{1 - \rho^2}
+\]</span></p>
+<p>where <span class="math inline">\(\rho^2\)</span> is the R-squared
+representing how much outcome variance is explained by confounders.</p>
+<p><strong>Example values:</strong></p>
+<table>
+<caption>Confounding Strength and Sample Size Impact</caption>
+<thead>
+<tr class="header">
+<th align="left">R_Squared</th>
+<th align="left">Confounding</th>
+<th align="left">Penalty</th>
+<th align="left">Impact</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">0.01</td>
+<td align="left">Weak</td>
+<td align="left">1.01×</td>
+<td align="left">Minimal inflation</td>
+</tr>
+<tr class="even">
+<td align="left">0.10</td>
+<td align="left">Moderate</td>
+<td align="left">1.11×</td>
+<td align="left">~11% sample increase</td>
+</tr>
+<tr class="odd">
+<td align="left">0.20</td>
+<td align="left">Strong</td>
+<td align="left">1.25×</td>
+<td align="left">~25% sample increase</td>
+</tr>
+<tr class="even">
+<td align="left">0.35</td>
+<td align="left">Very Strong</td>
+<td align="left">1.54×</td>
+<td align="left">~54% sample increase</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="overlap-coefficient-bhattacharyya-φ" class="section level3">
+<h3>Overlap Coefficient (Bhattacharyya φ)</h3>
+<p>Li et al. use the Bhattacharyya coefficient (φ) to quantify
+propensity score overlap:</p>
+<ul>
+<li><strong>φ = 1.0</strong>: Perfect overlap (distributions
+identical)</li>
+<li><strong>φ = 0.9</strong>: Excellent overlap</li>
+<li><strong>φ = 0.75</strong>: Good overlap</li>
+<li><strong>φ = 0.5</strong>: Fair overlap</li>
+<li><strong>φ &lt; 0.5</strong>: Poor overlap</li>
+</ul>
+<p><strong>Relationship to C-statistic</strong>: Higher C-statistic →
+lower overlap coefficient</p>
+</div>
+<div id="example-li-et-al.-2025-calculation" class="section level3">
+<h3>Example: Li et al. (2025) Calculation</h3>
+<p>Using the same scenario, but now incorporating confounding
+strength:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="co"># From pilot study: confounder-outcome R² = 0.20 (moderate confounding)</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="co"># Overlap coefficient φ = 0.75 (corresponds to C-stat ≈ 0.75)</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>li_result <span class="ot">&lt;-</span> <span class="fu">calculate_n_li_2025</span>(</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>  <span class="at">effect_size =</span> <span class="fl">0.2</span>,           <span class="co"># Standardized effect (Cohen&#39;s d)</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>  <span class="at">alpha =</span> <span class="fl">0.05</span>,</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>  <span class="at">power =</span> <span class="fl">0.80</span>,</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>  <span class="at">treatment_prop =</span> <span class="fl">0.30</span>,       <span class="co"># 30% treated</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>  <span class="at">overlap_phi =</span> <span class="fl">0.75</span>,          <span class="co"># Good overlap</span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>  <span class="at">rho_squared =</span> <span class="fl">0.20</span>,          <span class="co"># Moderate confounding</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>  <span class="at">weight_type =</span> <span class="st">&quot;ATE&quot;</span>,</span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>  <span class="at">outcome_var =</span> <span class="dv">1</span></span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>)</span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Required N:&quot;</span>, li_result<span class="sc">$</span>n_required, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Effective N:&quot;</span>, li_result<span class="sc">$</span>n_effective, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;VIF (Li 2025):&quot;</span>, <span class="fu">round</span>(li_result<span class="sc">$</span>vif, <span class="dv">2</span>), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Overlap penalty:&quot;</span>, <span class="fu">round</span>(li_result<span class="sc">$</span>overlap_penalty, <span class="dv">2</span>), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Confounding penalty:&quot;</span>, <span class="fu">round</span>(li_result<span class="sc">$</span>confounding_penalty, <span class="dv">2</span>), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<p><strong>Typical output</strong>: - Required N ≈ 950 - VIF ≈ 2.4 (vs
+1.8 using Austin) - Overlap penalty: 1.06× - Confounding penalty:
+1.25×</p>
+</div>
+<div id="comparing-austin-vs-li-et-al." class="section level3">
+<h3>Comparing Austin vs Li et al.</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>comparison <span class="ot">&lt;-</span> <span class="fu">compare_ps_methods</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="at">n_rct =</span> <span class="dv">400</span>,</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="at">treatment_prev_pct =</span> <span class="dv">30</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  <span class="at">c_stat =</span> <span class="fl">0.75</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>  <span class="at">overlap_phi =</span> <span class="fl">0.75</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>  <span class="at">rho_squared =</span> <span class="fl">0.20</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>  <span class="at">weight_type =</span> <span class="st">&quot;ATE&quot;</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>)</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="fu">print</span>(comparison)</span></code></pre></div>
+<p><strong>Output:</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>Sample Size</th>
+<th>VIF</th>
+<th>Increase vs RCT</th>
+<th>Accounts For</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>RCT</td>
+<td>400</td>
+<td>1.0</td>
+<td>—</td>
+<td>None</td>
+</tr>
+<tr class="even">
+<td>Austin (2021)</td>
+<td>720</td>
+<td>1.8</td>
+<td>+80%</td>
+<td>Overlap only</td>
+</tr>
+<tr class="odd">
+<td>Li et al. (2025)</td>
+<td>950</td>
+<td>2.4</td>
+<td>+138%</td>
+<td>Overlap + confounding</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Interpretation</strong>: Ignoring confounding strength (using
+Austin only) would underpower the study by 24% relative to Li’s more
+accurate method.</p>
+</div>
+</div>
+<div id="practical-workflow" class="section level2">
+<h2>Practical Workflow</h2>
+<div id="step-1-determine-rct-sample-size" class="section level3">
+<h3>Step 1: Determine RCT Sample Size</h3>
+<p>First, calculate the sample size you would need for an equivalent RCT
+using standard methods:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># For two-proportion comparison</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="fu">library</span>(pwr)</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>rct_result <span class="ot">&lt;-</span> <span class="fu">pwr.2p.test</span>(</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>  <span class="at">h =</span> <span class="fl">0.2</span>,           <span class="co"># Effect size (Cohen&#39;s h or standardized difference)</span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>  <span class="at">sig.level =</span> <span class="fl">0.05</span>,</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>  <span class="at">power =</span> <span class="fl">0.80</span>,</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>  <span class="at">alternative =</span> <span class="st">&quot;two.sided&quot;</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>)</span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>n_rct <span class="ot">&lt;-</span> <span class="fu">ceiling</span>(rct_result<span class="sc">$</span>n <span class="sc">*</span> <span class="dv">2</span>)  <span class="co"># Total sample size</span></span></code></pre></div>
+</div>
+<div id="step-2-estimate-propensity-score-model-performance" class="section level3">
+<h3>Step 2: Estimate Propensity Score Model Performance</h3>
+<p>From pilot data or literature, estimate:</p>
+<ol style="list-style-type: decimal">
+<li><strong>C-statistic</strong> (or AUC) of propensity score model</li>
+<li><strong>Treatment prevalence</strong> in your population</li>
+<li><strong>Overlap coefficient</strong> (or estimate from
+C-statistic)</li>
+</ol>
+<p>If you only have C-statistic, approximate overlap: - C = 0.70 → φ ≈
+0.85 - C = 0.75 → φ ≈ 0.75 - C = 0.80 → φ ≈ 0.65 - C = 0.85 → φ ≈
+0.50</p>
+</div>
+<div id="step-3-estimate-confounder-outcome-association" class="section level3">
+<h3>Step 3: Estimate Confounder-Outcome Association</h3>
+<p>Determine R² from:</p>
+<ul>
+<li><strong>Pilot study regression</strong>: Outcome ~ Confounder(s),
+extract R²</li>
+<li><strong>Literature</strong>: Find similar studies reporting
+confounder effects</li>
+<li><strong>Expert judgment</strong>: Conservative estimate (e.g., R² =
+0.20 if moderate)</li>
+</ul>
+<p><strong>Important</strong>: Use the R² from a model WITHOUT the
+treatment variable, only confounders → outcome.</p>
+</div>
+<div id="step-4-choose-weighting-method" class="section level3">
+<h3>Step 4: Choose Weighting Method</h3>
+<p>Select based on your target estimand:</p>
+<ul>
+<li><strong>ATE</strong>: Full population effect (most generalizable,
+highest VIF)</li>
+<li><strong>ATT</strong>: Effect in treated population (useful for
+treatment decisions)</li>
+<li><strong>ATO</strong>: Effect in overlap population (most efficient,
+lowest VIF, but less generalizable)</li>
+</ul>
+</div>
+<div id="step-5-calculate-required-sample-size" class="section level3">
+<h3>Step 5: Calculate Required Sample Size</h3>
+<div id="using-austin-2021-only" class="section level4">
+<h4>Using Austin (2021) only:</h4>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>vif <span class="ot">&lt;-</span> <span class="fu">estimate_vif_propensity_score</span>(</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="at">c_statistic =</span> <span class="fl">0.75</span>,</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="at">prevalence_pct =</span> <span class="dv">30</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>  <span class="at">weight_type =</span> <span class="st">&quot;ATE&quot;</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>)</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>n_required_austin <span class="ot">&lt;-</span> <span class="fu">ceiling</span>(n_rct <span class="sc">*</span> vif)</span></code></pre></div>
+</div>
+<div id="using-li-et-al.-2025-recommended" class="section level4">
+<h4>Using Li et al. (2025) (RECOMMENDED):</h4>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>li_result <span class="ot">&lt;-</span> <span class="fu">calculate_n_li_2025</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  <span class="at">effect_size =</span> <span class="fl">0.2</span>,</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  <span class="at">alpha =</span> <span class="fl">0.05</span>,</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  <span class="at">power =</span> <span class="fl">0.80</span>,</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>  <span class="at">treatment_prop =</span> <span class="fl">0.30</span>,</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>  <span class="at">overlap_phi =</span> <span class="fl">0.75</span>,</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>  <span class="at">rho_squared =</span> <span class="fl">0.20</span>,</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>  <span class="at">weight_type =</span> <span class="st">&quot;ATE&quot;</span>,</span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>  <span class="at">outcome_var =</span> <span class="dv">1</span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>)</span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a>n_required_li <span class="ot">&lt;-</span> li_result<span class="sc">$</span>n_required</span></code></pre></div>
+</div>
+</div>
+<div id="step-6-sensitivity-analysis" class="section level3">
+<h3>Step 6: Sensitivity Analysis</h3>
+<p>Test robustness to assumptions:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>sensitivity <span class="ot">&lt;-</span> <span class="fu">generate_ps_sensitivity_analysis</span>(</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>  <span class="at">n_rct =</span> <span class="dv">400</span>,</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  <span class="at">treatment_prev_pct =</span> <span class="dv">30</span>,</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  <span class="at">c_stat =</span> <span class="fl">0.75</span>,</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>  <span class="at">overlap_phi =</span> <span class="fl">0.75</span>,</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>  <span class="at">rho_squared =</span> <span class="fl">0.20</span>,</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>  <span class="at">weight_type =</span> <span class="st">&quot;ATE&quot;</span>,</span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;Both&quot;</span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>)</span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="fu">print</span>(sensitivity)</span></code></pre></div>
+<p>This generates a table showing sample size requirements under various
+overlap and confounding scenarios, helping you understand worst-case and
+best-case scenarios.</p>
+</div>
+</div>
+<div id="case-study-real-world-example" class="section level2">
+<h2>Case Study: Real-World Example</h2>
+<div id="scenario" class="section level3">
+<h3>Scenario</h3>
+<p>A health system wants to compare outcomes for patients receiving a
+new diabetes medication vs standard therapy. From EHR data:</p>
+<ul>
+<li><strong>Treatment prevalence</strong>: 35% receive new
+medication</li>
+<li><strong>PS model C-statistic</strong>: 0.78 (good
+discrimination)</li>
+<li><strong>Overlap</strong>: φ ≈ 0.70 (estimated from C-stat)</li>
+<li><strong>Confounding</strong>: Baseline HbA1c explains R² = 0.25 of
+outcome variance</li>
+<li><strong>Target</strong>: ATE (full population effect)</li>
+<li><strong>Design</strong>: 80% power, α = 0.05, effect size d =
+0.25</li>
+</ul>
+</div>
+<div id="calculations" class="section level3">
+<h3>Calculations</h3>
+<div id="rct-sample-size-baseline" class="section level4">
+<h4>RCT Sample Size (Baseline)</h4>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="co"># Continuous outcome, two groups</span></span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>pwr_result <span class="ot">&lt;-</span> <span class="fu">pwr.t.test</span>(</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>  <span class="at">d =</span> <span class="fl">0.25</span>,</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>  <span class="at">sig.level =</span> <span class="fl">0.05</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>  <span class="at">power =</span> <span class="fl">0.80</span>,</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>  <span class="at">type =</span> <span class="st">&quot;two.sample&quot;</span>,</span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>  <span class="at">alternative =</span> <span class="st">&quot;two.sided&quot;</span></span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>)</span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>n_rct <span class="ot">&lt;-</span> <span class="fu">ceiling</span>(pwr_result<span class="sc">$</span>n <span class="sc">*</span> <span class="dv">2</span>)</span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a><span class="co"># Result: N = 506</span></span></code></pre></div>
+</div>
+<div id="austin-2021-estimate" class="section level4">
+<h4>Austin (2021) Estimate</h4>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>vif_austin <span class="ot">&lt;-</span> <span class="fu">estimate_vif_propensity_score</span>(</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>  <span class="at">c_statistic =</span> <span class="fl">0.78</span>,</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>  <span class="at">prevalence_pct =</span> <span class="dv">35</span>,</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>  <span class="at">weight_type =</span> <span class="st">&quot;ATE&quot;</span></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>)</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a><span class="co"># VIF ≈ 2.1</span></span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>n_austin <span class="ot">&lt;-</span> <span class="fu">ceiling</span>(<span class="dv">506</span> <span class="sc">*</span> vif_austin)</span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a><span class="co"># Result: N ≈ 1,063 (+110% vs RCT)</span></span></code></pre></div>
+</div>
+<div id="li-et-al.-2025-estimate-recommended" class="section level4">
+<h4>Li et al. (2025) Estimate (Recommended)</h4>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>li_result <span class="ot">&lt;-</span> <span class="fu">calculate_n_li_2025</span>(</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>  <span class="at">effect_size =</span> <span class="fl">0.25</span>,</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>  <span class="at">alpha =</span> <span class="fl">0.05</span>,</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>  <span class="at">power =</span> <span class="fl">0.80</span>,</span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>  <span class="at">treatment_prop =</span> <span class="fl">0.35</span>,</span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>  <span class="at">overlap_phi =</span> <span class="fl">0.70</span>,</span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a>  <span class="at">rho_squared =</span> <span class="fl">0.25</span>,</span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a>  <span class="at">weight_type =</span> <span class="st">&quot;ATE&quot;</span>,</span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a>  <span class="at">outcome_var =</span> <span class="dv">1</span></span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a>)</span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a><span class="co"># Required N ≈ 1,380</span></span>
+<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a><span class="co"># VIF ≈ 2.7 (vs 2.1 for Austin)</span></span>
+<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a></span>
+<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a>n_li <span class="ot">&lt;-</span> li_result<span class="sc">$</span>n_required</span>
+<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a><span class="co"># Result: N ≈ 1,380 (+173% vs RCT)</span></span></code></pre></div>
+</div>
+</div>
+<div id="interpretation" class="section level3">
+<h3>Interpretation</h3>
+<ul>
+<li><strong>RCT baseline</strong>: 506 patients</li>
+<li><strong>Austin (ignoring confounding strength)</strong>: 1,063
+patients (+110%)</li>
+<li><strong>Li et al. (accounting for confounding)</strong>: 1,380
+patients (+173%)</li>
+</ul>
+<p><strong>Conclusion</strong>: Using Austin’s method alone would
+underpower the study by ~23%. The team should plan for <strong>1,380
+patients</strong> to achieve adequate power given moderate confounding
+(R² = 0.25).</p>
+</div>
+<div id="exploring-alternatives" class="section level3">
+<h3>Exploring Alternatives</h3>
+<p>The team also considers overlap weights (ATO) for better
+efficiency:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>li_result_ato <span class="ot">&lt;-</span> <span class="fu">calculate_n_li_2025</span>(</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>  <span class="at">effect_size =</span> <span class="fl">0.25</span>,</span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>  <span class="at">alpha =</span> <span class="fl">0.05</span>,</span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>  <span class="at">power =</span> <span class="fl">0.80</span>,</span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>  <span class="at">treatment_prop =</span> <span class="fl">0.35</span>,</span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a>  <span class="at">overlap_phi =</span> <span class="fl">0.70</span>,</span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a>  <span class="at">rho_squared =</span> <span class="fl">0.25</span>,</span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a>  <span class="at">weight_type =</span> <span class="st">&quot;ATO&quot;</span>,  <span class="co"># Changed to overlap weights</span></span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a>  <span class="at">outcome_var =</span> <span class="dv">1</span></span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a>)</span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a></span>
+<span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a><span class="co"># Required N ≈ 965 (vs 1,380 for ATE)</span></span>
+<span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a><span class="co"># VIF ≈ 1.9 (vs 2.7 for ATE)</span></span></code></pre></div>
+<p><strong>Trade-off</strong>: ATO reduces sample size to 965 (-30% vs
+ATE), but changes estimand from full population to overlap population
+only.</p>
+</div>
+</div>
+<div id="recommendations" class="section level2">
+<h2>Recommendations</h2>
+<div id="which-method-to-use" class="section level3">
+<h3>Which Method to Use?</h3>
+<ol style="list-style-type: decimal">
+<li><strong>Always start with Li et al. (2025)</strong> if you have an
+estimate of confounder-outcome strength
+<ul>
+<li>More accurate accounting for both overlap and confounding</li>
+<li>Prevents underpowered studies</li>
+</ul></li>
+<li><strong>Use Austin (2021) as a minimum</strong> if R² is unknown
+<ul>
+<li>Conservative assumption: R² = 0 (no confounding penalty)</li>
+<li>Provides lower bound on sample size</li>
+</ul></li>
+<li><strong>Conduct sensitivity analysis</strong> to explore scenarios
+<ul>
+<li>Test worst-case: poor overlap (φ = 0.5), strong confounding (R² =
+0.30)</li>
+<li>Test best-case: good overlap (φ = 0.85), weak confounding (R² =
+0.05)</li>
+</ul></li>
+</ol>
+</div>
+<div id="obtaining-r²-estimates" class="section level3">
+<h3>Obtaining R² Estimates</h3>
+<p>If you don’t have pilot data, consider:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Literature review</strong>: Find similar studies and extract
+reported R² or effect sizes</li>
+<li><strong>Expert consultation</strong>: Ask domain experts for
+plausible confounder effect magnitudes</li>
+<li><strong>Conservative assumption</strong>: Use R² = 0.20 (moderate)
+as default</li>
+<li><strong>Pilot study</strong>: Collect small sample to estimate PS
+model and confounder-outcome association</li>
+</ol>
+</div>
+<div id="when-to-use-overlap-weights" class="section level3">
+<h3>When to Use Overlap Weights</h3>
+<p>Consider ATO (overlap weights) if:</p>
+<ul>
+<li>VIF &gt; 2.5 with ATE weights</li>
+<li>Overlap coefficient φ &lt; 0.6</li>
+<li>Your research question allows restricting to overlap population</li>
+</ul>
+<p><strong>Caution</strong>: ATO changes the estimand. Clearly report
+that results apply to the overlap population, not the full
+population.</p>
+</div>
+</div>
+<div id="summary" class="section level2">
+<h2>Summary</h2>
+<p>Propensity score sample size calculations require accounting for
+efficiency loss due to:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Propensity score overlap</strong> (Austin 2021)</li>
+<li><strong>Confounder-outcome association</strong> (Li et
+al. 2025)</li>
+</ol>
+<p><strong>Key takeaways:</strong></p>
+<ul>
+<li><strong>Observational studies require larger samples than
+RCTs</strong> (typically 1.5× to 3× depending on overlap and
+confounding)</li>
+<li><strong>Li et al. (2025) method is more accurate</strong> than
+Austin (2021) when confounding is present</li>
+<li><strong>Ignoring confounding strength can underpower
+studies</strong> by 20-50%</li>
+<li><strong>Overlap weights (ATO) offer better efficiency</strong> but
+change the target estimand</li>
+<li><strong>Sensitivity analysis is essential</strong> to understand
+robustness to assumptions</li>
+</ul>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<ol style="list-style-type: decimal">
+<li><p>Austin PC (2021). Informing power and sample size calculations
+when using inverse probability of treatment weighting using the
+propensity score. <em>Statistics in Medicine</em> 40(27):6150-6163. <a href="https://doi.org/10.1002/sim.9149">https://doi.org/10.1002/sim.9149</a></p></li>
+<li><p>Li F, Liu B (2025). Sample size and power calculations for causal
+inference of observational studies. <em>arXiv</em> 2501.11181. <a href="https://arxiv.org/abs/2501.11181">https://arxiv.org/abs/2501.11181</a></p></li>
+<li><p>Li F, Morgan KL, Zaslavsky AM (2018). Balancing covariates via
+propensity score weighting. <em>Journal of the American Statistical
+Association</em> 113(521):390-400.</p></li>
+<li><p>Thomas LE, Li F, Pencina MJ (2020). Overlap weighting: A
+propensity score method that mimics attributes of a randomized clinical
+trial. <em>JAMA</em> 323(23):2417-2418.</p></li>
+</ol>
+</div>
+<div id="further-reading" class="section level2">
+<h2>Further Reading</h2>
+<ul>
+<li>See <code>vignette(&quot;missing-data-adjustments&quot;)</code> for handling
+missing data in propensity score studies</li>
+<li>See <code>vignette(&quot;design-effects-clustering&quot;)</code> for clustered
+observational studies</li>
+<li>See the VIF/Propensity Score Calculator tab in the Power Analysis
+Tool for interactive calculations</li>
+</ul>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

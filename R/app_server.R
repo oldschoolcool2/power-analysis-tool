@@ -51,6 +51,9 @@ app_server <- function(input, output, session) {
   # Tab 8: Mediation Analysis
   tab8_vals <- mod_08_mediation_server("tab8")
 
+  # Tab 9: Time-to-Event Equivalence/NI
+  tab9_vals <- mod_09_survival_equivalence_server("tab9")
+
   # Missing data modules for tabs not yet fully migrated
   # missing_data_surv_ss <- missing_data_server("surv_ss-missing_data")  # Now in tab3 module
   # missing_data_match <- missing_data_server("match-missing_data")  # Now in tab4 module
@@ -85,6 +88,7 @@ app_server <- function(input, output, session) {
       "power_continuous" = "Power (Continuous)",
       "ss_continuous" = "Sample Size (Continuous)",
       "noninf" = "Non-Inferiority",
+      "survival_ni_equiv" = "Time-to-Event Equivalence/Non-Inferiority",
       "vif_calculator" = "Propensity Score VIF Calculator",
       "mediation_analysis" = "Mediation Analysis",
       "documentation" = "Documentation",

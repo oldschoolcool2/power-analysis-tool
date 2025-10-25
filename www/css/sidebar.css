@@ -240,6 +240,29 @@
 }
 
 /* ==========================================================================
+   Sidebar Divider & Section Headers
+   ========================================================================== */
+
+/* Divider for separating sections */
+.sidebar-divider {
+  margin: var(--space-4) 0;
+  border: 0;
+  border-top: 1px solid var(--border-color-sidebar-subtle);
+  opacity: 0.3;
+}
+
+/* Section headers in sidebar (e.g., "Resources") */
+.sidebar-section-header {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-sidebar-dimmed);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: var(--space-2) var(--space-6);
+  margin-top: var(--space-2);
+}
+
+/* ==========================================================================
    Sidebar Footer
    ========================================================================== */
 

@@ -41,3 +41,5 @@
 ^validate_code_quality\.R$
 ^capture\.png$
 ^\.\.Rcheck$
+^doc$
+^Meta$

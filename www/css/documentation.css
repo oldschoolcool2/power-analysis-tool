@@ -1,0 +1,230 @@
+/**
+ * Documentation Page Styles
+ * Statistical Power Analysis Tool
+ *
+ * Implements a card-based documentation center with:
+ * - Grid layout for documentation cards
+ * - Hover effects and transitions
+ * - Responsive design
+ * - Accessible interactions
+ */
+
+/* ==========================================================================
+   Documentation Page Container
+   ========================================================================== */
+
+.documentation-page {
+  padding: var(--space-6);
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Documentation Header */
+.documentation-header {
+  margin-bottom: var(--space-8);
+  text-align: center;
+}
+
+.documentation-title {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+  line-height: var(--line-height-tight);
+}
+
+.documentation-subtitle {
+  font-size: var(--font-size-lg);
+  color: var(--text-secondary);
+  line-height: var(--line-height-normal);
+}
+
+/* ==========================================================================
+   Documentation Card Grid
+   ========================================================================== */
+
+.doc-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: var(--space-6);
+  margin-top: var(--space-6);
+}
+
+/* Individual Documentation Card */
+.doc-card {
+  background: var(--bg-card);
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.doc-card:hover {
+  border-color: var(--primary);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.doc-card:active {
+  transform: translateY(0);
+}
+
+/* Card Icon */
+.doc-card-icon {
+  width: 48px;
+  height: 48px;
+  background: var(--color-primary-100);
+  color: var(--primary);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--space-4);
+  font-size: 24px;
+  transition: all 0.2s ease;
+}
+
+.doc-card:hover .doc-card-icon {
+  background: var(--color-primary-200);
+  transform: scale(1.05);
+}
+
+/* Card Title */
+.doc-card-title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+  line-height: var(--line-height-tight);
+}
+
+/* Card Description */
+.doc-card-description {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: var(--space-4);
+}
+
+/* Card Link */
+.doc-card-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  font-size: var(--font-size-sm);
+  color: var(--primary);
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.doc-card-link:hover {
+  text-decoration: underline;
+  gap: var(--space-3);
+}
+
+/* Arrow icon animation */
+.doc-card:hover .doc-card-link {
+  color: var(--color-primary-700);
+}
+
+/* ==========================================================================
+   Responsive Breakpoints
+   ========================================================================== */
+
+/* Tablet */
+@media (max-width: 1023px) {
+  .documentation-page {
+    padding: var(--space-5);
+  }
+
+  .doc-card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--space-5);
+  }
+
+  .documentation-title {
+    font-size: var(--font-size-2xl);
+  }
+
+  .documentation-subtitle {
+    font-size: var(--font-size-md);
+  }
+}
+
+/* Mobile */
+@media (max-width: 639px) {
+  .documentation-page {
+    padding: var(--space-4);
+  }
+
+  .documentation-header {
+    margin-bottom: var(--space-6);
+    text-align: left;
+  }
+
+  .documentation-title {
+    font-size: var(--font-size-xl);
+  }
+
+  .documentation-subtitle {
+    font-size: var(--font-size-sm);
+  }
+
+  .doc-card-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+
+  .doc-card {
+    padding: var(--space-5);
+  }
+
+  .doc-card-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+
+  .doc-card-title {
+    font-size: var(--font-size-lg);
+  }
+}
+
+/* ==========================================================================
+   Accessibility
+   ========================================================================== */
+
+/* Focus styles for keyboard navigation */
+.doc-card:focus {
+  outline: 2px solid var(--color-accent-500);
+  outline-offset: 2px;
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .doc-card,
+  .doc-card-icon,
+  .doc-card-link {
+    transition: none;
+  }
+
+  .doc-card:hover {
+    transform: none;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .doc-card {
+    border-width: 2px;
+  }
+
+  .doc-card:hover {
+    border-width: 3px;
+  }
+}

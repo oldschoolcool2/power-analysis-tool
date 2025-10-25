@@ -5,6 +5,7 @@
 #' @param analysis_type The type of analysis (e.g., "single_proportion", "two_group")
 #' @return A bslib accordion component with contextual help
 #' @importFrom bslib accordion accordion_panel
+#' @importFrom shiny tags icon a p strong h5 HTML
 create_contextual_help <- function(analysis_type) {
   
   help_content <- switch(analysis_type,

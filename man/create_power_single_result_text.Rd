@@ -28,4 +28,5 @@ HTML formatted text
 }
 \description{
 Generates formatted result text for single proportion power analysis.
+Enhanced with visual result cards and color-coded power interpretation.
 }
