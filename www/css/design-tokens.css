@@ -47,8 +47,8 @@
   --color-neutral-300: #E2E8F0;     /* Light border */
   --color-neutral-200: #EDF2F7;     /* Subtle background */
   --color-neutral-100: #F7FAFC;     /* Whisper background */
-  --color-neutral-50: #F8F9FA;      /* Base background (NOT pure white) */
-  --color-white: #FFFFFF;           /* Card backgrounds */
+  --color-neutral-50: #FAFBFC;      /* Very light base background */
+  --color-white: #FFFFFF;           /* Pure white - Card backgrounds */
 
   /* ========================================================================
      SEMANTIC COLORS - Status & Feedback
@@ -82,7 +82,7 @@
      SEMANTIC APPLICATION TOKENS - Backgrounds
      ======================================================================== */
 
-  --bg-app: var(--color-neutral-50);           /* Main app background */
+  --bg-app: #FFFFFF;                           /* Main app background - Pure white */
   --bg-card: var(--color-white);               /* Content cards/panels */
   --bg-sidebar: var(--color-primary-800);      /* Navigation sidebar */
   --bg-header: var(--color-white);             /* App header */
@@ -99,12 +99,12 @@
 
   --text-primary: var(--color-neutral-900);    /* Main body text */
   --text-secondary: var(--color-neutral-700);  /* Secondary text */
-  --text-tertiary: var(--color-neutral-600);   /* Labels, captions */
+  --text-tertiary: var(--color-neutral-700);   /* Labels, captions - updated for WCAG AA */
   --text-placeholder: var(--color-neutral-500);
   --text-disabled: var(--color-neutral-400);
   --text-inverse: var(--color-white);          /* On dark backgrounds */
-  --text-link: var(--color-primary-600);
-  --text-link-hover: var(--color-primary-700);
+  --text-link: var(--color-primary-700);       /* Updated for WCAG AA contrast */
+  --text-link-hover: var(--color-primary-900); /* Darker on hover */
   --text-success: var(--color-success-600);
   --text-warning: var(--color-warning-600);
   --text-error: var(--color-error-600);

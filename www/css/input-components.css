@@ -24,7 +24,8 @@
 
 /* The segmented control container */
 .segmented-control {
-  display: inline-flex;
+  display: inline-flex !important;
+  flex-direction: row !important;
   background: var(--color-neutral-100);
   border-radius: var(--border-radius-md);
   padding: var(--space-1);
@@ -85,13 +86,16 @@
 
 /* For Shiny radio button container */
 .segmented-control .shiny-input-radiogroup {
-  display: flex;
+  display: flex !important;
+  flex-direction: row !important;
   gap: var(--space-1);
+  margin: 0 !important;
 }
 
 .segmented-control .shiny-input-radiogroup .radio {
-  display: inline-flex;
-  margin: 0;
+  display: inline-flex !important;
+  margin: 0 !important;
+  margin-bottom: 0 !important;
 }
 
 /* ========================================================================
@@ -112,7 +116,7 @@
 
 /* Slider value display */
 .enhanced-slider-wrapper .irs-single {
-  background: var(--color-primary-600);
+  background: var(--color-primary-700);  /* Darker for WCAG AA contrast */
   color: var(--text-inverse);
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);

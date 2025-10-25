@@ -16,7 +16,7 @@
 
 .app-container {
   display: flex;
-  min-height: 100vh;
+  min-height: calc(100vh - var(--header-height));
   position: relative;
 }
 
@@ -27,9 +27,9 @@
   display: flex;
   flex-direction: column;
   position: fixed;
-  top: 0;
+  top: var(--header-height);
   left: 0;
-  bottom: 0;
+  height: calc(100vh - var(--header-height));
   z-index: 1000;
   transition: transform 0.3s ease;
   overflow-y: auto;
@@ -89,7 +89,7 @@
   font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
   letter-spacing: var(--letter-spacing-wide);
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.7);  /* Increased opacity for WCAG AA */
 }
 
 /* ==========================================================================
@@ -146,7 +146,7 @@
 
 .nav-group-chevron {
   font-size: var(--font-size-sm);
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.75);  /* Increased opacity for WCAG AA */
   transition: transform 0.3s ease;
 }
 
@@ -251,7 +251,7 @@
 
 .sidebar-footer-text {
   font-size: var(--font-size-xs);
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.75);  /* Increased opacity for WCAG AA */
   text-align: center;
 }
 
@@ -262,12 +262,14 @@
 .main-content-wrapper {
   flex: 1;
   margin-left: 280px;
+  background-color: var(--bg-app);
   transition: margin-left 0.3s ease;
 }
 
 .main-content {
   max-width: 1200px;
   margin: 0 auto;
+  background-color: transparent;
   padding: var(--space-6);
 }
 
