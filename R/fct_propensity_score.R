@@ -461,3 +461,124 @@ generate_ps_sensitivity_analysis <- function(n_rct,
 
   return(sensitivity_df)
 }
+
+#' Estimate Variance Inflation Factor for Propensity Score Weighting
+#'
+#' Estimates the VIF based on C-statistic, treatment prevalence, and weight type.
+#' Based on Austin PC (2021). Statistics in Medicine 40(27):6150-6163.
+#'
+#' @param c_statistic C-statistic (AUC) of propensity score model (0.5-1.0)
+#' @param prevalence_pct Treatment prevalence as percentage (0-100)
+#' @param weight_type Type of propensity score weight: "ATE", "ATT", "ATO", "ATM", "ATEN"
+#'
+#' @return Numeric VIF value (rounded to 3 decimal places)
+#'
+#' @noRd
+estimate_vif_propensity_score <- function(c_statistic, prevalence_pct, weight_type = "ATE") {
+  # Convert inputs to proportions
+  p <- prevalence_pct / 100  # treatment prevalence
+  c <- c_statistic
+
+  # Validate inputs
+  if (c < 0.5 || c > 1.0) {
+    stop("C-statistic must be between 0.5 and 1.0")
+  }
+  if (p <= 0 || p >= 1) {
+    stop("Prevalence must be between 0 and 100%")
+  }
+
+  # Empirical approximation based on Austin (2021) findings
+  # These formulas approximate the relationships shown in the paper
+
+  # Separation measure (higher c-statistic = more separation = higher VIF)
+  separation <- (c - 0.5) / 0.5  # Normalized to 0-1 scale
+
+  # Imbalance factor (balanced groups have lower VIF)
+  # Minimum at p=0.5, increases as p approaches 0 or 1
+  imbalance <- abs(p - 0.5) * 2  # Normalized to 0-1 scale
+
+  # Calculate VIF based on weighting method
+  if (weight_type == "ATE") {
+    # Average Treatment Effect (IPTW) - most sensitive to c-statistic
+    # VIF increases substantially with high c-statistic and imbalanced groups
+    base_vif <- 1.0 + (separation^2 * 2.5)  # Quadratic relationship
+    imbalance_penalty <- 1.0 + (imbalance * separation * 1.5)
+    vif <- base_vif * imbalance_penalty
+
+  } else if (weight_type == "ATT") {
+    # Average Treatment effect on Treated
+    # Slightly lower VIF than ATE, less sensitive to imbalance
+    base_vif <- 1.0 + (separation^2 * 2.0)
+    imbalance_penalty <- 1.0 + (imbalance * separation * 1.2)
+    vif <- base_vif * imbalance_penalty
+
+  } else if (weight_type == "ATO") {
+    # Overlap weights - most efficient, VIF typically < 2
+    # Least sensitive to c-statistic and imbalance
+    base_vif <- 1.0 + (separation^1.5 * 0.8)  # Gentler increase
+    imbalance_penalty <- 1.0 + (imbalance * separation * 0.5)
+    vif <- base_vif * imbalance_penalty
+    # Cap at reasonable maximum for overlap weights
+    vif <- min(vif, 2.0)
+
+  } else if (weight_type == "ATM") {
+    # Matching weights - similar to overlap weights
+    base_vif <- 1.0 + (separation^1.5 * 0.9)
+    imbalance_penalty <- 1.0 + (imbalance * separation * 0.6)
+    vif <- base_vif * imbalance_penalty
+    vif <- min(vif, 2.2)
+
+  } else if (weight_type == "ATEN") {
+    # Entropy weights - similar efficiency to overlap weights
+    base_vif <- 1.0 + (separation^1.5 * 0.85)
+    imbalance_penalty <- 1.0 + (imbalance * separation * 0.55)
+    vif <- base_vif * imbalance_penalty
+    vif <- min(vif, 2.1)
+
+  } else {
+    stop("Invalid weight_type. Must be one of: ATE, ATT, ATO, ATM, ATEN")
+  }
+
+  return(round(vif, 3))
+}
+
+#' Interpret VIF Value
+#'
+#' Provides interpretation and recommendations for a given VIF value.
+#'
+#' @param vif Variance Inflation Factor (numeric)
+#'
+#' @return List with level, color, icon, and message
+#'
+#' @noRd
+interpret_vif <- function(vif) {
+  if (vif < 1.3) {
+    list(
+      level = "Low",
+      color = "#28a745",
+      icon = "✅",
+      message = "Minimal efficiency loss. Propensity score weighting is highly efficient for this scenario."
+    )
+  } else if (vif < 2.0) {
+    list(
+      level = "Moderate",
+      color = "#ffc107",
+      icon = "⚠️",
+      message = "Moderate efficiency loss. Propensity score weighting is acceptable but consider overlap or matching weights for better efficiency."
+    )
+  } else if (vif < 3.0) {
+    list(
+      level = "High",
+      color = "#fd7e14",
+      icon = "⚠️",
+      message = "Substantial efficiency loss. Consider using overlap weights (ATO) or matching weights (ATM) instead of ATE/ATT weights."
+    )
+  } else {
+    list(
+      level = "Very High",
+      color = "#dc3545",
+      icon = "❌",
+      message = "Severe efficiency loss. Propensity score weighting may not be feasible. Consider alternative methods (matching, stratification, or regression adjustment)."
+    )
+  }
+}

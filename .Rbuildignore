@@ -1,5 +1,7 @@
 ^renv$
+^renv/
 ^renv\.lock$
+^\.Rprofile$
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^app\.R$
@@ -7,13 +9,15 @@
 ^app\.R\.backup$
 ^rsconnect$
 ^deploy$
-^\.github$
+^\.github/
+^\.git/
+^\.gitignore$
 ^\.dockerignore$
 ^docker-compose\.yml$
 ^docker-compose\.dev\.yml$
 ^Dockerfile$
-^docs$
-^www$
+^docs/
+^www/
 ^PHASE2.*\.md$
 ^MIGRATION_STATUS\.md$
 ^SESSION_SUMMARY\.md$
@@ -25,7 +29,7 @@
 ^TECH_DEBT_RESOLVED\.md$
 ^TESTING\.md$
 ^DUPLICATION_ANALYSIS_SUMMARY\.txt$
-^\.claude$
+^\.claude/
 ^CLAUDE\.md$
 ^\.editorconfig$
 ^\.lintr$
@@ -36,3 +40,4 @@
 ^check_dependencies\.R$
 ^validate_code_quality\.R$
 ^capture\.png$
+^\.\.Rcheck$

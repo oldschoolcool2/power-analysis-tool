@@ -2,6 +2,8 @@ Package: PowerAnalysisTool
 Type: Package
 Title: Statistical Power Analysis Tool for Study Design
 Version: 5.0.0
+Author: Development Team
+Maintainer: Development Team <dev@example.com>
 Authors@R: c(
     person("Development", "Team", email = "dev@example.com", role = c("aut", "cre"))
     )
