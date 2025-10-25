@@ -40,9 +40,9 @@ ui <- fluidPage(
   tags$head(
     # Favicon
     tags$link(rel = "icon", type = "image/svg+xml", href = "favicon.svg"),
-    # CSS - with aggressive cache busting
-    tags$link(rel = "stylesheet", type = "text/css", href = paste0("css/design-tokens.css?v=", as.integer(Sys.time()))),
-    tags$link(rel = "stylesheet", type = "text/css", href = paste0("css/modern-theme.css?v=", as.integer(Sys.time()))),
+    # CSS - version constant for cache busting (update when CSS changes)
+    tags$link(rel = "stylesheet", type = "text/css", href = "css/design-tokens.css?v=1.1.0"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "css/modern-theme.css?v=1.1.0"),
     tags$link(rel = "stylesheet", type = "text/css", href = "css/input-components.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "css/responsive.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "css/sidebar.css"),
@@ -51,34 +51,47 @@ ui <- fluidPage(
     tags$script(src = "js/theme-switcher.js"),
     tags$script(src = "js/sidebar-navigation.js"),
     tags$style(HTML("
-      /* NUCLEAR OPTION: Force pure white background - override EVERYTHING */
+      /* Clean background color definitions */
       :root {
-        --bg-app: #FFFFFF !important;
-        --bs-body-bg: #FFFFFF !important;
-        --bs-body-bg-rgb: 255, 255, 255 !important;
+        --bs-body-bg: #FFFFFF;
+        --bs-body-bg-rgb: 255, 255, 255;
       }
       
-      body, html, .container-fluid, .bslib-page-fill {
-        background-color: #FFFFFF !important;
-        background: #FFFFFF !important;
+      body, html {
+        background-color: #FFFFFF;
       }
       
-      /* Override any bslib-generated backgrounds */
-      [data-bs-theme], [data-bs-theme=\"light\"] {
-        --bs-body-bg: #FFFFFF !important;
+      /* Ensure dark mode overrides work */
+      [data-theme='dark'] {
+        --bs-body-bg: #0F172A;
       }
       
-      /* FIX: Hide the Shiny disconnected overlay that's causing grey screen */
+      [data-theme='dark'] body,
+      [data-theme='dark'] html {
+        background-color: #0F172A;
+      }
+      
+      /* FIX: Style the Shiny disconnected overlay to be less intrusive */
       #shiny-disconnected-overlay {
-        display: none !important;
-        opacity: 0 !important;
-        visibility: hidden !important;
+        background: rgba(220, 53, 69, 0.95) !important; /* Red, semi-transparent */
+        opacity: 1 !important;
+        top: auto !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        height: auto !important;
+        padding: 12px 20px !important;
+        text-align: center !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        color: white !important;
+        z-index: 10000 !important;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.2) !important;
       }
       
-      /* Also hide the notification area if it's causing issues */
-      .shiny-notification-error,
-      .shiny-notification-warning {
-        display: block !important; /* Keep error notifications visible */
+      /* Hide overlay when not disconnected */
+      body:not(.disconnected) #shiny-disconnected-overlay {
+        display: none !important;
       }
       
       /* Additional inline styles */
@@ -647,7 +660,7 @@ server <- function(input, output, session) {
 
   # Initialize sidebar page to default (power_single)
   observe({
-    if (is.null(input$sidebar_page)) {
+    if (is.null(input$sidebar_page) || length(input$sidebar_page) == 0) {
       session$sendCustomMessage("set_active_page", "power_single")
     }
   })
@@ -2361,10 +2374,7 @@ server <- function(input, output, session) {
           )
         }
       })
-    },
-    width = 600,
-    height = 400,
-    res = 100
+    }
   ) %>%
     bindCache(
       input$tabset,
