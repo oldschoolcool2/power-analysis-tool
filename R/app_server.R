@@ -2,8 +2,20 @@
 #'
 #' @param input,output,session Internal parameters for {shiny}. DO NOT REMOVE.
 #' @noRd
-#' 
+#'
 #' @importFrom shiny moduleServer observeEvent reactive renderPlot renderPrint
+#' @importFrom shiny observe reactiveValues outputOptions showNotification debounce
+#' @importFrom shiny strong br em HTML h1 h4 h5 h6 p downloadButton downloadHandler
+#' @importFrom shiny tableOutput renderTable bindCache renderDataTable
+#' @importFrom shinyjs useShinyjs
+#' @importFrom stats uniroot qnorm
+#' @importFrom pwr pwr.p.test ES.h pwr.t2n.test pwr.t.test
+#' @importFrom powerSurvEpi powerEpi ssizeEpi
+#' @importFrom epiR epi.sscc
+#' @importFrom plotly plot_ly add_trace layout config renderPlotly
+#' @importFrom binom binom.confint
+#' @importFrom utils write.csv
+#' @importFrom magrittr %>%
 app_server <- function(input, output, session) {
   
   # Your application server logic
