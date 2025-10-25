@@ -747,6 +747,75 @@ tr:hover {
   color: var(--color-error-700);
 }
 
+/* Shiny Notifications (Toast Messages) */
+.shiny-notification {
+  position: fixed;
+  top: var(--space-6);
+  right: var(--space-6);
+  min-width: 250px;
+  max-width: 400px;
+  padding: var(--space-4);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-xl);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  z-index: var(--z-index-tooltip);
+  animation: slideInRight 0.3s ease;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Default notification (info/message) */
+.shiny-notification-message {
+  background-color: var(--color-info-600) !important;
+  color: #FFFFFF !important;
+  border-left: 4px solid var(--color-info-700);
+}
+
+/* Warning notification */
+.shiny-notification-warning {
+  background-color: var(--color-warning-700) !important;
+  color: #FFFFFF !important;
+  border-left: 4px solid var(--color-warning-600);
+}
+
+/* Error notification */
+.shiny-notification-error {
+  background-color: var(--color-error-600) !important;
+  color: #FFFFFF !important;
+  border-left: 4px solid var(--color-error-700);
+}
+
+/* Close button */
+.shiny-notification-close {
+  opacity: 1;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: rgba(255, 255, 255, 0.9) !important;
+  text-shadow: none;
+  cursor: pointer;
+  transition: opacity var(--transition-base);
+}
+
+.shiny-notification-close:hover {
+  opacity: 0.7;
+}
+
+/* Content area */
+.shiny-notification-content {
+  color: #FFFFFF !important;
+}
+
 /* ========================================================================
    TOOLTIPS
    ======================================================================== */
