@@ -130,6 +130,9 @@ mod_03_survival_ui <- function(id) {
       hr(),
       missing_data_ui(ns("missing_data")),
       hr(),
+      h4("Clustering Adjustment"),
+      clustering_ui(ns("clustering")),
+      hr(),
       div(class = "btn-group-custom",
         actionButton(ns("example_surv_ss"), "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
         actionButton(ns("reset_surv_ss"), "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
@@ -150,6 +153,7 @@ mod_03_survival_server <- function(id){
 
     # Initialize missing data module for sample size tab
     missing_data_vals <- missing_data_server("missing_data")
+    clustering_vals <- clustering_server("clustering")
 
     # Example button - Power Analysis
     observeEvent(input$example_surv_pow, {
@@ -210,7 +214,8 @@ mod_03_survival_server <- function(id){
           surv_ss_alpha = input$surv_ss_alpha
         )
       }),
-      missing_data_vals = missing_data_vals
+      missing_data_vals = missing_data_vals,
+      clustering_vals = clustering_vals
     )
   })
 }

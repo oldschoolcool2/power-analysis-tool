@@ -315,14 +315,14 @@ This document synthesizes current implementation status, existing feature propos
 
 ### ✅ TIER 2 - Well-Validated (proceed as planned)
 
-| # | Feature | Validation | Priority |
-|---|---------|------------|----------|
-| 5 | **E-value Sensitivity Analysis** | FDA/EMA increasingly require | ⭐⭐⭐⭐⭐ |
-| 9 | **Design Effect for Clustered Data** | Critical for EHR/claims data | ⭐⭐⭐⭐⭐ |
-| 11 | **Multiple Testing Corrections** | Standard regulatory requirement | ⭐⭐⭐⭐ |
-| 15 | **Enhanced Protocol Text Generator** | High user value, time savings | ⭐⭐⭐⭐ |
+| # | Feature | Validation | Priority | Status |
+|---|---------|------------|----------|--------|
+| 5 | **E-value Sensitivity Analysis** | FDA/EMA increasingly require | ⭐⭐⭐⭐⭐ | Pending |
+| 9 | **Design Effect for Clustered Data** ✅ | Critical for EHR/claims data | ⭐⭐⭐⭐⭐ | **COMPLETED (2025-10-25)** |
+| 11 | **Multiple Testing Corrections** | Standard regulatory requirement | ⭐⭐⭐⭐ | Pending |
+| 15 | **Enhanced Protocol Text Generator** | High user value, time savings | ⭐⭐⭐⭐ | Pending |
 
-**All validated - proceed as planned**
+**Feature #9 COMPLETED. Remaining features validated - proceed as planned**
 
 ---
 
@@ -896,6 +896,79 @@ The ultimate goal is to transform the Propensity Score Calculator into a **compr
 
 ---
 
+#### **TIER 2 Feature #9: Design Effect for Clustered Data** ✅ **COMPLETED**
+
+**Priority:** ⭐⭐⭐⭐⭐ **MUST HAVE**
+
+**Status:** ✅ **IMPLEMENTED (2025-10-25)**
+
+**What:** Adjustment for hierarchical/clustered data structures common in RWE studies
+
+**Rationale:** EHR/claims data are inherently clustered (patients within hospitals, providers, regions). Ignoring clustering inflates Type I error and underestimates required sample size.
+
+**Inputs:**
+- Number of clusters ✅
+- Average cluster size (m) ✅
+- ICC specification method (select from typical values or custom) ✅
+- Intraclass correlation coefficient (ICC) ✅
+
+**Outputs:**
+- Design Effect (DE = 1 + (m-1) × ICC) ✅
+- Inflated sample size ✅
+- Required number of clusters ✅
+- Effective sample size ✅
+- Real-time design effect summary with interpretation ✅
+- Color-coded impact assessment ✅
+
+**Implementation Details:**
+- Created `R/mod_clustering.R` - Reusable Shiny module following established patterns
+- Created `R/fct_clustering.R` - Statistical helper functions for DE calculations
+- Integrated into 6 analysis tabs (all except VIF/PS which doesn't need clustering)
+- Added comprehensive contextual help panel to all 6 help accordions
+- Typical ICC values from literature built-in:
+  - Behavioral outcomes: 0.025 (range: 0.01-0.05)
+  - Clinical outcomes: 0.05 (range: 0.01-0.10)
+  - Process measures: 0.20 (range: 0.10-0.30)
+  - GP practice-level: 0.017 (meta-analysis average)
+
+**Key Functions:**
+- `calc_design_effect()` - DE = 1 + (m-1) × ICC
+- `calc_effective_n()` - N_effective = N_total / DE
+- `calc_clustered_n()` - N_total = N_unclustered × DE
+- `calc_n_clusters()` - K = N_total / m
+- `get_typical_icc()` - Retrieve literature ICC values
+- `validate_clustering_params()` - Validation with warnings
+
+**UI Features:**
+- Toggle between typical ICC values (by domain) or custom ICC
+- Real-time design effect summary with formula display
+- Color-coded interpretation (green/yellow/red for low/moderate/strong clustering)
+- Validation warnings for inadequate cluster counts (<10)
+- Seamless integration with missing data adjustment
+
+**Statistical Validation:**
+Based on:
+- Donner & Klar (2000) - Design and Analysis of Cluster Randomization Trials
+- Campbell et al. (2004) - Sample size calculator for cluster randomized trials
+- Meta-analyses of ICC values by domain (2024)
+
+**Impact:** ⭐⭐⭐⭐⭐
+- Critical feature for real-world data analysis
+- Prevents underpowered studies in clustered settings
+- Educates users about clustering impact
+- Competitive advantage: Many tools ignore clustering entirely
+- Typical DE of 2.0-2.5 means 2-2.5× sample size inflation
+
+**Actual Effort:** ~6 hours (module creation + integration + help content)
+
+**Next Enhancement Opportunities:**
+- Add unequal cluster sizes support (currently uses average)
+- Add coefficient of variation for cluster sizes
+- Add minimum detectable ICC calculator
+- Integration with outcome-specific ICC databases
+
+---
+
 ### TIER 2 ADDITIONS (Should Have for Comprehensive RWE Tool)
 
 #### **NEW 3: Mediation Analysis Power Calculator**
@@ -1179,29 +1252,30 @@ Each feature scored on:
 **Positioning Statement:**
 > "The only free, open-source power analysis tool specifically designed for real-world evidence and observational studies, featuring cutting-edge 2025 propensity score methods and comprehensive adjustments for the complexities of real-world data."
 
-### Feature Comparison Matrix (Post Tier 1-2 Implementation)
+### Feature Comparison Matrix (Current Status - 2025-10-25)
 
-| Capability | Our Tool (Future) | G*Power | PASS | nQuery | Unique? |
-|------------|-------------------|---------|------|--------|---------|
+| Capability | Our Tool | G*Power | PASS | nQuery | Unique? |
+|------------|----------|---------|------|--------|---------|
 | **Cost** | FREE | FREE | $1,995 | $3,000+ | ✅ |
 | **RWE Focus** | ✅✅✅ | ❌ | Partial | Partial | ✅ |
-| **2025 PS Methods** | ✅ | ❌ | ❌ | ❌ | ✅ YES |
-| **Interactive Viz** | ✅ | ✅ | ✅ | ✅ | ❌ |
-| **Clustering** | ✅ | ❌ | ✅ | ✅ | Partial |
-| **Mediation** | ✅ | ❌ | ✅ | ✅ | Partial |
-| **E-values** | ✅ | ❌ | ❌ | ❌ | ✅ YES |
-| **DiD/ITS** | ✅ (Tier 3) | ❌ | Partial | Partial | ✅ |
-| **Bayesian** | ✅ (Tier 3) | ❌ | ✅ | ✅ | Partial |
+| **2025 PS Methods** | ✅ **DONE** | ❌ | ❌ | ❌ | ✅ YES |
+| **Interactive Viz** | ✅ **DONE** | ✅ | ✅ | ✅ | ❌ |
+| **Clustering** | ✅ **DONE** | ❌ | ✅ | ✅ | **Better UX** |
+| **Mediation** | 🔜 | ❌ | ✅ | ✅ | Partial |
+| **E-values** | 🔜 | ❌ | ❌ | ❌ | ✅ YES |
+| **DiD/ITS** | 🔜 (Tier 3) | ❌ | Partial | Partial | ✅ |
+| **Bayesian** | 🔜 (Tier 3) | ❌ | ✅ | ✅ | Partial |
 | **Open Source** | ✅ | Partial | ❌ | ❌ | ✅ |
 | **Web-Based** | ✅ | ❌ | ❌ | ❌ | ✅ |
 | **Modern UX** | ✅ | ❌ | ❌ | ❌ | ✅ |
 
-**Competitive Advantages (Post-Implementation):**
-1. ✅ **Only free tool with 2025 PS methods** (massive differentiation)
-2. ✅ **Only tool with E-value calculator** (regulatory advantage)
+**Competitive Advantages (Current):**
+1. ✅ **Only free tool with 2025 PS methods** (massive differentiation) - DONE
+2. ✅ **RWE-specific clustering with literature ICC values** (better UX than competitors) - DONE
 3. ✅ **Best UX** (modern web interface vs. desktop apps)
 4. ✅ **RWE-specific** (our niche vs. generalists)
 5. ✅ **Open source** (reproducibility, transparency)
+6. 🔜 **Only tool with E-value calculator** (regulatory advantage) - Next priority
 
 **Remaining Gaps vs. Commercial:**
 - ❌ Fewer total methods (we'll have ~30 vs. PASS's 680)
@@ -1281,7 +1355,7 @@ Each feature scored on:
 - Add competitive differentiators (E-values, mediation)
 
 **Deliverables:**
-1. Design Effect for Clustering
+1. ✅ **Design Effect for Clustering** - **COMPLETED (2025-10-25)**
 2. E-value Sensitivity Analysis
 3. Mediation Analysis Power - NEW
 4. Time-to-Event Equivalence/NI - NEW
@@ -1290,9 +1364,11 @@ Each feature scored on:
 7. Enhanced Protocol Text Generator
 
 **Timeline:**
-- Month 5-6: Features 1-2
+- ~~Month 5-6: Features 1-2~~ → Feature 1 DONE, proceed with Feature 2
 - Month 7-8: Features 3-4
 - Month 9-10: Features 5-7
+
+**Progress:** 1/7 complete (14%)
 
 ---
 

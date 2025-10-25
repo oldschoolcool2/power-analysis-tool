@@ -33,6 +33,9 @@ mod_06_non_inferiority_ui <- function(id) {
       hr(),
       missing_data_ui(ns("missing_data")),
       hr(),
+      h4("Clustering Adjustment"),
+      clustering_ui(ns("clustering")),
+      hr(),
       div(class = "btn-group-custom",
         actionButton(ns("example_noninf"), "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
         actionButton(ns("reset_noninf"), "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm"))
@@ -47,6 +50,7 @@ mod_06_non_inferiority_server <- function(id){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
     missing_data_vals <- missing_data_server("missing_data")
+    clustering_vals <- clustering_server("clustering")
     
     observeEvent(input$example_noninf, {
       updateRadioButtons(session, "noninf_calc_mode", selected = "calc_n")
@@ -75,7 +79,8 @@ mod_06_non_inferiority_server <- function(id){
              noninf_p1 = input$noninf_p1, noninf_p2 = input$noninf_p2, noninf_margin = input$noninf_margin,
              noninf_n1_fixed = input$noninf_n1_fixed, noninf_ratio = input$noninf_ratio, noninf_alpha = input$noninf_alpha)
       }),
-      missing_data_vals = missing_data_vals
+      missing_data_vals = missing_data_vals,
+      clustering_vals = clustering_vals
     )
   })
 }

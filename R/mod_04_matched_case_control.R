@@ -92,6 +92,9 @@ mod_04_matched_case_control_ui <- function(id) {
       hr(),
       missing_data_ui(ns("missing_data")),
       hr(),
+      h4("Clustering Adjustment"),
+      clustering_ui(ns("clustering")),
+      hr(),
       div(class = "btn-group-custom",
         actionButton(ns("example_match"), "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
         actionButton(ns("reset_match"), "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
@@ -109,6 +112,7 @@ mod_04_matched_case_control_server <- function(id){
 
     # Initialize missing data module
     missing_data_vals <- missing_data_server("missing_data")
+    clustering_vals <- clustering_server("clustering")
 
     # Example button
     observeEvent(input$example_match, {
@@ -147,7 +151,8 @@ mod_04_matched_case_control_server <- function(id){
           match_sided = input$match_sided
         )
       }),
-      missing_data_vals = missing_data_vals
+      missing_data_vals = missing_data_vals,
+      clustering_vals = clustering_vals
     )
   })
 }

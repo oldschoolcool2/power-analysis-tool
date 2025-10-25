@@ -119,6 +119,9 @@ mod_02_two_group_ui <- function(id) {
       hr(),
       missing_data_ui(ns("missing_data")),
       hr(),
+      h4("Clustering Adjustment"),
+      clustering_ui(ns("clustering")),
+      hr(),
       div(class = "btn-group-custom",
         actionButton(ns("example_twogrp_ss"), "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
         actionButton(ns("reset_twogrp_ss"), "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
@@ -139,6 +142,9 @@ mod_02_two_group_server <- function(id){
 
     # Initialize missing data module for sample size tab
     missing_data_vals <- missing_data_server("missing_data")
+
+    # Initialize clustering module for sample size tab
+    clustering_vals <- clustering_server("clustering")
 
     # Example button - Power Analysis
     observeEvent(input$example_twogrp_pow, {
@@ -207,7 +213,8 @@ mod_02_two_group_server <- function(id){
           twogrp_ss_sided = input$twogrp_ss_sided
         )
       }),
-      missing_data_vals = missing_data_vals
+      missing_data_vals = missing_data_vals,
+      clustering_vals = clustering_vals
     )
   })
 }

@@ -30,11 +30,12 @@ create_contextual_help <- function(analysis_type) {
           tags$li("Clinical trial safety monitoring")
         )
       ),
+      create_clustering_help_panel(),
       accordion_panel(
         title = "References",
         icon = icon("book"),
         tags$ul(
-          tags$li(a("Hanley JA, Lippman-Hand A. If nothing goes wrong, is everything all right? Interpreting zero numerators. JAMA. 1983;249(13):1743-1745.", 
+          tags$li(a("Hanley JA, Lippman-Hand A. If nothing goes wrong, is everything all right? Interpreting zero numerators. JAMA. 1983;249(13):1743-1745.",
                     href = "Hanley-1983-1743.pdf", target = "_blank")),
           tags$li("Eypasch E, et al. Probability of adverse events that have not yet occurred: a statistical reminder. BMJ. 1995;311(7005):619-620.")
         )
@@ -73,6 +74,7 @@ create_contextual_help <- function(analysis_type) {
           tags$li(strong("Odds Ratio (OR):"), "Odds ratio. Approximates RR when events are rare (<10%)")
         )
       ),
+      create_clustering_help_panel(),
       accordion_panel(
         title = "References",
         icon = icon("book"),
@@ -82,7 +84,7 @@ create_contextual_help <- function(analysis_type) {
         )
       )
     ),
-    
+
     # ============================================================
     # SURVIVAL ANALYSIS
     # ============================================================
@@ -117,6 +119,7 @@ create_contextual_help <- function(analysis_type) {
           tags$li("Overall survival in oncology studies")
         )
       ),
+      create_clustering_help_panel(),
       accordion_panel(
         title = "References",
         icon = icon("book"),
@@ -126,7 +129,7 @@ create_contextual_help <- function(analysis_type) {
         )
       )
     ),
-    
+
     # ============================================================
     # MATCHED CASE-CONTROL
     # ============================================================
@@ -161,6 +164,7 @@ create_contextual_help <- function(analysis_type) {
         ),
         p("Higher matching ratios increase power but require more controls.")
       ),
+      create_clustering_help_panel(),
       accordion_panel(
         title = "References",
         icon = icon("book"),
@@ -170,7 +174,7 @@ create_contextual_help <- function(analysis_type) {
         )
       )
     ),
-    
+
     # ============================================================
     # CONTINUOUS OUTCOMES
     # ============================================================
@@ -207,6 +211,7 @@ create_contextual_help <- function(analysis_type) {
         ),
         p("However, clinical significance should guide interpretation, not just statistical benchmarks.")
       ),
+      create_clustering_help_panel(),
       accordion_panel(
         title = "References",
         icon = icon("book"),
@@ -216,7 +221,7 @@ create_contextual_help <- function(analysis_type) {
         )
       )
     ),
-    
+
     # ============================================================
     # NON-INFERIORITY
     # ============================================================
@@ -250,6 +255,7 @@ create_contextual_help <- function(analysis_type) {
           tags$li(strong("ITT analysis:"), "Intent-to-treat is conservative for non-inferiority; per-protocol often also required")
         )
       ),
+      create_clustering_help_panel(),
       accordion_panel(
         title = "References",
         icon = icon("book"),
@@ -484,6 +490,72 @@ create_global_help <- function() {
         tags$li(strong("Odds Ratio (OR):"), "Similar interpretation to HR for rare outcomes"),
         tags$li(strong("Relative Risk (RR):"), "More intuitive than OR; directly interpretable as relative increase/decrease in risk")
       )
+    )
+  )
+}
+
+#' Create clustering/design effect help accordion panel
+#' @return accordion_panel for clustering adjustment
+#' @noRd
+create_clustering_help_panel <- function() {
+  accordion_panel(
+    title = "Clustered Data & Design Effect",
+    icon = icon("sitemap"),
+    p(strong("What is clustered data?"),
+      "In many real-world studies, participants are grouped within clusters (hospitals, clinics, geographic regions, practices). Observations within the same cluster tend to be more similar than those from different clusters, violating the independence assumption."),
+
+    h5("When to Use Clustering Adjustment"),
+    tags$ul(
+      tags$li(strong("Multi-site studies:"), "Patients recruited from multiple hospitals or clinics"),
+      tags$li(strong("Geographic clustering:"), "Participants grouped by region, city, or county"),
+      tags$li(strong("Provider-level clustering:"), "Patients treated by the same physician or practice"),
+      tags$li(strong("EHR/Claims data:"), "Patients naturally clustered within health systems")
+    ),
+
+    h5("Design Effect (DE)"),
+    p("The design effect quantifies the loss of statistical efficiency due to clustering:"),
+    tags$div(
+      style = "background-color: #f8f9fa; padding: 10px; border-left: 3px solid #007bff; margin: 10px 0;",
+      tags$strong("DE = 1 + (m - 1) × ICC"),
+      tags$br(),
+      tags$small("Where m = average cluster size, ICC = intraclass correlation coefficient")
+    ),
+    p("The required sample size is then: ", tags$strong("N_required = N_unclustered × DE")),
+
+    h5("Intraclass Correlation (ICC)"),
+    p("ICC measures the proportion of total variance attributable to clustering. Typical values from meta-analyses:"),
+    tags$ul(
+      tags$li(strong("Behavioral outcomes:"), "0.01 - 0.05 (e.g., smoking, adherence)"),
+      tags$li(strong("Clinical/physiological outcomes:"), "0.01 - 0.10 (e.g., blood pressure, cholesterol)"),
+      tags$li(strong("Process measures:"), "0.10 - 0.30 (e.g., quality metrics, provider practices)"),
+      tags$li(strong("General practice level:"), "~0.017 (average across primary care studies)")
+    ),
+
+    h5("Impact on Sample Size"),
+    tags$div(
+      style = "background-color: #fff3cd; padding: 10px; border-left: 3px solid #ffc107; margin: 10px 0;",
+      tags$strong("Example:"),
+      tags$br(),
+      "With 25 patients per hospital (m = 25) and ICC = 0.05:",
+      tags$br(),
+      "DE = 1 + (25-1) × 0.05 = 2.2",
+      tags$br(),
+      "This means you need ", tags$strong("2.2× more participants"), " than an unclustered study!"
+    ),
+
+    h5("Recommendations"),
+    tags$ul(
+      tags$li(strong("Minimum clusters:"), "At least 10-15 clusters for reliable inference"),
+      tags$li(strong("Estimate ICC:"), "Use literature values from similar outcomes/settings"),
+      tags$li(strong("Report design effect:"), "Always report DE and ICC in protocols and publications"),
+      tags$li(strong("Analysis:"), "Use mixed-effects models or GEE to account for clustering in analysis")
+    ),
+
+    h5("References"),
+    tags$ul(
+      tags$li("Donner A, Klar N. Design and Analysis of Cluster Randomization Trials in Health Research. Arnold, 2000."),
+      tags$li("Campbell MK, et al. Sample size calculator for cluster randomized trials. Computers in Biology and Medicine. 2004;34(2):113-125."),
+      tags$li("Adams G, et al. Patterns of intra-cluster correlation from primary care research. Statistics in Medicine. 2004;23(12):1655-1665.")
     )
   )
 }
