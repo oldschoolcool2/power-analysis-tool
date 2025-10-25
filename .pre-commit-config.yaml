@@ -64,3 +64,12 @@ repos:
         pass_filenames: true
         # Warning only - don't block commits
         verbose: true
+
+      - id: check-dependencies
+        name: Check R dependencies
+        entry: Rscript check_dependencies.R
+        language: system
+        pass_filenames: false
+        # Run when R files or renv.lock change
+        files: \.(R|lock)$
+        verbose: true

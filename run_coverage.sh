@@ -99,19 +99,49 @@ else
     exit 1
   fi
 
-  # Check if covr is installed
+  # Check if renv is properly set up
+  echo "Checking renv environment..."
+  if [ ! -d "renv/library" ]; then
+    echo -e "${YELLOW}Warning: renv library not found.${NC}"
+    echo -e "${YELLOW}Local execution requires renv to be set up first.${NC}"
+    echo ""
+    echo -e "${BLUE}Recommended: Use Docker instead:${NC}"
+    echo "  $0 --docker"
+    echo ""
+    echo -e "${BLUE}Or set up renv locally:${NC}"
+    echo "  R -e \"renv::restore()\""
+    echo ""
+    exit 1
+  fi
+
+  # Check if testthat is available in renv
+  if ! Rscript -e "library(testthat)" &> /dev/null; then
+    echo -e "${RED}Error: Required packages not installed in renv.${NC}"
+    echo ""
+    echo -e "${BLUE}Option 1 (Recommended): Use Docker${NC}"
+    echo "  $0 --docker"
+    echo ""
+    echo -e "${BLUE}Option 2: Restore renv packages${NC}"
+    echo "  R -e \"renv::restore()\""
+    echo ""
+    exit 1
+  fi
+
+  # Check if covr is installed (either in renv or system)
   if ! Rscript -e "if (!requireNamespace('covr', quietly = TRUE)) quit(status = 1)" &> /dev/null; then
-    echo -e "${YELLOW}Warning: covr package not found. Installing...${NC}"
+    echo -e "${YELLOW}Warning: covr package not found. Installing to user library...${NC}"
     Rscript -e "install.packages('covr', repos = 'https://cloud.r-project.org')"
   fi
 
-  # Check if here is installed
+  # Check if here is installed (either in renv or system)
   if ! Rscript -e "if (!requireNamespace('here', quietly = TRUE)) quit(status = 1)" &> /dev/null; then
-    echo -e "${YELLOW}Warning: here package not found. Installing...${NC}"
+    echo -e "${YELLOW}Warning: here package not found. Installing to user library...${NC}"
     Rscript -e "install.packages('here', repos = 'https://cloud.r-project.org')"
   fi
 
   echo "Running coverage analysis locally..."
+  echo -e "${YELLOW}Note: For reproducible results, use --docker flag${NC}"
+  echo ""
   Rscript "$SCRIPT"
 fi
 

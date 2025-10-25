@@ -299,9 +299,11 @@ grep -r "search term" docs/ --exclude-dir=reports
 | Advanced features implementation | [002-how-to-guides/002-advanced-statistical-features-implementation.md](002-how-to-guides/002-advanced-statistical-features-implementation.md) |
 | Quick start guide | [002-how-to-guides/003-quick-start-guide.md](002-how-to-guides/003-quick-start-guide.md) |
 | E2E testing with shinytest2 | [002-how-to-guides/004-end-to-end-testing-with-shinytest2.md](002-how-to-guides/004-end-to-end-testing-with-shinytest2.md) |
+| **Docker best practices maintenance** | **[002-how-to-guides/007-maintain-docker-best-practices.md](002-how-to-guides/007-maintain-docker-best-practices.md)** |
 | Code quality tools | [003-reference/001-code-quality-tools.md](003-reference/001-code-quality-tools.md) |
 | Antipatterns | [003-reference/002-antipatterns-guide.md](003-reference/002-antipatterns-guide.md) |
 | Developer guide (comprehensive) | [003-reference/003-developer-guide.md](003-reference/003-developer-guide.md) |
+| **Docker CI/CD validation** | **[003-reference/008-docker-cicd-validation.md](003-reference/008-docker-cicd-validation.md)** |
 | Feature proposals | [004-explanation/001-feature-proposals.md](004-explanation/001-feature-proposals.md) |
 | UI/UX design | [004-explanation/002-ui-ux-modernization.md](004-explanation/002-ui-ux-modernization.md) |
 | Comprehensive feature analysis | [004-explanation/003-comprehensive-feature-analysis-2025.md](004-explanation/003-comprehensive-feature-analysis-2025.md) |

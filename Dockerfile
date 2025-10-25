@@ -18,6 +18,10 @@ ARG BASE_IMAGE_DIGEST=sha256:a76bfc201e36b5da0727d99737a2e7bf0d9df56e812c6fb0877
 # ------------------------------------------------------------------------------
 FROM ${BASE_IMAGE}:${R_VERSION}@${BASE_IMAGE_DIGEST} AS base
 
+# Re-declare ARGs after FROM to use in LABELs
+ARG R_VERSION
+ARG BASE_IMAGE
+
 # Image metadata following OCI annotation standards
 LABEL org.opencontainers.image.title="Power Analysis Tool"
 LABEL org.opencontainers.image.description="R/Shiny application for statistical power analysis and sample size calculation"
