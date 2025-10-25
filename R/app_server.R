@@ -519,6 +519,24 @@ app_server <- function(input, output, session) {
         need(tab1_inputs$ss_p > 0, "Event frequency must be positive"),
         need(tab1_inputs$ss_discon >= 0 && tab1_inputs$ss_discon <= 100, "Discontinuation rate must be between 0 and 100%")
       )
+    # Tab 2: Two-Group Comparison (using sidebar_page)
+    } else if (input$sidebar_page == "power_twogrp") {
+      tab2_inputs <- tab2_vals$inputs()
+      validate(
+        need(tab2_inputs$twogrp_pow_n1 > 0, "Sample size Group 1 must be positive"),
+        need(tab2_inputs$twogrp_pow_n2 > 0, "Sample size Group 2 must be positive"),
+        need(tab2_inputs$twogrp_pow_p1 >= 0 && tab2_inputs$twogrp_pow_p1 <= 100, "Event rate Group 1 must be between 0 and 100%"),
+        need(tab2_inputs$twogrp_pow_p2 >= 0 && tab2_inputs$twogrp_pow_p2 <= 100, "Event rate Group 2 must be between 0 and 100%"),
+        need(tab2_inputs$twogrp_pow_p1 != tab2_inputs$twogrp_pow_p2, "Event rates must be different to calculate power")
+      )
+    } else if (input$sidebar_page == "ss_twogrp") {
+      tab2_inputs <- tab2_vals$inputs()
+      validate(
+        need(tab2_inputs$twogrp_ss_p1 >= 0 && tab2_inputs$twogrp_ss_p1 <= 100, "Event rate Group 1 must be between 0 and 100%"),
+        need(tab2_inputs$twogrp_ss_p2 >= 0 && tab2_inputs$twogrp_ss_p2 <= 100, "Event rate Group 2 must be between 0 and 100%"),
+        need(tab2_inputs$twogrp_ss_p1 != tab2_inputs$twogrp_ss_p2, "Event rates must be different to calculate sample size"),
+        need(tab2_inputs$twogrp_ss_ratio > 0, "Allocation ratio must be positive")
+      )
     # Legacy tabset checks for tabs not yet migrated
     } else if (input$tabset == "Power (Single)") {
       validate(
@@ -813,6 +831,164 @@ app_server <- function(input, output, session) {
           ))
 
           HTML(paste0(text0, text1, text2, text3))
+        }
+
+      # Tab 2: Two-Group Comparison - Power Analysis (using sidebar_page)
+      } else if (input$sidebar_page == "power_twogrp") {
+        tab2_inputs <- tab2_vals$inputs()
+        n1 <- tab2_inputs$twogrp_pow_n1
+        n2 <- tab2_inputs$twogrp_pow_n2
+        p1 <- tab2_inputs$twogrp_pow_p1 / 100
+        p2 <- tab2_inputs$twogrp_pow_p2 / 100
+
+        power <- pwr.2p2n.test(
+          h = ES.h(p1, p2), n1 = n1, n2 = n2,
+          sig.level = tab2_inputs$twogrp_pow_alpha,
+          alternative = tab2_inputs$twogrp_pow_sided
+        )$power
+
+        text0 <- hr()
+        text1 <- h1("Results of this analysis")
+        text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+        text3 <- p(paste0(
+          "For a two-group comparison with event rates of ",
+          format(p1 * 100, digits = 2, nsmall = 1), "% in Group 1 and ",
+          format(p2 * 100, digits = 2, nsmall = 1), "% in Group 2, with sample sizes of n1 = ",
+          n1, " and n2 = ", n2, ", the study has ",
+          format(power * 100, digits = 1, nsmall = 1), "% power to detect this difference at α = ",
+          tab2_inputs$twogrp_pow_alpha, " (", tab2_inputs$twogrp_pow_sided, " test)."
+        ))
+        HTML(paste0(text0, text1, text2, text3))
+
+      # Tab 2: Two-Group Comparison - Sample Size (using sidebar_page)
+      } else if (input$sidebar_page == "ss_twogrp") {
+        tab2_inputs <- tab2_vals$inputs()
+        calc_mode <- tab2_inputs$twogrp_ss_calc_mode
+        power <- tab2_inputs$twogrp_ss_power / 100
+
+        if (calc_mode == "calc_n") {
+          # Calculate Sample Size (original functionality)
+          p1 <- tab2_inputs$twogrp_ss_p1 / 100
+          p2 <- tab2_inputs$twogrp_ss_p2 / 100
+
+          # Calculate base sample size for group 1 (ratio-aware for unequal allocation)
+          n1_base <- solve_n1_for_ratio(
+            ES.h(p1, p2), tab2_inputs$twogrp_ss_ratio,
+            tab2_inputs$twogrp_ss_alpha, power, tab2_inputs$twogrp_ss_sided
+          )
+          n2_base <- n1_base * tab2_inputs$twogrp_ss_ratio
+          n_total_base <- ceiling(n1_base + n2_base)
+
+          # Apply missing data adjustment if enabled
+          md_vals <- tab2_vals$missing_data_vals()
+          if (md_vals$adjust_missing) {
+            missing_adj <- calc_missing_data_inflation(
+              n_total_base,
+              md_vals$missing_pct,
+              md_vals$missing_mechanism,
+              md_vals$missing_analysis,
+              md_vals$mi_imputations,
+              md_vals$mi_r_squared
+            )
+            n_total_final <- missing_adj$n_inflated
+            # Maintain allocation ratio after adjustment
+            n1_final <- ceiling(n_total_final / (1 + tab2_inputs$twogrp_ss_ratio))
+            n2_final <- n_total_final - n1_final
+
+            missing_data_text <- format_missing_data_text(missing_adj, n_total_base)
+          } else {
+            n1_final <- ceiling(n1_base)
+            n2_final <- ceiling(n2_base)
+            n_total_final <- n1_final + n2_final
+            missing_data_text <- HTML("")
+          }
+
+          text0 <- hr()
+          text1 <- h1("Results of this analysis")
+          text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+
+          # Calculate effect measures
+          effect_measures <- calc_effect_measures(p1, p2)
+
+          text3 <- p(paste0(
+            "To detect a difference in event rates from ",
+            format(p2 * 100, digits = 2, nsmall = 1), "% in Group 2 (control) to ",
+            format(p1 * 100, digits = 2, nsmall = 1), "% in Group 1 (exposed/treatment) with ",
+            format(power * 100, digits = 0, nsmall = 0), "% power at α = ",
+            tab2_inputs$twogrp_ss_alpha, " (", tab2_inputs$twogrp_ss_sided, " test), the required sample sizes are: Group 1: n1 = ",
+            format(n1_final, digits = 0, nsmall = 0), ", Group 2: n2 = ",
+            format(n2_final, digits = 0, nsmall = 0), " (total N = ",
+            format(n_total_final, digits = 0, nsmall = 0), ").",
+            if (md_vals$adjust_missing) {
+              paste0(" <strong>After adjusting for ", md_vals$missing_pct,
+                     "% missing data, the final total sample size is ",
+                     format(n_total_final, digits = 0), " participants (n1=", n1_final, ", n2=", n2_final, ").</strong>")
+            } else {
+              ""
+            }
+          ))
+
+          effect_text <- format_effect_measures(effect_measures, p1 * 100, p2 * 100)
+
+          HTML(paste0(text0, text1, text2, text3, effect_text, missing_data_text))
+
+        } else {
+          # Calculate Effect Size (Minimal Detectable Effect)
+          n1_nominal <- tab2_inputs$twogrp_ss_n1_fixed
+          n2_nominal <- n1_nominal * tab2_inputs$twogrp_ss_ratio
+          p2 <- tab2_inputs$twogrp_ss_p2_baseline / 100
+
+          # Account for missing data to get effective sample sizes
+          md_vals <- tab2_vals$missing_data_vals()
+          if (md_vals$adjust_missing) {
+            p_missing <- md_vals$missing_pct / 100
+            n1_effective <- ceiling(n1_nominal * (1 - p_missing))
+            n2_effective <- ceiling(n2_nominal * (1 - p_missing))
+            missing_note <- paste0(" After accounting for ", md_vals$missing_pct,
+              "% missing data (", tolower(substr(md_vals$missing_mechanism, 1, 4)),
+              "), effective sample sizes are n1=", n1_effective, ", n2=", n2_effective, ".")
+          } else {
+            n1_effective <- n1_nominal
+            n2_effective <- n2_nominal
+            missing_note <- ""
+          }
+
+          # Solve for minimal detectable h
+          h_min <- pwr.2p2n.test(
+            h = NULL, n1 = n1_effective, n2 = n2_effective,
+            sig.level = tab2_inputs$twogrp_ss_alpha, power = power,
+            alternative = tab2_inputs$twogrp_ss_sided
+          )$h
+
+          # Convert h to p1 given p2
+          # h = 2*asin(sqrt(p1)) - 2*asin(sqrt(p2))
+          # Therefore: p1 = sin²((h + 2*asin(sqrt(p2)))/2)
+          p1_detectable <- sin((h_min + 2 * asin(sqrt(p2))) / 2)^2
+
+          # Calculate effect measures
+          effect_measures <- calc_effect_measures(p1_detectable, p2)
+
+          text0 <- hr()
+          text1 <- h1("Results of this analysis")
+          text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+          text3 <- p(paste0(
+            "<strong>Minimal Detectable Effect Size Analysis</strong><br>",
+            "With available sample sizes of n1=", n1_nominal, " (Group 1) and n2=",
+            round(n2_nominal), " (Group 2, ratio=", tab2_inputs$twogrp_ss_ratio, "),",
+            missing_note,
+            " With ", format(power * 100, digits = 0), "% power and α = ", tab2_inputs$twogrp_ss_alpha,
+            " (", tab2_inputs$twogrp_ss_sided, " test), given a baseline event rate of ",
+            format(p2 * 100, digits = 2), "% in Group 2, ",
+            "the <strong>minimal detectable event rate in Group 1 is ",
+            format(p1_detectable * 100, digits = 2), "%</strong> (risk difference: ",
+            format(abs(effect_measures$risk_diff), digits = 2), " percentage points)."
+          ))
+
+          effect_size_box <- format_minimal_detectable_effect(
+            p1_detectable, p2, effect_measures, h_min
+          )
+
+          HTML(paste0(text0, text1, text2, text3, effect_size_box))
         }
 
       # Legacy tabset checks for non-migrated tabs
@@ -2143,6 +2319,99 @@ app_server <- function(input, output, session) {
             plot_title = "Interactive Power Curve (Tier 1 Enhancement)",
             n_reference_label = "Required N"
           )
+
+        # Tab 2: Two-Group Comparison - Power Analysis (using sidebar_page)
+        } else if (input$sidebar_page == "power_twogrp") {
+          tab2_inputs <- tab2_vals$inputs()
+          # Ratio-aware interactive plot for unequal allocation
+          p1 <- tab2_inputs$twogrp_pow_p1 / 100
+          p2 <- tab2_inputs$twogrp_pow_p2 / 100
+          ratio <- tab2_inputs$twogrp_pow_n2 / tab2_inputs$twogrp_pow_n1
+          n1_current <- tab2_inputs$twogrp_pow_n1
+
+          # Generate power curve varying n1
+          n1_seq <- generate_n_sequence(n_reference = n1_current, absolute_min = 5)
+
+          pow <- vapply(n1_seq, function(n1) {
+            pwr.2p2n.test(
+              h = ES.h(p1, p2), n1 = n1, n2 = n1 * ratio,
+              sig.level = tab2_inputs$twogrp_pow_alpha,
+              alternative = tab2_inputs$twogrp_pow_sided
+            )$power
+          }, FUN.VALUE = numeric(1))
+
+          # Create plot using helper function
+          create_power_curve_plot_twogroup(
+            n_seq = n1_seq,
+            power_vals = pow,
+            n_current = n1_current,
+            target_power = 0.8,
+            plot_title = paste0("Interactive Power Curve (n2/n1 = ", round(ratio, 3), ")"),
+            per_group = TRUE
+          )
+
+        # Tab 2: Two-Group Comparison - Sample Size (using sidebar_page)
+        } else if (input$sidebar_page == "ss_twogrp") {
+          tab2_inputs <- tab2_vals$inputs()
+          # Ratio-aware interactive plot for sample size calculation
+          p1 <- tab2_inputs$twogrp_ss_p1 / 100
+          p2 <- tab2_inputs$twogrp_ss_p2 / 100
+          ratio <- tab2_inputs$twogrp_ss_ratio
+          target <- tab2_inputs$twogrp_ss_power / 100
+
+          # Calculate required n1
+          n1_required <- solve_n1_for_ratio(
+            ES.h(p1, p2), ratio,
+            tab2_inputs$twogrp_ss_alpha, target, tab2_inputs$twogrp_ss_sided
+          )
+
+          # Generate power curve varying n1
+          n1_seq <- seq(max(5, floor(n1_required * 0.25)), floor(n1_required * 3), length.out = 100)
+          pow <- vapply(n1_seq, function(n1) {
+            pwr.2p2n.test(
+              h = ES.h(p1, p2), n1 = n1, n2 = n1 * ratio,
+              sig.level = tab2_inputs$twogrp_ss_alpha,
+              alternative = tab2_inputs$twogrp_ss_sided
+            )$power
+          }, FUN.VALUE = numeric(1))
+
+          # Create interactive plotly
+          plot_ly() %>%
+            add_trace(
+              x = n1_seq, y = pow, type = "scatter", mode = "lines",
+              line = list(color = "#2B5876", width = 3),
+              name = "Power Curve",
+              hovertemplate = paste0(
+                "<b>n1 (Group 1):</b> %{x:.0f}<br>",
+                "<b>n2 (Group 2):</b> ", round(n1_seq * ratio, 0), "<br>",
+                "<b>Power:</b> %{y:.3f}<br>",
+                "<extra></extra>"
+              )
+            ) %>%
+            add_trace(
+              x = range(n1_seq), y = c(target, target),
+              type = "scatter", mode = "lines",
+              line = list(color = "red", width = 2, dash = "dash"),
+              name = paste0("Target Power (", round(target * 100), "%)"),
+              hovertemplate = paste0("<b>Target Power:</b> ", round(target * 100), "%<extra></extra>")
+            ) %>%
+            add_trace(
+              x = c(n1_required, n1_required), y = c(0, 1),
+              type = "scatter", mode = "lines",
+              line = list(color = "green", width = 2, dash = "dot"),
+              name = "Required n1",
+              hovertemplate = paste0("<b>Required n1:</b> ", round(n1_required), "<extra></extra>")
+            ) %>%
+            layout(
+              title = list(text = paste0("Interactive Power Curve (n2/n1 = ", round(ratio, 3), ")"), font = list(size = 16)),
+              xaxis = list(title = "Sample Size n1 (Group 1)", gridcolor = "#e0e0e0"),
+              yaxis = list(title = "Power", range = c(0, 1), gridcolor = "#e0e0e0"),
+              hovermode = "closest",
+              plot_bgcolor = "#f8f9fa",
+              paper_bgcolor = "white",
+              legend = list(x = 0.7, y = 0.2)
+            ) %>%
+            config(displayModeBar = TRUE, displaylogo = FALSE)
 
         # Legacy tabset checks for non-migrated tabs
         } else if (input$tabset == "Power (Single)") {
