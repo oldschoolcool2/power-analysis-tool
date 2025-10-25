@@ -563,16 +563,16 @@ ui <- fluidPage(
                                   tooltip = "Probability of detecting the effect if it exists"),
             conditionalPanel(
               condition = "input.cont_ss_calc_mode == 'calc_n'",
-              numericInput("cont_ss_d", "Effect Size (Cohen's d):", 0.5, min = 0.01, max = 5, step = 0.1),
-              bsTooltip("cont_ss_d", "Standardized mean difference: Small=0.2, Medium=0.5, Large=0.8", "right")
+              create_numeric_input_with_tooltip("cont_ss_d", "Effect Size (Cohen's d):", 0.5, min = 0.01, max = 5, step = 0.1,
+                tooltip = "Standardized mean difference: Small=0.2, Medium=0.5, Large=0.8")
             ),
             conditionalPanel(
               condition = "input.cont_ss_calc_mode == 'calc_effect'",
-              numericInput("cont_ss_n1_fixed", "Available Sample Size (Group 1):", 100, min = 2, step = 1),
-              bsTooltip("cont_ss_n1_fixed", "Fixed sample size available for Group 1", "right")
+              create_numeric_input_with_tooltip("cont_ss_n1_fixed", "Available Sample Size (Group 1):", 100, min = 2, step = 1,
+                tooltip = "Fixed sample size available for Group 1")
             ),
-            numericInput("cont_ss_ratio", "Allocation Ratio (n2/n1):", 1, min = 0.1, max = 10, step = 0.1),
-            bsTooltip("cont_ss_ratio", "Ratio of Group 2 to Group 1 sample size. 1 = equal groups", "right"),
+            create_numeric_input_with_tooltip("cont_ss_ratio", "Allocation Ratio (n2/n1):", 1, min = 0.1, max = 10, step = 0.1,
+              tooltip = "Ratio of Group 2 to Group 1 sample size. 1 = equal groups"),
             create_segmented_alpha("cont_ss_alpha", "Significance Level (α):",
                                   selected = 0.05,
                                   tooltip = "Type I error rate (typically 0.05)"),
@@ -581,46 +581,7 @@ ui <- fluidPage(
               selected = "two.sided"
             ),
             hr(),
-            checkboxInput("adjust_missing_cont_ss", "Adjust for Missing Data", value = FALSE),
-            conditionalPanel(
-              condition = "input.adjust_missing_cont_ss",
-              create_enhanced_slider("missing_pct_cont_ss", "Expected Missingness (%):",
-                                    min = 5, max = 50, value = 20, step = 5, post = "%",
-                                    tooltip = "Percentage of participants with missing exposure, outcome, or covariate data"),
-              radioButtons_fixed("missing_mechanism_cont_ss",
-                "Missing Data Mechanism:",
-                choices = c(
-                  "MCAR (Missing Completely At Random)" = "mcar",
-                  "MAR (Missing At Random)" = "mar",
-                  "MNAR (Missing Not At Random)" = "mnar"
-                ),
-                selected = "mar"
-              ),
-              bsTooltip("missing_mechanism_cont_ss",
-                "MCAR: minimal bias. MAR: controllable with observed data. MNAR: potential substantial bias",
-                "right"
-              ),
-              radioButtons_fixed("missing_analysis_cont_ss",
-                "Planned Analysis Approach:",
-                choices = c(
-                  "Complete Case Analysis" = "complete_case",
-                  "Multiple Imputation (MI)" = "multiple_imputation"
-                ),
-                selected = "complete_case"
-              ),
-              bsTooltip("missing_analysis_cont_ss",
-                "Complete case: only use observations with no missing data (more conservative). MI: impute missing values (more efficient)",
-                "right"
-              ),
-              conditionalPanel(
-                condition = "input.missing_analysis_cont_ss == 'multiple_imputation'",
-                numericInput("mi_imputations_cont_ss", "Number of Imputations (m):", 5, min = 3, max = 100, step = 1),
-                bsTooltip("mi_imputations_cont_ss", "Typical values: 5-20. More imputations increase precision but require more computation", "right"),
-                create_enhanced_slider("mi_r_squared_cont_ss", "Expected Imputation Model R²:",
-                                      min = 0.1, max = 0.9, value = 0.5, step = 0.1,
-                                      tooltip = "Predictive power of imputation model (0.3=weak, 0.5=moderate, 0.7=strong). Higher R² means better imputation quality and less inflation needed")
-              )
-            ),
+            missing_data_ui("cont_ss-missing_data"),
             hr(),
             div(class = "btn-group-custom",
               actionButton("example_cont_ss", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
@@ -888,6 +849,7 @@ server <- function(input, output, session) {
   missing_data_twogrp_ss <- missing_data_server("twogrp_ss-missing_data")
   missing_data_surv_ss <- missing_data_server("surv_ss-missing_data")
   missing_data_match <- missing_data_server("match-missing_data")
+  missing_data_cont_ss <- missing_data_server("cont_ss-missing_data")
 
   # ============================================================
   # Sidebar Navigation Initialization
@@ -2113,29 +2075,22 @@ server <- function(input, output, session) {
           n_total_base <- ceiling(n1_base + n2_base)
 
           # Apply missing data adjustment if enabled (Tier 1 Enhancement)
-          if (input$adjust_missing_cont_ss) {
+          md_vals <- missing_data_cont_ss()
+          if (md_vals$adjust_missing) {
             missing_adj <- calc_missing_data_inflation(
               n_total_base,
-              input$missing_pct_cont_ss,
-              input$missing_mechanism_cont_ss,
-              input$missing_analysis_cont_ss,
-              ifelse(input$missing_analysis_cont_ss == "multiple_imputation", input$mi_imputations_cont_ss, 5),
-              ifelse(input$missing_analysis_cont_ss == "multiple_imputation", input$mi_r_squared_cont_ss, 0.5)
+              md_vals$missing_pct,
+              md_vals$missing_mechanism,
+              md_vals$missing_analysis,
+              md_vals$mi_imputations,
+              md_vals$mi_r_squared
             )
             n_total_final <- missing_adj$n_inflated
             # Maintain allocation ratio
             n1_final <- ceiling(n_total_final / (1 + ratio))
             n2_final <- n_total_final - n1_final
 
-            missing_data_text <- HTML(paste0(
-              "<p style='background-color: #fff3cd; border-left: 4px solid #f39c12; padding: 10px; margin-top: 15px;'>",
-              "<strong>Missing Data Adjustment (Tier 1 Enhancement):</strong> ",
-              missing_adj$interpretation,
-              "<br><strong>Total sample size before adjustment:</strong> ", n_total_base,
-              "<br><strong>Inflation factor:</strong> ", missing_adj$inflation_factor,
-              "<br><strong>Additional participants needed:</strong> ", missing_adj$n_increase,
-              "</p>"
-            ))
+            missing_data_text <- format_missing_data_text(missing_adj, n_total_base)
           } else {
             n1_final <- ceiling(n1_base)
             n2_final <- ceiling(n2_base)
@@ -2147,14 +2102,14 @@ server <- function(input, output, session) {
           text1 <- h1("Results of this analysis")
           text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
           text3 <- p(paste0(
-            "To detect an effect size of Cohen's d = ", format(d, digits = 2, nsmall = 2),
-            " in a two-group comparison of continuous outcomes with ", format(power * 100, digits = 0, nsmall = 0),
+            "To detect an effect size of ", format_cohens_d(d),
+            " in a two-group comparison of continuous outcomes with ", format_numeric(power * 100, 0),
             "% power at α = ", input$cont_ss_alpha, " (", input$cont_ss_sided, " test), ",
-            "the required sample sizes are: Group 1: n1 = ", format(n1_final, digits = 0, nsmall = 0),
-            ", Group 2: n2 = ", format(n2_final, digits = 0, nsmall = 0), " (total N = ",
-            format(n_total_final, digits = 0, nsmall = 0), ").",
-            if (input$adjust_missing_cont_ss) {
-              paste0(" <strong>After adjusting for ", input$missing_pct_cont_ss,
+            "the required sample sizes are: Group 1: n1 = ", format_numeric(n1_final, 0),
+            ", Group 2: n2 = ", format_numeric(n2_final, 0), " (total N = ",
+            format_numeric(n_total_final, 0), ").",
+            if (md_vals$adjust_missing) {
+              paste0(" <strong>After adjusting for ", md_vals$missing_pct,
                      "% missing data.</strong>")
             } else {
               ""
@@ -2169,13 +2124,15 @@ server <- function(input, output, session) {
           n2_nominal <- n1_nominal * ratio
 
           # Account for missing data to get effective sample sizes
-          if (input$adjust_missing_cont_ss) {
-            p_missing <- input$missing_pct_cont_ss / 100
+          md_vals <- missing_data_cont_ss()
+          if (md_vals$adjust_missing) {
+            p_missing <- md_vals$missing_pct / 100
             n1_effective <- ceiling(n1_nominal * (1 - p_missing))
             n2_effective <- ceiling(n2_nominal * (1 - p_missing))
-            missing_note <- paste0(" After accounting for ", input$missing_pct_cont_ss,
-              "% missing data (", tolower(substr(input$missing_mechanism_cont_ss, 1, 4)),
-              "), effective sample sizes are n1=", n1_effective, ", n2=", n2_effective, ".")
+            missing_note <- paste0(" After accounting for ", md_vals$missing_pct,
+              "% missing data (", tolower(substr(md_vals$missing_mechanism, 1, 4)),
+              "), effective sample sizes are n1=", format_numeric(n1_effective, 0),
+              ", n2=", format_numeric(n2_effective, 0), ".")
           } else {
             n1_effective <- n1_nominal
             n2_effective <- n2_nominal
@@ -2194,13 +2151,12 @@ server <- function(input, output, session) {
           text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
           text3 <- p(paste0(
             "<strong>Minimal Detectable Effect Size Analysis (Tier 1 Enhancement)</strong><br>",
-            "With available sample sizes of n1=", n1_nominal, " (Group 1) and n2=",
-            round(n2_nominal), " (Group 2, ratio=", ratio, "),",
+            "With available sample sizes of n1=", format_numeric(n1_nominal, 0), " (Group 1) and n2=",
+            format_numeric(n2_nominal, 0), " (Group 2, ratio=", ratio, "),",
             missing_note,
-            " With ", format(power * 100, digits = 0), "% power and α = ", input$cont_ss_alpha,
+            " With ", format_numeric(power * 100, 0), "% power and α = ", input$cont_ss_alpha,
             " (", input$cont_ss_sided, " test), ",
-            "the <strong>minimal detectable effect size is Cohen's d = ",
-            format(d_detectable, digits = 3), "</strong>. ",
+            "the <strong>minimal detectable effect size is ", format_cohens_d(d_detectable), "</strong>. ",
             "This is the smallest standardized mean difference that can be reliably detected with this sample size. ",
             "Cohen's d is the standardized mean difference (difference in means / pooled SD)."
           ))
@@ -2208,7 +2164,7 @@ server <- function(input, output, session) {
           effect_size_box <- HTML(paste0(
             "<p style='background-color: #d4edda; border-left: 4px solid #28a745; padding: 10px; margin-top: 15px;'>",
             "<strong>Minimal Detectable Effect (Tier 1 Enhancement):</strong><br>",
-            "<strong>Cohen's d:</strong> ", format(d_detectable, digits = 3), "<br>",
+            "<strong>Cohen's d:</strong> ", format_numeric(d_detectable, 3), "<br>",
             "<strong>Interpretation:</strong> ",
             ifelse(d_detectable < 0.2, "Very small effect",
               ifelse(d_detectable < 0.5, "Small effect",
