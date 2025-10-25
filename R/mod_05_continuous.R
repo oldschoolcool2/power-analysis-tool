@@ -56,6 +56,9 @@ mod_05_continuous_ui <- function(id) {
       ),
       bsTooltip(ns("cont_pow_sided"), "Two-sided: test if groups differ. One-sided: test directional hypothesis", "right"),
       hr(),
+      h4("E-value Sensitivity Analysis"),
+      evalue_ui(ns("evalue"), effect_type = "MD"),
+      hr(),
       div(class = "btn-group-custom",
         actionButton(ns("example_cont_pow"), "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
         actionButton(ns("reset_cont_pow"), "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
@@ -139,6 +142,9 @@ mod_05_continuous_ui <- function(id) {
       h4("Clustering Adjustment"),
       clustering_ui(ns("clustering")),
       hr(),
+      h4("E-value Sensitivity Analysis"),
+      evalue_ui(ns("evalue_ss"), effect_type = "MD"),
+      hr(),
       div(class = "btn-group-custom",
         actionButton(ns("example_cont_ss"), "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
         actionButton(ns("reset_cont_ss"), "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
@@ -157,6 +163,10 @@ mod_05_continuous_server <- function(id){
     # Initialize missing data module for sample size tab
     missing_data_vals <- missing_data_server("missing_data")
     clustering_vals <- clustering_server("clustering")
+
+    # Initialize E-value modules
+    evalue_vals_pow <- evalue_server("evalue", effect_type = "MD")
+    evalue_vals_ss <- evalue_server("evalue_ss", effect_type = "MD")
 
     # Example button - Power Analysis
     observeEvent(input$example_cont_pow, {
@@ -218,7 +228,9 @@ mod_05_continuous_server <- function(id){
         )
       }),
       missing_data_vals = missing_data_vals,
-      clustering_vals = clustering_vals
+      clustering_vals = clustering_vals,
+      evalue_vals_pow = evalue_vals_pow,
+      evalue_vals_ss = evalue_vals_ss
     )
   })
 }

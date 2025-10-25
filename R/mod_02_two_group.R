@@ -60,6 +60,9 @@ mod_02_two_group_ui <- function(id) {
       ),
       bsTooltip(ns("twogrp_pow_sided"), "Two-sided: test if groups differ. One-sided: test if Group 1 > Group 2", "right"),
       hr(),
+      h4("E-value Sensitivity Analysis"),
+      evalue_ui(ns("evalue"), effect_type = "RR"),
+      hr(),
       div(class = "btn-group-custom",
         actionButton(ns("example_twogrp_pow"), "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
         actionButton(ns("reset_twogrp_pow"), "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
@@ -122,6 +125,9 @@ mod_02_two_group_ui <- function(id) {
       h4("Clustering Adjustment"),
       clustering_ui(ns("clustering")),
       hr(),
+      h4("E-value Sensitivity Analysis"),
+      evalue_ui(ns("evalue_ss"), effect_type = "RR"),
+      hr(),
       div(class = "btn-group-custom",
         actionButton(ns("example_twogrp_ss"), "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
         actionButton(ns("reset_twogrp_ss"), "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
@@ -145,6 +151,10 @@ mod_02_two_group_server <- function(id){
 
     # Initialize clustering module for sample size tab
     clustering_vals <- clustering_server("clustering")
+
+    # Initialize E-value modules
+    evalue_vals_pow <- evalue_server("evalue", effect_type = "RR")
+    evalue_vals_ss <- evalue_server("evalue_ss", effect_type = "RR")
 
     # Example button - Power Analysis
     observeEvent(input$example_twogrp_pow, {
@@ -214,7 +224,9 @@ mod_02_two_group_server <- function(id){
         )
       }),
       missing_data_vals = missing_data_vals,
-      clustering_vals = clustering_vals
+      clustering_vals = clustering_vals,
+      evalue_vals_pow = evalue_vals_pow,
+      evalue_vals_ss = evalue_vals_ss
     )
   })
 }

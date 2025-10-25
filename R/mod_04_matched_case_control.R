@@ -95,6 +95,9 @@ mod_04_matched_case_control_ui <- function(id) {
       h4("Clustering Adjustment"),
       clustering_ui(ns("clustering")),
       hr(),
+      h4("E-value Sensitivity Analysis"),
+      evalue_ui(ns("evalue"), effect_type = "OR"),
+      hr(),
       div(class = "btn-group-custom",
         actionButton(ns("example_match"), "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
         actionButton(ns("reset_match"), "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
@@ -113,6 +116,9 @@ mod_04_matched_case_control_server <- function(id){
     # Initialize missing data module
     missing_data_vals <- missing_data_server("missing_data")
     clustering_vals <- clustering_server("clustering")
+
+    # Initialize E-value module
+    evalue_vals <- evalue_server("evalue", effect_type = "OR")
 
     # Example button
     observeEvent(input$example_match, {
@@ -152,7 +158,8 @@ mod_04_matched_case_control_server <- function(id){
         )
       }),
       missing_data_vals = missing_data_vals,
-      clustering_vals = clustering_vals
+      clustering_vals = clustering_vals,
+      evalue_vals = evalue_vals
     )
   })
 }

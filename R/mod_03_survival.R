@@ -53,6 +53,9 @@ mod_03_survival_ui <- function(id) {
         tooltip = "Type I error rate (typically 0.05)"
       ),
       hr(),
+      h4("E-value Sensitivity Analysis"),
+      evalue_ui(ns("evalue"), effect_type = "HR"),
+      hr(),
       div(class = "btn-group-custom",
         actionButton(ns("example_surv_pow"), "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
         actionButton(ns("reset_surv_pow"), "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
@@ -133,6 +136,9 @@ mod_03_survival_ui <- function(id) {
       h4("Clustering Adjustment"),
       clustering_ui(ns("clustering")),
       hr(),
+      h4("E-value Sensitivity Analysis"),
+      evalue_ui(ns("evalue_ss"), effect_type = "HR"),
+      hr(),
       div(class = "btn-group-custom",
         actionButton(ns("example_surv_ss"), "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
         actionButton(ns("reset_surv_ss"), "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
@@ -154,6 +160,10 @@ mod_03_survival_server <- function(id){
     # Initialize missing data module for sample size tab
     missing_data_vals <- missing_data_server("missing_data")
     clustering_vals <- clustering_server("clustering")
+
+    # Initialize E-value modules
+    evalue_vals_pow <- evalue_server("evalue", effect_type = "HR")
+    evalue_vals_ss <- evalue_server("evalue_ss", effect_type = "HR")
 
     # Example button - Power Analysis
     observeEvent(input$example_surv_pow, {
@@ -215,7 +225,9 @@ mod_03_survival_server <- function(id){
         )
       }),
       missing_data_vals = missing_data_vals,
-      clustering_vals = clustering_vals
+      clustering_vals = clustering_vals,
+      evalue_vals_pow = evalue_vals_pow,
+      evalue_vals_ss = evalue_vals_ss
     )
   })
 }

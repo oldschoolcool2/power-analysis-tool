@@ -36,6 +36,9 @@ mod_06_non_inferiority_ui <- function(id) {
       h4("Clustering Adjustment"),
       clustering_ui(ns("clustering")),
       hr(),
+      h4("E-value Sensitivity Analysis"),
+      evalue_ui(ns("evalue"), effect_type = "RR"),
+      hr(),
       div(class = "btn-group-custom",
         actionButton(ns("example_noninf"), "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
         actionButton(ns("reset_noninf"), "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm"))
@@ -51,7 +54,10 @@ mod_06_non_inferiority_server <- function(id){
     ns <- session$ns
     missing_data_vals <- missing_data_server("missing_data")
     clustering_vals <- clustering_server("clustering")
-    
+
+    # Initialize E-value module
+    evalue_vals <- evalue_server("evalue", effect_type = "RR")
+
     observeEvent(input$example_noninf, {
       updateRadioButtons(session, "noninf_calc_mode", selected = "calc_n")
       update_segmented_power(session, "noninf_power", value = 80)
@@ -80,7 +86,8 @@ mod_06_non_inferiority_server <- function(id){
              noninf_n1_fixed = input$noninf_n1_fixed, noninf_ratio = input$noninf_ratio, noninf_alpha = input$noninf_alpha)
       }),
       missing_data_vals = missing_data_vals,
-      clustering_vals = clustering_vals
+      clustering_vals = clustering_vals,
+      evalue_vals = evalue_vals
     )
   })
 }
