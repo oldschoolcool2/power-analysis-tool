@@ -258,3 +258,56 @@ create_button_group <- function(buttons) {
     button_elements
   )
 }
+
+
+#' Create Numeric Input with Optional Tooltip
+#'
+#' Creates a numericInput and optionally attaches a tooltip.
+#' This consolidates the repeated pattern of numericInput + bsTooltip
+#' that appears 30+ times throughout the application.
+#'
+#' @param inputId The input slot that will be used to access the value
+#' @param label Display label for the input
+#' @param value Initial/default value
+#' @param min Minimum allowed value
+#' @param max Maximum allowed value
+#' @param step Increment step size
+#' @param tooltip Optional tooltip text to display (NULL means no tooltip)
+#'
+#' @return A tagList containing numericInput and optional tooltip
+#'
+#' @examples
+#' create_numeric_input_with_tooltip(
+#'   "sample_size", "Sample Size:", 230, min = 1, step = 1,
+#'   tooltip = "Total number of participants available for the study"
+#' )
+create_numeric_input_with_tooltip <- function(inputId,
+                                              label,
+                                              value = 100,
+                                              min = NULL,
+                                              max = NULL,
+                                              step = 1,
+                                              tooltip = NULL) {
+
+  # Create the numeric input
+  input_element <- numericInput(
+    inputId = inputId,
+    label = label,
+    value = value,
+    min = min,
+    max = max,
+    step = step
+  )
+
+  # Add tooltip if provided
+  if (!is.null(tooltip) && tooltip != "") {
+    return(
+      tagList(
+        input_element,
+        bsTooltip(inputId, tooltip, "right")
+      )
+    )
+  }
+
+  return(input_element)
+}

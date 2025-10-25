@@ -32,7 +32,8 @@ docs/
 │   ├── 001-contributing.md        # How to contribute to the project
 │   ├── 002-advanced-statistical-features-implementation.md # Implementation guide
 │   ├── 003-quick-start-guide.md   # Quick start for development
-│   └── 004-end-to-end-testing-with-shinytest2.md # E2E testing guide
+│   ├── 004-end-to-end-testing-with-shinytest2.md # E2E testing guide
+│   └── 005-using-shiny-modules-and-helpers.md # NEW: Shiny modules refactoring guide
 ├── 003-reference/                 # Information-oriented specifications
 │   ├── 001-code-quality-tools.md  # Code quality tools reference
 │   ├── 002-antipatterns-guide.md  # Antipatterns reference
@@ -96,6 +97,11 @@ This documentation follows the **[Diataxis framework](https://diataxis.fr/)**, w
 1. Read [Code Quality Tools Reference](003-reference/001-code-quality-tools.md) for standards
 2. Read [Antipatterns Guide](003-reference/002-antipatterns-guide.md) for common mistakes
 3. Review [Quality Reports](reports/quality/) for analysis
+
+### "I want to refactor code using Shiny modules" ✨ NEW
+1. Read [Code Duplication Analysis](004-explanation/003-code-duplication-and-refactoring-analysis.md) for the full analysis
+2. Read [Using Shiny Modules and Helpers](002-how-to-guides/005-using-shiny-modules-and-helpers.md) for step-by-step guide
+3. Review [REFACTORING_SUMMARY.md](../REFACTORING_SUMMARY.md) for implementation status and impact metrics
 
 ---
 
