@@ -476,19 +476,22 @@ ui <- fluidPage(
                                   tooltip = "Probability of detecting the effect if it exists"),
             conditionalPanel(
               condition = "input.match_calc_mode == 'calc_n'",
-              numericInput("match_or", "Odds Ratio (OR):", 2.0, min = 0.01, max = 20, step = 0.1),
-              bsTooltip("match_or", "Expected odds ratio to detect (OR < 1 protective, OR > 1 risk factor)", "right")
+              create_numeric_input_with_tooltip("match_or", "Odds Ratio (OR):", 2.0,
+                min = 0.01, max = 20, step = 0.1,
+                tooltip = "Expected odds ratio to detect (OR < 1 protective, OR > 1 risk factor)")
             ),
             conditionalPanel(
               condition = "input.match_calc_mode == 'calc_effect'",
-              numericInput("match_n_pairs_fixed", "Available Number of Matched Pairs:", 100, min = 10, step = 5),
-              bsTooltip("match_n_pairs_fixed", "Fixed number of matched case-control pairs available", "right")
+              create_numeric_input_with_tooltip("match_n_pairs_fixed", "Available Number of Matched Pairs:", 100,
+                min = 10, step = 5,
+                tooltip = "Fixed number of matched case-control pairs available")
             ),
             create_enhanced_slider("match_p0", "Exposure Probability in Controls (%):",
                                   min = 5, max = 95, value = 20, step = 5, post = "%",
                                   tooltip = "Expected proportion of controls exposed to the risk factor"),
-            numericInput("match_ratio", "Controls per Case:", 1, min = 1, max = 5, step = 1),
-            bsTooltip("match_ratio", "Number of matched controls per case (typically 1:1, 2:1, or 3:1)", "right"),
+            create_numeric_input_with_tooltip("match_ratio", "Controls per Case:", 1,
+              min = 1, max = 5, step = 1,
+              tooltip = "Number of matched controls per case (typically 1:1, 2:1, or 3:1)"),
             create_segmented_alpha("match_alpha", "Significance Level (α):",
                                   selected = 0.05,
                                   tooltip = "Type I error rate (typically 0.05)"),
@@ -498,46 +501,7 @@ ui <- fluidPage(
             ),
             bsTooltip("match_sided", "Two-sided: test if groups differ. One-sided: test directional hypothesis", "right"),
             hr(),
-            checkboxInput("adjust_missing_match", "Adjust for Missing Data", value = FALSE),
-            conditionalPanel(
-              condition = "input.adjust_missing_match",
-              create_enhanced_slider("missing_pct_match", "Expected Missingness (%):",
-                                    min = 5, max = 50, value = 20, step = 5, post = "%",
-                                    tooltip = "Percentage of participants with missing exposure, outcome, or covariate data"),
-              radioButtons_fixed("missing_mechanism_match",
-                "Missing Data Mechanism:",
-                choices = c(
-                  "MCAR (Missing Completely At Random)" = "mcar",
-                  "MAR (Missing At Random)" = "mar",
-                  "MNAR (Missing Not At Random)" = "mnar"
-                ),
-                selected = "mar"
-              ),
-              bsTooltip("missing_mechanism_match",
-                "MCAR: minimal bias. MAR: controllable with observed data. MNAR: potential substantial bias",
-                "right"
-              ),
-              radioButtons_fixed("missing_analysis_match",
-                "Planned Analysis Approach:",
-                choices = c(
-                  "Complete Case Analysis" = "complete_case",
-                  "Multiple Imputation (MI)" = "multiple_imputation"
-                ),
-                selected = "complete_case"
-              ),
-              bsTooltip("missing_analysis_match",
-                "Complete case: only use observations with no missing data (more conservative). MI: impute missing values (more efficient)",
-                "right"
-              ),
-              conditionalPanel(
-                condition = "input.missing_analysis_match == 'multiple_imputation'",
-                numericInput("mi_imputations_match", "Number of Imputations (m):", 5, min = 3, max = 100, step = 1),
-                bsTooltip("mi_imputations_match", "Typical values: 5-20. More imputations increase precision but require more computation", "right"),
-                create_enhanced_slider("mi_r_squared_match", "Expected Imputation Model R²:",
-                                      min = 0.1, max = 0.9, value = 0.5, step = 0.1,
-                                      tooltip = "Predictive power of imputation model (0.3=weak, 0.5=moderate, 0.7=strong). Higher R² means better imputation quality and less inflation needed")
-              )
-            ),
+            missing_data_ui("match-missing_data"),
             hr(),
             div(class = "btn-group-custom",
               actionButton("example_match", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
@@ -920,6 +884,7 @@ server <- function(input, output, session) {
   missing_data_ss_single <- missing_data_server("ss_single-missing_data")
   missing_data_twogrp_ss <- missing_data_server("twogrp_ss-missing_data")
   missing_data_surv_ss <- missing_data_server("surv_ss-missing_data")
+  missing_data_match <- missing_data_server("match-missing_data")
 
   # ============================================================
   # Sidebar Navigation Initialization
@@ -1943,29 +1908,22 @@ server <- function(input, output, session) {
           n_total_base <- n_cases_base * (1 + m)
 
           # Apply missing data adjustment if enabled (Tier 1 Enhancement)
-          if (input$adjust_missing_match) {
+          md_vals <- missing_data_match()
+          if (md_vals$adjust_missing) {
             missing_adj <- calc_missing_data_inflation(
               n_total_base,
-              input$missing_pct_match,
-              input$missing_mechanism_match,
-              input$missing_analysis_match,
-              ifelse(input$missing_analysis_match == "multiple_imputation", input$mi_imputations_match, 5),
-              ifelse(input$missing_analysis_match == "multiple_imputation", input$mi_r_squared_match, 0.5)
+              md_vals$missing_pct,
+              md_vals$missing_mechanism,
+              md_vals$missing_analysis,
+              md_vals$mi_imputations,
+              md_vals$mi_r_squared
             )
             n_total_final <- missing_adj$n_inflated
             # Maintain matching ratio
             n_cases_final <- ceiling(n_total_final / (1 + m))
             n_controls_final <- n_cases_final * m
 
-            missing_data_text <- HTML(paste0(
-              "<p style='background-color: #fff3cd; border-left: 4px solid #f39c12; padding: 10px; margin-top: 15px;'>",
-              "<strong>Missing Data Adjustment (Tier 1 Enhancement):</strong> ",
-              missing_adj$interpretation,
-              "<br><strong>Total sample size before adjustment:</strong> ", n_total_base,
-              "<br><strong>Inflation factor:</strong> ", missing_adj$inflation_factor,
-              "<br><strong>Additional participants needed:</strong> ", missing_adj$n_increase,
-              "</p>"
-            ))
+            missing_data_text <- format_missing_data_text(missing_adj, n_total_base)
           } else {
             n_cases_final <- n_cases_base
             n_controls_final <- n_controls_base
@@ -1978,15 +1936,15 @@ server <- function(input, output, session) {
           text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
           text3 <- p(paste0(
             "For a matched case-control study to detect an odds ratio of ",
-            format(or, digits = 2, nsmall = 2), " with ", format(power * 100, digits = 0, nsmall = 0),
-            "% power, assuming ", format(p0 * 100, digits = 1, nsmall = 0),
+            format_numeric(or), " with ", format_numeric(power * 100, 0),
+            "% power, assuming ", format_numeric(p0 * 100, 1),
             "% exposure prevalence in controls, and a ", m, ":1 matching ratio (controls per case), ",
             "the required sample size is ", n_cases_final, " cases and ",
-            format(n_controls_final, digits = 0, nsmall = 0), " controls (total N = ",
-            format(n_total_final, digits = 0, nsmall = 0), " participants) at α = ",
+            format_numeric(n_controls_final, 0), " controls (total N = ",
+            format_numeric(n_total_final, 0), " participants) at α = ",
             input$match_alpha, " (", input$match_sided, " test).",
-            if (input$adjust_missing_match) {
-              paste0(" <strong>After adjusting for ", input$missing_pct_match,
+            if (md_vals$adjust_missing) {
+              paste0(" <strong>After adjusting for ", md_vals$missing_pct,
                      "% missing data.</strong>")
             } else {
               ""
@@ -1997,16 +1955,17 @@ server <- function(input, output, session) {
 
         } else {
           # Calculate Odds Ratio (Feature 2: Tier 1 Enhancement)
-          n_cases_nominal <- input$match_n_cases_fixed
+          n_cases_nominal <- input$match_n_pairs_fixed
           n_controls_nominal <- n_cases_nominal * m
           n_total_nominal <- n_cases_nominal * (1 + m)
 
           # Account for missing data to get effective sample sizes
-          if (input$adjust_missing_match) {
-            p_missing <- input$missing_pct_match / 100
+          md_vals <- missing_data_match()
+          if (md_vals$adjust_missing) {
+            p_missing <- md_vals$missing_pct / 100
             n_cases_effective <- ceiling(n_cases_nominal * (1 - p_missing))
-            missing_note <- paste0(" After accounting for ", input$missing_pct_match,
-              "% missing data (", tolower(substr(input$missing_mechanism_match, 1, 4)),
+            missing_note <- paste0(" After accounting for ", md_vals$missing_pct,
+              "% missing data (", tolower(substr(md_vals$missing_mechanism, 1, 4)),
               "), the effective number of cases is ", n_cases_effective, ".")
           } else {
             n_cases_effective <- n_cases_nominal
@@ -2060,13 +2019,13 @@ server <- function(input, output, session) {
           text3 <- p(paste0(
             "<strong>Minimal Detectable Effect Size Analysis (Tier 1 Enhancement)</strong><br>",
             "With ", n_cases_nominal, " available cases and a ", m, ":1 matching ratio (",
-            format(n_controls_nominal, digits = 0), " controls),",
+            format_numeric(n_controls_nominal, 0), " controls),",
             missing_note,
-            " With ", format(power * 100, digits = 0), "% power and α = ", input$match_alpha,
+            " With ", format_numeric(power * 100, 0), "% power and α = ", input$match_alpha,
             " (", input$match_sided, " test), assuming ",
-            format(p0 * 100, digits = 1), "% exposure prevalence in controls, ",
+            format_numeric(p0 * 100, 1), "% exposure prevalence in controls, ",
             "the <strong>minimal detectable odds ratio is OR = ",
-            format(or_detectable, digits = 3), "</strong>. ",
+            format_numeric(or_detectable, 3), "</strong>. ",
             "This is the smallest odds ratio that can be reliably detected with this sample size. ",
             "This accounts for correlation between matched pairs."
           ))
@@ -2074,11 +2033,11 @@ server <- function(input, output, session) {
           effect_size_box <- HTML(paste0(
             "<p style='background-color: #d4edda; border-left: 4px solid #28a745; padding: 10px; margin-top: 15px;'>",
             "<strong>Minimal Detectable Effect (Tier 1 Enhancement):</strong><br>",
-            "<strong>Odds Ratio (OR):</strong> ", format(or_detectable, digits = 3), "<br>",
+            "<strong>Odds Ratio (OR):</strong> ", format_numeric(or_detectable, 3), "<br>",
             "<strong>Interpretation:</strong> ",
             ifelse(or_detectable < 1,
-              paste0("Can detect protective effects with OR ≤ ", format(or_detectable, digits = 3)),
-              paste0("Can detect risk increases with OR ≥ ", format(or_detectable, digits = 3))),
+              paste0("Can detect protective effects with OR ≤ ", format_numeric(or_detectable, 3)),
+              paste0("Can detect risk increases with OR ≥ ", format_numeric(or_detectable, 3))),
             "</p>"
           ))
 
