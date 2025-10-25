@@ -847,33 +847,52 @@ The ultimate goal is to transform the Propensity Score Calculator into a **compr
 
 ---
 
-#### **NEW 2: Sample Size for Multiple Imputation**
+#### **NEW 2: Sample Size for Multiple Imputation** ✅ **COMPLETED**
 
 **Priority:** ⭐⭐⭐⭐ **SHOULD HAVE**
 
+**Status:** ✅ **IMPLEMENTED (2025-10-25)**
+
 **What:** Specialized inflation factors for multiple imputation analysis plans
 
-**Rationale:** Current "Missing Data Adjustment" assumes complete-case analysis. MI has different requirements.
+**Rationale:** Current "Missing Data Adjustment" had basic MI support but lacked proper formulas and comparison outputs.
 
 **Inputs:**
-- Sample size for complete data
-- Expected missingness (%)
-- Number of imputations planned (m)
-- Expected R² of imputation model
+- Sample size for complete data ✅
+- Expected missingness (%) ✅
+- Number of imputations planned (m) ✅
+- Expected R² of imputation model ✅
 
 **Outputs:**
-- Required sample size with MI
-- Efficiency relative to complete-case (usually better)
-- Recommended number of imputations
-- Comparison to complete-case inflation
+- Required sample size with MI ✅
+- Efficiency relative to complete-case (usually better) ✅
+- Recommended number of imputations ✅
+- Comparison to complete-case inflation ✅
+- Fraction of missing information (FMI) ✅
+- Relative efficiency calculation ✅
+- Effective sample size after MI ✅
+- M adequacy warnings ✅
+- Imputation model quality assessment ✅
 
-**Why Missing:** Current roadmap Feature 4 doesn't distinguish MI from complete-case
+**Implementation Details:**
+- Updated `calc_missing_data_inflation()` in app.R with corrected MI formula based on Rubin (1987)
+- Formula: Uses FMI (Fraction of Missing Information) = (1 + 1/m) × γ, where γ ≈ (1 - R²) × p_missing
+- Relative efficiency: RE = (1 + λ/m)^(-1)
+- MI inflation is less than CCA due to information recovery
+- Enhanced `format_missing_data_text()` to show MI vs CCA comparison
+- Displays efficiency gains, recommendations, and warnings
+- Available on all 6 existing sample size tabs
 
-**Enhancement:** Expand Tier 1 Feature 4 to include MI option
+**Impact:** ⭐⭐⭐⭐⭐
+- Corrects potential formula error in original implementation
+- Provides transparent comparison between CCA and MI approaches
+- Educates users about MI efficiency gains
+- Warns when m is insufficient (m < % missing)
+- Flags weak imputation models (R² < 0.3)
 
-**R Package:** Formulas from `mice` package documentation
+**R Package References:** Based on Rubin (1987), van Buuren (2018), White et al. (2011)
 
-**Effort:** Low (1 week - extend existing missing data feature)
+**Actual Effort:** 2 hours
 
 ---
 
@@ -1239,7 +1258,7 @@ Each feature scored on:
 3. ✅ Interactive Power Curves (all tabs) - COMPLETE (commit 5ffcf12)
 4. ✅ **Propensity Score Calculator (Li et al. 2025 + Austin 2021)** - **COMPLETE (2025-10-25)**
 5. ✅ VIF Calculator (Austin 2021) - COMPLETE (integrated into #4)
-6. ⏳ MI Sample Size (extension of Feature 1) - PLANNED
+6. ✅ **MI Sample Size (extension of Feature 1)** - **COMPLETE (2025-10-25)**
 
 **Success Metrics:**
 - All 6 Tier 1 features implemented

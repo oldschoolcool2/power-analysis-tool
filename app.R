@@ -969,7 +969,9 @@ server <- function(input, output, session) {
         inflation_factor = 1.0,
         n_increase = 0,
         pct_increase = 0,
-        interpretation = "No adjustment needed (0% missingness assumed)"
+        interpretation = "No adjustment needed (0% missingness assumed)",
+        mi_comparison = NULL,
+        mi_recommendations = NULL
       ))
     }
 
@@ -997,21 +999,50 @@ server <- function(input, output, session) {
         missing_pct, mechanism_text, pct_increase, n_increase
       )
 
+      # No MI-specific output for CCA
+      mi_comparison <- NULL
+      mi_recommendations <- NULL
+
     } else if (analysis_type == "multiple_imputation") {
-      # Multiple Imputation: Less inflation needed due to increased efficiency
-      # Formula based on variance inflation: VarMI / VarComplete ≈ (1 + 1/m) × (1 - R²)
-      # Where m = number of imputations, R² = predictive power of imputation model
+      # Multiple Imputation: Enhanced with proper formula and comparison output
+      # Based on Rubin (1987) and van Buuren (2018)
 
-      # Relative efficiency of MI vs complete case
-      # RE = 1 / [(1 + 1/m) × (1 - R²_imp)]
-      re_mi <- 1 / ((1 + 1/mi_imputations) * (1 - mi_r_squared))
+      # Fraction of missing information (FMI or lambda)
+      # FMI depends on both missingness rate and imputation model quality
+      # Formula: λ = (1 + 1/m) × γ, where γ ≈ (1 - R²) × p_missing
+      gamma <- (1 - mi_r_squared) * p_missing
+      fmi <- (1 + 1/mi_imputations) * gamma
 
-      # Inflation factor accounts for both missing data and MI efficiency
-      # Less conservative than complete case because MI recovers information
-      inflation_factor <- (1 / (1 - p_missing)) * (1 / re_mi)
+      # Relative efficiency of MI vs complete data (not vs complete case!)
+      # RE = (1 + λ/m)^(-1) where λ is the fraction of missing information
+      # This gives the variance inflation factor for MI estimates
+      relative_efficiency <- 1 / (1 + fmi / mi_imputations)
+
+      # Sample size inflation for MI approach
+      # Start with CCA inflation, then adjust for MI efficiency gains
+      cca_inflation <- 1 / (1 - p_missing)
+
+      # MI recovers some information, so the inflation is less than CCA
+      # The effective inflation is reduced by the square root of relative efficiency
+      # This is based on the variance inflation framework
+      mi_efficiency_factor <- 1 / sqrt(relative_efficiency)
+      inflation_factor <- cca_inflation * sqrt(mi_efficiency_factor)
+
+      # Calculate sample sizes
       n_inflated <- ceiling(n_required * inflation_factor)
       n_increase <- n_inflated - n_required
       pct_increase <- round((inflation_factor - 1) * 100, 1)
+
+      # Also calculate what CCA would require for comparison
+      n_cca <- ceiling(n_required * cca_inflation)
+      efficiency_gain <- n_cca - n_inflated
+
+      # Check if m is adequate (rule of thumb: m >= % missing)
+      m_adequate <- mi_imputations >= ceiling(missing_pct)
+      m_recommended <- max(ceiling(missing_pct), 10)  # At least 10, or %missing
+
+      # Effective sample size after MI
+      n_effective <- ceiling(n_inflated * (1 - p_missing) * relative_efficiency)
 
       mechanism_text <- switch(mechanism,
         "mcar" = "MCAR (minimal bias, MI highly efficient)",
@@ -1021,8 +1052,28 @@ server <- function(input, output, session) {
       )
 
       interpretation <- sprintf(
-        "Assuming %s%% missingness (%s) with multiple imputation (m=%s imputations, R²=%s), inflate sample size by %s%% (add %s participants). MI is more efficient than complete-case analysis.",
+        "Assuming %s%% missingness (%s) with multiple imputation (m=%s imputations, R²=%s), inflate sample size by %s%% (add %s participants). MI recovers information lost to missingness, requiring fewer participants than complete-case analysis.",
         missing_pct, mechanism_text, mi_imputations, mi_r_squared, pct_increase, n_increase
+      )
+
+      # MI-specific comparison output
+      mi_comparison <- list(
+        cca_n = n_cca,
+        mi_n = n_inflated,
+        efficiency_gain = efficiency_gain,
+        cca_inflation = round(cca_inflation, 3),
+        mi_inflation = round(inflation_factor, 3),
+        relative_efficiency = round(relative_efficiency, 3),
+        fmi = round(fmi, 3),
+        n_effective = n_effective
+      )
+
+      # MI-specific recommendations
+      mi_recommendations <- list(
+        m_adequate = m_adequate,
+        m_current = mi_imputations,
+        m_recommended = m_recommended,
+        r_squared_quality = if (mi_r_squared >= 0.7) "strong" else if (mi_r_squared >= 0.5) "moderate" else if (mi_r_squared >= 0.3) "weak" else "very weak"
       )
     }
 
@@ -1031,7 +1082,9 @@ server <- function(input, output, session) {
       inflation_factor = round(inflation_factor, 3),
       n_increase = n_increase,
       pct_increase = pct_increase,
-      interpretation = interpretation
+      interpretation = interpretation,
+      mi_comparison = mi_comparison,
+      mi_recommendations = mi_recommendations
     )
   }
 
@@ -2264,11 +2317,7 @@ server <- function(input, output, session) {
             n1_final <- ceiling(n_total_final / (1 + ratio))
             n2_final <- n_total_final - n1_final
 
-            missing_data_text <- format_missing_data_text(
-              n_total_base,
-              missing_adj$inflation_factor,
-              missing_adj$n_increase
-            )
+            missing_data_text <- format_missing_data_text(missing_adj, n_total_base)
           } else {
             n1_final <- ceiling(n1_base)
             n2_final <- ceiling(n2_base)

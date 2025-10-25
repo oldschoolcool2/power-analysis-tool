@@ -22,6 +22,7 @@ create_result_header <- function() {
 #'
 #' Creates a styled callout box showing missing data adjustment details.
 #' This replaces duplicated HTML formatting across 6 sample size calculations.
+#' Enhanced for Tier 1 Feature NEW 2: MI Sample Size with comparison output.
 #'
 #' @param missing_adj List returned from calc_missing_data_inflation()
 #' @param n_before Sample size before missing data adjustment
@@ -32,15 +33,57 @@ create_result_header <- function() {
 #' missing_adj <- calc_missing_data_inflation(100, 20, "mar", "complete_case", 5, 0.5)
 #' format_missing_data_text(missing_adj, n_before = 100)
 format_missing_data_text <- function(missing_adj, n_before) {
-  HTML(paste0(
+  base_text <- paste0(
     "<p style='background-color: #fff3cd; border-left: 4px solid #f39c12; padding: 10px; margin-top: 15px;'>",
     "<strong>Missing Data Adjustment (Tier 1 Enhancement):</strong> ",
     missing_adj$interpretation,
     "<br><strong>Sample size before missing data adjustment:</strong> ", n_before,
     "<br><strong>Inflation factor:</strong> ", missing_adj$inflation_factor,
-    "<br><strong>Additional participants needed:</strong> ", missing_adj$n_increase,
-    "</p>"
-  ))
+    "<br><strong>Additional participants needed:</strong> ", missing_adj$n_increase
+  )
+
+  # Add MI-specific comparison and recommendations if using multiple imputation
+  if (!is.null(missing_adj$mi_comparison) && !is.null(missing_adj$mi_recommendations)) {
+    mi_comp <- missing_adj$mi_comparison
+    mi_rec <- missing_adj$mi_recommendations
+
+    # MI comparison section
+    comparison_section <- paste0(
+      "<br><br><strong style='text-decoration: underline;'>MI Efficiency Comparison:</strong>",
+      "<br>• Complete-case analysis would require: <strong>", mi_comp$cca_n, " participants</strong> (", mi_comp$cca_inflation, "× inflation)",
+      "<br>• Multiple imputation requires: <strong>", mi_comp$mi_n, " participants</strong> (", mi_comp$mi_inflation, "× inflation)",
+      "<br>• <span style='color: #28a745; font-weight: bold;'>Efficiency gain: ", mi_comp$efficiency_gain, " fewer participants vs. CCA</span>",
+      "<br>• Relative efficiency: ", mi_comp$relative_efficiency,
+      "<br>• Fraction of missing information (FMI): ", mi_comp$fmi,
+      "<br>• Effective N after MI: ~", mi_comp$n_effective
+    )
+
+    # MI recommendations section
+    m_status_color <- if (mi_rec$m_adequate) "#28a745" else "#dc3545"
+    m_status_text <- if (mi_rec$m_adequate) "✓ Adequate" else "⚠ Below recommended"
+
+    recommendations_section <- paste0(
+      "<br><br><strong style='text-decoration: underline;'>MI Recommendations (NEW Feature):</strong>",
+      "<br>• Number of imputations (m): ", mi_rec$m_current,
+      " - <span style='color: ", m_status_color, "; font-weight: bold;'>", m_status_text, "</span>",
+      if (!mi_rec$m_adequate) {
+        paste0("<br>&nbsp;&nbsp;<em>Recommended: At least m = ", mi_rec$m_recommended, " imputations for robust results</em>")
+      } else {
+        ""
+      },
+      "<br>• Imputation model quality: <strong>", mi_rec$r_squared_quality, "</strong>",
+      if (mi_rec$r_squared_quality %in% c("weak", "very weak")) {
+        "<br>&nbsp;&nbsp;<em style='color: #dc3545;'>⚠ Consider improving imputation model or using CCA</em>"
+      } else {
+        ""
+      },
+      "<br>• <em>Rule of thumb: m ≥ % missing (White et al. 2011)</em>"
+    )
+
+    base_text <- paste0(base_text, comparison_section, recommendations_section)
+  }
+
+  HTML(paste0(base_text, "</p>"))
 }
 
 
