@@ -1,7 +1,7 @@
 # Golem Migration Status
 
 **Last Updated:** 2025-10-25
-**Migration Progress:** 95% Complete (Phases 0-7)
+**Migration Progress:** 97% Complete (Phases 0-7)
 
 ## Completed (Phases 0-6)
 
@@ -89,7 +89,7 @@ Total: 21 R files, 8,557 lines
 
 ## Remaining Work
 
-### Phase 7: Validation & Polish (In Progress - 85% Complete)
+### Phase 7: Validation & Polish (In Progress - 95% Complete)
 - ✅ Fixed NAMESPACE warnings (added comprehensive @importFrom statements)
 - ✅ Updated .Rbuildignore to exclude non-standard files
 - ✅ Added MIT LICENSE file
@@ -103,9 +103,14 @@ Total: 21 R files, 8,557 lines
   - Removed duplicates of calc_effect_measures, calc_missing_data_inflation
   - app_server.R reduced from 4,588 to 4,345 lines (-243 lines, -5%)
 - ✅ No non-ASCII characters in R files
+- ✅ Fixed propensity score test (column name mismatch)
+- ✅ Package builds successfully (PowerAnalysisTool_5.0.0.tar.gz)
+- ✅ All tests passing (197/197 core tests, 33 integration tests skipped - require chromote)
+- ✅ CI/CD pipeline (GitHub Actions)
+  - R-CMD-check workflow for automated package validation
+  - Test coverage workflow for monitoring code coverage
 - ⏳ Legacy tabset code cleanup (84 references to old input$tabset, low priority)
 - ⏳ Optional: Create vignettes for complex features
-- ⏳ Optional: CI/CD pipeline (GitHub Actions)
 
 ### Technical Debt
 
@@ -122,9 +127,12 @@ Total: 21 R files, 8,557 lines
 
 ## Commits
 
-Total commits on feature/golem-migration: 54+
+Total commits on feature/golem-migration: 57+
 
 Recent key commits (Phase 7):
+- 5427c25: ci: add GitHub Actions workflows for R CMD check and test coverage
+- 8311334: fix: correct column name in propensity score sensitivity test
+- 65442a2: docs: update migration status to reflect Phase 7 progress (95%)
 - 8ed3937: refactor: remove duplicate function definitions from app_server.R
 - 2495a18: fix: resolve additional R CMD check warnings (documentation fixes)
 - d5cbf2c: fix: Phase 7 validation - address R CMD check warnings (imports & licensing)
@@ -187,9 +195,11 @@ Previous commits:
 - **Documentation:** ⭐⭐⭐⭐⭐ (5/5) - Full roxygen docs, 37 man files
 - **Deployment:** ⭐⭐⭐⭐⭐ (5/5) - Multi-platform ready (shinyapps.io, Docker)
 
-Overall: **Phases 0-7: 95% complete**
+Overall: **Phases 0-7: 97% complete**
 
-- Phase 7 validation: 85% complete (duplicate functions removed, DESCRIPTION fixed)
+- Phase 7 validation: 95% complete (all critical items resolved)
 - Package quality: Production-ready for deployment
-- R CMD check: Significantly improved (major issues resolved)
+- R CMD check: Package builds successfully
 - Code deduplication: All business logic properly extracted to fct_*.R files
+- Testing: 197/197 core tests passing
+- CI/CD: GitHub Actions workflows configured and ready
