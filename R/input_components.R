@@ -4,6 +4,43 @@
 # This file contains helper functions for creating modern, styled input components
 # including segmented controls (for significance level selection) and enhanced sliders.
 
+#' Create Radio Buttons Without Label Tag
+#'
+#' Wrapper around radioButtons that replaces the <label> tag with a <div>
+#' to fix accessibility validation errors. Radio button groups should not
+#' use <label for="..."> tags since the 'for' attribute would point to a
+#' container div, not an actual input element.
+#'
+#' @param inputId The input slot that will be used to access the value
+#' @param label Display label text for the radio group (or NULL for no label)
+#' @param choices List of values to select from
+#' @param selected The initially selected value
+#' @param inline If TRUE, render choices inline
+#' @param ... Additional arguments passed to radioButtons
+#'
+#' @return A Shiny tag element with div instead of label
+radioButtons_fixed <- function(inputId, label, choices, selected = NULL, inline = FALSE, ...) {
+  # Create standard radioButtons with NULL label to avoid the problematic <label> tag
+  rb <- radioButtons(inputId = inputId, label = NULL, choices = choices,
+                     selected = selected, inline = inline, ...)
+
+  # If a label was provided, add it as a styled div (not a <label> tag)
+  if (!is.null(label) && label != "") {
+    # Create a div that looks like a label but doesn't have the accessibility issue
+    label_div <- tags$div(
+      class = "control-label",
+      style = "margin-bottom: 5px;",
+      label
+    )
+
+    # Insert the label div as the first child
+    rb$children <- c(list(label_div), rb$children)
+  }
+
+  return(rb)
+}
+
+
 #' Create Segmented Control for Significance Level (Alpha)
 #'
 #' Replaces slider input with a precise button group/segmented control.
@@ -33,19 +70,13 @@ create_segmented_alpha <- function(inputId,
   container <- tags$div(
     class = "form-group segmented-control-wrapper",
 
-    # Label
-    tags$label(
-      class = "control-label",
-      `for` = inputId,
-      label
-    ),
-
     # Radio buttons with segmented control styling
+    # Label is passed to radioButtons_fixed which creates it without 'for' attribute
     tags$div(
       class = "segmented-control",
-      radioButtons(
+      radioButtons_fixed(
         inputId = inputId,
-        label = NULL,  # Label already added above
+        label = label,
         choices = choices,
         selected = selected,
         inline = TRUE
@@ -90,19 +121,13 @@ create_segmented_power <- function(inputId,
   container <- tags$div(
     class = "form-group segmented-control-wrapper",
 
-    # Label
-    tags$label(
-      class = "control-label",
-      `for` = inputId,
-      label
-    ),
-
     # Radio buttons with segmented control styling
+    # Label is passed to radioButtons_fixed which creates it without 'for' attribute
     tags$div(
       class = "segmented-control",
-      radioButtons(
+      radioButtons_fixed(
         inputId = inputId,
-        label = NULL,
+        label = label,
         choices = choices,
         selected = selected,
         inline = TRUE

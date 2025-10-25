@@ -20,47 +20,72 @@ library(ggplot2)
 # Source UI helper functions
 source("R/sidebar_ui.R")
 source("R/input_components.R")
+source("R/header_ui.R")
+source("R/help_content.R")
 
 # Define UI
 ui <- fluidPage(
   # Modern bslib theme for mobile responsiveness
   theme = bs_theme(
     version = 5,
-    bootswatch = "cosmo",
+    bootswatch = NULL,  # Remove Cosmo theme - it has grey background
     primary = "#2B5876",  # Updated to professional teal/slate
     base_font = font_google("Inter"),
-    heading_font = font_google("Inter")
+    heading_font = font_google("Inter"),
+    bg = "#FFFFFF",  # Force pure white background
+    fg = "#1D2A39"   # Dark text on white
   ),
 
   # Link custom CSS files for modern design system
   tags$head(
-    tags$link(rel = "stylesheet", type = "text/css", href = "css/design-tokens.css"),
-    tags$link(rel = "stylesheet", type = "text/css", href = "css/modern-theme.css"),
+    # Favicon
+    tags$link(rel = "icon", type = "image/svg+xml", href = "favicon.svg"),
+    # CSS - with aggressive cache busting
+    tags$link(rel = "stylesheet", type = "text/css", href = paste0("css/design-tokens.css?v=", as.integer(Sys.time()))),
+    tags$link(rel = "stylesheet", type = "text/css", href = paste0("css/modern-theme.css?v=", as.integer(Sys.time()))),
     tags$link(rel = "stylesheet", type = "text/css", href = "css/input-components.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "css/responsive.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "css/sidebar.css"),
+    # JavaScript - Bootstrap 5 fix must load before other scripts
+    tags$script(src = "js/bootstrap5-shinyBS-fix.js"),
+    tags$script(src = "js/theme-switcher.js"),
     tags$script(src = "js/sidebar-navigation.js"),
     tags$style(HTML("
-      /* Button group enhancements */
-      .btn-group-custom {
-        display: flex;
-        gap: var(--space-2);
-        margin-top: var(--space-3);
+      /* NUCLEAR OPTION: Force pure white background - override EVERYTHING */
+      :root {
+        --bg-app: #FFFFFF !important;
+        --bs-body-bg: #FFFFFF !important;
+        --bs-body-bg-rgb: 255, 255, 255 !important;
       }
-      .btn-group-custom .btn {
-        flex: 1;
+      
+      body, html, .container-fluid, .bslib-page-fill {
+        background-color: #FFFFFF !important;
+        background: #FFFFFF !important;
       }
-
-      /* Content card styling */
+      
+      /* Override any bslib-generated backgrounds */
+      [data-bs-theme], [data-bs-theme=\"light\"] {
+        --bs-body-bg: #FFFFFF !important;
+      }
+      
+      /* FIX: Hide the Shiny disconnected overlay that's causing grey screen */
+      #shiny-disconnected-overlay {
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+      }
+      
+      /* Also hide the notification area if it's causing issues */
+      .shiny-notification-error,
+      .shiny-notification-warning {
+        display: block !important; /* Keep error notifications visible */
+      }
+      
+      /* Additional inline styles */
       .content-card {
-        background: var(--bg-card);
-        border-radius: var(--border-radius-lg);
-        box-shadow: var(--shadow-md);
-        padding: var(--space-6);
-        margin-bottom: var(--space-6);
+        background: var(--bg-card) !important;
       }
 
-      /* Page title */
       .page-title {
         font-size: var(--font-size-2xl);
         font-weight: var(--font-weight-bold);
@@ -70,6 +95,33 @@ ui <- fluidPage(
         border-bottom: var(--border-subtle);
       }
     "))
+  ),
+
+  # App Header
+  create_app_header(),
+
+  # Global Help Modal
+  bsModal(
+    id = "help_modal",
+    title = tags$div(
+      class = "modal-header-title",
+      icon("book", class = "me-2"),
+      "Help & Documentation"
+    ),
+    trigger = "show_help_modal",
+    size = "large",
+    
+    # Introduction
+    tags$div(
+      class = "modal-intro",
+      p("This tool provides power and sample size calculations for epidemiological studies, with a focus on real-world evidence (RWE) applications in pharmaceutical research."),
+      p(strong("How to use:"), "Select your study design from the sidebar navigation, enter your parameters, and click Calculate. Contextual help for each analysis type is available below the results.")
+    ),
+    
+    hr(),
+    
+    # Global help content (Regulatory Guidance & Interpretation)
+    create_global_help()
   ),
 
   # App Container with Sidebar + Main Content
@@ -117,7 +169,7 @@ ui <- fluidPage(
             h2(class = "page-title", "Single Proportion: Sample Size Calculation"),
             helpText("Calculate required sample size OR minimal detectable effect size"),
             hr(),
-            radioButtons("ss_single_calc_mode",
+            radioButtons_fixed("ss_single_calc_mode",
               "Calculation Mode:",
               choices = c(
                 "Calculate Sample Size (given effect size)" = "calc_n",
@@ -156,7 +208,7 @@ ui <- fluidPage(
               create_enhanced_slider("missing_pct_ss_single", "Expected Missingness (%):",
                                     min = 5, max = 50, value = 20, step = 5, post = "%",
                                     tooltip = "Percentage of participants with missing exposure, outcome, or covariate data"),
-              radioButtons("missing_mechanism_ss_single",
+              radioButtons_fixed("missing_mechanism_ss_single",
                 "Missing Data Mechanism:",
                 choices = c(
                   "MCAR (Missing Completely At Random)" = "mcar",
@@ -194,7 +246,7 @@ ui <- fluidPage(
             create_segmented_alpha("twogrp_pow_alpha", "Significance Level (α):",
                                   selected = 0.05,
                                   tooltip = "Type I error rate (typically 0.05)"),
-            radioButtons("twogrp_pow_sided", "Test Type:",
+            radioButtons_fixed("twogrp_pow_sided", "Test Type:",
               choices = c("Two-sided" = "two.sided", "One-sided" = "greater"),
               selected = "two.sided"
             ),
@@ -224,7 +276,7 @@ ui <- fluidPage(
             create_segmented_alpha("twogrp_ss_alpha", "Significance Level (α):",
                                   selected = 0.05,
                                   tooltip = "Type I error rate (typically 0.05)"),
-            radioButtons("twogrp_ss_sided", "Test Type:",
+            radioButtons_fixed("twogrp_ss_sided", "Test Type:",
               choices = c("Two-sided" = "two.sided", "One-sided" = "greater"),
               selected = "two.sided"
             ),
@@ -235,7 +287,7 @@ ui <- fluidPage(
               create_enhanced_slider("missing_pct_twogrp_ss", "Expected Missingness (%):",
                                     min = 5, max = 50, value = 20, step = 5, post = "%",
                                     tooltip = "Percentage of participants with missing exposure, outcome, or covariate data"),
-              radioButtons("missing_mechanism_twogrp_ss",
+              radioButtons_fixed("missing_mechanism_twogrp_ss",
                 "Missing Data Mechanism:",
                 choices = c(
                   "MCAR (Missing Completely At Random)" = "mcar",
@@ -309,7 +361,7 @@ ui <- fluidPage(
               create_enhanced_slider("missing_pct_surv_ss", "Expected Missingness (%):",
                                     min = 5, max = 50, value = 20, step = 5, post = "%",
                                     tooltip = "Percentage of participants with missing exposure, outcome, or covariate data"),
-              radioButtons("missing_mechanism_surv_ss",
+              radioButtons_fixed("missing_mechanism_surv_ss",
                 "Missing Data Mechanism:",
                 choices = c(
                   "MCAR (Missing Completely At Random)" = "mcar",
@@ -349,7 +401,7 @@ ui <- fluidPage(
             create_segmented_alpha("match_alpha", "Significance Level (α):",
                                   selected = 0.05,
                                   tooltip = "Type I error rate (typically 0.05)"),
-            radioButtons("match_sided", "Test Type:",
+            radioButtons_fixed("match_sided", "Test Type:",
               choices = c("Two-sided" = "two.sided", "One-sided" = "one.sided"),
               selected = "two.sided"
             ),
@@ -361,7 +413,7 @@ ui <- fluidPage(
               create_enhanced_slider("missing_pct_match", "Expected Missingness (%):",
                                     min = 5, max = 50, value = 20, step = 5, post = "%",
                                     tooltip = "Percentage of participants with missing exposure, outcome, or covariate data"),
-              radioButtons("missing_mechanism_match",
+              radioButtons_fixed("missing_mechanism_match",
                 "Missing Data Mechanism:",
                 choices = c(
                   "MCAR (Missing Completely At Random)" = "mcar",
@@ -397,7 +449,7 @@ ui <- fluidPage(
             create_segmented_alpha("cont_pow_alpha", "Significance Level (α):",
                                   selected = 0.05,
                                   tooltip = "Type I error rate (typically 0.05)"),
-            radioButtons("cont_pow_sided", "Test Type:",
+            radioButtons_fixed("cont_pow_sided", "Test Type:",
               choices = c("Two-sided" = "two.sided", "One-sided (greater)" = "greater", "One-sided (less)" = "less"),
               selected = "two.sided"
             ),
@@ -425,7 +477,7 @@ ui <- fluidPage(
             create_segmented_alpha("cont_ss_alpha", "Significance Level (α):",
                                   selected = 0.05,
                                   tooltip = "Type I error rate (typically 0.05)"),
-            radioButtons("cont_ss_sided", "Test Type:",
+            radioButtons_fixed("cont_ss_sided", "Test Type:",
               choices = c("Two-sided" = "two.sided", "One-sided (greater)" = "greater", "One-sided (less)" = "less"),
               selected = "two.sided"
             ),
@@ -436,7 +488,7 @@ ui <- fluidPage(
               create_enhanced_slider("missing_pct_cont_ss", "Expected Missingness (%):",
                                     min = 5, max = 50, value = 20, step = 5, post = "%",
                                     tooltip = "Percentage of participants with missing exposure, outcome, or covariate data"),
-              radioButtons("missing_mechanism_cont_ss",
+              radioButtons_fixed("missing_mechanism_cont_ss",
                 "Missing Data Mechanism:",
                 choices = c(
                   "MCAR (Missing Completely At Random)" = "mcar",
@@ -485,7 +537,7 @@ ui <- fluidPage(
               create_enhanced_slider("missing_pct_noninf", "Expected Missingness (%):",
                                     min = 5, max = 50, value = 20, step = 5, post = "%",
                                     tooltip = "Percentage of participants with missing exposure, outcome, or covariate data"),
-              radioButtons("missing_mechanism_noninf",
+              radioButtons_fixed("missing_mechanism_noninf",
                 "Missing Data Mechanism:",
                 choices = c(
                   "MCAR (Missing Completely At Random)" = "mcar",
@@ -512,120 +564,59 @@ ui <- fluidPage(
         # CALCULATE BUTTON (always visible)
         # ============================================================
 
-        hr(),
         actionButton("go", "Calculate", icon = icon("calculator"), class = "btn-primary btn-lg w-100"),
-        hr(),
 
         # ============================================================
-        # HELP SECTIONS & RESULTS (always visible)
+        # CONTEXTUAL HELP & RESULTS
         # ============================================================
 
-        h1("About this tool"),
-        p("This tool provides power and sample size calculations for epidemiological studies, with a focus on real-world evidence (RWE) applications in pharmaceutical research. Use the sidebar navigation to select your study design and fill in the parameters."),
-
-        # Collapsible help sections using accordion
-        accordion(
-          id = "help_accordion",
-          multiple = TRUE,
-          accordion_panel(
-            title = "Single Proportion Analysis (Rule of Three)",
-            icon = icon("info-circle"),
-            p("The 'Rule of Three' states that if a certain event did not occur in a sample with n participants, the interval from 0 to 3/n is a 95% confidence interval for the rate of occurrences in the population. When n is greater than 30, this is a good approximation."),
-            p(strong("Example:"), "If a drug is tested on 1,500 participants and no adverse event is recorded, we can conclude with 95% confidence that fewer than 1 person in 500 (or 3/1500 = 0.2%) will experience an adverse event."),
-            p(strong("Use cases:"), "Post-marketing surveillance, rare adverse event detection, safety studies."),
-            p(a("Learn more in Hanley & Lippman-Hand (1983)", href = "Hanley-1983-1743.pdf", target = "_blank"))
-          ),
-          accordion_panel(
-            title = "Two-Group Comparisons",
-            icon = icon("users"),
-            p("For comparative effectiveness research and observational studies, use the Two-Group tabs to compare event rates between exposed/unexposed groups or treatment/control groups."),
-            p(strong("Study designs:"), "Cohort studies (prospective or retrospective), comparative effectiveness studies, RCTs."),
-            p(strong("Effect measures:"), "The tool calculates Risk Difference, Relative Risk (RR), and Odds Ratio (OR) to help interpret clinical significance."),
-            p(strong("Example:"), "Comparing hospitalization rates between patients prescribed Drug A vs. Drug B using claims data.")
-          ),
-          accordion_panel(
-            title = "Survival Analysis (Cox Regression)",
-            icon = icon("chart-line"),
-            p("Survival analysis is used for time-to-event outcomes, which are extremely common in pharmaceutical RWE studies (e.g., time to hospitalization, time to disease progression, time to death)."),
-            p(strong("Method:"), "Uses the Schoenfeld (1983) method for Cox proportional hazards regression, implemented in the powerSurvEpi R package."),
-            p(strong("Key inputs:"), "Hazard Ratio (HR), proportion exposed, overall event rate during follow-up."),
-            p(strong("Example:"), "Estimating sample size to detect a 30% reduction in risk of cardiovascular events (HR = 0.7) in a cohort study.")
-          ),
-          accordion_panel(
-            title = "Matched Case-Control Studies",
-            icon = icon("link"),
-            p("The Matched Case-Control tab provides sample size calculations for studies using matching strategies, such as propensity score matching or traditional case-control matching."),
-            p(strong("When to use:"), "When cases and controls are matched on confounding variables (age, sex, comorbidities, etc.)."),
-            p(strong("Matching ratios:"), "Supports 1:1, 2:1, 3:1, or higher matching ratios (controls per case)."),
-            p(strong("Example:"), "Matched case-control study examining association between statin use and liver injury, matching on age, sex, and diabetes status.")
-          ),
-          accordion_panel(
-            title = "Continuous Outcomes",
-            icon = icon("calculator"),
-            p("The Continuous Outcomes tabs handle power and sample size calculations for comparing continuous endpoints between two groups using two-sample t-tests."),
-            p(strong("Use cases:"), "Comparisons involving continuous measures such as BMI, blood pressure, lab values (HbA1c, cholesterol), quality of life scores, cognitive function tests, and biomarker levels."),
-            p(strong("Effect size (Cohen's d):"), "Standardized mean difference. Conventionally: Small = 0.2, Medium = 0.5, Large = 0.8. Calculate as (mean1 - mean2) / pooled_SD."),
-            p(strong("Example:"), "Comparing mean HbA1c reduction between two diabetes medications in an RWE study using EHR data.")
-          ),
-          accordion_panel(
-            title = "Non-Inferiority Testing",
-            icon = icon("balance-scale"),
-            p("Non-inferiority trials aim to demonstrate that a new treatment is 'not worse' than a reference treatment by more than a pre-specified margin. This is common in generic drug approval, biosimilar studies, and situations where superiority is not expected or ethical."),
-            p(strong("Non-inferiority margin:"), "The maximum clinically acceptable difference in outcomes. Should be based on clinical judgment and regulatory guidance. Typically smaller than expected treatment effect of reference."),
-            p(strong("Regulatory context:"), "FDA/EMA require pre-specification of non-inferiority margin with clinical justification. One-sided α=0.025 (equivalent to two-sided α=0.05) is standard."),
-            p(strong("Example:"), "Demonstrating a generic formulation has adverse event rates no worse than branded drug +5 percentage points.")
-          ),
-          accordion_panel(
-            title = "Regulatory Guidance & References",
-            icon = icon("book"),
-            h5("FDA/EMA Guidance on RWE"),
-            tags$ul(
-              tags$li(a("FDA - Real-World Evidence Framework",
-                href = "https://www.fda.gov/science-research/science-and-research-special-topics/real-world-evidence",
-                target = "_blank"
-              )),
-              tags$li(a("FDA - Use of Real-World Evidence (2023)",
-                href = "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/real-world-data-assessing-electronic-health-records-and-medical-claims-data-support-regulatory",
-                target = "_blank"
-              )),
-              tags$li(a("EMA - Real World Evidence Framework",
-                href = "https://www.ema.europa.eu/en/about-us/how-we-work/big-data/real-world-evidence",
-                target = "_blank"
-              ))
-            ),
-            h5("Key Statistical References"),
-            tags$ul(
-              tags$li("Hanley JA, Lippman-Hand A. If nothing goes wrong, is everything all right? Interpreting zero numerators. JAMA. 1983;249(13):1743-1745."),
-              tags$li("Schoenfeld DA. Sample-size formula for the proportional-hazards regression model. Biometrics. 1983;39(2):499-503."),
-              tags$li("Cohen J. Statistical Power Analysis for the Behavioral Sciences. 2nd ed. Routledge; 1988."),
-              tags$li("Lachin JM. Introduction to sample size determination and power analysis for clinical trials. Control Clin Trials. 1981;2(2):93-113.")
-            )
-          ),
-          accordion_panel(
-            title = "Interpretation Guide",
-            icon = icon("question-circle"),
-            h5("Understanding Power"),
-            p("Power is the probability of detecting a true effect when it exists. Conventionally:"),
-            tags$ul(
-              tags$li(strong("80% power:"), "Standard for most studies"),
-              tags$li(strong("90% power:"), "Preferred for pivotal or confirmatory studies"),
-              tags$li(strong("<70% power:"), "Generally considered inadequate")
-            ),
-            h5("Understanding Significance Level (α)"),
-            tags$ul(
-              tags$li(strong("α = 0.05:"), "Standard for most studies (5% false positive rate)"),
-              tags$li(strong("α = 0.01:"), "More conservative, used for multiple testing or critical decisions"),
-              tags$li(strong("α = 0.10:"), "Sometimes used in exploratory studies")
-            ),
-            h5("Effect Sizes"),
-            tags$ul(
-              tags$li(strong("Hazard Ratio (HR):"), "HR < 1 = protective, HR > 1 = increased risk, HR = 1 = no effect"),
-              tags$li(strong("Odds Ratio (OR):"), "Similar interpretation to HR for rare outcomes"),
-              tags$li(strong("Relative Risk (RR):"), "More intuitive than OR; directly interpretable as relative increase/decrease in risk")
-            )
+        # Contextual help for Single Proportion
+        conditionalPanel(
+          condition = "input.sidebar_page == 'power_single' || input.sidebar_page == 'ss_single'",
+          div(class = "content-card help-section",
+            create_contextual_help("single_proportion")
           )
         ),
-        hr(),
+
+        # Contextual help for Two-Group Comparisons
+        conditionalPanel(
+          condition = "input.sidebar_page == 'power_twogrp' || input.sidebar_page == 'ss_twogrp'",
+          div(class = "content-card help-section",
+            create_contextual_help("two_group")
+          )
+        ),
+
+        # Contextual help for Survival Analysis
+        conditionalPanel(
+          condition = "input.sidebar_page == 'power_survival' || input.sidebar_page == 'ss_survival'",
+          div(class = "content-card help-section",
+            create_contextual_help("survival")
+          )
+        ),
+
+        # Contextual help for Matched Case-Control
+        conditionalPanel(
+          condition = "input.sidebar_page == 'ss_matched'",
+          div(class = "content-card help-section",
+            create_contextual_help("matched")
+          )
+        ),
+
+        # Contextual help for Continuous Outcomes
+        conditionalPanel(
+          condition = "input.sidebar_page == 'power_cont' || input.sidebar_page == 'ss_cont'",
+          div(class = "content-card help-section",
+            create_contextual_help("continuous")
+          )
+        ),
+
+        # Contextual help for Non-Inferiority
+        conditionalPanel(
+          condition = "input.sidebar_page == 'ss_noninf'",
+          div(class = "content-card help-section",
+            create_contextual_help("noninferiority")
+          )
+        ),
 
         # Live preview (debounced)
         uiOutput("live_preview"),
