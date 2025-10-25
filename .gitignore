@@ -18,3 +18,8 @@ Dockerfile~
 # Claude Code configuration (user-specific)
 .claude/
 CLAUDE.md
+
+# Vignette build artifacts
+vignettes/*.html
+vignettes/.build.timestamp
+inst/doc/
