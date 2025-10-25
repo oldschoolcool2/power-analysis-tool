@@ -337,20 +337,25 @@ ui <- fluidPage(
                                   tooltip = "Probability of detecting the effect if it exists"),
             conditionalPanel(
               condition = "input.twogrp_ss_calc_mode == 'calc_n'",
-              numericInput("twogrp_ss_p1", "Event Rate Group 1 (%):", 10, min = 0, max = 100, step = 0.1),
-              numericInput("twogrp_ss_p2", "Event Rate Group 2 (%):", 5, min = 0, max = 100, step = 0.1),
-              bsTooltip("twogrp_ss_p1", "Expected event rate in exposed/treatment group (as percentage)", "right"),
-              bsTooltip("twogrp_ss_p2", "Expected event rate in unexposed/control group (as percentage)", "right")
+              create_numeric_input_with_tooltip("twogrp_ss_p1", "Event Rate Group 1 (%):", 10,
+                                               min = 0, max = 100, step = 0.1,
+                                               tooltip = "Expected event rate in exposed/treatment group (as percentage)"),
+              create_numeric_input_with_tooltip("twogrp_ss_p2", "Event Rate Group 2 (%):", 5,
+                                               min = 0, max = 100, step = 0.1,
+                                               tooltip = "Expected event rate in unexposed/control group (as percentage)")
             ),
             conditionalPanel(
               condition = "input.twogrp_ss_calc_mode == 'calc_effect'",
-              numericInput("twogrp_ss_n1_fixed", "Available Sample Size (Group 1):", 500, min = 10, step = 1),
-              bsTooltip("twogrp_ss_n1_fixed", "Fixed sample size available for Group 1", "right"),
-              numericInput("twogrp_ss_p2_baseline", "Baseline Event Rate Group 2 (%):", 10, min = 0, max = 100, step = 0.1),
-              bsTooltip("twogrp_ss_p2_baseline", "Expected event rate in control/unexposed group (as percentage)", "right")
+              create_numeric_input_with_tooltip("twogrp_ss_n1_fixed", "Available Sample Size (Group 1):", 500,
+                                               min = 10, step = 1,
+                                               tooltip = "Fixed sample size available for Group 1"),
+              create_numeric_input_with_tooltip("twogrp_ss_p2_baseline", "Baseline Event Rate Group 2 (%):", 10,
+                                               min = 0, max = 100, step = 0.1,
+                                               tooltip = "Expected event rate in control/unexposed group (as percentage)")
             ),
-            numericInput("twogrp_ss_ratio", "Allocation Ratio (n2/n1):", 1, min = 0.1, max = 10, step = 0.1),
-            bsTooltip("twogrp_ss_ratio", "Ratio of Group 2 to Group 1 sample size. 1 = equal groups, 2 = twice as many in Group 2", "right"),
+            create_numeric_input_with_tooltip("twogrp_ss_ratio", "Allocation Ratio (n2/n1):", 1,
+                                             min = 0.1, max = 10, step = 0.1,
+                                             tooltip = "Ratio of Group 2 to Group 1 sample size. 1 = equal groups, 2 = twice as many in Group 2"),
             create_segmented_alpha("twogrp_ss_alpha", "Significance Level (α):",
                                   selected = 0.05,
                                   tooltip = "Type I error rate (typically 0.05)"),
@@ -359,46 +364,7 @@ ui <- fluidPage(
               selected = "two.sided"
             ),
             hr(),
-            checkboxInput("adjust_missing_twogrp_ss", "Adjust for Missing Data", value = FALSE),
-            conditionalPanel(
-              condition = "input.adjust_missing_twogrp_ss",
-              create_enhanced_slider("missing_pct_twogrp_ss", "Expected Missingness (%):",
-                                    min = 5, max = 50, value = 20, step = 5, post = "%",
-                                    tooltip = "Percentage of participants with missing exposure, outcome, or covariate data"),
-              radioButtons_fixed("missing_mechanism_twogrp_ss",
-                "Missing Data Mechanism:",
-                choices = c(
-                  "MCAR (Missing Completely At Random)" = "mcar",
-                  "MAR (Missing At Random)" = "mar",
-                  "MNAR (Missing Not At Random)" = "mnar"
-                ),
-                selected = "mar"
-              ),
-              bsTooltip("missing_mechanism_twogrp_ss",
-                "MCAR: minimal bias. MAR: controllable with observed data. MNAR: potential substantial bias",
-                "right"
-              ),
-              radioButtons_fixed("missing_analysis_twogrp_ss",
-                "Planned Analysis Approach:",
-                choices = c(
-                  "Complete Case Analysis" = "complete_case",
-                  "Multiple Imputation (MI)" = "multiple_imputation"
-                ),
-                selected = "complete_case"
-              ),
-              bsTooltip("missing_analysis_twogrp_ss",
-                "Complete case: only use observations with no missing data (more conservative). MI: impute missing values (more efficient)",
-                "right"
-              ),
-              conditionalPanel(
-                condition = "input.missing_analysis_twogrp_ss == 'multiple_imputation'",
-                numericInput("mi_imputations_twogrp_ss", "Number of Imputations (m):", 5, min = 3, max = 100, step = 1),
-                bsTooltip("mi_imputations_twogrp_ss", "Typical values: 5-20. More imputations increase precision but require more computation", "right"),
-                create_enhanced_slider("mi_r_squared_twogrp_ss", "Expected Imputation Model R²:",
-                                      min = 0.1, max = 0.9, value = 0.5, step = 0.1,
-                                      tooltip = "Predictive power of imputation model (0.3=weak, 0.5=moderate, 0.7=strong). Higher R² means better imputation quality and less inflation needed")
-              )
-            ),
+            missing_data_ui("twogrp_ss-missing_data"),
             hr(),
             div(class = "btn-group-custom",
               actionButton("example_twogrp_ss", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
@@ -987,6 +953,7 @@ server <- function(input, output, session) {
 
   # Initialize missing data modules for all tabs that use them
   missing_data_ss_single <- missing_data_server("ss_single-missing_data")
+  missing_data_twogrp_ss <- missing_data_server("twogrp_ss-missing_data")
 
   # ============================================================
   # Sidebar Navigation Initialization
@@ -1725,29 +1692,22 @@ server <- function(input, output, session) {
           n_total_base <- ceiling(n1_base + n2_base)
 
           # Apply missing data adjustment if enabled (Tier 1 Enhancement)
-          if (input$adjust_missing_twogrp_ss) {
+          md_vals <- missing_data_twogrp_ss()
+          if (md_vals$adjust_missing) {
             missing_adj <- calc_missing_data_inflation(
               n_total_base,
-              input$missing_pct_twogrp_ss,
-              input$missing_mechanism_twogrp_ss,
-              input$missing_analysis_twogrp_ss,
-              ifelse(input$missing_analysis_twogrp_ss == "multiple_imputation", input$mi_imputations_twogrp_ss, 5),
-              ifelse(input$missing_analysis_twogrp_ss == "multiple_imputation", input$mi_r_squared_twogrp_ss, 0.5)
+              md_vals$missing_pct,
+              md_vals$missing_mechanism,
+              md_vals$missing_analysis,
+              md_vals$mi_imputations,
+              md_vals$mi_r_squared
             )
             n_total_final <- missing_adj$n_inflated
             # Maintain allocation ratio after adjustment
             n1_final <- ceiling(n_total_final / (1 + input$twogrp_ss_ratio))
             n2_final <- n_total_final - n1_final
 
-            missing_data_text <- HTML(paste0(
-              "<p style='background-color: #fff3cd; border-left: 4px solid #f39c12; padding: 10px; margin-top: 15px;'>",
-              "<strong>Missing Data Adjustment (Tier 1 Enhancement):</strong> ",
-              missing_adj$interpretation,
-              "<br><strong>Total sample size before adjustment:</strong> ", n_total_base,
-              "<br><strong>Inflation factor:</strong> ", missing_adj$inflation_factor,
-              "<br><strong>Additional participants needed:</strong> ", missing_adj$n_increase,
-              "</p>"
-            ))
+            missing_data_text <- format_missing_data_text(missing_adj, n_total_base)
           } else {
             n1_final <- ceiling(n1_base)
             n2_final <- ceiling(n2_base)
@@ -1758,6 +1718,10 @@ server <- function(input, output, session) {
           text0 <- hr()
           text1 <- h1("Results of this analysis")
           text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+
+          # Calculate effect measures
+          effect_measures <- calc_effect_measures(p1, p2)
+
           text3 <- p(paste0(
             "To detect a difference in event rates from ",
             format(p2 * 100, digits = 2, nsmall = 1), "% in Group 2 (control) to ",
@@ -1767,15 +1731,18 @@ server <- function(input, output, session) {
             format(n1_final, digits = 0, nsmall = 0), ", Group 2: n2 = ",
             format(n2_final, digits = 0, nsmall = 0), " (total N = ",
             format(n_total_final, digits = 0, nsmall = 0), ").",
-            if (input$adjust_missing_twogrp_ss) {
-              paste0(" <strong>After adjusting for ", input$missing_pct_twogrp_ss,
+            if (md_vals$adjust_missing) {
+              paste0(" <strong>After adjusting for ", md_vals$missing_pct,
                      "% missing data, the final total sample size is ",
                      format(n_total_final, digits = 0), " participants (n1=", n1_final, ", n2=", n2_final, ").</strong>")
             } else {
               ""
             }
           ))
-          HTML(paste0(text0, text1, text2, text3, missing_data_text))
+
+          effect_text <- format_effect_measures(effect_measures, p1 * 100, p2 * 100)
+
+          HTML(paste0(text0, text1, text2, text3, effect_text, missing_data_text))
 
         } else {
           # Calculate Effect Size (Feature 2: Tier 1 Enhancement)
@@ -1784,12 +1751,13 @@ server <- function(input, output, session) {
           p2 <- input$twogrp_ss_p2_baseline / 100
 
           # Account for missing data to get effective sample sizes
-          if (input$adjust_missing_twogrp_ss) {
-            p_missing <- input$missing_pct_twogrp_ss / 100
+          md_vals <- missing_data_twogrp_ss()
+          if (md_vals$adjust_missing) {
+            p_missing <- md_vals$missing_pct / 100
             n1_effective <- ceiling(n1_nominal * (1 - p_missing))
             n2_effective <- ceiling(n2_nominal * (1 - p_missing))
-            missing_note <- paste0(" After accounting for ", input$missing_pct_twogrp_ss,
-              "% missing data (", tolower(substr(input$missing_mechanism_twogrp_ss, 1, 4)),
+            missing_note <- paste0(" After accounting for ", md_vals$missing_pct,
+              "% missing data (", tolower(substr(md_vals$missing_mechanism, 1, 4)),
               "), effective sample sizes are n1=", n1_effective, ", n2=", n2_effective, ".")
           } else {
             n1_effective <- n1_nominal
@@ -1809,11 +1777,9 @@ server <- function(input, output, session) {
           # Therefore: p1 = sin²((h + 2*asin(sqrt(p2)))/2)
           p1_detectable <- sin((h_min + 2 * asin(sqrt(p2))) / 2)^2
 
-          # Calculate effect sizes
-          risk_diff <- (p1_detectable - p2) * 100
-          relative_risk <- ifelse(p2 > 0, p1_detectable / p2, NA)
-          odds_ratio <- ifelse(p2 < 1 && p1_detectable < 1,
-            (p1_detectable / (1 - p1_detectable)) / (p2 / (1 - p2)), NA)
+          # Calculate effect measures
+          effect_measures <- calc_effect_measures(p1_detectable, p2)
+          risk_diff <- effect_measures$RD * 100
 
           text0 <- hr()
           text1 <- h1("Results of this analysis")
@@ -1831,17 +1797,9 @@ server <- function(input, output, session) {
             format(abs(risk_diff), digits = 2), " percentage points)."
           ))
 
-          effect_size_box <- HTML(paste0(
-            "<p style='background-color: #d4edda; border-left: 4px solid #28a745; padding: 10px; margin-top: 15px;'>",
-            "<strong>Minimal Detectable Effect (Tier 1 Enhancement):</strong><br>",
-            "<strong>Group 1 Event Rate:</strong> ", format(p1_detectable * 100, digits = 2), "%<br>",
-            "<strong>Group 2 Event Rate:</strong> ", format(p2 * 100, digits = 2), "%<br>",
-            "<strong>Risk Difference:</strong> ", format(abs(risk_diff), digits = 2), " percentage points<br>",
-            "<strong>Relative Risk:</strong> ", ifelse(is.na(relative_risk), "N/A", format(relative_risk, digits = 3)), "<br>",
-            "<strong>Odds Ratio:</strong> ", ifelse(is.na(odds_ratio), "N/A", format(odds_ratio, digits = 3)), "<br>",
-            "<strong>Cohen's h:</strong> ", format(h_min, digits = 3),
-            "</p>"
-          ))
+          effect_size_box <- format_minimal_detectable_effect(
+            p1_detectable, p2, effect_measures, h_min
+          )
 
           HTML(paste0(text0, text1, text2, text3, effect_size_box))
         }

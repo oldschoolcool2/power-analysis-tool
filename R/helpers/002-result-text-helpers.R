@@ -279,3 +279,29 @@ format_cohens_d <- function(d) {
     ))
   )
 }
+
+#' Format Minimal Detectable Effect
+#'
+#' Creates a formatted box showing minimal detectable effect measures
+#'
+#' @param p1 Proportion in group 1
+#' @param p2 Proportion in group 2
+#' @param effect_measures List with RR, OR, RD
+#' @param h Cohen's h value
+#'
+#' @return HTML formatted text
+format_minimal_detectable_effect <- function(p1, p2, effect_measures, h) {
+  risk_diff <- effect_measures$RD * 100
+
+  HTML(paste0(
+    "<p style='background-color: #d4edda; border-left: 4px solid #28a745; padding: 10px; margin-top: 15px;'>",
+    "<strong>Minimal Detectable Effect (Tier 1 Enhancement):</strong><br>",
+    "<strong>Group 1 Event Rate:</strong> ", format(p1 * 100, digits = 2), "%<br>",
+    "<strong>Group 2 Event Rate:</strong> ", format(p2 * 100, digits = 2), "%<br>",
+    "<strong>Risk Difference:</strong> ", format(abs(risk_diff), digits = 2), " percentage points<br>",
+    "<strong>Relative Risk:</strong> ", ifelse(is.na(effect_measures$RR), "N/A", format(effect_measures$RR, digits = 3)), "<br>",
+    "<strong>Odds Ratio:</strong> ", ifelse(is.na(effect_measures$OR), "N/A", format(effect_measures$OR, digits = 3)), "<br>",
+    "<strong>Cohen's h:</strong> ", format(h, digits = 3),
+    "</p>"
+  ))
+}
