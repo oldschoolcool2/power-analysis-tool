@@ -611,67 +611,33 @@ ui <- fluidPage(
             create_segmented_power("noninf_power", "Desired Power:",
                                   selected = 80,
                                   tooltip = "Probability of demonstrating non-inferiority if true"),
-            numericInput("noninf_p1", "Event Rate Test Group (%):", 10, min = 0, max = 100, step = 0.1),
-            numericInput("noninf_p2", "Event Rate Reference Group (%):", 10, min = 0, max = 100, step = 0.1),
-            bsTooltip("noninf_p1", "Expected event rate in test/generic group (as percentage)", "right"),
-            bsTooltip("noninf_p2", "Expected event rate in reference/branded group (as percentage)", "right"),
+            create_numeric_input_with_tooltip("noninf_p1", "Event Rate Test Group (%):", 10,
+              min = 0, max = 100, step = 0.1,
+              tooltip = "Expected event rate in test/generic group (as percentage)"),
+            create_numeric_input_with_tooltip("noninf_p2", "Event Rate Reference Group (%):", 10,
+              min = 0, max = 100, step = 0.1,
+              tooltip = "Expected event rate in reference/branded group (as percentage)"),
             conditionalPanel(
               condition = "input.noninf_calc_mode == 'calc_n'",
-              numericInput("noninf_margin", "Non-Inferiority Margin (%):", 5, min = 0.1, max = 50, step = 0.5),
-              bsTooltip("noninf_margin", "Maximum clinically acceptable difference (percentage points). Test is non-inferior if difference < margin.", "right")
+              create_numeric_input_with_tooltip("noninf_margin", "Non-Inferiority Margin (%):", 5,
+                min = 0.1, max = 50, step = 0.5,
+                tooltip = "Maximum clinically acceptable difference (percentage points). Test is non-inferior if difference < margin.")
             ),
             conditionalPanel(
               condition = "input.noninf_calc_mode == 'calc_effect'",
-              numericInput("noninf_n1_fixed", "Available Sample Size (Test Group):", 500, min = 10, step = 10),
-              bsTooltip("noninf_n1_fixed", "Fixed sample size available for test/generic group", "right")
+              create_numeric_input_with_tooltip("noninf_n1_fixed", "Available Sample Size (Test Group):", 500,
+                min = 10, step = 10,
+                tooltip = "Fixed sample size available for test/generic group")
             ),
-            numericInput("noninf_ratio", "Allocation Ratio (n2/n1):", 1, min = 0.1, max = 10, step = 0.1),
-            bsTooltip("noninf_ratio", "Ratio of Reference to Test group size. 1 = equal groups", "right"),
+            create_numeric_input_with_tooltip("noninf_ratio", "Allocation Ratio (n2/n1):", 1,
+              min = 0.1, max = 10, step = 0.1,
+              tooltip = "Ratio of Reference to Test group size. 1 = equal groups"),
             create_segmented_alpha("noninf_alpha", "Significance Level (α):",
                                   choices = c("0.01" = 0.01, "0.025" = 0.025, "0.05" = 0.05, "0.10" = 0.10),
                                   selected = 0.025,
                                   tooltip = "Type I error rate (typically 0.025 for one-sided non-inferiority test)"),
             hr(),
-            checkboxInput("adjust_missing_noninf", "Adjust for Missing Data", value = FALSE),
-            conditionalPanel(
-              condition = "input.adjust_missing_noninf",
-              create_enhanced_slider("missing_pct_noninf", "Expected Missingness (%):",
-                                    min = 5, max = 50, value = 20, step = 5, post = "%",
-                                    tooltip = "Percentage of participants with missing exposure, outcome, or covariate data"),
-              radioButtons_fixed("missing_mechanism_noninf",
-                "Missing Data Mechanism:",
-                choices = c(
-                  "MCAR (Missing Completely At Random)" = "mcar",
-                  "MAR (Missing At Random)" = "mar",
-                  "MNAR (Missing Not At Random)" = "mnar"
-                ),
-                selected = "mar"
-              ),
-              bsTooltip("missing_mechanism_noninf",
-                "MCAR: minimal bias. MAR: controllable with observed data. MNAR: potential substantial bias",
-                "right"
-              ),
-              radioButtons_fixed("missing_analysis_noninf",
-                "Planned Analysis Approach:",
-                choices = c(
-                  "Complete Case Analysis" = "complete_case",
-                  "Multiple Imputation (MI)" = "multiple_imputation"
-                ),
-                selected = "complete_case"
-              ),
-              bsTooltip("missing_analysis_noninf",
-                "Complete case: only use observations with no missing data (more conservative). MI: impute missing values (more efficient)",
-                "right"
-              ),
-              conditionalPanel(
-                condition = "input.missing_analysis_noninf == 'multiple_imputation'",
-                numericInput("mi_imputations_noninf", "Number of Imputations (m):", 5, min = 3, max = 100, step = 1),
-                bsTooltip("mi_imputations_noninf", "Typical values: 5-20. More imputations increase precision but require more computation", "right"),
-                create_enhanced_slider("mi_r_squared_noninf", "Expected Imputation Model R²:",
-                                      min = 0.1, max = 0.9, value = 0.5, step = 0.1,
-                                      tooltip = "Predictive power of imputation model (0.3=weak, 0.5=moderate, 0.7=strong). Higher R² means better imputation quality and less inflation needed")
-              )
-            ),
+            missing_data_ui("noninf-missing_data"),
             hr(),
             div(class = "btn-group-custom",
               actionButton("example_noninf", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
@@ -850,6 +816,7 @@ server <- function(input, output, session) {
   missing_data_surv_ss <- missing_data_server("surv_ss-missing_data")
   missing_data_match <- missing_data_server("match-missing_data")
   missing_data_cont_ss <- missing_data_server("cont_ss-missing_data")
+  missing_data_noninf <- missing_data_server("noninf-missing_data")
 
   # ============================================================
   # Sidebar Navigation Initialization
@@ -2225,30 +2192,27 @@ server <- function(input, output, session) {
           }
           n_total_base <- ceiling(n1_base + n2_base)
 
-          # Apply missing data adjustment if enabled (Tier 1 Enhancement)
-          if (input$adjust_missing_noninf) {
+          # Apply missing data adjustment if enabled
+          md_vals <- missing_data_noninf()
+          if (md_vals$adjust_missing) {
             missing_adj <- calc_missing_data_inflation(
               n_total_base,
-              input$missing_pct_noninf,
-              input$missing_mechanism_noninf,
-              input$missing_analysis_noninf,
-              ifelse(input$missing_analysis_noninf == "multiple_imputation", input$mi_imputations_noninf, 5),
-              ifelse(input$missing_analysis_noninf == "multiple_imputation", input$mi_r_squared_noninf, 0.5)
+              md_vals$missing_pct,
+              md_vals$missing_mechanism,
+              md_vals$missing_analysis,
+              md_vals$mi_imputations,
+              md_vals$mi_r_squared
             )
             n_total_final <- missing_adj$n_inflated
             # Maintain allocation ratio
             n1_final <- ceiling(n_total_final / (1 + ratio))
             n2_final <- n_total_final - n1_final
 
-            missing_data_text <- HTML(paste0(
-              "<p style='background-color: #fff3cd; border-left: 4px solid #f39c12; padding: 10px; margin-top: 15px;'>",
-              "<strong>Missing Data Adjustment (Tier 1 Enhancement):</strong> ",
-              missing_adj$interpretation,
-              "<br><strong>Total sample size before adjustment:</strong> ", n_total_base,
-              "<br><strong>Inflation factor:</strong> ", missing_adj$inflation_factor,
-              "<br><strong>Additional participants needed:</strong> ", missing_adj$n_increase,
-              "</p>"
-            ))
+            missing_data_text <- format_missing_data_text(
+              n_total_base,
+              missing_adj$inflation_factor,
+              missing_adj$n_increase
+            )
           } else {
             n1_final <- ceiling(n1_base)
             n2_final <- ceiling(n2_base)
@@ -2261,16 +2225,16 @@ server <- function(input, output, session) {
           text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
           text3 <- p(paste0(
             "For a non-inferiority trial comparing a test treatment (expected event rate: ",
-            format(p1 * 100, digits = 2, nsmall = 1), "%) to a reference treatment (expected event rate: ",
-            format(p2 * 100, digits = 2, nsmall = 1), "%) with a non-inferiority margin of ",
-            format(margin * 100, digits = 2, nsmall = 1), " percentage points, to demonstrate non-inferiority with ",
-            format(power * 100, digits = 0, nsmall = 0), "% power at α = ", input$noninf_alpha,
+            format_numeric(p1 * 100, 2, 1), "%) to a reference treatment (expected event rate: ",
+            format_numeric(p2 * 100, 2, 1), "%) with a non-inferiority margin of ",
+            format_numeric(margin * 100, 2, 1), " percentage points, to demonstrate non-inferiority with ",
+            format_numeric(power * 100, 0, 0), "% power at α = ", input$noninf_alpha,
             " (one-sided test), the required sample sizes are: Test Group: n1 = ",
-            format(n1_final, digits = 0, nsmall = 0), ", Reference Group: n2 = ",
-            format(n2_final, digits = 0, nsmall = 0), " (total N = ",
-            format(n_total_final, digits = 0, nsmall = 0), ").",
-            if (input$adjust_missing_noninf) {
-              paste0(" <strong>After adjusting for ", input$missing_pct_noninf,
+            format_numeric(n1_final, 0, 0), ", Reference Group: n2 = ",
+            format_numeric(n2_final, 0, 0), " (total N = ",
+            format_numeric(n_total_final, 0, 0), ").",
+            if (md_vals$adjust_missing) {
+              paste0(" <strong>After adjusting for ", md_vals$missing_pct,
                      "% missing data.</strong>")
             } else {
               ""
@@ -2285,13 +2249,15 @@ server <- function(input, output, session) {
           n2_nominal <- n1_nominal * ratio
 
           # Account for missing data to get effective sample sizes
-          if (input$adjust_missing_noninf) {
-            p_missing <- input$missing_pct_noninf / 100
+          md_vals <- missing_data_noninf()
+          if (md_vals$adjust_missing) {
+            p_missing <- md_vals$missing_pct / 100
             n1_effective <- ceiling(n1_nominal * (1 - p_missing))
             n2_effective <- ceiling(n2_nominal * (1 - p_missing))
-            missing_note <- paste0(" After accounting for ", input$missing_pct_noninf,
-              "% missing data (", tolower(substr(input$missing_mechanism_noninf, 1, 4)),
-              "), effective sample sizes are n1=", n1_effective, ", n2=", n2_effective, ".")
+            missing_note <- paste0(" After accounting for ", md_vals$missing_pct,
+              "% missing data (", tolower(substr(md_vals$missing_mechanism, 1, 4)),
+              "), effective sample sizes are n1=", format_numeric(n1_effective, 0, 0),
+              ", n2=", format_numeric(n2_effective, 0, 0), ".")
           } else {
             n1_effective <- n1_nominal
             n2_effective <- n2_nominal
@@ -2332,26 +2298,26 @@ server <- function(input, output, session) {
           text1 <- h1("Results of this analysis")
           text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
           text3 <- p(paste0(
-            "<strong>Minimal Detectable Margin Analysis (Tier 1 Enhancement)</strong><br>",
-            "With available sample sizes of n1=", n1_nominal, " (Test Group) and n2=",
-            round(n2_nominal), " (Reference Group, ratio=", ratio, "),",
+            "<strong>Minimal Detectable Margin Analysis</strong><br>",
+            "With available sample sizes of n1=", format_numeric(n1_nominal, 0, 0), " (Test Group) and n2=",
+            format_numeric(n2_nominal, 0, 0), " (Reference Group, ratio=", format_numeric(ratio, 1, 1), "),",
             missing_note,
-            " With ", format(power * 100, digits = 0), "% power and α = ", input$noninf_alpha,
+            " With ", format_numeric(power * 100, 0, 0), "% power and α = ", input$noninf_alpha,
             " (one-sided test), for a non-inferiority trial comparing test treatment (expected event rate: ",
-            format(p1 * 100, digits = 2), "%) to reference treatment (expected event rate: ",
-            format(p2 * 100, digits = 2), "%), ",
+            format_numeric(p1 * 100, 2, 1), "%) to reference treatment (expected event rate: ",
+            format_numeric(p2 * 100, 2, 1), "%), ",
             "the <strong>minimal detectable non-inferiority margin is ",
-            format(margin_detectable * 100, digits = 2), " percentage points</strong>. ",
+            format_numeric(margin_detectable * 100, 2, 2), " percentage points</strong>. ",
             "This is the largest margin that can be reliably tested for non-inferiority with this sample size. ",
             "Non-inferiority will be demonstrated if the upper bound of the confidence interval for the difference (Test - Reference) is less than this margin."
           ))
 
           effect_size_box <- HTML(paste0(
             "<p style='background-color: #d4edda; border-left: 4px solid #28a745; padding: 10px; margin-top: 15px;'>",
-            "<strong>Minimal Detectable Margin (Tier 1 Enhancement):</strong><br>",
-            "<strong>Non-Inferiority Margin:</strong> ", format(margin_detectable * 100, digits = 2), " percentage points<br>",
+            "<strong>Minimal Detectable Margin:</strong><br>",
+            "<strong>Non-Inferiority Margin:</strong> ", format_numeric(margin_detectable * 100, 2, 2), " percentage points<br>",
             "<strong>Interpretation:</strong> Can demonstrate non-inferiority if the true difference (Test - Reference) is less than ",
-            format(margin_detectable * 100, digits = 2), " percentage points",
+            format_numeric(margin_detectable * 100, 2, 2), " percentage points",
             "</p>"
           ))
 
