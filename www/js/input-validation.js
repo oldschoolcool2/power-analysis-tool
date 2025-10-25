@@ -15,7 +15,7 @@
       max: 1000000,
       message: (value, min, max) => {
         if (value < min) return `Sample size must be at least ${min}`;
-        if (value > max) return `Sample size cannot exceed ${max:,}`;
+        if (value > max) return `Sample size cannot exceed ${max.toLocaleString()}`;
         return null;
       },
       suggestion: (value) => {

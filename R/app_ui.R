@@ -323,7 +323,7 @@ app_ui <- function(request) {
 #' resources inside the Shiny application.
 #'
 #' @importFrom shiny tags addResourcePath
-#' @importFrom htmltools htmlDependency
+#' @importFrom htmltools htmlDependency attachDependencies tagList
 #' @noRd
 golem_add_external_resources <- function() {
   # Add resource path for www directory
@@ -339,22 +339,20 @@ golem_add_external_resources <- function() {
     directoryPath = www_path
   )
 
-  # Get shinyBS package path for resources
-  shinyBS_path <- system.file(package = "shinyBS")
-
-  # Add shinyBS resource path
-  addResourcePath(
-    prefix = "shinyBS",
-    directoryPath = file.path(shinyBS_path, "www")
+  # Create shinyBS HTML dependency
+  shinyBS_dep <- htmlDependency(
+    name = "shinyBS",
+    version = as.character(packageVersion("shinyBS")),
+    src = system.file("www", package = "shinyBS"),
+    script = "shinyBS.js",
+    stylesheet = "shinyBS.css"
   )
 
-  tags$head(
-    # Attach shinyBS CSS and JS dependencies
-    tags$link(
-      rel = "stylesheet",
-      type = "text/css",
-      href = "shinyBS/shinyBS.css"
+  # Attach dependencies
+  attachDependencies(
+    tags$head(
+      # Placeholder for additional head content if needed
     ),
-    tags$script(src = "shinyBS/shinyBS.js")
+    shinyBS_dep
   )
 }

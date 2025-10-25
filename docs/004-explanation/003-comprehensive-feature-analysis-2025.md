@@ -1191,13 +1191,25 @@ Based on Schoenfeld (1983) formula adapted for non-inferiority:
 - Fills critical gap for survival NI/equivalence studies
 - Competitive advantage: Most free tools lack this feature
 - Regulatory relevant (FDA/EMA guidance compliant)
-- First implementation of HR-based NI/equivalence for survival in free software
+- First free implementation of HR-based NI/equivalence for survival data
 - Modern, accessible interface with comprehensive help content
+- Full integration with missing data, clustering, and E-value modules
+- Interactive visualizations for exploring power across sample sizes
+- Supports both sample size and margin calculations
+
+**Key Differentiators:**
+- Dual calculation modes: calculate N given margin OR calculate margin given N
+- Both non-inferiority and equivalence tests in single interface
+- Integrated adjustments for missing data and clustering
+- Interactive power curves with real-time parameter adjustment
+- Professional CSV exports for protocols and grants
+- Educational tooltips and help content throughout
 
 **Future Enhancements (Tier 3):**
 1. RMST-based methods (robust to non-proportional hazards)
-2. Sample size by events (specify events directly)
+2. Sample size by events (specify events directly instead of event rate)
 3. Graphical margin visualization (forest plot style)
+4. Multiple interim analyses for adaptive designs
 
 ---
 
@@ -1480,18 +1492,17 @@ Each feature scored on:
 1. ✅ **Design Effect for Clustering** - **COMPLETED (2025-10-25)**
 2. ✅ **E-value Sensitivity Analysis** - **COMPLETED (2025-10-26)**
 3. ✅ **Mediation Analysis Power** - **COMPLETED (2025-10-26)**
-4. Time-to-Event Equivalence/NI - NEW
+4. ✅ **Time-to-Event Equivalence/NI** - **COMPLETED (2025-10-26)** - NEW
 5. Multiple Testing Corrections
 6. Continuous Equivalence (TOST) - NEW
 7. Enhanced Protocol Text Generator
 
 **Timeline:**
 - ~~Month 5-6: Features 1-2~~ → Features 1-2 DONE ✅
-- ~~Month 7-8: Feature 3~~ → Feature 3 DONE ✅
-- Month 7-8: Feature 4
+- ~~Month 7-8: Features 3-4~~ → Features 3-4 DONE ✅
 - Month 9-10: Features 5-7
 
-**Progress:** 3/7 complete (43%)
+**Progress:** 4/7 complete (57%)
 
 ---
 
