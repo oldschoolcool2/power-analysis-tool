@@ -12,7 +12,7 @@
   const THEME_ATTRIBUTE = 'data-theme';
 
   /**
-   * Get the current theme from localStorage or system preference
+   * Get the current theme from localStorage or default to light
    * @returns {string} 'light' or 'dark'
    */
   function getPreferredTheme() {
@@ -22,10 +22,11 @@
       return stored;
     }
 
-    // Check system preference
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return 'dark';
-    }
+    // Default to light mode (disable auto system preference detection)
+    // Uncomment below to enable system preference detection:
+    // if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    //   return 'dark';
+    // }
 
     return 'light';
   }
@@ -99,10 +100,14 @@
     // Add no-transitions class to prevent animation on page load
     document.documentElement.classList.add('no-transitions');
 
-    // Set initial theme
+    // Get user's saved preference or default to light mode
     const theme = getPreferredTheme();
+    
+    // Apply the theme
     if (theme === 'dark') {
       document.documentElement.setAttribute(THEME_ATTRIBUTE, 'dark');
+    } else {
+      document.documentElement.removeAttribute(THEME_ATTRIBUTE);
     }
 
     // Remove no-transitions class after a short delay
@@ -134,28 +139,17 @@
       }
     });
 
-    // Listen for system theme changes
-    if (window.matchMedia) {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-
-      // Modern browsers
-      if (mediaQuery.addEventListener) {
-        mediaQuery.addEventListener('change', (e) => {
-          // Only auto-switch if user hasn't set a preference
-          if (!localStorage.getItem(STORAGE_KEY)) {
-            setTheme(e.matches ? 'dark' : 'light');
-          }
-        });
-      }
-      // Older browsers
-      else if (mediaQuery.addListener) {
-        mediaQuery.addListener((e) => {
-          if (!localStorage.getItem(STORAGE_KEY)) {
-            setTheme(e.matches ? 'dark' : 'light');
-          }
-        });
-      }
-    }
+    // System theme change listener disabled - uncomment to enable
+    // if (window.matchMedia) {
+    //   const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    //   if (mediaQuery.addEventListener) {
+    //     mediaQuery.addEventListener('change', (e) => {
+    //       if (!localStorage.getItem(STORAGE_KEY)) {
+    //         setTheme(e.matches ? 'dark' : 'light');
+    //       }
+    //     });
+    //   }
+    // }
   }
 
   // Initialize immediately (before DOM ready for no-flash)
