@@ -24,6 +24,13 @@ source("R/input_components.R")
 source("R/header_ui.R")
 source("R/help_content.R")
 
+# Source Shiny modules
+source("R/modules/001-missing-data-module.R")
+
+# Source helper functions
+source("R/helpers/001-plot-helpers.R")
+source("R/helpers/002-result-text-helpers.R")
+
 # Define UI
 ui <- fluidPage(
   # Modern bslib theme for mobile responsiveness
@@ -163,10 +170,22 @@ ui <- fluidPage(
             h2(class = "page-title", "Single Proportion: Power Analysis"),
             helpText("Calculate power for detecting a single event rate (e.g., post-marketing surveillance)"),
             hr(),
-            numericInput("power_n", "Available Sample Size:", 230, min = 1, step = 1),
-            bsTooltip("power_n", "Total number of participants available for the study", "right"),
-            numericInput("power_p", "Event Frequency (1 in x):", 100, min = 1, step = 1),
-            bsTooltip("power_p", "Expected frequency of the event. E.g., 100 means 1 event per 100 participants", "right"),
+            create_numeric_input_with_tooltip(
+              "power_n",
+              "Available Sample Size:",
+              value = 230,
+              min = 1,
+              step = 1,
+              tooltip = "Total number of participants available for the study"
+            ),
+            create_numeric_input_with_tooltip(
+              "power_p",
+              "Event Frequency (1 in x):",
+              value = 100,
+              min = 1,
+              step = 1,
+              tooltip = "Expected frequency of the event. E.g., 100 means 1 event per 100 participants"
+            ),
             create_enhanced_slider("power_discon", "Withdrawal/Discontinuation Rate (%):",
                                   min = 0, max = 50, value = 10, step = 1, post = "%",
                                   tooltip = "Expected percentage of participants who will withdraw or discontinue"),
@@ -1535,21 +1554,13 @@ server <- function(input, output, session) {
         )$power
         discon <- input$power_discon / 100
 
-        text0 <- hr()
-        text1 <- h1("Results of this analysis")
-        text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
-        text3 <- p(paste0(
-          "Based on the Binomial distribution and a true event incidence rate of 1 in ",
-          format(incidence_rate, digits = 0, nsmall = 0), " (or ",
-          format(1 / incidence_rate * 100, digits = 2, nsmall = 2), "%), with ",
-          format(ceiling(sample_size), digits = 0, nsmall = 0),
-          " participants, the probability of observing at least one event is ",
-          format(power * 100, digits = 0, nsmall = 0), "% (α = ",
-          input$power_alpha, "). Accounting for a possible withdrawal or discontinuation rate of ",
-          format(discon * 100, digits = 0), "%, the adjusted sample size is ",
-          format(ceiling((sample_size * (1 + discon))), digits = 0), " to maintain this power."
-        ))
-        HTML(paste0(text0, text1, text2, text3))
+        create_power_single_result_text(
+          incidence_rate = incidence_rate,
+          sample_size = sample_size,
+          power = power,
+          alpha = input$power_alpha,
+          discon = discon
+        )
       } else if (input$tabset == "Sample Size (Single)") {
         # Feature 2: Minimal Detectable Effect Size Calculator
         calc_mode <- input$ss_single_calc_mode
@@ -2775,10 +2786,8 @@ server <- function(input, output, session) {
         if (input$tabset == "Power (Single)") {
           # Generate power curve data
           n_current <- input$power_n
-          n_seq <- seq(max(10, floor(n_current * 0.25)),
-            floor(n_current * 4),
-            length.out = 100
-          )
+          n_seq <- generate_n_sequence(n_reference = n_current)
+
           pow <- vapply(n_seq, function(n) {
             pwr.p.test(
               sig.level = input$power_alpha, power = NULL,
@@ -2786,42 +2795,15 @@ server <- function(input, output, session) {
             )$power
           }, FUN.VALUE = numeric(1))
 
-          # Create interactive plotly
-          plot_ly() %>%
-            add_trace(
-              x = n_seq, y = pow, type = "scatter", mode = "lines",
-              line = list(color = "#2B5876", width = 3),
-              name = "Power Curve",
-              hovertemplate = paste0(
-                "<b>Sample Size:</b> %{x:.0f}<br>",
-                "<b>Power:</b> %{y:.3f}<br>",
-                "<extra></extra>"
-              )
-            ) %>%
-            add_trace(
-              x = range(n_seq), y = c(0.8, 0.8),
-              type = "scatter", mode = "lines",
-              line = list(color = "red", width = 2, dash = "dash"),
-              name = "80% Power Target",
-              hovertemplate = "<b>Target Power:</b> 80%<extra></extra>"
-            ) %>%
-            add_trace(
-              x = c(n_current, n_current), y = c(0, 1),
-              type = "scatter", mode = "lines",
-              line = list(color = "green", width = 2, dash = "dot"),
-              name = "Current N",
-              hovertemplate = paste0("<b>Current N:</b> ", n_current, "<extra></extra>")
-            ) %>%
-            layout(
-              title = list(text = "Interactive Power Curve (Tier 1 Enhancement)", font = list(size = 16)),
-              xaxis = list(title = "Sample Size (N)", gridcolor = "#e0e0e0"),
-              yaxis = list(title = "Power", range = c(0, 1), gridcolor = "#e0e0e0"),
-              hovermode = "closest",
-              plot_bgcolor = "#f8f9fa",
-              paper_bgcolor = "white",
-              legend = list(x = 0.7, y = 0.2)
-            ) %>%
-            config(displayModeBar = TRUE, displaylogo = FALSE)
+          # Create plot using helper function
+          create_power_curve_plot(
+            n_seq = n_seq,
+            power_vals = pow,
+            n_current = n_current,
+            target_power = 0.8,
+            plot_title = "Interactive Power Curve (Tier 1 Enhancement)",
+            n_reference_label = "Current N"
+          )
 
         } else if (input$tabset == "Sample Size (Single)") {
           # Generate power curve data
