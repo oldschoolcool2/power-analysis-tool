@@ -515,12 +515,15 @@ ui <- fluidPage(
             h2(class = "page-title", "Continuous Outcomes (t-test): Power Analysis"),
             helpText("Calculate power for comparing means between two groups (e.g., BMI, blood pressure, QoL scores)"),
             hr(),
-            numericInput("cont_pow_n1", "Sample Size Group 1:", 100, min = 2, step = 1),
-            numericInput("cont_pow_n2", "Sample Size Group 2:", 100, min = 2, step = 1),
-            bsTooltip("cont_pow_n1", "Number of participants in treatment/exposed group", "right"),
-            bsTooltip("cont_pow_n2", "Number of participants in control/unexposed group", "right"),
-            numericInput("cont_pow_d", "Effect Size (Cohen's d):", 0.5, min = 0.01, max = 5, step = 0.1),
-            bsTooltip("cont_pow_d", "Standardized mean difference: Small=0.2, Medium=0.5, Large=0.8", "right"),
+            create_numeric_input_with_tooltip("cont_pow_n1", "Sample Size Group 1:", 100,
+              min = 2, step = 1,
+              tooltip = "Number of participants in treatment/exposed group"),
+            create_numeric_input_with_tooltip("cont_pow_n2", "Sample Size Group 2:", 100,
+              min = 2, step = 1,
+              tooltip = "Number of participants in control/unexposed group"),
+            create_numeric_input_with_tooltip("cont_pow_d", "Effect Size (Cohen's d):", 0.5,
+              min = 0.01, max = 5, step = 0.1,
+              tooltip = "Standardized mean difference: Small=0.2, Medium=0.5, Large=0.8"),
             create_segmented_alpha("cont_pow_alpha", "Significance Level (α):",
                                   selected = 0.05,
                                   tooltip = "Type I error rate (typically 0.05)"),
@@ -2055,18 +2058,14 @@ server <- function(input, output, session) {
           alternative = input$cont_pow_sided
         )$power
 
-        text0 <- hr()
-        text1 <- h1("Results of this analysis")
-        text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
-        text3 <- p(paste0(
-          "For a two-group comparison of continuous outcomes with sample sizes of n1 = ",
-          n1, " and n2 = ", n2, ", and an expected effect size of Cohen's d = ",
-          format(d, digits = 2, nsmall = 2), " (standardized mean difference), the study has ",
-          format(power * 100, digits = 1, nsmall = 1), "% power to detect this difference using a two-sample t-test at α = ",
-          input$cont_pow_alpha, " (", input$cont_pow_sided, " test). ",
-          "Cohen's d represents the difference in means divided by the pooled standard deviation."
-        ))
-        HTML(paste0(text0, text1, text2, text3))
+        create_continuous_power_result_text(
+          n1 = n1,
+          n2 = n2,
+          d = d,
+          power = power,
+          alpha = input$cont_pow_alpha,
+          sided = input$cont_pow_sided
+        )
       } else if (input$tabset == "Sample Size (Continuous)") {
         # Feature 2: Minimal Detectable Effect Size Calculator
         calc_mode <- input$cont_ss_calc_mode
