@@ -12,7 +12,7 @@ app_ui <- function(request) {
   tagList(
     # Leave this function for adding external resources
     golem_add_external_resources(),
-    
+
     # Your application UI logic
     fluidPage(
   # Modern bslib theme for mobile responsiveness
@@ -323,6 +323,7 @@ app_ui <- function(request) {
 #' resources inside the Shiny application.
 #'
 #' @importFrom shiny tags addResourcePath
+#' @importFrom htmltools htmlDependency
 #' @noRd
 golem_add_external_resources <- function() {
   # Add resource path for www directory
@@ -332,13 +333,28 @@ golem_add_external_resources <- function() {
   } else {
     app_sys("app", "www")
   }
-  
+
   addResourcePath(
     prefix = "www",
     directoryPath = www_path
   )
-  
+
+  # Get shinyBS package path for resources
+  shinyBS_path <- system.file(package = "shinyBS")
+
+  # Add shinyBS resource path
+  addResourcePath(
+    prefix = "shinyBS",
+    directoryPath = file.path(shinyBS_path, "www")
+  )
+
   tags$head(
-    # Placeholder for additional head content if needed
+    # Attach shinyBS CSS and JS dependencies
+    tags$link(
+      rel = "stylesheet",
+      type = "text/css",
+      href = "shinyBS/shinyBS.css"
+    ),
+    tags$script(src = "shinyBS/shinyBS.js")
   )
 }
