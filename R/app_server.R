@@ -10,11 +10,13 @@ app_server <- function(input, output, session) {
   
 
   # ============================================================
-  # Missing Data Module Initialization
+  # Module Initialization
   # ============================================================
 
-  # Initialize missing data modules for all tabs that use them
-  missing_data_ss_single <- missing_data_server("ss_single-missing_data")
+  # Tab 1: Single Proportion (includes missing data module)
+  mod_01_single_proportion_server("tab1")
+
+  # Missing data modules for other tabs
   missing_data_twogrp_ss <- missing_data_server("twogrp_ss-missing_data")
   missing_data_surv_ss <- missing_data_server("surv_ss-missing_data")
   missing_data_match <- missing_data_server("match-missing_data")

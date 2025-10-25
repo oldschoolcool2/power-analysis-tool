@@ -143,99 +143,10 @@ app_ui <- function(request) {
 
         div(class = "content-card",
 
-          # PAGE 1: Single Proportion - Power Analysis
-          conditionalPanel(
-            condition = "input.sidebar_page == 'power_single' || input.sidebar_page == null",
-            h2(class = "page-title", "Single Proportion: Power Analysis"),
-            helpText("Calculate power for detecting a single event rate (e.g., post-marketing surveillance)"),
-            hr(),
-            create_numeric_input_with_tooltip(
-              "power_n",
-              "Available Sample Size:",
-              value = 230,
-              min = 1,
-              step = 1,
-              tooltip = "Total number of participants available for the study"
-            ),
-            create_numeric_input_with_tooltip(
-              "power_p",
-              "Event Frequency (1 in x):",
-              value = 100,
-              min = 1,
-              step = 1,
-              tooltip = "Expected frequency of the event. E.g., 100 means 1 event per 100 participants"
-            ),
-            create_enhanced_slider("power_discon", "Withdrawal/Discontinuation Rate (%):",
-                                  min = 0, max = 50, value = 10, step = 1, post = "%",
-                                  tooltip = "Expected percentage of participants who will withdraw or discontinue"),
-            create_segmented_alpha("power_alpha", "Significance Level (α):",
-                                  selected = 0.05,
-                                  tooltip = "Type I error rate (typically 0.05). Lower values are more conservative."),
-            hr(),
-            div(class = "btn-group-custom",
-              actionButton("example_power_single", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
-              actionButton("reset_power_single", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
-            )
-          ),
-
-          # PAGE 2: Single Proportion - Sample Size
-          conditionalPanel(
-            condition = "input.sidebar_page == 'ss_single'",
-            h2(class = "page-title", "Single Proportion: Sample Size Calculation"),
-            helpText("Calculate required sample size OR minimal detectable effect size"),
-            hr(),
-            radioButtons_fixed("ss_single_calc_mode",
-              "Calculation Mode:",
-              choices = c(
-                "Calculate Sample Size (given effect size)" = "calc_n",
-                "Calculate Effect Size (given sample size)" = "calc_effect"
-              ),
-              selected = "calc_n"
-            ),
-            bsTooltip("ss_single_calc_mode",
-              "Choose whether to calculate required sample size or minimal detectable effect size",
-              "right"
-            ),
-            hr(),
-            create_segmented_power("ss_power", "Desired Power:",
-                                  selected = 80,
-                                  tooltip = "Probability of detecting the effect if it exists (typically 80% or 90%)"),
-            conditionalPanel(
-              condition = "input.ss_single_calc_mode == 'calc_n'",
-              create_numeric_input_with_tooltip(
-                "ss_p",
-                "Event Frequency (1 in x):",
-                value = 100,
-                min = 1,
-                step = 1,
-                tooltip = "Expected frequency of the event. E.g., 100 means 1 event per 100 participants"
-              )
-            ),
-            conditionalPanel(
-              condition = "input.ss_single_calc_mode == 'calc_effect'",
-              create_numeric_input_with_tooltip(
-                "ss_n_fixed",
-                "Available Sample Size:",
-                value = 500,
-                min = 10,
-                step = 1,
-                tooltip = "Fixed sample size available for the study"
-              )
-            ),
-            create_enhanced_slider("ss_discon", "Withdrawal/Discontinuation Rate (%):",
-                                  min = 0, max = 50, value = 10, step = 1, post = "%",
-                                  tooltip = "Expected percentage of participants who will withdraw or discontinue"),
-            create_segmented_alpha("ss_alpha", "Significance Level (α):",
-                                  selected = 0.05,
-                                  tooltip = "Type I error rate (typically 0.05). Lower values are more conservative."),
-            hr(),
-            missing_data_ui("ss_single-missing_data"),
-            hr(),
-            div(class = "btn-group-custom",
-              actionButton("example_ss_single", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
-              actionButton("reset_ss_single", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
-            )
-          ),
+          # ==============================================================================
+          # TAB 1: SINGLE PROPORTION [MODULARIZED]
+          # ==============================================================================
+          mod_01_single_proportion_ui("tab1"),
 
           # PAGE 3: Two-Group - Power Analysis
           conditionalPanel(
