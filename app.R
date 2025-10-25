@@ -378,10 +378,12 @@ ui <- fluidPage(
             h2(class = "page-title", "Survival Analysis (Cox): Power Analysis"),
             helpText("Calculate power for time-to-event outcomes using Cox regression (common in RWE studies)"),
             hr(),
-            numericInput("surv_pow_n", "Total Sample Size:", 500, min = 10, step = 10),
-            bsTooltip("surv_pow_n", "Total number of participants in the study", "right"),
-            numericInput("surv_pow_hr", "Hazard Ratio (HR):", 0.7, min = 0.01, max = 10, step = 0.05),
-            bsTooltip("surv_pow_hr", "Expected hazard ratio (HR < 1 indicates protective effect, HR > 1 indicates risk)", "right"),
+            create_numeric_input_with_tooltip("surv_pow_n", "Total Sample Size:", 500,
+                                             min = 10, step = 10,
+                                             tooltip = "Total number of participants in the study"),
+            create_numeric_input_with_tooltip("surv_pow_hr", "Hazard Ratio (HR):", 0.7,
+                                             min = 0.01, max = 10, step = 0.05,
+                                             tooltip = "Expected hazard ratio (HR < 1 indicates protective effect, HR > 1 indicates risk)"),
             create_enhanced_slider("surv_pow_k", "Proportion Exposed (%):",
                                   min = 10, max = 90, value = 50, step = 5, post = "%",
                                   tooltip = "Proportion of participants in the exposed/treatment group"),
@@ -1815,18 +1817,8 @@ server <- function(input, output, session) {
           RR = hr, alpha = input$surv_pow_alpha
         )
 
-        text0 <- hr()
-        text1 <- h1("Results of this analysis")
-        text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
-        text3 <- p(paste0(
-          "For a survival analysis with N = ", n, " total participants, ",
-          format(k * 100, digits = 1, nsmall = 0), "% exposed/treated, an overall event rate of ",
-          format(pE * 100, digits = 1, nsmall = 0), "%, and an expected hazard ratio of ",
-          format(hr, digits = 2, nsmall = 2), ", the study has ",
-          format(power * 100, digits = 1, nsmall = 1), "% power to detect this effect using Cox regression at α = ",
-          input$surv_pow_alpha, " (two-sided test). This calculation uses the Schoenfeld (1983) method for Cox proportional hazards models."
-        ))
-        HTML(paste0(text0, text1, text2, text3))
+        # Use helper function for result text
+        HTML(as.character(create_survival_power_result_text(n, hr, k, pE, power, input$surv_pow_alpha)))
       } else if (input$tabset == "Sample Size (Survival)") {
         # Feature 2: Minimal Detectable Effect Size Calculator
         calc_mode <- input$surv_ss_calc_mode

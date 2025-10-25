@@ -305,3 +305,31 @@ format_minimal_detectable_effect <- function(p1, p2, effect_measures, h) {
     "</p>"
   ))
 }
+
+
+#' Create Survival Power Analysis Result Text
+#'
+#' Generates formatted result text for survival analysis power calculations.
+#'
+#' @param n Total sample size
+#' @param hr Hazard ratio
+#' @param k Proportion exposed (as proportion, e.g., 0.5)
+#' @param pE Overall event rate (as proportion)
+#' @param power Calculated power (as proportion)
+#' @param alpha Significance level
+#'
+#' @return HTML formatted text
+create_survival_power_result_text <- function(n, hr, k, pE, power, alpha) {
+  tagList(
+    create_result_header(),
+    p(paste0(
+      "For a survival analysis with N = ", n, " total participants, ",
+      format_numeric(k, as_percent = TRUE, digits = 1), " exposed/treated, an overall event rate of ",
+      format_numeric(pE, as_percent = TRUE, digits = 1), "%, and an expected hazard ratio of ",
+      format_numeric(hr, digits = 2), ", the study has ",
+      format_numeric(power, as_percent = TRUE, digits = 1), " power to detect this effect using Cox regression at α = ",
+      alpha, " (two-sided test). This calculation uses the Schoenfeld (1983) method for Cox proportional hazards models."
+    )),
+    format_hazard_ratio(hr)
+  )
+}
