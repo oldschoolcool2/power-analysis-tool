@@ -2769,10 +2769,6 @@ server <- function(input, output, session) {
       if (!v$doAnalysis) {
         return()
       }
-      if (input$tabset == "Matched Case-Control") {
-        return()
-      } # No plot for matched case-control
-
       isolate({
         validate_inputs()
 
@@ -3139,6 +3135,358 @@ server <- function(input, output, session) {
               legend = list(x = 0.7, y = 0.2)
             ) %>%
             config(displayModeBar = TRUE, displaylogo = FALSE)
+        } else if (input$tabset == "Matched Case-Control") {
+          # Generate power curve for matched case-control
+          calc_mode <- input$match_calc_mode
+          p0 <- input$match_p0 / 100
+          m <- input$match_ratio
+          target_power <- input$match_power / 100
+          or <- input$match_or
+          alpha <- input$match_alpha
+          sided_val <- ifelse(input$match_sided == "two.sided", 2, 1)
+
+          if (calc_mode == "calc_n") {
+            # Power curve varying sample size for fixed OR
+            result <- epi.sscc(
+              OR = or, p0 = p0, n = NA, power = target_power,
+              r = m, rho = 0, design = 1, sided.test = sided_val,
+              conf.level = 1 - alpha
+            )
+            n_cases_required <- ceiling(result$n.total)
+
+            # Generate range of sample sizes
+            n_seq <- seq(max(10, floor(n_cases_required * 0.25)),
+                        floor(n_cases_required * 3),
+                        length.out = 100)
+
+            # Calculate power for each sample size
+            pow <- vapply(n_seq, function(n_cases) {
+              result <- tryCatch({
+                epi.sscc(
+                  OR = or, p0 = p0, n = n_cases, power = NA,
+                  r = m, rho = 0, design = 1, sided.test = sided_val,
+                  conf.level = 1 - alpha
+                )
+              }, error = function(e) list(power = 0))
+              result$power
+            }, FUN.VALUE = numeric(1))
+
+            # Create interactive plotly
+            plot_ly() %>%
+              add_trace(
+                x = n_seq, y = pow, type = "scatter", mode = "lines",
+                line = list(color = "#2B5876", width = 3),
+                name = "Power Curve",
+                hovertemplate = paste0(
+                  "<b>Cases:</b> %{x:.0f}<br>",
+                  "<b>Controls:</b> ", round(n_seq * m, 0), "<br>",
+                  "<b>Total N:</b> ", round(n_seq * (1 + m), 0), "<br>",
+                  "<b>Power:</b> %{y:.3f}<br>",
+                  "<b>OR:</b> ", round(or, 3), "<br>",
+                  "<extra></extra>"
+                )
+              ) %>%
+              add_trace(
+                x = range(n_seq), y = c(target_power, target_power),
+                type = "scatter", mode = "lines",
+                line = list(color = "red", width = 2, dash = "dash"),
+                name = paste0("Target Power (", round(target_power * 100), "%)"),
+                hovertemplate = paste0("<b>Target Power:</b> ", round(target_power * 100), "%<extra></extra>")
+              ) %>%
+              add_trace(
+                x = c(n_cases_required, n_cases_required), y = c(0, 1),
+                type = "scatter", mode = "lines",
+                line = list(color = "green", width = 2, dash = "dot"),
+                name = "Required N (Cases)",
+                hovertemplate = paste0("<b>Required Cases:</b> ", n_cases_required, "<extra></extra>")
+              ) %>%
+              layout(
+                title = list(text = paste0("Interactive Power Curve - Matched Case-Control (", m, ":1 matching)"), font = list(size = 16)),
+                xaxis = list(title = "Number of Cases", gridcolor = "#e0e0e0"),
+                yaxis = list(title = "Power", range = c(0, 1), gridcolor = "#e0e0e0"),
+                hovermode = "closest",
+                plot_bgcolor = "#f8f9fa",
+                paper_bgcolor = "white",
+                legend = list(x = 0.7, y = 0.2)
+              ) %>%
+              config(displayModeBar = TRUE, displaylogo = FALSE)
+          } else {
+            # calc_effect mode: Power curve varying OR for fixed sample size
+            n_cases_fixed <- input$match_n_pairs_fixed
+
+            # Generate range of ORs
+            or_seq <- seq(0.5, 5.0, length.out = 100)
+
+            # Calculate power for each OR
+            pow <- vapply(or_seq, function(or_val) {
+              result <- tryCatch({
+                epi.sscc(
+                  OR = or_val, p0 = p0, n = n_cases_fixed, power = NA,
+                  r = m, rho = 0, design = 1, sided.test = sided_val,
+                  conf.level = 1 - alpha
+                )
+              }, error = function(e) list(power = 0))
+              result$power
+            }, FUN.VALUE = numeric(1))
+
+            # Create interactive plotly
+            plot_ly() %>%
+              add_trace(
+                x = or_seq, y = pow, type = "scatter", mode = "lines",
+                line = list(color = "#2B5876", width = 3),
+                name = "Power Curve",
+                hovertemplate = paste0(
+                  "<b>Odds Ratio:</b> %{x:.2f}<br>",
+                  "<b>Power:</b> %{y:.3f}<br>",
+                  "<b>Cases:</b> ", n_cases_fixed, "<br>",
+                  "<b>Controls:</b> ", n_cases_fixed * m, "<br>",
+                  "<extra></extra>"
+                )
+              ) %>%
+              add_trace(
+                x = range(or_seq), y = c(target_power, target_power),
+                type = "scatter", mode = "lines",
+                line = list(color = "red", width = 2, dash = "dash"),
+                name = paste0("Target Power (", round(target_power * 100), "%)"),
+                hovertemplate = paste0("<b>Target Power:</b> ", round(target_power * 100), "%<extra></extra>")
+              ) %>%
+              add_trace(
+                x = c(1, 1), y = c(0, 1),
+                type = "scatter", mode = "lines",
+                line = list(color = "gray", width = 1, dash = "dot"),
+                name = "Null (OR=1)",
+                hovertemplate = "<b>No Effect (OR=1)</b><extra></extra>"
+              ) %>%
+              layout(
+                title = list(text = paste0("Power vs Odds Ratio - Matched Case-Control (n=", n_cases_fixed, " cases)"), font = list(size = 16)),
+                xaxis = list(title = "Odds Ratio (OR)", gridcolor = "#e0e0e0"),
+                yaxis = list(title = "Power", range = c(0, 1), gridcolor = "#e0e0e0"),
+                hovermode = "closest",
+                plot_bgcolor = "#f8f9fa",
+                paper_bgcolor = "white",
+                legend = list(x = 0.7, y = 0.2)
+              ) %>%
+              config(displayModeBar = TRUE, displaylogo = FALSE)
+          }
+        } else if (input$tabset == "Non-Inferiority") {
+          # Generate power curve for non-inferiority testing
+          calc_mode <- input$noninf_calc_mode
+          p1 <- input$noninf_p1 / 100
+          p2 <- input$noninf_p2 / 100
+          target_power <- input$noninf_power / 100
+          ratio <- input$noninf_ratio
+          alpha <- input$noninf_alpha
+
+          if (calc_mode == "calc_n") {
+            # Calculate sample size for non-inferiority
+            margin <- input$noninf_margin / 100
+
+            # Use pwr package for non-inferiority (one-sided test with adjusted effect size)
+            h <- ES.h(p1, p2 - margin)
+
+            if (ratio == 1) {
+              n_required <- pwr.2p.test(
+                h = h, sig.level = alpha, power = target_power,
+                alternative = "greater"
+              )$n
+              n1_required <- ceiling(n_required)
+              n2_required <- n1_required
+            } else {
+              # Solve for n1 with ratio
+              n1_required <- solve_n1_for_ratio(h, ratio, alpha, target_power, "greater")
+              n2_required <- ceiling(n1_required * ratio)
+            }
+
+            # Generate range of sample sizes
+            n1_seq <- seq(max(10, floor(n1_required * 0.25)),
+                         floor(n1_required * 3),
+                         length.out = 100)
+
+            # Calculate power for each sample size
+            pow <- vapply(n1_seq, function(n1) {
+              n2 <- n1 * ratio
+              pwr.2p2n.test(
+                h = h, n1 = n1, n2 = n2,
+                sig.level = alpha,
+                alternative = "greater"
+              )$power
+            }, FUN.VALUE = numeric(1))
+
+            # Create interactive plotly
+            plot_ly() %>%
+              add_trace(
+                x = n1_seq, y = pow, type = "scatter", mode = "lines",
+                line = list(color = "#2B5876", width = 3),
+                name = "Power Curve",
+                hovertemplate = paste0(
+                  "<b>n1 (Test):</b> %{x:.0f}<br>",
+                  "<b>n2 (Reference):</b> ", round(n1_seq * ratio, 0), "<br>",
+                  "<b>Total N:</b> ", round(n1_seq * (1 + ratio), 0), "<br>",
+                  "<b>Power:</b> %{y:.3f}<br>",
+                  "<b>Margin:</b> ", round(margin * 100, 2), "%<br>",
+                  "<extra></extra>"
+                )
+              ) %>%
+              add_trace(
+                x = range(n1_seq), y = c(target_power, target_power),
+                type = "scatter", mode = "lines",
+                line = list(color = "red", width = 2, dash = "dash"),
+                name = paste0("Target Power (", round(target_power * 100), "%)"),
+                hovertemplate = paste0("<b>Target Power:</b> ", round(target_power * 100), "%<extra></extra>")
+              ) %>%
+              add_trace(
+                x = c(n1_required, n1_required), y = c(0, 1),
+                type = "scatter", mode = "lines",
+                line = list(color = "green", width = 2, dash = "dot"),
+                name = "Required n1",
+                hovertemplate = paste0("<b>Required n1:</b> ", round(n1_required), "<extra></extra>")
+              ) %>%
+              layout(
+                title = list(text = paste0("Interactive Power Curve - Non-Inferiority (Margin=", round(margin * 100, 2), "%)"), font = list(size = 16)),
+                xaxis = list(title = "Sample Size n1 (Test Group)", gridcolor = "#e0e0e0"),
+                yaxis = list(title = "Power", range = c(0, 1), gridcolor = "#e0e0e0"),
+                hovermode = "closest",
+                plot_bgcolor = "#f8f9fa",
+                paper_bgcolor = "white",
+                legend = list(x = 0.7, y = 0.2)
+              ) %>%
+              config(displayModeBar = TRUE, displaylogo = FALSE)
+          } else {
+            # calc_effect mode: Power curve varying margin for fixed sample size
+            n1_fixed <- input$noninf_n1_fixed
+            n2_fixed <- n1_fixed * ratio
+
+            # Generate range of margins (in percentage points)
+            margin_seq <- seq(0.5, 20, length.out = 100) / 100
+
+            # Calculate power for each margin
+            pow <- vapply(margin_seq, function(margin_val) {
+              h <- ES.h(p1, p2 - margin_val)
+              pwr.2p2n.test(
+                h = h, n1 = n1_fixed, n2 = n2_fixed,
+                sig.level = alpha,
+                alternative = "greater"
+              )$power
+            }, FUN.VALUE = numeric(1))
+
+            # Create interactive plotly
+            plot_ly() %>%
+              add_trace(
+                x = margin_seq * 100, y = pow, type = "scatter", mode = "lines",
+                line = list(color = "#2B5876", width = 3),
+                name = "Power Curve",
+                hovertemplate = paste0(
+                  "<b>NI Margin:</b> %{x:.2f}%<br>",
+                  "<b>Power:</b> %{y:.3f}<br>",
+                  "<b>n1 (Test):</b> ", n1_fixed, "<br>",
+                  "<b>n2 (Reference):</b> ", n2_fixed, "<br>",
+                  "<extra></extra>"
+                )
+              ) %>%
+              add_trace(
+                x = range(margin_seq * 100), y = c(target_power, target_power),
+                type = "scatter", mode = "lines",
+                line = list(color = "red", width = 2, dash = "dash"),
+                name = paste0("Target Power (", round(target_power * 100), "%)"),
+                hovertemplate = paste0("<b>Target Power:</b> ", round(target_power * 100), "%<extra></extra>")
+              ) %>%
+              layout(
+                title = list(text = paste0("Power vs Non-Inferiority Margin (n1=", n1_fixed, ")"), font = list(size = 16)),
+                xaxis = list(title = "Non-Inferiority Margin (%)", gridcolor = "#e0e0e0"),
+                yaxis = list(title = "Power", range = c(0, 1), gridcolor = "#e0e0e0"),
+                hovermode = "closest",
+                plot_bgcolor = "#f8f9fa",
+                paper_bgcolor = "white",
+                legend = list(x = 0.7, y = 0.2)
+              ) %>%
+              config(displayModeBar = TRUE, displaylogo = FALSE)
+          }
+        } else if (input$tabset == "Propensity Score VIF Calculator") {
+          # Generate visualization for VIF Calculator
+          n_rct <- input$vif_n_rct
+          prevalence <- input$vif_prevalence / 100
+          cstat <- input$vif_cstat
+          method <- input$vif_method
+
+          # Calculate VIF using Austin (2021) method
+          # VIF depends on C-statistic and treatment prevalence
+          # Approximate formula based on Austin (2021)
+          standardized_diff <- 2 * qnorm(cstat)
+
+          # Calculate VIF for different methods
+          if (method == "ATE") {
+            vif <- 1 + (standardized_diff^2) * prevalence * (1 - prevalence)
+          } else if (method == "ATT") {
+            vif <- 1 + (standardized_diff^2) * (1 - prevalence)
+          } else if (method == "ATO") {
+            vif <- 1 + 0.5 * (standardized_diff^2) * prevalence * (1 - prevalence)
+          } else if (method == "ATM") {
+            vif <- 1 + 0.6 * (standardized_diff^2) * prevalence * (1 - prevalence)
+          } else { # ATEN
+            vif <- 1 + 0.7 * (standardized_diff^2) * prevalence * (1 - prevalence)
+          }
+
+          n_obs <- ceiling(n_rct * vif)
+
+          # Generate curves showing VIF across different C-statistics
+          cstat_seq <- seq(0.55, 0.95, length.out = 100)
+
+          # Calculate VIF for each C-stat
+          vif_seq <- vapply(cstat_seq, function(c) {
+            sd <- 2 * qnorm(c)
+            if (method == "ATE") {
+              1 + (sd^2) * prevalence * (1 - prevalence)
+            } else if (method == "ATT") {
+              1 + (sd^2) * (1 - prevalence)
+            } else if (method == "ATO") {
+              1 + 0.5 * (sd^2) * prevalence * (1 - prevalence)
+            } else if (method == "ATM") {
+              1 + 0.6 * (sd^2) * prevalence * (1 - prevalence)
+            } else {
+              1 + 0.7 * (sd^2) * prevalence * (1 - prevalence)
+            }
+          }, FUN.VALUE = numeric(1))
+
+          n_obs_seq <- n_rct * vif_seq
+
+          # Create interactive plotly showing relationship between C-stat and required N
+          plot_ly() %>%
+            add_trace(
+              x = cstat_seq, y = n_obs_seq, type = "scatter", mode = "lines",
+              line = list(color = "#2B5876", width = 3),
+              name = "Required N (Observational)",
+              hovertemplate = paste0(
+                "<b>C-statistic:</b> %{x:.3f}<br>",
+                "<b>VIF:</b> ", round(vif_seq, 2), "<br>",
+                "<b>Required N:</b> %{y:.0f}<br>",
+                "<b>RCT N:</b> ", n_rct, "<br>",
+                "<extra></extra>"
+              )
+            ) %>%
+            add_trace(
+              x = range(cstat_seq), y = c(n_rct, n_rct),
+              type = "scatter", mode = "lines",
+              line = list(color = "green", width = 2, dash = "dot"),
+              name = "RCT Sample Size",
+              hovertemplate = paste0("<b>RCT N:</b> ", n_rct, "<extra></extra>")
+            ) %>%
+            add_trace(
+              x = c(cstat, cstat), y = c(0, max(n_obs_seq)),
+              type = "scatter", mode = "lines",
+              line = list(color = "red", width = 2, dash = "dash"),
+              name = "Current C-statistic",
+              hovertemplate = paste0("<b>Current C-stat:</b> ", round(cstat, 3), "<extra></extra>")
+            ) %>%
+            layout(
+              title = list(text = paste0("Sample Size Inflation - ", method, " Weighting (Prevalence=", round(prevalence * 100), "%)"), font = list(size = 16)),
+              xaxis = list(title = "C-statistic of PS Model", gridcolor = "#e0e0e0"),
+              yaxis = list(title = "Required Sample Size", gridcolor = "#e0e0e0"),
+              hovermode = "closest",
+              plot_bgcolor = "#f8f9fa",
+              paper_bgcolor = "white",
+              legend = list(x = 0.05, y = 0.95)
+            ) %>%
+            config(displayModeBar = TRUE, displaylogo = FALSE)
         }
       })
     }
@@ -3159,6 +3507,14 @@ server <- function(input, output, session) {
       # Continuous Outcomes inputs
       input$cont_pow_n1, input$cont_pow_n2, input$cont_pow_d, input$cont_pow_alpha, input$cont_pow_sided,
       input$cont_ss_d, input$cont_ss_alpha, input$cont_ss_sided, input$cont_ss_ratio, input$cont_ss_power,
+      # Matched Case-Control inputs
+      input$match_calc_mode, input$match_or, input$match_n_pairs_fixed, input$match_p0,
+      input$match_ratio, input$match_power, input$match_alpha, input$match_sided,
+      # Non-Inferiority inputs
+      input$noninf_calc_mode, input$noninf_p1, input$noninf_p2, input$noninf_margin,
+      input$noninf_n1_fixed, input$noninf_ratio, input$noninf_power, input$noninf_alpha,
+      # VIF Calculator inputs
+      input$vif_n_rct, input$vif_prevalence, input$vif_cstat, input$vif_method,
       # Include doAnalysis flag to invalidate cache when Calculate is pressed
       v$doAnalysis
     )
