@@ -251,6 +251,8 @@ code {
   cursor: pointer;
   transition: all var(--transition-base);
   width: 100%;
+  margin-top: var(--space-8);
+  margin-bottom: var(--space-8);
 }
 
 .btn-primary:hover,
@@ -635,6 +637,63 @@ tr:hover {
 
 .panel-collapse {
   transition: height var(--transition-slow);
+}
+
+/* ========================================================================
+   HELP SECTIONS
+   ======================================================================== */
+
+/* Contextual help sections */
+.help-section {
+  margin-top: var(--space-6);
+  margin-bottom: var(--space-6);
+}
+
+.help-section .accordion {
+  background: var(--bg-card);
+  border: var(--border-subtle);
+}
+
+/* Make help accordions slightly more subtle */
+.help-section .accordion-button {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  padding: var(--space-3) var(--space-5);
+}
+
+.help-section .accordion-button:not(.collapsed) {
+  color: var(--color-primary-700);
+  font-weight: var(--font-weight-semibold);
+}
+
+.help-section .accordion-body {
+  font-size: var(--font-size-sm);
+  padding: var(--space-4) var(--space-5);
+}
+
+/* Modal styles for global help */
+.modal-header-title {
+  display: flex;
+  align-items: center;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.modal-intro {
+  margin-bottom: var(--space-4);
+  padding: var(--space-4);
+  background: var(--color-primary-50);
+  border-left: 4px solid var(--color-primary-600);
+  border-radius: var(--border-radius-md);
+}
+
+.modal-intro p {
+  margin-bottom: var(--space-2);
+}
+
+.modal-intro p:last-child {
+  margin-bottom: 0;
 }
 
 /* ========================================================================
