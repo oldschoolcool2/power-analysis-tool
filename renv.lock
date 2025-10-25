@@ -27,6 +27,12 @@
       "Source": "Repository",
       "Repository": "CRAN"
     },
+    "shinyjs": {
+      "Package": "shinyjs",
+      "Version": "2.1.0",
+      "Source": "Repository",
+      "Repository": "CRAN"
+    },
     "pwr": {
       "Package": "pwr",
       "Version": "1.3-0",

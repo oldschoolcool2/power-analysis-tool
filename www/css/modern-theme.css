@@ -771,6 +771,26 @@ tr:hover {
   margin-left: var(--space-2);
 }
 
+/* Adjust main content to account for fixed footer */
+.main-content {
+  padding-bottom: 56px; /* 40px footer + 16px spacing */
+}
+
+/* Mobile adjustments for footer */
+@media (max-width: 639px) {
+  .quick-preview-footer {
+    padding: 0 var(--space-4);
+  }
+
+  .quick-preview-cta {
+    display: none; /* Hide CTA text on mobile for space */
+  }
+
+  .main-content {
+    padding-bottom: 48px; /* Reduced spacing on mobile */
+  }
+}
+
 /* ========================================================================
    ALERTS & NOTIFICATIONS
    ======================================================================== */
