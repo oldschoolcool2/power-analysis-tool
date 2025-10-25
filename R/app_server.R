@@ -14,7 +14,7 @@ app_server <- function(input, output, session) {
   # ============================================================
 
   # Tab 1: Single Proportion (includes missing data module)
-  mod_01_single_proportion_server("tab1")
+  tab1_vals <- mod_01_single_proportion_server("tab1")
 
   # Missing data modules for other tabs
   missing_data_twogrp_ss <- missing_data_server("twogrp_ss-missing_data")
@@ -502,7 +502,22 @@ app_server <- function(input, output, session) {
 
   # Validation function
   validate_inputs <- function() {
-    if (input$tabset == "Power (Single)") {
+    # Tab 1: Single Proportion (using sidebar_page)
+    if (input$sidebar_page == "power_single") {
+      tab1_inputs <- tab1_vals$inputs()
+      validate(
+        need(tab1_inputs$power_n > 0, "Sample size must be positive"),
+        need(tab1_inputs$power_p > 0, "Event frequency must be positive"),
+        need(tab1_inputs$power_discon >= 0 && tab1_inputs$power_discon <= 100, "Discontinuation rate must be between 0 and 100%")
+      )
+    } else if (input$sidebar_page == "ss_single") {
+      tab1_inputs <- tab1_vals$inputs()
+      validate(
+        need(tab1_inputs$ss_p > 0, "Event frequency must be positive"),
+        need(tab1_inputs$ss_discon >= 0 && tab1_inputs$ss_discon <= 100, "Discontinuation rate must be between 0 and 100%")
+      )
+    # Legacy tabset checks for tabs not yet migrated
+    } else if (input$tabset == "Power (Single)") {
       validate(
         need(input$power_n > 0, "Sample size must be positive"),
         need(input$power_p > 0, "Event frequency must be positive"),
@@ -578,7 +593,27 @@ app_server <- function(input, output, session) {
 
   # Create debounced preview reactive for quick feedback
   preview_inputs <- reactive({
-    if (input$tabset == "Power (Single)") {
+    # Tab 1: Single Proportion (using sidebar_page and module values)
+    if (input$sidebar_page == "power_single") {
+      tab1_inputs <- tab1_vals$inputs()
+      list(
+        tab = "Power (Single)",
+        n = tab1_inputs$power_n,
+        p = tab1_inputs$power_p,
+        alpha = tab1_inputs$power_alpha,
+        rate = 1 / tab1_inputs$power_p
+      )
+    } else if (input$sidebar_page == "ss_single") {
+      tab1_inputs <- tab1_vals$inputs()
+      list(
+        tab = "Sample Size (Single)",
+        power = tab1_inputs$ss_power,
+        p = tab1_inputs$ss_p,
+        alpha = tab1_inputs$ss_alpha,
+        rate = 1 / tab1_inputs$ss_p
+      )
+    # Legacy checks for non-migrated tabs
+    } else if (input$tabset == "Power (Single)") {
       list(
         tab = input$tabset,
         n = input$power_n,
@@ -655,7 +690,130 @@ app_server <- function(input, output, session) {
     isolate({
       validate_inputs()
 
-      if (input$tabset == "Power (Single)") {
+      # Tab 1: Single Proportion - Power Analysis (using sidebar_page)
+      if (input$sidebar_page == "power_single") {
+        tab1_inputs <- tab1_vals$inputs()
+        incidence_rate <- tab1_inputs$power_p
+        sample_size <- tab1_inputs$power_n
+        power <- pwr.p.test(
+          sig.level = tab1_inputs$power_alpha, power = NULL,
+          h = ES.h(1 / tab1_inputs$power_p, 0), alt = "greater", n = tab1_inputs$power_n
+        )$power
+        discon <- tab1_inputs$power_discon / 100
+
+        create_power_single_result_text(
+          incidence_rate = incidence_rate,
+          sample_size = sample_size,
+          power = power,
+          alpha = tab1_inputs$power_alpha,
+          discon = discon
+        )
+      # Tab 1: Single Proportion - Sample Size (using sidebar_page)
+      } else if (input$sidebar_page == "ss_single") {
+        tab1_inputs <- tab1_vals$inputs()
+        calc_mode <- tab1_inputs$ss_single_calc_mode
+        power <- tab1_inputs$ss_power / 100
+        discon <- tab1_inputs$ss_discon / 100
+
+        if (calc_mode == "calc_n") {
+          # Calculate Sample Size
+          incidence_rate <- tab1_inputs$ss_p
+          sample_size_base <- pwr.p.test(
+            sig.level = tab1_inputs$ss_alpha, power = power,
+            h = ES.h(1 / tab1_inputs$ss_p, 0), alt = "greater", n = NULL
+          )$n
+
+          # Apply discontinuation adjustment
+          sample_size_after_discon <- ceiling(sample_size_base * (1 + discon))
+
+          # Apply missing data adjustment if enabled
+          md_vals <- tab1_vals$missing_data_vals()
+          if (md_vals$adjust_missing) {
+            missing_adj <- calc_missing_data_inflation(
+              sample_size_after_discon,
+              md_vals$missing_pct,
+              md_vals$missing_mechanism,
+              md_vals$missing_analysis,
+              md_vals$mi_imputations,
+              md_vals$mi_r_squared
+            )
+            sample_size_final <- missing_adj$n_inflated
+            missing_data_text <- format_missing_data_text(missing_adj, sample_size_after_discon)
+          } else {
+            sample_size_final <- sample_size_after_discon
+            missing_data_text <- HTML("")
+          }
+
+          text0 <- hr()
+          text1 <- h1("Results of this analysis")
+          text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+          text3 <- p(paste0(
+            "Based on the Binomial distribution and a true event incidence rate of 1 in ",
+            format(incidence_rate, digits = 0, nsmall = 0), " (or ",
+            format(1 / incidence_rate * 100, digits = 2, nsmall = 2), "%), ",
+            format(ceiling(sample_size_base), digits = 0, nsmall = 0),
+            " participants would be needed to observe at least one event with ",
+            format(power * 100, digits = 0, nsmall = 0), "% probability (α = ",
+            tab1_inputs$ss_alpha, "). Accounting for a possible withdrawal or discontinuation rate of ",
+            format(discon * 100, digits = 0), "%, the target number of participants is set as ",
+            format(sample_size_after_discon, digits = 0), ".",
+            if (md_vals$adjust_missing) {
+              paste0(" <strong>After adjusting for ", md_vals$missing_pct,
+                     "% missing data, the final target sample size is ",
+                     format(sample_size_final, digits = 0), ".</strong>")
+            } else {
+              ""
+            }
+          ))
+
+          HTML(paste0(text0, text1, text2, text3, missing_data_text))
+
+        } else {
+          # Calculate Minimal Detectable Effect Size
+          n_nominal <- tab1_inputs$ss_n_fixed
+          n_after_discon <- ceiling(n_nominal * (1 - discon))
+
+          md_vals <- tab1_vals$missing_data_vals()
+          if (md_vals$adjust_missing) {
+            p_missing <- md_vals$missing_pct / 100
+            n_effective <- ceiling(n_after_discon * (1 - p_missing))
+          } else {
+            n_effective <- n_after_discon
+          }
+
+          # Solve for minimal detectable p
+          minimal_p <- uniroot(function(p) {
+            pwr.p.test(
+              sig.level = tab1_inputs$ss_alpha, power = power,
+              h = ES.h(p, 0), alt = "greater", n = n_effective
+            )$power - power
+          }, c(0.001, 0.999))$root
+
+          minimal_rate <- 1 / minimal_p
+
+          text0 <- hr()
+          text1 <- h1("Results of this analysis")
+          text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+          text3 <- p(paste0(
+            "With a sample size of ", format(n_nominal, digits = 0), " participants, ",
+            "accounting for ", format(discon * 100, digits = 0), "% discontinuation",
+            if (md_vals$adjust_missing) {
+              paste0(" and ", md_vals$missing_pct, "% missing data")
+            } else {
+              ""
+            },
+            " (effective N = ", n_effective, "), ",
+            "the study has ", format(power * 100, digits = 0), "% power (α = ",
+            tab1_inputs$ss_alpha, ") to detect an event with incidence rate of 1 in ",
+            format(ceiling(minimal_rate), digits = 0, nsmall = 0), " (or ",
+            format(minimal_p * 100, digits = 2, nsmall = 2), "%) or higher."
+          ))
+
+          HTML(paste0(text0, text1, text2, text3))
+        }
+
+      # Legacy tabset checks for non-migrated tabs
+      } else if (input$tabset == "Power (Single)") {
         incidence_rate <- input$power_p
         sample_size <- input$power_n
         power <- pwr.p.test(
@@ -1931,7 +2089,60 @@ app_server <- function(input, output, session) {
       isolate({
         validate_inputs()
 
-        if (input$tabset == "Power (Single)") {
+        # Tab 1: Single Proportion - Power Analysis (using sidebar_page)
+        if (input$sidebar_page == "power_single") {
+          tab1_inputs <- tab1_vals$inputs()
+          # Generate power curve data
+          n_current <- tab1_inputs$power_n
+          n_seq <- generate_n_sequence(n_reference = n_current)
+
+          pow <- vapply(n_seq, function(n) {
+            pwr.p.test(
+              sig.level = tab1_inputs$power_alpha, power = NULL,
+              h = ES.h(1 / tab1_inputs$power_p, 0), alt = "greater", n = n
+            )$power
+          }, FUN.VALUE = numeric(1))
+
+          # Create plot using helper function
+          create_power_curve_plot(
+            n_seq = n_seq,
+            power_vals = pow,
+            n_current = n_current,
+            target_power = 0.8,
+            plot_title = "Interactive Power Curve (Tier 1 Enhancement)",
+            n_reference_label = "Current N"
+          )
+
+        # Tab 1: Single Proportion - Sample Size (using sidebar_page)
+        } else if (input$sidebar_page == "ss_single") {
+          tab1_inputs <- tab1_vals$inputs()
+          # Generate power curve data
+          target_power <- tab1_inputs$ss_power / 100
+          n_required <- pwr.p.test(
+            sig.level = tab1_inputs$ss_alpha, power = target_power,
+            h = ES.h(1 / tab1_inputs$ss_p, 0), alt = "greater", n = NULL
+          )$n
+          n_seq <- generate_n_sequence_for_ss(n_required = n_required)
+
+          pow <- vapply(n_seq, function(n) {
+            pwr.p.test(
+              sig.level = tab1_inputs$ss_alpha, power = NULL,
+              h = ES.h(1 / tab1_inputs$ss_p, 0), alt = "greater", n = n
+            )$power
+          }, FUN.VALUE = numeric(1))
+
+          # Create plot using helper function
+          create_power_curve_plot(
+            n_seq = n_seq,
+            power_vals = pow,
+            n_current = n_required,
+            target_power = target_power,
+            plot_title = "Interactive Power Curve (Tier 1 Enhancement)",
+            n_reference_label = "Required N"
+          )
+
+        # Legacy tabset checks for non-migrated tabs
+        } else if (input$tabset == "Power (Single)") {
           # Generate power curve data
           n_current <- input$power_n
           n_seq <- generate_n_sequence(n_reference = n_current)

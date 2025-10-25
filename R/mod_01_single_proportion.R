@@ -127,9 +127,17 @@ mod_01_single_proportion_ui <- function(id) {
 #' 01_single_proportion Server Functions
 #'
 #' @noRd
-mod_01_single_proportion_server <- function(id){
+#'
+#' @importFrom shiny observeEvent updateNumericInput updateSliderInput updateRadioButtons
+#' @importFrom shiny reactive renderUI renderPlot req validate need isolate
+mod_01_single_proportion_server <- function(id, parent_session){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
+
+    # Use parent session for rendering to shared outputs
+    if (missing(parent_session)) {
+      parent_session <- session$parent
+    }
 
     # Initialize missing data module for sample size tab
     missing_data_vals <- missing_data_server("missing_data")
@@ -169,8 +177,25 @@ mod_01_single_proportion_server <- function(id){
       update_segmented_alpha(session, "ss_alpha", value = 0.05)
     })
 
-    # Note: The actual calculation logic will remain in app_server.R for now
-    # and will be migrated in a future step when we extract business logic to fct_*.R files
+    # Return reactive values that indicate this module should handle results
+    # The parent app_server will check these to know which module is active
+    list(
+      inputs = reactive({
+        list(
+          power_n = input$power_n,
+          power_p = input$power_p,
+          power_alpha = input$power_alpha,
+          power_discon = input$power_discon,
+          ss_single_calc_mode = input$ss_single_calc_mode,
+          ss_power = input$ss_power,
+          ss_p = input$ss_p,
+          ss_n_fixed = input$ss_n_fixed,
+          ss_discon = input$ss_discon,
+          ss_alpha = input$ss_alpha
+        )
+      }),
+      missing_data_vals = missing_data_vals
+    )
   })
 }
 
