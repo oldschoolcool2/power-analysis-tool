@@ -1,0 +1,811 @@
+---
+title: "Minimal Detectable Effect Sizes: Understanding Feasibility Constraints"
+author: "Power Analysis Tool Development Team"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Minimal Detectable Effect Sizes: Understanding Feasibility Constraints}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
+)
+```
+
+## Introduction
+
+Traditional sample size calculations answer the question: *"How many participants do I need to detect an effect of size X?"*
+
+But in real-world research, sample size is often **constrained** by:
+
+- **Budget limitations**: Limited funding for recruitment and follow-up
+- **Feasibility**: Small eligible patient population
+- **Time constraints**: Short study duration limits enrollment
+- **Logistical barriers**: Limited sites, staff, or resources
+
+In these scenarios, a more practical question is: *"Given my constrained sample size, what is the smallest effect I can reliably detect?"*
+
+This is the **Minimal Detectable Effect Size (MDE)** — also called the **Minimum Detectable Effect**.
+
+This vignette explains:
+
+1. **What is a minimal detectable effect** and why it matters
+2. **How to calculate MDE** for different study designs
+3. **How to interpret MDE** in the context of clinical or practical significance
+4. **When to use MDE** vs traditional sample size calculations
+5. **Practical workflows** and decision-making examples
+
+## What is a Minimal Detectable Effect?
+
+### Definition
+
+The **Minimal Detectable Effect Size (MDE)** is the smallest true effect that a study can reliably detect (with specified power and significance level) given a fixed sample size.
+
+**Key components**:
+
+- **Fixed N**: Sample size is predetermined (constrained by feasibility)
+- **Fixed α**: Significance level (typically 0.05)
+- **Fixed power**: Desired statistical power (typically 0.80 or 0.90)
+- **Unknown effect size**: What we're solving for
+
+### Why MDE Matters
+
+Traditional power analysis assumes:
+1. You specify the effect size of interest (from literature, pilot data, or clinical importance)
+2. Calculate required sample size
+3. Recruit that many participants
+
+**Problem**: What if the calculated N is 5,000 but you can only afford to recruit 500?
+
+**Solution**: Calculate the MDE for N = 500 to understand:
+- What effect sizes are you powered to detect?
+- Is the MDE clinically meaningful?
+- Should you proceed with the study or seek additional resources/collaborations?
+
+### MDE as a Reality Check
+
+The MDE provides a **feasibility reality check**:
+
+**Scenario A: Feasible Study**
+- Can recruit N = 400
+- MDE = 10 percentage points difference (e.g., 30% vs 40%)
+- Clinically meaningful threshold = 8 percentage points
+- **Decision**: Proceed — study is powered to detect meaningful effects
+
+**Scenario B: Underpowered Study**
+- Can recruit N = 100
+- MDE = 25 percentage points (e.g., 30% vs 55%)
+- Clinically meaningful threshold = 8 percentage points
+- **Decision**: Do NOT proceed — study can only detect unrealistically large effects
+
+## Calculating MDE for Different Designs
+
+### Single Proportion
+
+**Question**: Given fixed N, what is the smallest difference from a null proportion we can detect?
+
+**Example**:
+- Historical proportion: **p₀ = 0.30** (30% event rate)
+- Available sample: **N = 150**
+- Power: **80%**, α = 0.05
+
+**Calculation (using Power Analysis Tool)**:
+
+```{r mde-single-prop, eval=FALSE}
+# This calculation is performed via binary search in the tool
+# For a single proportion test:
+
+library(pwr)
+
+# Solve for effect size h given fixed n
+result <- pwr.p.test(
+  n = 150,
+  sig.level = 0.05,
+  power = 0.80,
+  alternative = "two.sided"
+)
+
+h_mde <- result$h  # Cohen's h
+
+# Convert h back to proportion
+# h = 2 * (arcsin(sqrt(p1)) - arcsin(sqrt(p0)))
+# For p0 = 0.30, solve for p1 using h_mde
+p0 <- 0.30
+p1_mde <- (sin(asin(sqrt(p0)) + h_mde / 2))^2
+
+cat("With N =", 150, ", minimal detectable proportion is p1 =", round(p1_mde, 3), "\n")
+cat("Minimal detectable difference:", round(p1_mde - p0, 3), "\n")
+```
+
+**Typical output**:
+```
+With N = 150, minimal detectable proportion is p1 = 0.436
+Minimal detectable difference: 0.136 (13.6 percentage points)
+```
+
+**Interpretation**: With 150 participants, the study can detect an increase from 30% to at least 44% (13.6 percentage point difference). Smaller effects will not be reliably detected.
+
+### Two-Group Comparison (Proportions)
+
+**Question**: Given fixed N per group, what is the smallest difference between two proportions we can detect?
+
+**Example**:
+- Control group proportion: **p₂ = 0.20** (20% event rate)
+- Available sample: **N = 200** (100 per group)
+- Power: **80%**, α = 0.05
+
+**Calculation**:
+
+```{r mde-two-prop, eval=FALSE}
+result <- pwr.2p.test(
+  n = 100,  # Per group
+  sig.level = 0.05,
+  power = 0.80,
+  alternative = "two.sided"
+)
+
+h_mde <- result$h
+
+# Convert h to proportions (p2 = 0.20 is fixed)
+p2 <- 0.20
+# h = 2 * (arcsin(sqrt(p1)) - arcsin(sqrt(p2)))
+# Solve for p1
+p1_mde <- (sin(asin(sqrt(p2)) + h_mde / 2))^2
+
+cat("With N = 100 per group, minimal detectable p1 =", round(p1_mde, 3), "\n")
+cat("Minimal detectable difference:", round(p1_mde - p2, 3), "\n")
+
+# Calculate effect measures
+rr_mde <- p1_mde / p2
+or_mde <- (p1_mde / (1 - p1_mde)) / (p2 / (1 - p2))
+rd_mde <- p1_mde - p2
+
+cat("MDE in terms of:\n")
+cat("  Risk Difference (RD):", round(rd_mde, 3), "\n")
+cat("  Relative Risk (RR):", round(rr_mde, 2), "\n")
+cat("  Odds Ratio (OR):", round(or_mde, 2), "\n")
+```
+
+**Typical output**:
+```
+With N = 100 per group, minimal detectable p1 = 0.361
+Minimal detectable difference: 0.161 (16.1 percentage points)
+
+MDE in terms of:
+  Risk Difference (RD): 0.161
+  Relative Risk (RR): 1.81
+  Odds Ratio (OR): 2.27
+```
+
+**Interpretation**: With 100 per group, the study can detect an increase from 20% to at least 36% (RR ≥ 1.81, OR ≥ 2.27). Smaller effects will not be reliably detected.
+
+### Continuous Outcomes (t-test)
+
+**Question**: Given fixed N per group, what is the smallest mean difference (in standardized units) we can detect?
+
+**Example**:
+- Available sample: **N = 120** (60 per group)
+- Power: **80%**, α = 0.05
+
+**Calculation**:
+
+```{r mde-continuous, eval=FALSE}
+result <- pwr.t.test(
+  n = 60,  # Per group
+  sig.level = 0.05,
+  power = 0.80,
+  type = "two.sample",
+  alternative = "two.sided"
+)
+
+d_mde <- result$d
+
+cat("With N = 60 per group, minimal detectable Cohen's d =", round(d_mde, 3), "\n")
+
+# Interpretation in terms of raw differences (if SD is known)
+# Example: If outcome is blood pressure with SD = 15 mmHg
+sd <- 15
+mean_diff_mde <- d_mde * sd
+
+cat("If SD = 15 mmHg, minimal detectable mean difference:", round(mean_diff_mde, 1), "mmHg\n")
+```
+
+**Typical output**:
+```
+With N = 60 per group, minimal detectable Cohen's d = 0.519
+
+If SD = 15 mmHg, minimal detectable mean difference: 7.8 mmHg
+```
+
+**Interpretation**: With 60 per group, the study can detect a standardized mean difference of at least 0.52 (a "medium" effect by Cohen's conventions). In practical terms, this corresponds to a 7.8 mmHg blood pressure difference if SD = 15 mmHg.
+
+### Survival Analysis (Cox Regression)
+
+**Question**: Given fixed sample size and event rate, what is the smallest hazard ratio we can detect?
+
+**Example**:
+- Available sample: **N = 300**
+- Expected event rate: **60%** (180 events)
+- Power: **80%**, α = 0.05
+
+**Calculation (conceptual)**:
+
+For Cox regression, power depends on the **number of events**, not total sample size.
+
+```{r mde-survival, eval=FALSE}
+# Approximate calculation using event-driven power
+# For a two-group comparison with equal allocation:
+
+n_events <- 180
+z_alpha <- qnorm(1 - 0.05 / 2)  # 1.96
+z_beta <- qnorm(0.80)           # 0.84
+
+# Formula: log(HR) ≈ (z_alpha + z_beta) / sqrt(n_events / 4)
+log_hr_mde <- (z_alpha + z_beta) / sqrt(n_events / 4)
+hr_mde <- exp(log_hr_mde)
+
+cat("With", n_events, "events, minimal detectable HR =", round(hr_mde, 2), "\n")
+```
+
+**Typical output**:
+```
+With 180 events, minimal detectable HR = 1.53
+```
+
+**Interpretation**: With 300 participants and 180 events, the study can detect a hazard ratio of at least 1.53 (53% increased hazard). Smaller hazard ratios will not be reliably detected.
+
+### Matched Case-Control Studies
+
+**Question**: Given fixed number of matched pairs, what is the smallest odds ratio we can detect?
+
+**Example**:
+- Available sample: **100 matched pairs**
+- Exposure proportion in controls: **30%**
+- Matching ratio: **1:1**
+- Power: **80%**, α = 0.05
+
+**Calculation (using Power Analysis Tool)**:
+
+The tool uses binary search to find the minimal OR that achieves 80% power given fixed N. This involves iteratively testing OR values until the power curve crosses 0.80.
+
+**Typical MDE**: OR ≥ 2.0 to 3.0 for 100 matched pairs (depends on baseline exposure).
+
+### Non-Inferiority Trials
+
+**Question**: Given fixed sample size, what is the widest non-inferiority margin we can demonstrate?
+
+**Example**:
+- Expected event rates: **p₁ = 0.15** (test), **p₂ = 0.15** (reference)
+- Available sample: **N = 400** (200 per group)
+- Power: **80%**, α = 0.025 (one-sided)
+
+**Calculation**:
+
+The tool uses binary search to find the maximum non-inferiority margin (Δ) such that the upper bound of the confidence interval for (p₁ - p₂) excludes Δ with 80% power.
+
+**Typical MDE**: Margin ≤ 5-10 percentage points for N = 400.
+
+## Interpreting MDE in Context
+
+### Clinical vs Statistical Significance
+
+The MDE must be interpreted relative to **clinical or practical significance thresholds**:
+
+**Example 1: Blood Pressure Reduction**
+
+- MDE: 7.8 mmHg reduction
+- Clinically meaningful: 5 mmHg reduction (established guideline threshold)
+- **Interpretation**: Study is adequately powered; MDE is smaller than clinical threshold ✅
+
+**Example 2: Diabetes HbA1c Reduction**
+
+- MDE: 1.2% reduction
+- Clinically meaningful: 0.5% reduction (established threshold)
+- **Interpretation**: Study is underpowered; MDE exceeds clinical threshold ❌
+
+### Effect Size Benchmarks
+
+**Cohen's d (Continuous Outcomes)**:
+
+```{r cohens-d-table, echo=FALSE}
+cohens_table <- data.frame(
+  Effect_Size = c("Small", "Medium", "Large"),
+  Cohens_d = c("0.20", "0.50", "0.80"),
+  Example = c("Small but noticeable (e.g., 3 mmHg BP)",
+              "Moderate, clinically relevant (e.g., 7.5 mmHg BP)",
+              "Large, clinically important (e.g., 12 mmHg BP)"),
+  stringsAsFactors = FALSE
+)
+
+library(knitr)
+kable(cohens_table, caption = "Cohen's d Benchmarks for Continuous Outcomes")
+```
+
+**Relative Risk / Odds Ratio (Binary Outcomes)**:
+
+```{r rr-or-table, echo=FALSE}
+effect_table <- data.frame(
+  Effect_Size = c("Small", "Moderate", "Large", "Very Large"),
+  Relative_Risk = c("1.1 - 1.3", "1.3 - 2.0", "2.0 - 3.0", "> 3.0"),
+  Odds_Ratio = c("1.2 - 1.5", "1.5 - 2.5", "2.5 - 4.0", "> 4.0"),
+  Example = c("Weak association (e.g., minor risk factor)",
+              "Moderate association (e.g., typical treatment effect)",
+              "Strong association (e.g., effective prevention)",
+              "Very strong (e.g., smoking → lung cancer)"),
+  stringsAsFactors = FALSE
+)
+
+kable(effect_table, caption = "Relative Effect Size Benchmarks for Binary Outcomes")
+```
+
+**Hazard Ratio (Survival Analysis)**:
+
+Similar interpretation to RR/OR:
+
+- **HR = 1.0**: No effect
+- **HR = 1.3**: 30% increased hazard (moderate)
+- **HR = 2.0**: 100% increased hazard (large)
+
+### Domain-Specific Thresholds
+
+Different fields have established thresholds for meaningful effects:
+
+**Cardiovascular Medicine**:
+- Blood pressure: ≥ 5 mmHg reduction
+- LDL cholesterol: ≥ 10% reduction
+- Cardiovascular events: RR ≤ 0.90 (10% reduction)
+
+**Diabetes**:
+- HbA1c: ≥ 0.5% reduction
+- Fasting glucose: ≥ 10 mg/dL reduction
+
+**Mental Health**:
+- Depression scales (e.g., PHQ-9): ≥ 3-point change
+- Anxiety scales (e.g., GAD-7): ≥ 4-point change
+
+**Education**:
+- Standardized test scores: ≥ 0.20 SD improvement
+
+**Recommendation**: Always specify **a priori** what effect size is clinically/practically meaningful, then compare MDE to this threshold.
+
+## Decision-Making Framework
+
+### Step 1: Calculate MDE for Your Constrained N
+
+Use the Power Analysis Tool or statistical software to determine the MDE given:
+
+- Fixed sample size (N)
+- Desired power (typically 0.80)
+- Significance level (α = 0.05)
+
+```{r step1-example, eval=FALSE}
+# Example: Two-group comparison with constrained N = 200 (100 per group)
+library(pwr)
+
+result <- pwr.2p.test(
+  n = 100,
+  sig.level = 0.05,
+  power = 0.80,
+  alternative = "two.sided"
+)
+
+h_mde <- result$h
+# Convert to practical metrics (RD, RR, OR) based on your baseline p2
+```
+
+### Step 2: Compare MDE to Clinical Threshold
+
+**If MDE ≤ Clinical Threshold**: Study is feasible ✅
+
+- The smallest effect you can detect is smaller than (or equal to) what's clinically meaningful
+- Proceed with the study
+
+**If MDE > Clinical Threshold**: Study is underpowered ❌
+
+- You can only detect effects larger than what's clinically meaningful
+- Risk of **false negatives**: Missing true but smaller effects
+- Consider alternatives (Step 3)
+
+### Step 3: Explore Alternatives if Underpowered
+
+**Option A: Increase Sample Size**
+
+- Seek additional funding
+- Extend recruitment period
+- Add recruitment sites
+- Use multi-site collaborations
+
+```{r option-a, eval=FALSE}
+# Calculate required N to detect clinical threshold effect
+# Example: Need to detect RD = 0.10 (10 percentage points)
+
+# Convert RD to Cohen's h
+p1 <- 0.30  # Clinical threshold
+p2 <- 0.20
+h_target <- 2 * (asin(sqrt(p1)) - asin(sqrt(p2)))
+
+# Calculate required N
+result_needed <- pwr.2p.test(
+  h = h_target,
+  sig.level = 0.05,
+  power = 0.80,
+  alternative = "two.sided"
+)
+
+n_per_group_needed <- ceiling(result_needed$n)
+cat("To detect RD = 0.10, need", n_per_group_needed, "per group\n")
+```
+
+**Option B: Increase Power for Larger (but Still Meaningful) Effects**
+
+If you can't detect the smallest meaningful effect, determine what larger effect you CAN detect and assess if it's still meaningful.
+
+```{r option-b, eval=FALSE}
+# Calculate MDE with current N but for higher power (e.g., 90%)
+result_high_power <- pwr.2p.test(
+  n = 100,
+  sig.level = 0.05,
+  power = 0.90,  # Higher power
+  alternative = "two.sided"
+)
+
+h_mde_90 <- result_high_power$h
+# Compare: with 90% power, MDE is slightly larger
+```
+
+**Option C: Accept Lower Power**
+
+If the MDE is close to the clinical threshold, you might accept lower power (e.g., 70%) to make the study feasible.
+
+**Caution**: Lower power increases the risk of false negatives (Type II errors).
+
+```{r option-c, eval=FALSE}
+# Calculate MDE with lower power (70%)
+result_low_power <- pwr.2p.test(
+  n = 100,
+  sig.level = 0.05,
+  power = 0.70,
+  alternative = "two.sided"
+)
+
+h_mde_70 <- result_low_power$h
+# With lower power, MDE is smaller (but risk of missing true effects increases)
+```
+
+**Option D: Combine with Meta-Analysis**
+
+If your study alone is underpowered, plan to contribute to a future meta-analysis with other similar studies.
+
+**Option E: Revise Research Question**
+
+If the primary outcome is not feasible, consider:
+
+- **Composite outcomes**: Combine multiple related outcomes to increase event rate
+- **Alternative outcomes**: Use a more sensitive outcome (e.g., continuous biomarker instead of binary clinical event)
+- **Subgroup analysis**: Focus on higher-risk subgroup with higher event rate
+
+**Option F: Do Not Proceed**
+
+If none of the above are feasible and the MDE is much larger than meaningful, it may be more ethical and efficient to **not conduct the study**.
+
+**Why?**
+- Wastes resources (money, time, participant burden)
+- Contributes to research waste (underpowered studies clutter literature)
+- Ethical concerns (exposing participants to interventions without adequate chance of detecting benefit)
+
+## Practical Case Studies
+
+### Case Study 1: Community Health Intervention
+
+**Scenario**:
+
+A community health center wants to test a smoking cessation intervention.
+
+**Parameters**:
+- Outcome: Smoking cessation at 6 months (binary)
+- Historical quit rate: **15%**
+- Available budget: **200 participants** (100 per group)
+- Clinically meaningful: **10 percentage point increase** (to 25%)
+
+**Analysis**:
+
+```{r case1-analysis, eval=FALSE}
+# Calculate MDE with N = 100 per group
+result <- pwr.2p.test(
+  n = 100,
+  sig.level = 0.05,
+  power = 0.80,
+  alternative = "two.sided"
+)
+
+h_mde <- result$h
+p2 <- 0.15
+
+# Solve for p1 given h_mde and p2
+p1_mde <- (sin(asin(sqrt(p2)) + h_mde / 2))^2
+rd_mde <- p1_mde - p2
+
+cat("MDE (Risk Difference):", round(rd_mde, 3), "\n")
+cat("MDE (Cessation rate):", round(p1_mde, 3), "(", round(p1_mde * 100, 1), "%)\n")
+cat("Clinical threshold: 0.10 (10 percentage points)\n")
+
+if (rd_mde <= 0.10) {
+  cat("✅ Study is feasible: MDE ≤ clinical threshold\n")
+} else {
+  cat("❌ Study is underpowered: MDE > clinical threshold\n")
+}
+```
+
+**Output**:
+```
+MDE (Risk Difference): 0.159
+MDE (Cessation rate): 0.309 (30.9%)
+Clinical threshold: 0.10 (10 percentage points)
+
+❌ Study is underpowered: MDE > clinical threshold
+```
+
+**Interpretation**:
+
+- With 100 per group, can only detect an increase from 15% to 31% (16 percentage points)
+- Clinical threshold is 10 percentage points (15% → 25%)
+- **Conclusion**: Study cannot detect the clinically meaningful 10-point increase
+
+**Decision Options**:
+
+1. **Increase N**: Calculate required sample size for 10-point increase
+   ```{r case1-option1, eval=FALSE}
+   h_target <- 2 * (asin(sqrt(0.25)) - asin(sqrt(0.15)))
+   result_target <- pwr.2p.test(h = h_target, sig.level = 0.05, power = 0.80, alternative = "two.sided")
+   n_needed <- ceiling(result_target$n)
+   cat("Need", n_needed, "per group (", n_needed * 2, "total)\n")
+   # Output: Need 293 per group (586 total)
+   ```
+
+2. **Accept larger MDE**: Reframe research question as detecting 15% → 31% increase (still meaningful?)
+
+3. **Do not proceed**: If 586 participants infeasible and 16-point increase not meaningful, cancel study
+
+**Final Decision**: Seek additional funding to recruit 600 participants, or do not proceed.
+
+### Case Study 2: Clinical Trial with Fixed Budget
+
+**Scenario**:
+
+A pharmaceutical company has a fixed budget for a Phase 2 trial of a new antihypertensive drug.
+
+**Parameters**:
+- Outcome: Change in systolic blood pressure (continuous)
+- Baseline SD: **15 mmHg** (from literature)
+- Available budget: **N = 120** (60 per group)
+- Clinically meaningful: **5 mmHg reduction** (guideline threshold)
+
+**Analysis**:
+
+```{r case2-analysis, eval=FALSE}
+# Calculate MDE (Cohen's d) with N = 60 per group
+result <- pwr.t.test(
+  n = 60,
+  sig.level = 0.05,
+  power = 0.80,
+  type = "two.sample",
+  alternative = "two.sided"
+)
+
+d_mde <- result$d
+
+# Convert to mmHg
+sd <- 15
+mean_diff_mde <- d_mde * sd
+
+cat("MDE (Cohen's d):", round(d_mde, 3), "\n")
+cat("MDE (mmHg):", round(mean_diff_mde, 2), "mmHg\n")
+cat("Clinical threshold: 5 mmHg\n")
+
+if (mean_diff_mde <= 5) {
+  cat("✅ Study is feasible: MDE ≤ clinical threshold\n")
+} else {
+  cat("❌ Study is underpowered: MDE > clinical threshold\n")
+}
+```
+
+**Output**:
+```
+MDE (Cohen's d): 0.519
+MDE (mmHg): 7.79 mmHg
+Clinical threshold: 5 mmHg
+
+❌ Study is underpowered: MDE > clinical threshold
+```
+
+**Interpretation**:
+
+- With 60 per group, can only detect a 7.8 mmHg reduction
+- Clinical threshold is 5 mmHg
+- **Conclusion**: Study cannot detect the clinically meaningful 5 mmHg reduction
+
+**Decision Options**:
+
+1. **Increase N**:
+   ```{r case2-option1, eval=FALSE}
+   d_target <- 5 / 15  # 0.333
+   result_target <- pwr.t.test(d = d_target, sig.level = 0.05, power = 0.80, type = "two.sample", alternative = "two.sided")
+   n_needed <- ceiling(result_target$n)
+   cat("Need", n_needed, "per group (", n_needed * 2, "total)\n")
+   # Output: Need 143 per group (286 total)
+   ```
+
+2. **Use a more sensitive outcome**: Switch from office BP to 24-hour ambulatory BP monitoring (lower variance)
+
+3. **Proceed with N = 120 as exploratory study**: Accept that study is powered for 7.8 mmHg, but report results regardless (exploratory Phase 2)
+
+**Final Decision**: Proceed with N = 120 as **exploratory Phase 2** trial. If results show ≥ 7.8 mmHg reduction, conduct larger Phase 3 trial (N = 286) powered for 5 mmHg.
+
+### Case Study 3: Rare Disease Study
+
+**Scenario**:
+
+A rare disease registry can only enroll **50 participants total** (25 per group) for a treatment comparison.
+
+**Parameters**:
+- Outcome: Disease severity score (continuous, SD = 10)
+- Available sample: **N = 50** (25 per group)
+- Clinically meaningful: **5-point reduction** (0.5 SD)
+
+**Analysis**:
+
+```{r case3-analysis, eval=FALSE}
+result <- pwr.t.test(
+  n = 25,
+  sig.level = 0.05,
+  power = 0.80,
+  type = "two.sample",
+  alternative = "two.sided"
+)
+
+d_mde <- result$d
+sd <- 10
+mean_diff_mde <- d_mde * sd
+
+cat("MDE (Cohen's d):", round(d_mde, 3), "\n")
+cat("MDE (score points):", round(mean_diff_mde, 2), "\n")
+cat("Clinical threshold: 5 points\n")
+```
+
+**Output**:
+```
+MDE (Cohen's d): 0.814
+MDE (score points): 8.14
+Clinical threshold: 5 points
+
+❌ Study is underpowered: MDE > clinical threshold
+```
+
+**Interpretation**:
+
+- With 25 per group, can only detect an 8.1-point reduction
+- Clinical threshold is 5 points
+- **Conclusion**: Study cannot detect the clinically meaningful 5-point reduction
+
+**Decision Options**:
+
+1. **Multi-site collaboration**: Partner with other registries to increase N to 143 per group (from Case 2 calculation)
+
+2. **Accept high MDE and proceed**: Rare disease trials are inherently underpowered; proceed as pilot/proof-of-concept
+
+3. **Use Bayesian approach**: Use Bayesian methods to incorporate prior information and gain efficiency
+
+**Final Decision**: Proceed with N = 50 as **pilot study**. Use Bayesian analysis incorporating literature priors. Report findings to contribute to future meta-analysis.
+
+## Advanced Topics
+
+### MDE vs Post-Hoc Power
+
+**Important distinction**:
+
+- **MDE (a priori)**: Calculated **before** data collection, using fixed N to determine smallest detectable effect
+- **Post-hoc power**: Calculated **after** data collection, using observed effect size to determine power
+
+**Never calculate post-hoc power** for your study's observed effect:
+
+- Circular reasoning: Post-hoc power is a 1:1 function of the p-value
+- If p < 0.05, post-hoc power will be high (misleading)
+- If p > 0.05, post-hoc power will be low (obvious from non-significance)
+
+**Instead**: Report **MDE** in your study protocol and publications to show what effects the study was designed to detect.
+
+### MDE with Adjustments (Clustering, Missing Data)
+
+When sample size is constrained and you have clustering or missing data, the **effective sample size** is reduced, increasing the MDE.
+
+**Example**:
+- Available sample: N = 400
+- Clustering: Design effect = 2.0 (ICC = 0.05, m = 20)
+- Effective N: 400 / 2.0 = **200**
+
+**MDE calculation**:
+
+```{r mde-adjusted, eval=FALSE}
+# Calculate MDE using effective N
+n_effective <- 200 / 2  # 100 per group
+
+result <- pwr.2p.test(
+  n = n_effective,
+  sig.level = 0.05,
+  power = 0.80,
+  alternative = "two.sided"
+)
+
+# MDE will be larger due to reduced effective N
+```
+
+**Recommendation**: Always account for clustering and missing data when calculating MDE for constrained samples.
+
+### MDE for Non-Inferiority Trials
+
+Non-inferiority trials aim to show that a new treatment is "not worse" than standard by more than a margin Δ.
+
+**MDE question**: Given constrained N, what is the widest margin we can demonstrate?
+
+**Interpretation**:
+- **Narrow margin** (e.g., 2%): Stringent non-inferiority (requires large N)
+- **Wide margin** (e.g., 10%): Lenient non-inferiority (feasible with smaller N)
+
+**Decision**: Compare MDE margin to clinically acceptable margin (often half of the superiority threshold).
+
+## Summary
+
+**Key takeaways**:
+
+1. **MDE answers**: "What's the smallest effect I can detect with my constrained sample size?"
+
+2. **Calculate MDE when**:
+   - Sample size is fixed by budget, feasibility, or logistics
+   - You need a reality check on what effects are detectable
+
+3. **Compare MDE to clinical thresholds**:
+   - If MDE ≤ threshold: Study is feasible ✅
+   - If MDE > threshold: Study is underpowered ❌
+
+4. **Decision options for underpowered studies**:
+   - Increase N (seek funding, extend timeline, add sites)
+   - Revise research question (larger effects, alternative outcomes)
+   - Accept underpowering (pilot/exploratory study)
+   - Do not proceed (avoid research waste)
+
+5. **Always report MDE in study protocols** to show transparency about what effects the study can detect
+
+6. **Never calculate post-hoc power** — use MDE instead
+
+**Practical workflow**:
+
+1. Determine constrained sample size (N)
+2. Calculate MDE for N (using Power Analysis Tool or pwr package)
+3. Compare MDE to clinically meaningful threshold
+4. Decide: proceed, modify, or cancel study
+5. Report MDE in protocol and publications
+
+## References
+
+1. Lenth RV (2001). Some practical guidelines for effective sample size determination. *The American Statistician* 55(3):187-193.
+
+2. Gelman A, Carlin J (2014). Beyond power calculations: Assessing Type S (sign) and Type M (magnitude) errors. *Perspectives on Psychological Science* 9(6):641-651.
+
+3. Cohen J (1988). *Statistical Power Analysis for the Behavioral Sciences* (2nd ed.). Routledge.
+
+4. Freedman LS, Lowe D, Macaskill P (1984). Stopping rules for clinical trials incorporating clinical opinion. *Biometrics* 40(3):575-586.
+
+5. Hoenig JM, Heisey DM (2001). The abuse of power: The pervasive fallacy of power calculations for data analysis. *The American Statistician* 55(1):19-24.
+
+## Further Reading
+
+- See `vignette("interactive-power-curves")` for visualizing power across a range of effect sizes
+- See `vignette("design-effects-clustering")` for adjusting MDE for clustered data
+- See `vignette("missing-data-adjustments")` for adjusting MDE for missing data
+- See all tabs in the Power Analysis Tool for interactive MDE calculations

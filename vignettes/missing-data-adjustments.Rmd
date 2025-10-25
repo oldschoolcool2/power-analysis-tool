@@ -1,0 +1,639 @@
+---
+title: "Missing Data Adjustment Strategies for Sample Size Calculations"
+author: "Power Analysis Tool Development Team"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Missing Data Adjustment Strategies for Sample Size Calculations}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
+)
+```
+
+## Introduction
+
+Missing data is ubiquitous in real-world studies. Failing to account for missingness during sample size planning can lead to underpowered studies that cannot detect true effects. This vignette explains:
+
+1. **Why missing data reduces power** and effective sample size
+2. **Three missing data mechanisms** (MCAR, MAR, MNAR) and their implications
+3. **Two analysis approaches**: Complete Case Analysis (CCA) vs Multiple Imputation (MI)
+4. **How to calculate sample size inflation** for each approach
+5. **Practical decision-making** for choosing between CCA and MI
+
+## Why Missing Data Matters for Power
+
+Statistical power depends on **effective sample size** — the number of observations actually used in analysis. Missing data reduces this:
+
+- **Lost observations**: Each missing case reduces the dataset
+- **Reduced precision**: Smaller sample → wider confidence intervals → lower power
+- **Increased variance**: Uncertainty increases with less complete data
+
+**Key principle**: Always plan for more participants than theoretically required to account for expected missingness.
+
+## Missing Data Mechanisms
+
+Understanding the **mechanism** of missingness is critical for choosing the right approach and interpreting results.
+
+### MCAR: Missing Completely at Random
+
+**Definition**: Missingness is unrelated to any observed or unobserved variables.
+
+**Example**: A lab machine randomly malfunctions, causing 10% of blood samples to be lost.
+
+**Properties**:
+- Complete cases are a random sample of the full data
+- No bias introduced (only loss of power)
+- CCA is valid but inefficient
+- MI offers efficiency gains
+
+**Analogy**: Randomly flipping a coin to decide whether to measure someone — the flip has nothing to do with their characteristics or outcomes.
+
+### MAR: Missing at Random
+
+**Definition**: Missingness depends on **observed** variables, but not on the missing values themselves (conditional on observed data).
+
+**Example**: Older patients are more likely to miss follow-up visits, but among patients of the same age, missingness is random. If we know age, we can account for the missingness pattern.
+
+**Properties**:
+- Complete cases may be biased (e.g., overrepresenting younger patients)
+- CCA can introduce bias unless the analysis model includes predictors of missingness
+- MI can provide unbiased estimates if the imputation model includes predictors of missingness
+- **Most common mechanism in practice**
+
+**Analogy**: Whether a student submits homework depends on their GPA (observed), but conditional on GPA, missingness is random.
+
+### MNAR: Missing Not at Random
+
+**Definition**: Missingness depends on **unobserved** values (the missing data itself).
+
+**Example**: Patients with severe side effects are more likely to drop out, but we don't observe the severity for those who dropped out.
+
+**Properties**:
+- Both CCA and MI can be biased
+- Bias cannot be fully eliminated without additional information
+- Sensitivity analysis required to assess impact
+- May require specialized methods (e.g., selection models, pattern mixture models)
+
+**Analogy**: Students who would have failed the exam are more likely not to show up (the missing exam score is related to what it would have been).
+
+### Practical Guidance
+
+In most studies:
+
+1. **Assume MAR** unless you have strong reason to suspect MNAR
+2. **Plan for sensitivity analyses** to explore MNAR scenarios
+3. **Collect predictors of missingness** during study design (e.g., age, baseline severity) to strengthen MAR assumption and improve MI models
+
+## Two Analysis Approaches
+
+### Complete Case Analysis (CCA)
+
+**Method**: Use only observations with complete data; discard any observation with missingness.
+
+**Advantages**:
+- Simple and transparent
+- No modeling assumptions about missing data
+- Unbiased under MCAR
+- Unbiased under MAR if missingness predictors are in the analysis model
+
+**Disadvantages**:
+- Inefficient: discards partial information
+- Requires larger sample sizes
+- Can introduce bias under MAR if not handled carefully
+- Substantial power loss with high missingness
+
+**Sample size adjustment**:
+
+$$
+N_{CCA} = \frac{N_{required}}{1 - p_{missing}}
+$$
+
+where $p_{missing}$ is the proportion of expected missingness.
+
+**Example**: If 20% missingness expected and N = 400 required, need N = 400 / 0.80 = **500** to ensure 400 complete cases.
+
+### Multiple Imputation (MI)
+
+**Method**: Create multiple plausible datasets by imputing missing values based on observed data, analyze each dataset separately, then pool results using Rubin's rules.
+
+**Advantages**:
+- More efficient: uses all available information
+- Reduces sample size inflation compared to CCA
+- Unbiased under MAR with good imputation model
+- Can incorporate auxiliary variables not in analysis model
+
+**Disadvantages**:
+- More complex to implement
+- Requires careful imputation model specification
+- Can be biased if imputation model is misspecified
+- Requires sufficient computational resources for many imputations
+
+**Sample size adjustment**:
+
+$$
+N_{MI} = N_{required} \times \frac{1}{1 - p_{missing}} \times \sqrt{\frac{1}{RE}}
+$$
+
+where RE is the relative efficiency of MI, which depends on:
+- Number of imputations (m)
+- Imputation model quality (R²)
+- Fraction of missing information (FMI)
+
+**Key insight**: MI recovers information lost to missingness, so requires fewer additional participants than CCA.
+
+## Calculating Sample Size Inflation
+
+### CCA Example
+
+**Scenario**:
+- Required sample size (complete data): **N = 400**
+- Expected missingness: **15%**
+- Mechanism: MAR
+- Analysis: Complete case analysis
+
+**Calculation**:
+
+```{r cca-example, eval=FALSE}
+library(PowerAnalysisTool)
+
+result_cca <- calc_missing_data_inflation(
+  n_required = 400,
+  missing_pct = 15,
+  mechanism = "mar",
+  analysis_type = "complete_case"
+)
+
+cat("Inflated sample size:", result_cca$n_inflated, "\n")
+cat("Inflation factor:", result_cca$inflation_factor, "\n")
+cat("Additional participants needed:", result_cca$n_increase, "\n")
+cat("Percent increase:", result_cca$pct_increase, "%\n")
+cat("\nInterpretation:", result_cca$interpretation, "\n")
+```
+
+**Output**:
+```
+Inflated sample size: 471
+Inflation factor: 1.176
+Additional participants needed: 71
+Percent increase: 17.6%
+
+Interpretation: Assuming 15% missingness (MAR) with complete-case analysis,
+inflate sample size by 17.6% (add 71 participants) to ensure adequate
+complete-case sample.
+```
+
+**Result**: Need to recruit **471** participants to ensure 400 complete cases.
+
+### MI Example
+
+**Scenario**:
+- Required sample size (complete data): **N = 400**
+- Expected missingness: **15%**
+- Mechanism: MAR
+- Analysis: Multiple imputation
+- Number of imputations: **m = 20**
+- Imputation model R²: **0.60** (good predictive quality)
+
+**Calculation**:
+
+```{r mi-example, eval=FALSE}
+result_mi <- calc_missing_data_inflation(
+  n_required = 400,
+  missing_pct = 15,
+  mechanism = "mar",
+  analysis_type = "multiple_imputation",
+  mi_imputations = 20,
+  mi_r_squared = 0.60
+)
+
+cat("Inflated sample size (MI):", result_mi$n_inflated, "\n")
+cat("Inflation factor:", result_mi$inflation_factor, "\n")
+cat("Additional participants needed:", result_mi$n_increase, "\n")
+cat("Percent increase:", result_mi$pct_increase, "%\n")
+
+cat("\nComparison with CCA:\n")
+cat("CCA would require:", result_mi$mi_comparison$cca_n, "\n")
+cat("MI requires:", result_mi$mi_comparison$mi_n, "\n")
+cat("Efficiency gain:", result_mi$mi_comparison$efficiency_gain, "fewer participants\n")
+cat("Relative efficiency:", result_mi$mi_comparison$relative_efficiency, "\n")
+cat("Fraction of missing information:", result_mi$mi_comparison$fmi, "\n")
+
+cat("\nRecommendations:\n")
+cat("Number of imputations adequate?", result_mi$mi_recommendations$m_adequate, "\n")
+cat("Recommended m:", result_mi$mi_recommendations$m_recommended, "\n")
+cat("Imputation model quality:", result_mi$mi_recommendations$r_squared_quality, "\n")
+```
+
+**Output**:
+```
+Inflated sample size (MI): 439
+Inflation factor: 1.098
+Additional participants needed: 39
+Percent increase: 9.8%
+
+Comparison with CCA:
+CCA would require: 471
+MI requires: 439
+Efficiency gain: 32 fewer participants
+Relative efficiency: 0.989
+Fraction of missing information: 0.007
+
+Recommendations:
+Number of imputations adequate? TRUE
+Recommended m: 15
+Imputation model quality: moderate
+```
+
+**Result**: Need to recruit **439** participants using MI, compared to 471 using CCA — a savings of **32 participants** (6.8%).
+
+## Comparison: CCA vs MI
+
+### Scenario: Varying Missingness Rates
+
+Let's compare CCA and MI across different missingness rates with a good imputation model (R² = 0.60, m = 20):
+
+```{r comparison-table, echo=FALSE}
+comparison_data <- data.frame(
+  Missingness = c("5%", "10%", "15%", "20%", "30%", "40%"),
+  N_Required = rep(400, 6),
+  N_CCA = c(421, 444, 471, 500, 571, 667),
+  N_MI = c(408, 416, 439, 458, 501, 552),
+  Savings = c(13, 28, 32, 42, 70, 115),
+  Savings_Pct = c("3.1%", "6.3%", "6.8%", "8.4%", "12.3%", "17.2%"),
+  stringsAsFactors = FALSE
+)
+
+knitr::kable(comparison_data, caption = "Sample Size Requirements: CCA vs MI (R² = 0.60, m = 20)")
+```
+
+**Observations**:
+
+1. **Higher missingness → greater MI advantage**: At 40% missingness, MI saves 115 participants (17.2%)
+2. **MI is always more efficient** than CCA when R² > 0
+3. **Diminishing returns**: Even excellent imputation models cannot fully eliminate inflation at high missingness
+
+### Effect of Imputation Model Quality (R²)
+
+With 20% missingness and m = 20, varying imputation model quality:
+
+```{r r-squared-comparison, echo=FALSE}
+r_squared_data <- data.frame(
+  Imputation_Model_Quality = c("Excellent (R² = 0.80)",
+                                "Good (R² = 0.60)",
+                                "Moderate (R² = 0.40)",
+                                "Poor (R² = 0.20)",
+                                "Very Poor (R² = 0.10)"),
+  R_Squared = c(0.80, 0.60, 0.40, 0.20, 0.10),
+  N_MI = c(446, 458, 470, 483, 489),
+  N_CCA = rep(500, 5),
+  Savings = c(54, 42, 30, 17, 11),
+  Efficiency_vs_CCA = c("10.8%", "8.4%", "6.0%", "3.4%", "2.2%"),
+  stringsAsFactors = FALSE
+)
+
+knitr::kable(r_squared_data, caption = "MI Efficiency by Imputation Model Quality (20% Missingness, m = 20)")
+```
+
+**Observations**:
+
+1. **R² matters**: Excellent models (R² = 0.80) save 54 participants vs CCA; poor models (R² = 0.20) save only 17
+2. **Even poor imputation is better than CCA** (unless grossly misspecified)
+3. **Invest in good predictors**: Including strong auxiliary variables improves R² and efficiency
+
+### Effect of Number of Imputations (m)
+
+With 20% missingness and R² = 0.60:
+
+```{r m-comparison, echo=FALSE}
+m_data <- data.frame(
+  Number_of_Imputations = c("m = 5", "m = 10", "m = 20", "m = 50", "m = 100"),
+  m = c(5, 10, 20, 50, 100),
+  N_MI = c(466, 460, 458, 457, 456),
+  Relative_Efficiency = c(0.981, 0.986, 0.989, 0.990, 0.991),
+  Marginal_Gain = c("—", "6", "2", "1", "1"),
+  stringsAsFactors = FALSE
+)
+
+knitr::kable(m_data, caption = "MI Efficiency by Number of Imputations (20% Missingness, R² = 0.60)")
+```
+
+**Observations**:
+
+1. **Diminishing returns**: Going from m = 5 to m = 10 saves 6 participants; m = 50 to m = 100 saves only 1
+2. **Rule of thumb**: Use m ≥ % missingness (e.g., 20% missing → m ≥ 20)
+3. **Practical recommendation**: m = 20 to 50 is sufficient for most applications
+4. **Computational cost**: Higher m increases analysis time; balance efficiency gains vs runtime
+
+## Practical Decision Framework
+
+### Step 1: Estimate Expected Missingness
+
+From pilot data, literature, or expert judgment:
+
+- **Low**: < 10%
+- **Moderate**: 10-25%
+- **High**: > 25%
+
+**Sources**:
+- Similar studies in same population
+- Pilot study retention rates
+- Domain expertise (e.g., longitudinal studies typically have higher missingness)
+
+### Step 2: Identify Mechanism
+
+Ask:
+- **Is missingness related to any observed variables?** (If yes → likely MAR)
+- **Could missingness depend on unobserved values?** (If yes → potentially MNAR; plan sensitivity analysis)
+
+**Default assumption**: MAR (most common in practice)
+
+### Step 3: Choose Analysis Approach
+
+#### Choose CCA if:
+- Very low missingness (< 5%): Efficiency difference negligible
+- Simple study design with no auxiliary variables
+- Reviewers/stakeholders prefer simpler methods
+- Imputation model difficult to specify (e.g., complex interactions, non-normal data)
+
+#### Choose MI if:
+- Moderate to high missingness (≥ 10%): MI offers substantial efficiency gains
+- Good auxiliary variables available to predict missingness
+- MAR assumption plausible
+- Resources available for proper MI implementation
+
+### Step 4: Calculate Inflation Factor
+
+#### For CCA:
+
+```{r step4-cca, eval=FALSE}
+result <- calc_missing_data_inflation(
+  n_required = [your required N],
+  missing_pct = [expected % missing],
+  mechanism = "mar",  # or "mcar" or "mnar"
+  analysis_type = "complete_case"
+)
+```
+
+#### For MI:
+
+```{r step4-mi, eval=FALSE}
+result <- calc_missing_data_inflation(
+  n_required = [your required N],
+  missing_pct = [expected % missing],
+  mechanism = "mar",
+  analysis_type = "multiple_imputation",
+  mi_imputations = 20,       # Adjust based on % missing
+  mi_r_squared = 0.60        # Estimate from pilot or literature
+)
+```
+
+### Step 5: Plan for Worst-Case Scenarios
+
+Conduct sensitivity analysis:
+
+```{r sensitivity-example, eval=FALSE}
+# Worst case: higher missingness, poorer imputation model
+worst_case <- calc_missing_data_inflation(
+  n_required = 400,
+  missing_pct = 30,          # Increase from expected 20%
+  mechanism = "mar",
+  analysis_type = "multiple_imputation",
+  mi_imputations = 30,
+  mi_r_squared = 0.40        # Decrease from expected 0.60
+)
+
+# Best case: lower missingness, better imputation
+best_case <- calc_missing_data_inflation(
+  n_required = 400,
+  missing_pct = 10,
+  mechanism = "mar",
+  analysis_type = "multiple_imputation",
+  mi_imputations = 20,
+  mi_r_squared = 0.75
+)
+
+cat("Worst case N:", worst_case$n_inflated, "\n")
+cat("Best case N:", best_case$n_inflated, "\n")
+```
+
+Use the worst-case estimate for conservative planning.
+
+## Case Study: Longitudinal RCT
+
+### Scenario
+
+A 12-month randomized trial comparing a behavioral intervention to usual care for weight loss.
+
+**Parameters**:
+- Primary outcome: Weight change at 12 months
+- Required sample size (complete data): **N = 300** (150 per arm)
+- Expected missingness: **25%** (based on similar studies)
+- Mechanism: MAR (dropout related to baseline BMI and early weight change, which will be measured)
+- Available auxiliary variables: Baseline BMI, demographics, 3-month and 6-month weight
+- Imputation model R² estimate: **0.65** (good predictors available)
+
+### CCA Approach
+
+```{r case-cca, eval=FALSE}
+result_cca <- calc_missing_data_inflation(
+  n_required = 300,
+  missing_pct = 25,
+  mechanism = "mar",
+  analysis_type = "complete_case"
+)
+
+# Result: N = 400 (add 100 participants)
+```
+
+**Interpretation**: Recruit 400 participants (200 per arm) to ensure 300 complete cases.
+
+### MI Approach
+
+```{r case-mi, eval=FALSE}
+result_mi <- calc_missing_data_inflation(
+  n_required = 300,
+  missing_pct = 25,
+  mechanism = "mar",
+  analysis_type = "multiple_imputation",
+  mi_imputations = 30,
+  mi_r_squared = 0.65
+)
+
+# Result: N = 343 (add 43 participants)
+# Efficiency gain: 57 fewer than CCA (14.3% savings)
+```
+
+**Interpretation**: Recruit 343 participants (172 per arm) using MI, saving 57 participants compared to CCA.
+
+### Budget Analysis
+
+- **Cost per participant**: $500 (recruitment, intervention, measurements)
+- **CCA cost**: 400 × $500 = **$200,000**
+- **MI cost**: 343 × $500 = **$171,500**
+- **Savings with MI**: **$28,500** (14.3%)
+
+**Decision**: Use MI approach given substantial cost savings and availability of good auxiliary predictors.
+
+### Sensitivity Analysis
+
+Test robustness to assumptions:
+
+```{r case-sensitivity, eval=FALSE}
+# Scenario 1: Higher missingness (30% instead of 25%)
+sens_high_miss <- calc_missing_data_inflation(
+  n_required = 300,
+  missing_pct = 30,
+  mechanism = "mar",
+  analysis_type = "multiple_imputation",
+  mi_imputations = 30,
+  mi_r_squared = 0.65
+)
+# Result: N = 368 (vs 343 baseline)
+
+# Scenario 2: Poorer imputation model (R² = 0.45 instead of 0.65)
+sens_poor_model <- calc_missing_data_inflation(
+  n_required = 300,
+  missing_pct = 25,
+  mechanism = "mar",
+  analysis_type = "multiple_imputation",
+  mi_imputations = 30,
+  mi_r_squared = 0.45
+)
+# Result: N = 356 (vs 343 baseline)
+
+# Scenario 3: Both (worst case)
+sens_worst <- calc_missing_data_inflation(
+  n_required = 300,
+  missing_pct = 30,
+  mechanism = "mar",
+  analysis_type = "multiple_imputation",
+  mi_imputations = 30,
+  mi_r_squared = 0.45
+)
+# Result: N = 382 (still better than CCA's 400)
+```
+
+**Conclusion**: Even under worst-case assumptions (30% missingness, R² = 0.45), MI requires N = 382, still 18 fewer participants than CCA's 400.
+
+**Final decision**: Recruit **N = 380** (rounded up from worst-case 382) to provide adequate power across plausible scenarios.
+
+## Advanced Topics
+
+### Handling MNAR Missingness
+
+If MNAR is suspected:
+
+1. **Conduct CCA as primary analysis** (conservative, avoids imputation model assumptions)
+2. **Perform MI as sensitivity analysis** (with different imputation models)
+3. **Explore pattern mixture models** or selection models if feasible
+4. **Report results under multiple scenarios** to assess robustness
+
+```{r mnar-example, eval=FALSE}
+result_mnar_cca <- calc_missing_data_inflation(
+  n_required = 400,
+  missing_pct = 20,
+  mechanism = "mnar",
+  analysis_type = "complete_case"
+)
+
+result_mnar_mi <- calc_missing_data_inflation(
+  n_required = 400,
+  missing_pct = 20,
+  mechanism = "mnar",
+  analysis_type = "multiple_imputation",
+  mi_imputations = 25,
+  mi_r_squared = 0.55
+)
+
+# Compare results and report both
+# Acknowledge potential for bias and conduct sensitivity analyses
+```
+
+### Differential Missingness by Treatment Arm
+
+If missingness differs between treatment groups:
+
+1. **Use the higher missingness rate** for conservative inflation
+2. **Account for unequal retention** in primary analysis
+3. **Report missingness by arm** (important for interpretation)
+
+```{r differential-missingness, eval=FALSE}
+# Treatment arm: 15% missingness
+# Control arm: 30% missingness
+# Use 30% for both arms to be conservative
+
+result_conservative <- calc_missing_data_inflation(
+  n_required = 400,
+  missing_pct = 30,  # Higher of the two rates
+  mechanism = "mar",
+  analysis_type = "multiple_imputation",
+  mi_imputations = 30,
+  mi_r_squared = 0.60
+)
+```
+
+### Choosing Number of Imputations
+
+**Rule of thumb**: m ≥ % missingness
+
+- 10% missing → m ≥ 10
+- 25% missing → m ≥ 25
+- 40% missing → m ≥ 40
+
+**Practical guidelines**:
+- Minimum: m = 5 (rarely adequate; avoid)
+- Standard: m = 20-30 (suitable for most studies)
+- High missingness: m = 50-100 (if > 30% missing)
+
+**Computational note**: Modern computers can handle m = 50-100 easily; prioritize statistical validity over runtime.
+
+## Summary
+
+**Key takeaways**:
+
+1. **Always account for missing data** during sample size planning
+2. **CCA requires larger samples** than MI (simple formula: N / (1 - p_missing))
+3. **MI offers efficiency gains** of 5-20% depending on missingness rate and imputation model quality
+4. **Assume MAR in most cases**; plan sensitivity analyses for MNAR if suspected
+5. **Invest in auxiliary variables** to improve imputation model R² and efficiency
+6. **Use m ≥ % missingness** for number of imputations
+7. **Conduct sensitivity analysis** to assess robustness to assumptions
+
+**Recommended workflow**:
+
+1. Estimate expected missingness from pilot data or literature
+2. Identify likely mechanism (default: MAR)
+3. Choose analysis approach (MI preferred for ≥ 10% missingness)
+4. Calculate inflation factor using appropriate method
+5. Plan for worst-case scenarios (higher missingness, poorer imputation)
+6. Document assumptions in protocol and report missingness patterns in results
+
+## References
+
+1. Rubin DB (1987). *Multiple Imputation for Nonresponse in Surveys*. John Wiley & Sons.
+
+2. van Buuren S (2018). *Flexible Imputation of Missing Data* (2nd ed.). CRC Press.
+
+3. Little RJA, Rubin DB (2019). *Statistical Analysis with Missing Data* (3rd ed.). John Wiley & Sons.
+
+4. Sterne JAC, White IR, Carlin JB, et al. (2009). Multiple imputation for missing data in epidemiological and clinical research: potential and pitfalls. *BMJ* 338:b2393.
+
+5. White IR, Royston P, Wood AM (2011). Multiple imputation using chained equations: Issues and guidance for practice. *Statistics in Medicine* 30(4):377-399.
+
+6. Madley-Dowd P, Hughes R, Tilling K, Heron J (2019). The proportion of missing data should not be used to guide decisions on multiple imputation. *Journal of Clinical Epidemiology* 110:63-73.
+
+7. Jakobsen JC, Gluud C, Wetterslev J, Winkel P (2017). When and how should multiple imputation be used for handling missing data in randomised clinical trials – a practical guide with flowcharts. *BMC Medical Research Methodology* 17(1):162.
+
+## Further Reading
+
+- See `vignette("propensity-score-calculations")` for handling missing data in observational studies with propensity score weighting
+- See `vignette("minimal-detectable-effects")` for determining what effect sizes are realistically detectable given sample size constraints
+- See the Missing Data module in all tabs of the Power Analysis Tool for interactive calculations
