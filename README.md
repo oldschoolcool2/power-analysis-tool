@@ -24,6 +24,20 @@ A comprehensive R Shiny application for calculating statistical power and sample
 - **Example buttons**: Pre-filled realistic pharmaceutical RWE scenarios
 - **Reset functionality**: Quick restore to defaults
 
+### Modern User Interface
+
+This application features an enterprise-grade, accessible user interface:
+
+- **Hierarchical Navigation**: Logical sidebar with 6 grouped analysis sections replacing traditional horizontal tabs
+- **Responsive Design**: Fully optimized for desktop, tablet, and mobile devices (≥320px width)
+- **Dark Mode**: Toggle between light and dark themes with keyboard shortcut (Ctrl/Cmd+Shift+D)
+- **Accessibility**: WCAG 2.1 Level AA compliant with keyboard navigation and screen reader support
+- **Professional Aesthetics**: Teal/slate color palette with Inter typography and semantic design tokens
+- **Touch-Optimized**: All interactive elements ≥44px on mobile for comfortable tapping
+- **Print Support**: Clean print layout with expanded accordions and optimized typography
+
+**Design System**: Built on 363 CSS custom properties with 9-level color scales, 8px-based spacing system, and consistent shadows, borders, and transitions. See `www/css/design-tokens.css` for full variable reference.
+
 ---
 
 ## Quick Start

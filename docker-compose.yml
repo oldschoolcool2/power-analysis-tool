@@ -3,6 +3,9 @@ services:
     build:
       context: .
       target: production  # Change to 'development' for dev environment
+      args:
+        R_VERSION: "4.4.0"  # Override with different R version if needed
+        BASE_IMAGE: "rocker/shiny"  # Override base image if needed
     ports: ['3838:3838']
     dns:
       - 8.8.8.8
@@ -20,6 +23,9 @@ services:
     build:
       context: .
       target: development
+      args:
+        R_VERSION: "4.4.0"  # Override with different R version if needed
+        BASE_IMAGE: "rocker/shiny"  # Override base image if needed
     dns:
       - 8.8.8.8
       - 8.8.4.4
