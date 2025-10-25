@@ -333,3 +333,31 @@ create_survival_power_result_text <- function(n, hr, k, pE, power, alpha) {
     format_hazard_ratio(hr)
   )
 }
+
+
+#' Create Continuous Outcomes Power Analysis Result Text
+#'
+#' Generates formatted result text for continuous outcomes power calculations.
+#'
+#' @param n1 Sample size for group 1
+#' @param n2 Sample size for group 2
+#' @param d Effect size (Cohen's d)
+#' @param power Calculated power (as proportion)
+#' @param alpha Significance level
+#' @param sided Test type ("two.sided", "greater", "less")
+#'
+#' @return HTML formatted text
+create_continuous_power_result_text <- function(n1, n2, d, power, alpha, sided) {
+  tagList(
+    create_result_header(),
+    p(paste0(
+      "For a two-group comparison of continuous outcomes with sample sizes of n1 = ",
+      n1, " and n2 = ", n2, ", and an expected effect size of Cohen's d = ",
+      format_numeric(d, digits = 2), " (standardized mean difference), the study has ",
+      format_numeric(power, as_percent = TRUE, digits = 1), " power to detect this difference using a two-sample t-test at α = ",
+      alpha, " (", sided, " test). ",
+      "Cohen's d represents the difference in means divided by the pooled standard deviation."
+    )),
+    format_cohens_d(d)
+  )
+}
