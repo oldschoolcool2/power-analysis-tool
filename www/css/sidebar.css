@@ -463,3 +463,24 @@
 .sidebar::-webkit-scrollbar-thumb:hover {
   background: var(--text-sidebar-bright);
 }
+
+/* ==========================================================================
+   Dark Mode Specific Styles
+   ========================================================================== */
+
+[data-theme="dark"] .sidebar-header {
+  /* Dark, subtle background - blend with sidebar, not stand out */
+  background: #1E293B;
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .sidebar {
+  /* Ensure dark sidebar background */
+  background: #0F172A;
+}
+
+[data-theme="dark"] .sidebar-logo-text h1,
+[data-theme="dark"] .sidebar-logo-text p {
+  /* Ensure white text for maximum contrast */
+  color: #FFFFFF;
+}

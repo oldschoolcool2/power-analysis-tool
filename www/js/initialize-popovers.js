@@ -13,14 +13,41 @@
     // Check if Bootstrap is available
     if (typeof bootstrap === 'undefined') {
       console.warn('Bootstrap not loaded, popovers will not work');
+      console.log('Trying fallback initialization...');
+
+      // Try jQuery/Bootstrap 3 fallback
+      if (typeof $ !== 'undefined' && typeof $.fn.popover !== 'undefined') {
+        $('[data-bs-toggle="popover"]').popover({
+          trigger: 'click focus',
+          html: true,
+          placement: 'right',
+          container: 'body'
+        });
+        console.log('Initialized popovers with jQuery/Bootstrap 3');
+        return;
+      }
+
+      console.error('No popover library available');
       return;
     }
 
     // Initialize all elements with data-bs-toggle="popover"
     const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
+    console.log(`Found ${popoverTriggerList.length} elements with popover data attribute`);
+
+    if (popoverTriggerList.length === 0) {
+      console.warn('No popover triggers found. Make sure help_content is provided to inputs.');
+      // List all help icons for debugging
+      const helpIcons = document.querySelectorAll('.contextual-help-icon');
+      console.log(`Found ${helpIcons.length} help icon elements`);
+      helpIcons.forEach((icon, i) => {
+        console.log(`Help icon ${i}:`, icon.id, icon.getAttribute('data-bs-toggle'));
+      });
+    }
+
     const popoverList = [...popoverTriggerList].map(popoverTriggerEl => {
       return new bootstrap.Popover(popoverTriggerEl, {
-        trigger: 'focus',
+        trigger: 'click focus',
         html: true,
         placement: 'right',
         container: 'body',
@@ -28,7 +55,7 @@
       });
     });
 
-    console.log(`Initialized ${popoverList.length} popovers`);
+    console.log(`Successfully initialized ${popoverList.length} popovers`);
   }
 
   /**
@@ -104,20 +131,29 @@
 
       /* Help icon styling */
       .contextual-help-icon {
-        color: var(--color-primary);
-        opacity: 0.7;
+        color: var(--color-primary) !important;
+        opacity: 0.8;
         transition: opacity 0.2s ease, transform 0.2s ease;
+        display: inline-block;
+        vertical-align: middle;
+        line-height: 1;
       }
 
       .contextual-help-icon:hover {
-        opacity: 1;
-        transform: scale(1.1);
+        opacity: 1 !important;
+        transform: scale(1.15);
+        color: var(--color-primary) !important;
       }
 
       .contextual-help-icon:focus {
         outline: 2px solid var(--color-primary);
         outline-offset: 2px;
         border-radius: var(--radius-sm);
+        opacity: 1 !important;
+      }
+
+      .contextual-help-icon i {
+        pointer-events: none;
       }
 
       /* Mobile adjustments */

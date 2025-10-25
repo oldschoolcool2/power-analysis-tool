@@ -511,28 +511,33 @@ create_tabbed_options <- function(id, tabs) {
 create_input_with_help_icon <- function(inputId, input_element, help_content) {
   help_icon_id <- paste0(inputId, "_help_icon")
 
-  # Create wrapper with input and help icon
-  tags$div(
-    class = "input-with-help-wrapper",
-    style = "position: relative;",
+  # Modify the label to include the help icon
+  # The input element structure: list with children, first child is the label
+  if (length(input_element$children) > 0 && inherits(input_element$children[[1]], "shiny.tag")) {
+    label_element <- input_element$children[[1]]
 
-    # Original input
-    input_element,
-
-    # Help icon (positioned after label)
-    tags$button(
-      id = help_icon_id,
-      class = "contextual-help-icon",
-      type = "button",
-      style = "position: absolute; top: 8px; right: 0; background: none; border: none; color: var(--color-primary); cursor: pointer; font-size: 16px; padding: 2px 6px;",
-      icon("circle-question"),
-      `data-bs-toggle` = "popover",
-      `data-bs-placement` = "right",
-      `data-bs-trigger` = "focus",
-      `data-bs-html` = "true",
-      `data-bs-content` = as.character(help_content),
-      title = "Help",
-      tabindex = "0"
+    # Add help icon to the label
+    label_element$children <- list(
+      label_element$children,  # Original label text
+      tags$button(
+        id = help_icon_id,
+        class = "contextual-help-icon",
+        type = "button",
+        style = "margin-left: 6px; background: none; border: none; color: var(--color-primary); cursor: pointer; font-size: 14px; padding: 0; vertical-align: middle;",
+        icon("question-circle"),  # Changed from circle-question to question-circle
+        `data-bs-toggle` = "popover",
+        `data-bs-placement` = "right",
+        `data-bs-trigger` = "click focus",
+        `data-bs-html` = "true",
+        `data-bs-content` = as.character(help_content),
+        title = "Help",
+        tabindex = "0",
+        onclick = "event.preventDefault();"
+      )
     )
-  )
+
+    input_element$children[[1]] <- label_element
+  }
+
+  return(input_element)
 }

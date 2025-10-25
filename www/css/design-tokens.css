@@ -363,7 +363,7 @@
   --text-tertiary: #A0AEC0;                /* Medium gray */
   --text-placeholder: #718096;
   --text-disabled: #4A5568;
-  --text-inverse: #1A202C;                 /* Dark text on light bg */
+  --text-inverse: #FFFFFF;                 /* White text for dark backgrounds */
   --text-link: #6B9EC7;
   --text-link-hover: #8FB5D9;
   --text-success: #4ADE80;

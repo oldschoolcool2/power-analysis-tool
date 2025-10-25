@@ -407,6 +407,38 @@ app_server <- function(input, output, session) {
         need(tab6_inputs$noninf_margin < 100, "Non-inferiority margin must be less than 100%"),
         need(tab6_inputs$noninf_ratio > 0, "Allocation ratio must be positive")
       )
+
+    # Tab 9: Time-to-Event Equivalence/Non-Inferiority
+    } else if (input$sidebar_page == "survival_ni_equiv") {
+      tab9_inputs <- tab9_vals$inputs()
+      validate(
+        need(tab9_inputs$hr_expected > 0, "Expected HR must be positive"),
+        need(tab9_inputs$prop_exposed > 0 && tab9_inputs$prop_exposed <= 100, "Proportion exposed must be 0-100%"),
+        need(tab9_inputs$event_rate > 0 && tab9_inputs$event_rate <= 100, "Event rate must be 0-100%"),
+        need(tab9_inputs$allocation_ratio > 0, "Allocation ratio must be positive")
+      )
+
+      if (tab9_inputs$calc_mode == "calc_n") {
+        if (tab9_inputs$test_type == "non-inferiority") {
+          validate(
+            need(!is.null(tab9_inputs$hr_margin_ni) && tab9_inputs$hr_margin_ni > 1.0,
+                 "NI margin must be > 1.0 (e.g., 1.25 for 25% increase)"),
+            need(tab9_inputs$hr_expected < tab9_inputs$hr_margin_ni,
+                 "Expected HR must be better than margin to demonstrate NI")
+          )
+        } else {
+          validate(
+            need(!is.null(tab9_inputs$hr_margin_equiv) && tab9_inputs$hr_margin_equiv > 1.0,
+                 "Equivalence margin must be > 1.0"),
+            need(abs(log(tab9_inputs$hr_expected)) < abs(log(tab9_inputs$hr_margin_equiv)),
+                 "Expected HR must be within equivalence bounds")
+          )
+        }
+      } else {
+        validate(
+          need(tab9_inputs$n_fixed >= 50, "Sample size must be at least 50")
+        )
+      }
     }
   }
 
@@ -1789,6 +1821,194 @@ app_server <- function(input, output, session) {
         }
 
         HTML(result_html)
+
+      } else if (input$sidebar_page == "survival_ni_equiv") {
+        # ============================================================
+        # TIME-TO-EVENT EQUIVALENCE/NON-INFERIORITY
+        # ============================================================
+
+        # Get module inputs
+        tab9_inputs <- tab9_vals$inputs()
+        md_vals <- tab9_vals$missing_data_vals()
+        clust_vals <- tab9_vals$clustering_vals()
+
+        # Extract values
+        test_type <- tab9_inputs$test_type
+        calc_mode <- tab9_inputs$calc_mode
+        power <- tab9_inputs$power / 100
+        hr_expected <- tab9_inputs$hr_expected
+        prop_exposed <- tab9_inputs$prop_exposed / 100
+        event_rate <- tab9_inputs$event_rate / 100
+        ratio <- tab9_inputs$allocation_ratio
+        alpha <- tab9_inputs$alpha
+
+        if (calc_mode == "calc_n") {
+          # Calculate sample size
+          if (test_type == "non-inferiority") {
+            hr_margin <- tab9_inputs$hr_margin_ni
+
+            # Base calculation
+            n_base <- ssize_survival_ni(
+              power = power,
+              hr_expected = hr_expected,
+              hr_margin = hr_margin,
+              k = prop_exposed,
+              pE = event_rate,
+              alpha = alpha,
+              ratio = ratio
+            )
+
+            # Apply missing data adjustment
+            if (md_vals$adjust_missing) {
+              missing_adj <- calc_missing_data_inflation(
+                n_base,
+                md_vals$missing_pct,
+                md_vals$missing_mechanism,
+                md_vals$missing_analysis,
+                md_vals$mi_imputations,
+                md_vals$mi_r_squared
+              )
+              n_total <- missing_adj$n_inflated
+            } else {
+              n_total <- n_base
+            }
+
+            # Apply clustering adjustment
+            if (clust_vals$adjust_clustering) {
+              de <- calc_design_effect(clust_vals$cluster_size, clust_vals$icc)
+              n_before_clustering <- n_total
+              n_total <- ceiling(n_total * de)
+            }
+
+            # Calculate group sizes
+            n_test <- ceiling(n_total / (1 + ratio))
+            n_ref <- n_total - n_test
+
+            # Calculate events
+            d_events <- events_survival_ni(power, hr_expected, hr_margin, alpha)
+
+            # Generate result text using helper
+            result_text <- create_survival_ni_samplesize_text(
+              n_total, n_test, n_ref, d_events,
+              hr_expected, hr_margin, power, alpha,
+              prop_exposed, event_rate
+            )
+
+            # Add missing data text if applicable
+            if (md_vals$adjust_missing) {
+              missing_text <- format_missing_data_text(missing_adj, n_base)
+              result_text <- tagList(result_text, missing_text)
+            }
+
+            # Add clustering text if applicable
+            if (clust_vals$adjust_clustering) {
+              clustering_text <- format_clustering_text(clust_vals, n_before_clustering, n_total, de)
+              result_text <- tagList(result_text, clustering_text)
+            }
+
+            HTML(as.character(result_text))
+
+          } else {
+            # Equivalence calculation
+            hr_margin <- tab9_inputs$hr_margin_equiv
+            hr_lower <- 1 / hr_margin
+            hr_upper <- hr_margin
+
+            # Base calculation
+            n_base <- ssize_survival_equiv(
+              power = power,
+              hr_expected = hr_expected,
+              hr_lower = hr_lower,
+              hr_upper = hr_upper,
+              k = prop_exposed,
+              pE = event_rate,
+              alpha = alpha,
+              ratio = ratio
+            )
+
+            # Apply missing data adjustment
+            if (md_vals$adjust_missing) {
+              missing_adj <- calc_missing_data_inflation(
+                n_base,
+                md_vals$missing_pct,
+                md_vals$missing_mechanism,
+                md_vals$missing_analysis,
+                md_vals$mi_imputations,
+                md_vals$mi_r_squared
+              )
+              n_total <- missing_adj$n_inflated
+            } else {
+              n_total <- n_base
+            }
+
+            # Apply clustering adjustment
+            if (clust_vals$adjust_clustering) {
+              de <- calc_design_effect(clust_vals$cluster_size, clust_vals$icc)
+              n_before_clustering <- n_total
+              n_total <- ceiling(n_total * de)
+            }
+
+            # Calculate group sizes
+            n_test <- ceiling(n_total / (1 + ratio))
+            n_ref <- n_total - n_test
+
+            # Calculate events (use upper margin for conservative estimate)
+            d_events <- events_survival_ni(power, hr_expected, hr_upper, alpha / 2)
+
+            # Generate result text using helper
+            result_text <- create_survival_equiv_samplesize_text(
+              n_total, n_test, n_ref, d_events,
+              hr_expected, hr_lower, hr_upper, power, alpha,
+              prop_exposed, event_rate
+            )
+
+            # Add missing data text if applicable
+            if (md_vals$adjust_missing) {
+              missing_text <- format_missing_data_text(missing_adj, n_base)
+              result_text <- tagList(result_text, missing_text)
+            }
+
+            # Add clustering text if applicable
+            if (clust_vals$adjust_clustering) {
+              clustering_text <- format_clustering_text(clust_vals, n_before_clustering, n_total, de)
+              result_text <- tagList(result_text, clustering_text)
+            }
+
+            HTML(as.character(result_text))
+          }
+
+        } else {
+          # Calculate margin (calc_mode == "calc_margin")
+          n_fixed <- tab9_inputs$n_fixed
+
+          # Account for adjustments in reverse
+          n_effective <- n_fixed
+          if (md_vals$adjust_missing) {
+            p_missing <- md_vals$missing_pct / 100
+            n_effective <- ceiling(n_fixed * (1 - p_missing))
+          }
+          if (clust_vals$adjust_clustering) {
+            de <- calc_design_effect(clust_vals$cluster_size, clust_vals$icc)
+            n_effective <- ceiling(n_effective / de)
+          }
+
+          margin_detectable <- mde_survival_ni(
+            n = n_effective,
+            hr_expected = hr_expected,
+            power = power,
+            k = prop_exposed,
+            pE = event_rate,
+            alpha = alpha,
+            ratio = ratio
+          )
+
+          result_text <- create_survival_ni_margin_text(
+            margin_detectable, n_fixed, hr_expected,
+            power, alpha, event_rate
+          )
+
+          HTML(as.character(result_text))
+        }
       }
     })
   })
@@ -2319,6 +2539,219 @@ app_server <- function(input, output, session) {
               ) %>%
               config(displayModeBar = TRUE, displaylogo = FALSE)
           }
+
+        } else if (input$sidebar_page == "survival_ni_equiv") {
+          # Time-to-Event Equivalence/Non-Inferiority Power Curve
+          tab9_inputs <- tab9_vals$inputs()
+          test_type <- tab9_inputs$test_type
+          calc_mode <- tab9_inputs$calc_mode
+
+          if (calc_mode == "calc_n") {
+            # Power curve: power vs. sample size
+            power_target <- tab9_inputs$power / 100
+            hr_expected <- tab9_inputs$hr_expected
+            prop_exposed <- tab9_inputs$prop_exposed / 100
+            event_rate <- tab9_inputs$event_rate / 100
+            ratio <- tab9_inputs$allocation_ratio
+            alpha <- tab9_inputs$alpha
+
+            if (test_type == "non-inferiority") {
+              hr_margin <- tab9_inputs$hr_margin_ni
+
+              # Calculate required N for reference
+              n_required <- ssize_survival_ni(
+                power = power_target,
+                hr_expected = hr_expected,
+                hr_margin = hr_margin,
+                k = prop_exposed,
+                pE = event_rate,
+                alpha = alpha,
+                ratio = ratio
+              )
+
+              # Generate sample size sequence
+              n_seq <- seq(max(50, n_required * 0.5), n_required * 1.5, length.out = 50)
+
+              power_vals <- vapply(n_seq, function(n) {
+                power_survival_ni(
+                  n = n,
+                  hr_expected = hr_expected,
+                  hr_margin = hr_margin,
+                  k = prop_exposed,
+                  pE = event_rate,
+                  alpha = alpha,
+                  ratio = ratio
+                )
+              }, FUN.VALUE = numeric(1))
+
+              plot_ly() %>%
+                add_trace(
+                  x = n_seq,
+                  y = power_vals * 100,
+                  type = "scatter",
+                  mode = "lines",
+                  line = list(color = "#2B5876", width = 3),
+                  name = "Power",
+                  hovertemplate = paste0(
+                    "<b>Sample Size:</b> %{x:.0f}<br>",
+                    "<b>Power:</b> %{y:.1f}%<br>",
+                    "<extra></extra>"
+                  )
+                ) %>%
+                add_trace(
+                  x = c(n_required, n_required),
+                  y = c(0, 100),
+                  type = "scatter",
+                  mode = "lines",
+                  line = list(color = "#FF6B6B", width = 2, dash = "dash"),
+                  name = paste0("Required N (", format_numeric(n_required, 0), ")"),
+                  hoverinfo = "skip",
+                  showlegend = TRUE
+                ) %>%
+                add_trace(
+                  x = c(min(n_seq), max(n_seq)),
+                  y = c(power_target * 100, power_target * 100),
+                  type = "scatter",
+                  mode = "lines",
+                  line = list(color = "#4ECDC4", width = 2, dash = "dot"),
+                  name = paste0("Target Power (", format_numeric(power_target * 100, 0), "%)"),
+                  hoverinfo = "skip",
+                  showlegend = TRUE
+                ) %>%
+                layout(
+                  title = paste0("Power Curve: Non-Inferiority Test (HR=", format_numeric(hr_expected, 2), ", Margin=", format_numeric(hr_margin, 2), ")"),
+                  xaxis = list(title = "Total Sample Size (N)", gridcolor = "#E0E0E0"),
+                  yaxis = list(title = "Power (%)", gridcolor = "#E0E0E0", range = c(0, 100)),
+                  hovermode = "closest",
+                  plot_bgcolor = "#FFFFFF",
+                  paper_bgcolor = "#FFFFFF"
+                ) %>%
+                config(displayModeBar = TRUE, displaylogo = FALSE)
+
+            } else {
+              # Equivalence test
+              hr_margin <- tab9_inputs$hr_margin_equiv
+              hr_lower <- 1 / hr_margin
+              hr_upper <- hr_margin
+
+              # Calculate required N for reference
+              n_required <- ssize_survival_equiv(
+                power = power_target,
+                hr_expected = hr_expected,
+                hr_lower = hr_lower,
+                hr_upper = hr_upper,
+                k = prop_exposed,
+                pE = event_rate,
+                alpha = alpha,
+                ratio = ratio
+              )
+
+              # Generate sample size sequence
+              n_seq <- seq(max(50, n_required * 0.5), n_required * 1.5, length.out = 50)
+
+              # For equivalence, calculate power as minimum of both tests
+              power_vals <- vapply(n_seq, function(n) {
+                p_upper <- power_survival_ni(n, hr_expected, hr_upper, prop_exposed, event_rate, alpha/2, ratio)
+                p_lower <- power_survival_ni(n, 1/hr_expected, 1/hr_lower, prop_exposed, event_rate, alpha/2, ratio)
+                min(p_upper, p_lower)
+              }, FUN.VALUE = numeric(1))
+
+              plot_ly() %>%
+                add_trace(
+                  x = n_seq,
+                  y = power_vals * 100,
+                  type = "scatter",
+                  mode = "lines",
+                  line = list(color = "#2B5876", width = 3),
+                  name = "Power",
+                  hovertemplate = paste0(
+                    "<b>Sample Size:</b> %{x:.0f}<br>",
+                    "<b>Power:</b> %{y:.1f}%<br>",
+                    "<extra></extra>"
+                  )
+                ) %>%
+                add_trace(
+                  x = c(n_required, n_required),
+                  y = c(0, 100),
+                  type = "scatter",
+                  mode = "lines",
+                  line = list(color = "#FF6B6B", width = 2, dash = "dash"),
+                  name = paste0("Required N (", format_numeric(n_required, 0), ")"),
+                  hoverinfo = "skip",
+                  showlegend = TRUE
+                ) %>%
+                add_trace(
+                  x = c(min(n_seq), max(n_seq)),
+                  y = c(power_target * 100, power_target * 100),
+                  type = "scatter",
+                  mode = "lines",
+                  line = list(color = "#4ECDC4", width = 2, dash = "dot"),
+                  name = paste0("Target Power (", format_numeric(power_target * 100, 0), "%)"),
+                  hoverinfo = "skip",
+                  showlegend = TRUE
+                ) %>%
+                layout(
+                  title = paste0("Power Curve: Equivalence Test (HR=", format_numeric(hr_expected, 2), ", Margins=[", format_numeric(hr_lower, 2), ", ", format_numeric(hr_upper, 2), "])"),
+                  xaxis = list(title = "Total Sample Size (N)", gridcolor = "#E0E0E0"),
+                  yaxis = list(title = "Power (%)", gridcolor = "#E0E0E0", range = c(0, 100)),
+                  hovermode = "closest",
+                  plot_bgcolor = "#FFFFFF",
+                  paper_bgcolor = "#FFFFFF"
+                ) %>%
+                config(displayModeBar = TRUE, displaylogo = FALSE)
+            }
+
+          } else {
+            # Margin calculation mode: show margin vs. sample size
+            n_fixed <- tab9_inputs$n_fixed
+            hr_expected <- tab9_inputs$hr_expected
+            power_target <- tab9_inputs$power / 100
+            prop_exposed <- tab9_inputs$prop_exposed / 100
+            event_rate <- tab9_inputs$event_rate / 100
+            ratio <- tab9_inputs$allocation_ratio
+            alpha <- tab9_inputs$alpha
+
+            # Generate sample size sequence around fixed N
+            n_seq <- seq(max(50, n_fixed * 0.5), n_fixed * 1.5, length.out = 50)
+
+            margin_vals <- vapply(n_seq, function(n) {
+              mde_survival_ni(n, hr_expected, power_target, prop_exposed, event_rate, alpha, ratio)
+            }, FUN.VALUE = numeric(1))
+
+            plot_ly() %>%
+              add_trace(
+                x = n_seq,
+                y = margin_vals,
+                type = "scatter",
+                mode = "lines",
+                line = list(color = "#2B5876", width = 3),
+                name = "Detectable Margin",
+                hovertemplate = paste0(
+                  "<b>Sample Size:</b> %{x:.0f}<br>",
+                  "<b>Margin (HR):</b> %{y:.3f}<br>",
+                  "<extra></extra>"
+                )
+              ) %>%
+              add_trace(
+                x = c(n_fixed, n_fixed),
+                y = c(min(margin_vals) * 0.95, max(margin_vals) * 1.05),
+                type = "scatter",
+                mode = "lines",
+                line = list(color = "#FF6B6B", width = 2, dash = "dash"),
+                name = paste0("Available N (", format_numeric(n_fixed, 0), ")"),
+                hoverinfo = "skip",
+                showlegend = TRUE
+              ) %>%
+              layout(
+                title = paste0("Minimal Detectable Margin (N=", format_numeric(n_fixed, 0), ", Power=", format_numeric(power_target * 100, 0), "%)"),
+                xaxis = list(title = "Total Sample Size (N)", gridcolor = "#E0E0E0"),
+                yaxis = list(title = "Detectable NI Margin (HR)", gridcolor = "#E0E0E0"),
+                hovermode = "closest",
+                plot_bgcolor = "#FFFFFF",
+                paper_bgcolor = "#FFFFFF"
+              ) %>%
+              config(displayModeBar = TRUE, displaylogo = FALSE)
+          }
         }
       })
     }
@@ -2351,6 +2784,10 @@ app_server <- function(input, output, session) {
       input$`tab8-calc_mode`, input$`tab8-path_a`, input$`tab8-path_b`, input$`tab8-path_c_prime`,
       input$`tab8-med_n`, input$`tab8-med_power`, input$`tab8-med_alpha`, input$`tab8-med_sided`,
       input$`tab8-se_a`, input$`tab8-se_b`,
+      # Survival NI/Equivalence inputs
+      input$`tab9-test_type`, input$`tab9-calc_mode`, input$`tab9-power`, input$`tab9-hr_expected`,
+      input$`tab9-hr_margin_ni`, input$`tab9-hr_margin_equiv`, input$`tab9-n_fixed`,
+      input$`tab9-prop_exposed`, input$`tab9-event_rate`, input$`tab9-allocation_ratio`, input$`tab9-alpha`,
       # Include doAnalysis flag to invalidate cache when Calculate is pressed
       v$doAnalysis
     )
@@ -2732,6 +3169,127 @@ app_server <- function(input, output, session) {
           Significance_Level = input$noninf_alpha,
           Date = Sys.Date()
         )
+
+      } else if (input$sidebar_page == "survival_ni_equiv") {
+        tab9_inputs <- tab9_vals$inputs()
+        test_type <- tab9_inputs$test_type
+        calc_mode <- tab9_inputs$calc_mode
+
+        if (calc_mode == "calc_n") {
+          power <- tab9_inputs$power / 100
+          hr_expected <- tab9_inputs$hr_expected
+          prop_exposed <- tab9_inputs$prop_exposed / 100
+          event_rate <- tab9_inputs$event_rate / 100
+          ratio <- tab9_inputs$allocation_ratio
+          alpha <- tab9_inputs$alpha
+
+          if (test_type == "non-inferiority") {
+            hr_margin <- tab9_inputs$hr_margin_ni
+
+            n_total <- ssize_survival_ni(
+              power = power,
+              hr_expected = hr_expected,
+              hr_margin = hr_margin,
+              k = prop_exposed,
+              pE = event_rate,
+              alpha = alpha,
+              ratio = ratio
+            )
+
+            n_test <- ceiling(n_total / (1 + ratio))
+            n_ref <- n_total - n_test
+            d_events <- events_survival_ni(power, hr_expected, hr_margin, alpha)
+
+            results <- data.frame(
+              Analysis_Type = "Time-to-Event Non-Inferiority - Sample Size",
+              Test_Type = "Non-Inferiority (one-sided)",
+              Expected_HR = hr_expected,
+              NI_Margin_HR = hr_margin,
+              Desired_Power_Percent = tab9_inputs$power,
+              Significance_Level = alpha,
+              Prop_Exposed_Percent = tab9_inputs$prop_exposed,
+              Event_Rate_Percent = tab9_inputs$event_rate,
+              Allocation_Ratio = ratio,
+              Total_Sample_Size = n_total,
+              Sample_Size_Test = n_test,
+              Sample_Size_Reference = n_ref,
+              Required_Events = d_events,
+              Date = Sys.Date()
+            )
+
+          } else {
+            hr_margin <- tab9_inputs$hr_margin_equiv
+            hr_lower <- 1 / hr_margin
+            hr_upper <- hr_margin
+
+            n_total <- ssize_survival_equiv(
+              power = power,
+              hr_expected = hr_expected,
+              hr_lower = hr_lower,
+              hr_upper = hr_upper,
+              k = prop_exposed,
+              pE = event_rate,
+              alpha = alpha,
+              ratio = ratio
+            )
+
+            n_test <- ceiling(n_total / (1 + ratio))
+            n_ref <- n_total - n_test
+            d_events <- events_survival_ni(power, hr_expected, hr_upper, alpha / 2)
+
+            results <- data.frame(
+              Analysis_Type = "Time-to-Event Equivalence - Sample Size",
+              Test_Type = "Equivalence (TOST)",
+              Expected_HR = hr_expected,
+              Equiv_Margin_Lower_HR = hr_lower,
+              Equiv_Margin_Upper_HR = hr_upper,
+              Desired_Power_Percent = tab9_inputs$power,
+              Significance_Level = alpha,
+              Prop_Exposed_Percent = tab9_inputs$prop_exposed,
+              Event_Rate_Percent = tab9_inputs$event_rate,
+              Allocation_Ratio = ratio,
+              Total_Sample_Size = n_total,
+              Sample_Size_Test = n_test,
+              Sample_Size_Reference = n_ref,
+              Required_Events = d_events,
+              Date = Sys.Date()
+            )
+          }
+
+        } else {
+          # Margin calculation
+          n_fixed <- tab9_inputs$n_fixed
+          hr_expected <- tab9_inputs$hr_expected
+          power <- tab9_inputs$power / 100
+          prop_exposed <- tab9_inputs$prop_exposed / 100
+          event_rate <- tab9_inputs$event_rate / 100
+          ratio <- tab9_inputs$allocation_ratio
+          alpha <- tab9_inputs$alpha
+
+          margin_detectable <- mde_survival_ni(
+            n = n_fixed,
+            hr_expected = hr_expected,
+            power = power,
+            k = prop_exposed,
+            pE = event_rate,
+            alpha = alpha,
+            ratio = ratio
+          )
+
+          results <- data.frame(
+            Analysis_Type = "Time-to-Event NI/Equivalence - Margin Calculation",
+            Test_Type = tab9_inputs$test_type,
+            Available_Sample_Size = n_fixed,
+            Expected_HR = hr_expected,
+            Detectable_Margin_HR = margin_detectable,
+            Desired_Power_Percent = tab9_inputs$power,
+            Significance_Level = alpha,
+            Prop_Exposed_Percent = tab9_inputs$prop_exposed,
+            Event_Rate_Percent = tab9_inputs$event_rate,
+            Allocation_Ratio = ratio,
+            Date = Sys.Date()
+          )
+        }
       }
 
       write.csv(results, file, row.names = FALSE)

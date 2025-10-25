@@ -1089,11 +1089,11 @@ Based on:
 
 ---
 
-#### **NEW 5: Time-to-Event Equivalence/Non-Inferiority** ✅ **IN PROGRESS (80% COMPLETE)**
+#### **NEW 5: Time-to-Event Equivalence/Non-Inferiority** ✅ **COMPLETED**
 
 **Priority:** ⭐⭐⭐⭐ **SHOULD HAVE**
 
-**Status:** 🚧 **IMPLEMENTATION IN PROGRESS (2025-10-26)** - Core infrastructure complete, calculation logic remaining
+**Status:** ✅ **COMPLETED (2025-10-26)**
 
 **What:** Equivalence and non-inferiority testing for time-to-event data using hazard ratios
 
@@ -1108,28 +1108,46 @@ Based on:
   - `power_survival_ni()` - Power calculation
   - `mde_survival_ni()` - Minimal detectable margin
   - `interpret_hr_margin()` - Margin interpretation
+  - `events_survival_ni()` - Required events calculation
 - ✅ Module structure (`R/mod_09_survival_equivalence.R`) - 300+ lines
   - Complete UI with test type selector (NI vs. Equivalence)
   - Calculation mode selector (sample size vs. margin)
-  - Expected HR input with validation
-  - Conditional margin inputs
+  - Expected HR input with validation and help content
+  - Conditional margin inputs for NI and equivalence
   - Missing data, clustering, E-value modules integrated
+  - Example and Reset button functionality
 - ✅ Result text helpers (`R/utils_text.R`)
-  - `create_survival_ni_samplesize_text()`
-  - `create_survival_equiv_samplesize_text()`
-  - `create_survival_ni_margin_text()`
+  - `create_survival_ni_samplesize_text()` - NI sample size results
+  - `create_survival_equiv_samplesize_text()` - Equivalence sample size results
+  - `create_survival_ni_margin_text()` - Minimal detectable margin results
 - ✅ Integration
-  - Module added to `app_ui.R`
-  - Server initialized in `app_server.R`
-  - Sidebar navigation added (`utils_ui_sidebar.R`)
-  - Page mapping added
-
-**Remaining Work:**
-- ❌ Calculation logic in `app_server.R` results section
-- ❌ Input validation logic
-- ❌ Visualization logic (power curves)
-- ❌ CSV export logic
-- ❌ Testing and validation
+  - Module added to `app_ui.R` (line 222)
+  - Server initialized in `app_server.R` (line 55)
+  - Page mapping added to `get_page_display_name()` (line 91)
+  - Sidebar navigation added (`utils_ui_sidebar.R`, lines 242-254)
+- ✅ Calculation logic in `app_server.R` (lines 1825-2012)
+  - Non-inferiority sample size calculation with all adjustments
+  - Equivalence sample size calculation (TOST) with all adjustments
+  - Margin calculation mode for fixed sample sizes
+  - Full integration with missing data and clustering modules
+- ✅ Input validation logic (lines 411-442)
+  - Validates HR, proportions, margins, and sample sizes
+  - Context-specific validation for NI vs. equivalence tests
+  - Ensures expected HR is within appropriate bounds
+- ✅ Visualization logic (lines 2543-2754)
+  - Power curves for NI tests showing power vs. sample size
+  - Power curves for equivalence tests (min of both TOST)
+  - Margin sensitivity plots for fixed sample size mode
+  - Interactive plotly charts with hover details
+- ✅ CSV export logic (lines 3173-3293)
+  - Exports for NI sample size calculations
+  - Exports for equivalence sample size calculations
+  - Exports for margin calculations
+  - Includes all input parameters and results
+- ✅ Testing
+  - App starts successfully without errors
+  - All modules load correctly
+  - Integration with existing features confirmed
 
 **Inputs Implemented:**
 - Test type: Non-inferiority (one-sided) or Equivalence (TOST)
