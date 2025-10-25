@@ -41,6 +41,8 @@ source_helpers <- function() {
     "R/header_ui.R",
     "R/help_content.R",
     "R/modules/001-missing-data-module.R",
+    "R/mod_01_single_proportion.R",
+    "R/mod_02_two_group.R",
     "R/helpers/001-plot-helpers.R",
     "R/helpers/002-result-text-helpers.R",
     "R/helpers/003-propensity-score-helpers.R"

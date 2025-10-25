@@ -16,8 +16,11 @@ app_server <- function(input, output, session) {
   # Tab 1: Single Proportion (includes missing data module)
   tab1_vals <- mod_01_single_proportion_server("tab1")
 
-  # Missing data modules for other tabs
-  missing_data_twogrp_ss <- missing_data_server("twogrp_ss-missing_data")
+  # Tab 2: Two-Group Comparisons (includes missing data module)
+  tab2_vals <- mod_02_two_group_server("tab2")
+
+  # Missing data modules for other tabs (will be migrated to modules)
+  # missing_data_twogrp_ss <- missing_data_server("twogrp_ss-missing_data")  # Now in tab2 module
   missing_data_surv_ss <- missing_data_server("surv_ss-missing_data")
   missing_data_match <- missing_data_server("match-missing_data")
   missing_data_cont_ss <- missing_data_server("cont_ss-missing_data")
