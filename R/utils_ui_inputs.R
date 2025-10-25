@@ -260,9 +260,9 @@ create_button_group <- function(buttons) {
 }
 
 
-#' Create Numeric Input with Optional Tooltip
+#' Create Numeric Input with Optional Tooltip and Validation
 #'
-#' Creates a numericInput and optionally attaches a tooltip.
+#' Creates a numericInput and optionally attaches a tooltip and real-time validation.
 #' This consolidates the repeated pattern of numericInput + bsTooltip
 #' that appears 30+ times throughout the application.
 #'
@@ -273,13 +273,21 @@ create_button_group <- function(buttons) {
 #' @param max Maximum allowed value
 #' @param step Increment step size
 #' @param tooltip Optional tooltip text to display (NULL means no tooltip)
+#' @param validation_type Optional validation type for real-time validation
+#'   (e.g., "sample_size", "power", "proportion", "hazard_ratio", "event_rate")
 #'
 #' @return A tagList containing numericInput and optional tooltip
 #'
 #' @examples
 #' create_numeric_input_with_tooltip(
 #'   "sample_size", "Sample Size:", 230, min = 1, step = 1,
-#'   tooltip = "Total number of participants available for the study"
+#'   tooltip = "Total number of participants available for the study",
+#'   validation_type = "sample_size"
+#' )
+#' create_numeric_input_with_tooltip(
+#'   "hr", "Hazard Ratio:", 0.75, min = 0.01, max = 100, step = 0.01,
+#'   tooltip = "Expected hazard ratio between groups",
+#'   validation_type = "hazard_ratio"
 #' )
 create_numeric_input_with_tooltip <- function(inputId,
                                               label,
@@ -287,7 +295,8 @@ create_numeric_input_with_tooltip <- function(inputId,
                                               min = NULL,
                                               max = NULL,
                                               step = 1,
-                                              tooltip = NULL) {
+                                              tooltip = NULL,
+                                              validation_type = NULL) {
 
   # Create the numeric input
   input_element <- numericInput(
@@ -298,6 +307,15 @@ create_numeric_input_with_tooltip <- function(inputId,
     max = max,
     step = step
   )
+
+  # Add validation attribute if validation type is specified
+  if (!is.null(validation_type)) {
+    # Find the input element and add data-validate attribute
+    input_tag <- input_element$children[[2]]  # The actual input is the second child
+    if (!is.null(input_tag) && inherits(input_tag, "shiny.tag")) {
+      input_tag$attribs$`data-validate` <- validation_type
+    }
+  }
 
   # Add tooltip if provided
   if (!is.null(tooltip) && tooltip != "") {
@@ -310,4 +328,146 @@ create_numeric_input_with_tooltip <- function(inputId,
   }
 
   return(input_element)
+}
+
+
+#' Create Progressive Disclosure Section
+#'
+#' Creates a collapsible section for advanced options using progressive disclosure.
+#' This reduces cognitive load by hiding complex options until needed.
+#'
+#' @param id Unique identifier for the collapsible section
+#' @param title Section title (default: "Advanced Options")
+#' @param content Shiny UI content to display when expanded
+#' @param icon_name Optional icon name (default: "sliders")
+#' @param initially_open Whether the section should start expanded (default: FALSE)
+#'
+#' @return A Shiny tag element with collapsible section
+#'
+#' @examples
+#' create_progressive_disclosure(
+#'   "advanced_opts",
+#'   "Advanced Options",
+#'   tagList(
+#'     sliderInput("discon", "Discontinuation Rate:", 0, 50, 10),
+#'     radioButtons("alpha", "Alpha:", c("0.05" = 0.05, "0.01" = 0.01))
+#'   )
+#' )
+#'
+#' @importFrom shiny tags icon
+create_progressive_disclosure <- function(id,
+                                         title = "Advanced Options",
+                                         content,
+                                         icon_name = "sliders",
+                                         initially_open = FALSE) {
+
+  collapse_class <- if (initially_open) "collapse show" else "collapse"
+
+  tags$div(
+    class = "progressive-disclosure-wrapper",
+    style = "margin: var(--space-4) 0;",
+
+    # Toggle button
+    tags$button(
+      class = "btn btn-outline-secondary btn-block progressive-disclosure-toggle",
+      type = "button",
+      `data-bs-toggle` = "collapse",
+      `data-bs-target` = paste0("#", id),
+      `aria-expanded` = tolower(as.character(initially_open)),
+      `aria-controls` = id,
+      style = "width: 100%; text-align: left; display: flex; align-items: center; justify-content: space-between; padding: var(--space-3) var(--space-4); border-radius: var(--border-radius-md); transition: all var(--transition-base);",
+
+      tags$span(
+        style = "display: flex; align-items: center; gap: var(--space-2);",
+        icon(icon_name),
+        title
+      ),
+      icon("chevron-down", class = "toggle-icon")
+    ),
+
+    # Collapsible content
+    tags$div(
+      id = id,
+      class = collapse_class,
+      style = "margin-top: var(--space-3);",
+      tags$div(
+        class = "progressive-disclosure-content",
+        style = "padding: var(--space-4); background: var(--bg-card); border: var(--border-subtle); border-radius: var(--border-radius-md); box-shadow: var(--shadow-sm);",
+        content
+      )
+    )
+  )
+}
+
+
+#' Create Tabbed Options Section
+#'
+#' Creates a tabbed interface for organizing related options into groups.
+#'
+#' @param id Unique identifier for the tabbed section
+#' @param tabs List of tab definitions, each with title and content
+#'
+#' @return A Shiny tag element with tabbed interface
+#'
+#' @examples
+#' create_tabbed_options(
+#'   "analysis_opts",
+#'   list(
+#'     list(title = "Basic", content = tagList(numericInput("n", "N:", 100))),
+#'     list(title = "Advanced", content = tagList(sliderInput("alpha", "Alpha:", 0, 1, 0.05)))
+#'   )
+#' )
+#'
+#' @importFrom shiny tags
+create_tabbed_options <- function(id, tabs) {
+  tab_ids <- paste0(id, "_tab", seq_along(tabs))
+
+  # Tab navigation
+  nav_tabs <- tags$ul(
+    class = "nav nav-tabs",
+    role = "tablist",
+    lapply(seq_along(tabs), function(i) {
+      active_class <- if (i == 1) "nav-link active" else "nav-link"
+      aria_selected <- if (i == 1) "true" else "false"
+
+      tags$li(
+        class = "nav-item",
+        role = "presentation",
+        tags$button(
+          class = active_class,
+          id = paste0(tab_ids[i], "-tab"),
+          `data-bs-toggle` = "tab",
+          `data-bs-target` = paste0("#", tab_ids[i]),
+          type = "button",
+          role = "tab",
+          `aria-controls` = tab_ids[i],
+          `aria-selected` = aria_selected,
+          tabs[[i]]$title
+        )
+      )
+    })
+  )
+
+  # Tab content
+  tab_content <- tags$div(
+    class = "tab-content",
+    style = "padding: var(--space-4) 0;",
+    lapply(seq_along(tabs), function(i) {
+      active_class <- if (i == 1) "tab-pane fade show active" else "tab-pane fade"
+
+      tags$div(
+        class = active_class,
+        id = tab_ids[i],
+        role = "tabpanel",
+        `aria-labelledby` = paste0(tab_ids[i], "-tab"),
+        tabs[[i]]$content
+      )
+    })
+  )
+
+  tags$div(
+    class = "tabbed-options-wrapper",
+    nav_tabs,
+    tab_content
+  )
 }

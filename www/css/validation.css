@@ -1,0 +1,290 @@
+/**
+ * Input Validation Styles
+ * Statistical Power Analysis Tool
+ *
+ * Styles for real-time input validation with error messages and suggestions
+ */
+
+/* ========================================================================
+   VALIDATION FEEDBACK CONTAINER
+   ======================================================================== */
+
+.validation-feedback {
+  margin-top: var(--space-2);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+  animation: fadeIn var(--transition-base);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========================================================================
+   INPUT STATES
+   ======================================================================== */
+
+/* Invalid input */
+.form-control.is-invalid,
+.shiny-input-container input.is-invalid,
+.form-select.is-invalid {
+  border-color: var(--color-error-600) !important;
+  box-shadow: 0 0 0 0.2rem rgba(220, 38, 38, 0.15) !important;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc2626'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc2626' stroke='none'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right calc(0.375em + 0.1875rem) center;
+  background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+  padding-right: calc(1.5em + 0.75rem);
+}
+
+.form-control.is-invalid:focus,
+.shiny-input-container input.is-invalid:focus {
+  border-color: var(--color-error-600) !important;
+  box-shadow: 0 0 0 0.25rem rgba(220, 38, 38, 0.25) !important;
+}
+
+/* Valid input */
+.form-control.is-valid,
+.shiny-input-container input.is-valid,
+.form-select.is-valid {
+  border-color: var(--color-success-600) !important;
+  box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.15) !important;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%2310b981' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right calc(0.375em + 0.1875rem) center;
+  background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+  padding-right: calc(1.5em + 0.75rem);
+}
+
+/* Input with suggestion */
+.form-control.has-suggestion,
+.shiny-input-container input.has-suggestion {
+  border-color: var(--color-info-600);
+  box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.1);
+}
+
+/* ========================================================================
+   ERROR FEEDBACK
+   ======================================================================== */
+
+.invalid-feedback {
+  display: block;
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-error-100);
+  border-left: 3px solid var(--color-error-600);
+  border-radius: var(--border-radius-sm);
+  color: var(--color-error-700);
+  font-weight: var(--font-weight-medium);
+}
+
+.invalid-feedback .fa {
+  margin-right: var(--space-2);
+  color: var(--color-error-600);
+}
+
+/* ========================================================================
+   SUGGESTION FEEDBACK
+   ======================================================================== */
+
+.suggestion-feedback {
+  display: block;
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-info-100);
+  border-left: 3px solid var(--color-info-600);
+  border-radius: var(--border-radius-sm);
+  color: var(--color-info-700);
+  font-size: var(--font-size-sm);
+}
+
+.suggestion-feedback .fa {
+  margin-right: var(--space-2);
+  color: var(--color-info-600);
+}
+
+/* ========================================================================
+   CALCULATE BUTTON STATE
+   ======================================================================== */
+
+.btn-primary:disabled.btn-disabled,
+.btn-primary.btn-disabled {
+  background-color: var(--color-neutral-400) !important;
+  border-color: var(--color-neutral-400) !important;
+  color: var(--color-neutral-600) !important;
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.btn-primary:disabled.btn-disabled:hover,
+.btn-primary.btn-disabled:hover {
+  background-color: var(--color-neutral-400) !important;
+  border-color: var(--color-neutral-400) !important;
+  transform: none;
+}
+
+/* ========================================================================
+   FIELD LABELS WITH VALIDATION
+   ======================================================================== */
+
+.shiny-input-container.has-validation label,
+.form-group.has-validation label {
+  position: relative;
+}
+
+.shiny-input-container.has-validation label::after,
+.form-group.has-validation label::after {
+  content: "*";
+  color: var(--color-error-600);
+  margin-left: var(--space-1);
+  font-weight: var(--font-weight-bold);
+}
+
+/* ========================================================================
+   VALIDATION SUMMARY (for form-level errors)
+   ======================================================================== */
+
+.validation-summary {
+  background: var(--color-error-100);
+  border: 1px solid var(--color-error-600);
+  border-radius: var(--border-radius-lg);
+  padding: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.validation-summary-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-error-700);
+  margin-bottom: var(--space-3);
+}
+
+.validation-summary-title .fa {
+  font-size: 1.25rem;
+}
+
+.validation-summary-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.validation-summary-list li {
+  padding: var(--space-2) 0;
+  color: var(--color-error-700);
+  display: flex;
+  align-items: start;
+  gap: var(--space-2);
+}
+
+.validation-summary-list li::before {
+  content: "•";
+  font-weight: var(--font-weight-bold);
+  color: var(--color-error-600);
+}
+
+/* ========================================================================
+   RESPONSIVE ADJUSTMENTS
+   ======================================================================== */
+
+@media (max-width: 768px) {
+  .invalid-feedback,
+  .suggestion-feedback {
+    font-size: var(--font-size-xs);
+    padding: var(--space-1) var(--space-2);
+  }
+}
+
+/* ========================================================================
+   DARK MODE ADJUSTMENTS
+   ======================================================================== */
+
+[data-theme="dark"] .invalid-feedback {
+  background: rgba(220, 38, 38, 0.2);
+  color: var(--color-error-100);
+}
+
+[data-theme="dark"] .suggestion-feedback {
+  background: rgba(37, 99, 235, 0.2);
+  color: var(--color-info-100);
+}
+
+[data-theme="dark"] .form-control.is-invalid,
+[data-theme="dark"] .shiny-input-container input.is-invalid {
+  background-color: var(--bg-input);
+}
+
+[data-theme="dark"] .form-control.is-valid,
+[data-theme="dark"] .shiny-input-container input.is-valid {
+  background-color: var(--bg-input);
+}
+
+/* ========================================================================
+   ANIMATIONS
+   ======================================================================== */
+
+.form-control,
+.shiny-input-container input {
+  transition: border-color var(--transition-base),
+              box-shadow var(--transition-base),
+              background-image var(--transition-base);
+}
+
+.validation-feedback {
+  animation: slideDown var(--transition-base);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    max-height: 100px;
+    transform: translateY(0);
+  }
+}
+
+/* ========================================================================
+   ACCESSIBILITY
+   ======================================================================== */
+
+/* Focus states for keyboard navigation */
+.form-control:focus,
+.shiny-input-container input:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.form-control.is-invalid:focus {
+  outline-color: var(--color-error-600);
+}
+
+.form-control.is-valid:focus {
+  outline-color: var(--color-success-600);
+}
+
+/* Screen reader only text */
+.sr-only-validation {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

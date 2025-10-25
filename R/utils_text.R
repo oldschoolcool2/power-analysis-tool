@@ -128,6 +128,7 @@ format_numeric <- function(value,
 #' Create Power Analysis Result Text (Single Proportion)
 #'
 #' Generates formatted result text for single proportion power analysis.
+#' Enhanced with visual result cards and color-coded power interpretation.
 #'
 #' @param incidence_rate Event rate (1 in X format)
 #' @param sample_size Sample size
@@ -141,7 +142,68 @@ create_power_single_result_text <- function(incidence_rate,
                                            power,
                                            alpha,
                                            discon) {
-  tagList(
+  # Get power status for color coding
+  power_status <- get_power_status(power)
+
+  # Main result card configuration
+  main_card <- list(
+    title = "Achieved Power",
+    value = format_numeric(power, as_percent = TRUE, digits = 1),
+    subtitle = power_status$interpretation,
+    status = power_status$status,
+    icon_name = power_status$icon
+  )
+
+  # Key findings
+  key_findings <- list(
+    list(
+      text = paste0(
+        "With ", format_numeric(sample_size, as_integer = TRUE),
+        " participants, you have a ", format_numeric(power, as_percent = TRUE, digits = 0),
+        " probability of observing at least one event"
+      ),
+      type = "info",
+      icon = "chart-bar"
+    )
+  )
+
+  # Add warning if power is low
+  if (power < 0.80) {
+    key_findings <- c(key_findings, list(
+      list(
+        text = paste0(
+          "Power is below the conventional 80% threshold. Consider increasing sample size to ",
+          ceiling(sample_size / power * 0.80),
+          " participants for adequate power"
+        ),
+        type = "warning",
+        icon = "exclamation-triangle"
+      )
+    ))
+  }
+
+  # Recommendations
+  recommendations <- c(
+    paste0(
+      "Accounting for ", format_numeric(discon, as_percent = TRUE, digits = 0),
+      "% discontinuation, the adjusted sample size is ",
+      format_numeric(ceiling(sample_size * (1 + discon)), as_integer = TRUE),
+      " participants"
+    )
+  )
+
+  # Add recommendation about rare event
+  if (incidence_rate > 200) {
+    recommendations <- c(recommendations,
+      paste0(
+        "For very rare events (1 in ", format_numeric(incidence_rate, as_integer = TRUE),
+        "), consider extended follow-up or enrichment strategies"
+      )
+    )
+  }
+
+  # Detailed text content
+  text_content <- tagList(
     create_result_header(),
     p(paste0(
       "Based on the Binomial distribution and a true event incidence rate of 1 in ",
@@ -155,6 +217,14 @@ create_power_single_result_text <- function(incidence_rate,
       format_numeric(ceiling(sample_size * (1 + discon)), as_integer = TRUE),
       " to maintain this power."
     ))
+  )
+
+  # Use enhanced results layout
+  create_enhanced_results(
+    main_card_config = main_card,
+    text_content = text_content,
+    key_findings = key_findings,
+    recommendations = recommendations
   )
 }
 

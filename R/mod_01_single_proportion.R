@@ -23,7 +23,8 @@ mod_01_single_proportion_ui <- function(id) {
         value = 230,
         min = 1,
         step = 1,
-        tooltip = "Total number of participants available for the study"
+        tooltip = "Total number of participants available for the study",
+        validation_type = "sample_size"
       ),
       create_numeric_input_with_tooltip(
         ns("power_p"),
@@ -33,17 +34,25 @@ mod_01_single_proportion_ui <- function(id) {
         step = 1,
         tooltip = "Expected frequency of the event. E.g., 100 means 1 event per 100 participants"
       ),
-      create_enhanced_slider(
-        ns("power_discon"),
-        "Withdrawal/Discontinuation Rate (%):",
-        min = 0, max = 50, value = 10, step = 1, post = "%",
-        tooltip = "Expected percentage of participants who will withdraw or discontinue"
-      ),
-      create_segmented_alpha(
-        ns("power_alpha"),
-        "Significance Level (α):",
-        selected = 0.05,
-        tooltip = "Type I error rate (typically 0.05). Lower values are more conservative."
+      create_progressive_disclosure(
+        ns("power_advanced"),
+        "Advanced Options",
+        tagList(
+          create_enhanced_slider(
+            ns("power_discon"),
+            "Withdrawal/Discontinuation Rate (%):",
+            min = 0, max = 50, value = 10, step = 1, post = "%",
+            tooltip = "Expected percentage of participants who will withdraw or discontinue"
+          ),
+          create_segmented_alpha(
+            ns("power_alpha"),
+            "Significance Level (α):",
+            selected = 0.05,
+            tooltip = "Type I error rate (typically 0.05). Lower values are more conservative."
+          )
+        ),
+        icon_name = "cog",
+        initially_open = FALSE
       ),
       hr(),
       div(class = "btn-group-custom",
@@ -101,23 +110,32 @@ mod_01_single_proportion_ui <- function(id) {
           tooltip = "Fixed sample size available for the study"
         )
       ),
-      create_enhanced_slider(
-        ns("ss_discon"),
-        "Withdrawal/Discontinuation Rate (%):",
-        min = 0, max = 50, value = 10, step = 1, post = "%",
-        tooltip = "Expected percentage of participants who will withdraw or discontinue"
+      create_progressive_disclosure(
+        ns("ss_advanced"),
+        "Advanced Options",
+        tagList(
+          create_enhanced_slider(
+            ns("ss_discon"),
+            "Withdrawal/Discontinuation Rate (%):",
+            min = 0, max = 50, value = 10, step = 1, post = "%",
+            tooltip = "Expected percentage of participants who will withdraw or discontinue"
+          ),
+          create_segmented_alpha(
+            ns("ss_alpha"),
+            "Significance Level (α):",
+            selected = 0.05,
+            tooltip = "Type I error rate (typically 0.05). Lower values are more conservative."
+          ),
+          hr(),
+          h4("Missing Data Adjustment"),
+          missing_data_ui(ns("missing_data")),
+          hr(),
+          h4("Clustering Adjustment"),
+          clustering_ui(ns("clustering"))
+        ),
+        icon_name = "cog",
+        initially_open = FALSE
       ),
-      create_segmented_alpha(
-        ns("ss_alpha"),
-        "Significance Level (α):",
-        selected = 0.05,
-        tooltip = "Type I error rate (typically 0.05). Lower values are more conservative."
-      ),
-      hr(),
-      missing_data_ui(ns("missing_data")),
-      hr(),
-      h4("Clustering Adjustment"),
-      clustering_ui(ns("clustering")),
       hr(),
       div(class = "btn-group-custom",
         actionButton(ns("example_ss_single"), "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),

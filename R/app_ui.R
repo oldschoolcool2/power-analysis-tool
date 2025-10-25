@@ -33,10 +33,15 @@ app_ui <- function(request) {
     tags$link(rel = "stylesheet", type = "text/css", href = "www/css/input-components.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "www/css/responsive.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "www/css/sidebar.css"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "www/css/result-cards.css"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "www/css/validation.css"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "www/css/progressive-disclosure.css"),
     # JavaScript - Bootstrap 5 fix must load before other scripts
     tags$script(src = "www/js/bootstrap5-shinyBS-fix.js"),
     tags$script(src = "www/js/theme-switcher.js"),
     tags$script(src = "www/js/sidebar-navigation.js"),
+    tags$script(src = "www/js/copy-to-clipboard.js"),
+    tags$script(src = "www/js/input-validation.js"),
     tags$style(HTML("
       /* Clean background color definitions */
       :root {
