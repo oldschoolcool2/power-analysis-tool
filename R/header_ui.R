@@ -54,14 +54,15 @@ create_app_header <- function() {
         tags$span(class = "theme-toggle-text", "Dark")
       ),
 
-      # Help Button (future: open help modal)
-      tags$button(
+      # Help Button - triggers modal
+      actionButton(
+        "show_help_modal",
+        label = tags$span(
+          icon("question-circle"),
+          tags$span(class = "btn-text", "Help")
+        ),
         class = "app-header-action-btn",
-        type = "button",
-        onclick = "alert('Help documentation coming soon!')",
-        `aria-label` = "Help",
-        icon("question-circle"),
-        tags$span(class = "btn-text", "Help")
+        `aria-label` = "Show help documentation"
       )
     )
   )
