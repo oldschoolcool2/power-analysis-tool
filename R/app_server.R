@@ -551,6 +551,59 @@ app_server <- function(input, output, session) {
         need(tab2_inputs$twogrp_ss_p1 != tab2_inputs$twogrp_ss_p2, "Event rates must be different to calculate sample size"),
         need(tab2_inputs$twogrp_ss_ratio > 0, "Allocation ratio must be positive")
       )
+    # Tab 3: Survival Analysis
+    } else if (input$sidebar_page == "power_survival") {
+      tab3_inputs <- tab3_vals$inputs()
+      validate(
+        need(tab3_inputs$surv_pow_n > 0, "Sample size must be positive"),
+        need(tab3_inputs$surv_pow_hr > 0, "Hazard ratio must be positive"),
+        need(tab3_inputs$surv_pow_k >= 0 && tab3_inputs$surv_pow_k <= 100, "Proportion exposed must be between 0 and 100%"),
+        need(tab3_inputs$surv_pow_pE >= 0 && tab3_inputs$surv_pow_pE <= 100, "Event rate must be between 0 and 100%"),
+        need(tab3_inputs$surv_pow_hr != 1, "Hazard ratio must be different from 1 to calculate power")
+      )
+    } else if (input$sidebar_page == "ss_survival") {
+      tab3_inputs <- tab3_vals$inputs()
+      validate(
+        need(tab3_inputs$surv_ss_hr > 0, "Hazard ratio must be positive"),
+        need(tab3_inputs$surv_ss_k >= 0 && tab3_inputs$surv_ss_k <= 100, "Proportion exposed must be between 0 and 100%"),
+        need(tab3_inputs$surv_ss_pE >= 0 && tab3_inputs$surv_ss_pE <= 100, "Event rate must be between 0 and 100%"),
+        need(tab3_inputs$surv_ss_hr != 1, "Hazard ratio must be different from 1 to calculate sample size")
+      )
+    # Tab 4: Matched Case-Control
+    } else if (input$sidebar_page == "match_casecontrol") {
+      tab4_inputs <- tab4_vals$inputs()
+      validate(
+        need(tab4_inputs$match_or > 0, "Odds ratio must be positive"),
+        need(tab4_inputs$match_p0 >= 0 && tab4_inputs$match_p0 <= 100, "Exposure probability must be between 0 and 100%"),
+        need(tab4_inputs$match_ratio >= 1, "Controls per case must be at least 1"),
+        need(tab4_inputs$match_or != 1, "Odds ratio must be different from 1 to calculate sample size")
+      )
+    # Tab 5: Continuous Outcomes
+    } else if (input$sidebar_page == "power_continuous") {
+      tab5_inputs <- tab5_vals$inputs()
+      validate(
+        need(tab5_inputs$cont_pow_n1 > 1, "Sample size Group 1 must be at least 2"),
+        need(tab5_inputs$cont_pow_n2 > 1, "Sample size Group 2 must be at least 2"),
+        need(tab5_inputs$cont_pow_d > 0, "Effect size (Cohen's d) must be positive"),
+        need(tab5_inputs$cont_pow_d != 0, "Effect size cannot be zero")
+      )
+    } else if (input$sidebar_page == "ss_continuous") {
+      tab5_inputs <- tab5_vals$inputs()
+      validate(
+        need(tab5_inputs$cont_ss_d > 0, "Effect size (Cohen's d) must be positive"),
+        need(tab5_inputs$cont_ss_d != 0, "Effect size cannot be zero"),
+        need(tab5_inputs$cont_ss_ratio > 0, "Allocation ratio must be positive")
+      )
+    # Tab 6: Non-Inferiority
+    } else if (input$sidebar_page == "noninf") {
+      tab6_inputs <- tab6_vals$inputs()
+      validate(
+        need(tab6_inputs$noninf_p1 >= 0 && tab6_inputs$noninf_p1 <= 100, "Event rate Test Group must be between 0 and 100%"),
+        need(tab6_inputs$noninf_p2 >= 0 && tab6_inputs$noninf_p2 <= 100, "Event rate Reference Group must be between 0 and 100%"),
+        need(tab6_inputs$noninf_margin > 0, "Non-inferiority margin must be positive"),
+        need(tab6_inputs$noninf_margin < 100, "Non-inferiority margin must be less than 100%"),
+        need(tab6_inputs$noninf_ratio > 0, "Allocation ratio must be positive")
+      )
     # Legacy tabset checks for tabs not yet migrated
     } else if (input$tabset == "Power (Single)") {
       validate(
@@ -1001,6 +1054,669 @@ app_server <- function(input, output, session) {
           effect_size_box <- format_minimal_detectable_effect(
             p1_detectable, p2, effect_measures, h_min
           )
+
+          HTML(paste0(text0, text1, text2, text3, effect_size_box))
+        }
+
+      # Tab 3: Survival Analysis - Power Analysis (using sidebar_page)
+      } else if (input$sidebar_page == "power_survival") {
+        tab3_inputs <- tab3_vals$inputs()
+        n <- tab3_inputs$surv_pow_n
+        hr <- tab3_inputs$surv_pow_hr
+        k <- tab3_inputs$surv_pow_k / 100
+        pE <- tab3_inputs$surv_pow_pE / 100
+
+        # Calculate power using powerSurvEpi
+        power <- powerEpi(
+          n = n, theta = hr, k = k, pE = pE,
+          RR = hr, alpha = tab3_inputs$surv_pow_alpha
+        )
+
+        # Use helper function for result text
+        HTML(as.character(create_survival_power_result_text(n, hr, k, pE, power, tab3_inputs$surv_pow_alpha)))
+
+      # Tab 3: Survival Analysis - Sample Size (using sidebar_page)
+      } else if (input$sidebar_page == "ss_survival") {
+        tab3_inputs <- tab3_vals$inputs()
+        calc_mode <- tab3_inputs$surv_ss_calc_mode
+        power <- tab3_inputs$surv_ss_power / 100
+        k <- tab3_inputs$surv_ss_k / 100
+        pE <- tab3_inputs$surv_ss_pE / 100
+        md_vals <- tab3_vals$missing_data_vals()
+
+        if (calc_mode == "calc_n") {
+          # Calculate Sample Size
+          hr <- tab3_inputs$surv_ss_hr
+
+          # Calculate base sample size using powerSurvEpi
+          n_base <- ssizeEpi(
+            power = power, theta = hr, k = k, pE = pE,
+            RR = hr, alpha = tab3_inputs$surv_ss_alpha
+          )
+
+          # Apply missing data adjustment if enabled
+          if (md_vals$adjust_missing) {
+            missing_adj <- calc_missing_data_inflation(
+              n_base,
+              md_vals$missing_pct,
+              md_vals$missing_mechanism,
+              md_vals$missing_analysis,
+              md_vals$mi_imputations,
+              md_vals$mi_r_squared
+            )
+            n_final <- missing_adj$n_inflated
+            missing_data_text <- format_missing_data_text(missing_adj, n_base)
+          } else {
+            n_final <- n_base
+            missing_data_text <- HTML("")
+          }
+
+          text0 <- hr()
+          text1 <- h1("Results of this analysis")
+          text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+          text3 <- p(paste0(
+            "To detect a hazard ratio of ", format_numeric(hr, 2),
+            " with ", format_numeric(power * 100, 0), "% power in a survival analysis using Cox regression, ",
+            "with ", format_numeric(k * 100, 1), "% of participants exposed/treated and an overall event rate of ",
+            format_numeric(pE * 100, 1), "%, the required total sample size is N = ",
+            format_numeric(ceiling(n_final), 0), " participants (α = ",
+            tab3_inputs$surv_ss_alpha, ", two-sided test).",
+            if (md_vals$adjust_missing) {
+              paste0(" <strong>This includes adjustment for ", md_vals$missing_pct,
+                     "% missing data.</strong>")
+            } else {
+              ""
+            },
+            " This calculation uses the Schoenfeld (1983) method for Cox proportional hazards models."
+          ))
+          HTML(paste0(text0, text1, text2, text3, missing_data_text))
+
+        } else {
+          # Calculate Hazard Ratio (Minimal Detectable Effect)
+          n_nominal <- tab3_inputs$surv_ss_n_fixed
+
+          # Account for missing data to get effective sample size
+          if (md_vals$adjust_missing) {
+            p_missing <- md_vals$missing_pct / 100
+            n_effective <- ceiling(n_nominal * (1 - p_missing))
+            missing_note <- paste0(" After accounting for ", md_vals$missing_pct,
+              "% missing data (", tolower(substr(md_vals$missing_mechanism, 1, 4)),
+              "), the effective sample size is ", n_effective, " participants.")
+          } else {
+            n_effective <- n_nominal
+            missing_note <- ""
+          }
+
+          # Solve for minimal detectable HR using binary search
+          hr_lower <- 0.01
+          hr_upper <- 10.0
+          tolerance <- 0.001
+          max_iter <- 100
+
+          for (i in 1:max_iter) {
+            hr_mid <- (hr_lower + hr_upper) / 2
+            power_achieved <- powerEpi(
+              n = n_effective, theta = hr_mid, k = k, pE = pE,
+              RR = hr_mid, alpha = tab3_inputs$surv_ss_alpha
+            )
+
+            if (abs(power_achieved - power) < 0.001) {
+              break
+            } else if (power_achieved > power) {
+              # HR too far from 1, need to move closer to 1
+              if (hr_mid < 1) {
+                hr_lower <- hr_mid
+              } else {
+                hr_upper <- hr_mid
+              }
+            } else {
+              # HR too close to 1, need to move farther from 1
+              if (hr_mid < 1) {
+                hr_upper <- hr_mid
+              } else {
+                hr_lower <- hr_mid
+              }
+            }
+          }
+
+          hr_detectable <- hr_mid
+          hr_interpretation <- format_hazard_ratio(hr_detectable)
+
+          text0 <- hr()
+          text1 <- h1("Results of this analysis")
+          text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+          text3 <- p(paste0(
+            "<strong>Minimal Detectable Effect Size Analysis</strong><br>",
+            "With an available sample size of N=", n_nominal, " participants,",
+            missing_note,
+            " With ", format_numeric(power * 100, 0), "% power, α = ", tab3_inputs$surv_ss_alpha,
+            ", ", format_numeric(k * 100, 1), "% exposed/treated, and ",
+            format_numeric(pE * 100, 1), "% overall event rate, ",
+            "the <strong>minimal detectable hazard ratio is HR = ",
+            format_numeric(hr_detectable, 3), "</strong>. ",
+            "This is the smallest hazard ratio that can be reliably detected with this sample size using Cox regression. ",
+            "This calculation uses the Schoenfeld (1983) method for Cox proportional hazards models."
+          ))
+
+          effect_size_box <- HTML(paste0(
+            "<p style='background-color: #d4edda; border-left: 4px solid #28a745; padding: 10px; margin-top: 15px;'>",
+            "<strong>Minimal Detectable Effect:</strong><br>",
+            "<strong>Hazard Ratio (HR):</strong> ", format_numeric(hr_detectable, 3),
+            " (", hr_interpretation, ")<br>",
+            "<strong>Interpretation:</strong> ",
+            ifelse(hr_detectable < 1,
+              paste0("Can detect protective effects with HR ≤ ", format_numeric(hr_detectable, 3)),
+              paste0("Can detect risk increases with HR ≥ ", format_numeric(hr_detectable, 3))),
+            "</p>"
+          ))
+
+          HTML(paste0(text0, text1, text2, text3, effect_size_box))
+        }
+
+      # Tab 4: Matched Case-Control (using sidebar_page)
+      } else if (input$sidebar_page == "match_casecontrol") {
+        tab4_inputs <- tab4_vals$inputs()
+        calc_mode <- tab4_inputs$match_calc_mode
+        p0 <- tab4_inputs$match_p0 / 100
+        m <- tab4_inputs$match_ratio
+        power <- tab4_inputs$match_power / 100
+        sided_val <- ifelse(tab4_inputs$match_sided == "two.sided", 2, 1)
+
+        if (calc_mode == "calc_n") {
+          # Calculate Sample Size
+          or <- tab4_inputs$match_or
+
+          # Calculate base sample size for matched case-control using epiR
+          result <- epi.sscc(
+            OR = or, p0 = p0, n = NA, power = power,
+            r = m, rho = 0, design = 1, sided.test = sided_val,
+            conf.level = 1 - tab4_inputs$match_alpha
+          )
+          n_cases_base <- ceiling(result$n.total)
+          n_controls_base <- n_cases_base * m
+          n_total_base <- n_cases_base * (1 + m)
+
+          # Apply missing data adjustment if enabled
+          md_vals <- tab4_vals$missing_data_vals()
+          if (md_vals$adjust_missing) {
+            missing_adj <- calc_missing_data_inflation(
+              n_total_base,
+              md_vals$missing_pct,
+              md_vals$missing_mechanism,
+              md_vals$missing_analysis,
+              md_vals$mi_imputations,
+              md_vals$mi_r_squared
+            )
+            n_total_final <- missing_adj$n_inflated
+            # Maintain matching ratio
+            n_cases_final <- ceiling(n_total_final / (1 + m))
+            n_controls_final <- n_cases_final * m
+
+            missing_data_text <- format_missing_data_text(missing_adj, n_total_base)
+          } else {
+            n_cases_final <- n_cases_base
+            n_controls_final <- n_controls_base
+            n_total_final <- n_total_base
+            missing_data_text <- HTML("")
+          }
+
+          text0 <- hr()
+          text1 <- h1("Results of this analysis")
+          text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+          text3 <- p(paste0(
+            "For a matched case-control study to detect an odds ratio of ",
+            format_numeric(or), " with ", format_numeric(power * 100, 0),
+            "% power, assuming ", format_numeric(p0 * 100, 1),
+            "% exposure prevalence in controls, and a ", m, ":1 matching ratio (controls per case), ",
+            "the required sample size is ", n_cases_final, " cases and ",
+            format_numeric(n_controls_final, 0), " controls (total N = ",
+            format_numeric(n_total_final, 0), " participants) at α = ",
+            tab4_inputs$match_alpha, " (", tab4_inputs$match_sided, " test).",
+            if (md_vals$adjust_missing) {
+              paste0(" <strong>After adjusting for ", md_vals$missing_pct,
+                     "% missing data.</strong>")
+            } else {
+              ""
+            },
+            " This accounts for correlation between matched pairs."
+          ))
+          HTML(paste0(text0, text1, text2, text3, missing_data_text))
+
+        } else {
+          # Calculate Odds Ratio (Minimal Detectable Effect)
+          n_cases_nominal <- tab4_inputs$match_n_pairs_fixed
+          n_controls_nominal <- n_cases_nominal * m
+          n_total_nominal <- n_cases_nominal * (1 + m)
+
+          # Account for missing data to get effective sample sizes
+          md_vals <- tab4_vals$missing_data_vals()
+          if (md_vals$adjust_missing) {
+            p_missing <- md_vals$missing_pct / 100
+            n_cases_effective <- ceiling(n_cases_nominal * (1 - p_missing))
+            missing_note <- paste0(" After accounting for ", md_vals$missing_pct,
+              "% missing data (", tolower(substr(md_vals$missing_mechanism, 1, 4)),
+              "), the effective number of cases is ", n_cases_effective, ".")
+          } else {
+            n_cases_effective <- n_cases_nominal
+            missing_note <- ""
+          }
+
+          # Solve for minimal detectable OR using binary search
+          or_lower <- 0.1
+          or_upper <- 10.0
+          tolerance <- 0.01
+          max_iter <- 100
+
+          for (i in 1:max_iter) {
+            or_mid <- (or_lower + or_upper) / 2
+            result <- tryCatch({
+              epi.sscc(
+                OR = or_mid, p0 = p0, n = n_cases_effective, power = NA,
+                r = m, rho = 0, design = 1, sided.test = sided_val,
+                conf.level = 1 - tab4_inputs$match_alpha
+              )
+            }, error = function(e) list(power = 0))
+
+            power_achieved <- result$power
+            if (is.null(power_achieved) || is.na(power_achieved)) power_achieved <- 0
+
+            if (abs(power_achieved - power) < 0.01) {
+              break
+            } else if (power_achieved > power) {
+              # OR too far from 1, need to move closer to 1
+              if (or_mid < 1) {
+                or_lower <- or_mid
+              } else {
+                or_upper <- or_mid
+              }
+            } else {
+              # OR too close to 1, need to move farther from 1
+              if (or_mid < 1) {
+                or_upper <- or_mid
+              } else {
+                or_lower <- or_mid
+              }
+            }
+          }
+
+          or_detectable <- or_mid
+
+          text0 <- hr()
+          text1 <- h1("Results of this analysis")
+          text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+          text3 <- p(paste0(
+            "<strong>Minimal Detectable Effect Size Analysis</strong><br>",
+            "With an available sample size of ", n_cases_nominal, " matched case-control pairs,",
+            missing_note,
+            " With ", format_numeric(power * 100, 0), "% power, α = ", tab4_inputs$match_alpha,
+            ", assuming ", format_numeric(p0 * 100, 1),
+            "% exposure prevalence in controls and a ", m, ":1 matching ratio, ",
+            "the <strong>minimal detectable odds ratio is OR = ",
+            format_numeric(or_detectable, 2), "</strong>. ",
+            "This is the smallest odds ratio that can be reliably detected with this matched study design."
+          ))
+
+          effect_size_box <- HTML(paste0(
+            "<p style='background-color: #d4edda; border-left: 4px solid #28a745; padding: 10px; margin-top: 15px;'>",
+            "<strong>Minimal Detectable Effect:</strong><br>",
+            "<strong>Odds Ratio (OR):</strong> ", format_numeric(or_detectable, 2),
+            ifelse(or_detectable < 1,
+              " (protective effect)",
+              " (risk factor)"), "<br>",
+            "<strong>Interpretation:</strong> ",
+            ifelse(or_detectable < 1,
+              paste0("Can detect protective effects with OR ≤ ", format_numeric(or_detectable, 2)),
+              paste0("Can detect risk increases with OR ≥ ", format_numeric(or_detectable, 2))),
+            "</p>"
+          ))
+
+          HTML(paste0(text0, text1, text2, text3, effect_size_box))
+        }
+
+      # Tab 5: Continuous Outcomes - Power Analysis (using sidebar_page)
+      } else if (input$sidebar_page == "power_continuous") {
+        tab5_inputs <- tab5_vals$inputs()
+        n1 <- tab5_inputs$cont_pow_n1
+        n2 <- tab5_inputs$cont_pow_n2
+        d <- tab5_inputs$cont_pow_d
+
+        # Calculate power for t-test
+        power <- pwr.t2n.test(
+          n1 = n1, n2 = n2, d = d,
+          sig.level = tab5_inputs$cont_pow_alpha,
+          alternative = tab5_inputs$cont_pow_sided
+        )$power
+
+        create_continuous_power_result_text(
+          n1 = n1,
+          n2 = n2,
+          d = d,
+          power = power,
+          alpha = tab5_inputs$cont_pow_alpha,
+          sided = tab5_inputs$cont_pow_sided
+        )
+
+      # Tab 5: Continuous Outcomes - Sample Size (using sidebar_page)
+      } else if (input$sidebar_page == "ss_continuous") {
+        tab5_inputs <- tab5_vals$inputs()
+        calc_mode <- tab5_inputs$cont_ss_calc_mode
+        power <- tab5_inputs$cont_ss_power / 100
+        ratio <- tab5_inputs$cont_ss_ratio
+
+        if (calc_mode == "calc_n") {
+          # Calculate Sample Size
+          d <- tab5_inputs$cont_ss_d
+
+          # Calculate base sample size for t-test (solve for n1)
+          if (ratio == 1) {
+            n <- pwr.t.test(
+              d = d, sig.level = tab5_inputs$cont_ss_alpha,
+              power = power, type = "two.sample",
+              alternative = tab5_inputs$cont_ss_sided
+            )$n
+            n1_base <- n
+            n2_base <- n
+          } else {
+            # For unequal allocation, use iterative approach
+            f <- function(n1) {
+              n2 <- n1 * ratio
+              pwr.t2n.test(
+                n1 = n1, n2 = n2, d = d,
+                sig.level = tab5_inputs$cont_ss_alpha,
+                alternative = tab5_inputs$cont_ss_sided
+              )$power - power
+            }
+            n1_base <- tryCatch(
+              {
+                uniroot(f, c(2, 1e6), extendInt = "yes")$root
+              },
+              error = function(e) {
+                # Fallback
+                pwr.t.test(
+                  d = d, sig.level = tab5_inputs$cont_ss_alpha,
+                  power = power, type = "two.sample",
+                  alternative = tab5_inputs$cont_ss_sided
+                )$n
+              }
+            )
+            n2_base <- n1_base * ratio
+          }
+          n_total_base <- ceiling(n1_base + n2_base)
+
+          # Apply missing data adjustment if enabled
+          md_vals <- tab5_vals$missing_data_vals()
+          if (md_vals$adjust_missing) {
+            missing_adj <- calc_missing_data_inflation(
+              n_total_base,
+              md_vals$missing_pct,
+              md_vals$missing_mechanism,
+              md_vals$missing_analysis,
+              md_vals$mi_imputations,
+              md_vals$mi_r_squared
+            )
+            n_total_final <- missing_adj$n_inflated
+            # Maintain allocation ratio
+            n1_final <- ceiling(n_total_final / (1 + ratio))
+            n2_final <- n_total_final - n1_final
+
+            missing_data_text <- format_missing_data_text(missing_adj, n_total_base)
+          } else {
+            n1_final <- ceiling(n1_base)
+            n2_final <- ceiling(n2_base)
+            n_total_final <- n1_final + n2_final
+            missing_data_text <- HTML("")
+          }
+
+          text0 <- hr()
+          text1 <- h1("Results of this analysis")
+          text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+          text3 <- p(paste0(
+            "To detect an effect size of ", format_cohens_d(d),
+            " in a two-group comparison of continuous outcomes with ", format_numeric(power * 100, 0),
+            "% power at α = ", tab5_inputs$cont_ss_alpha, " (", tab5_inputs$cont_ss_sided, " test), ",
+            "the required sample sizes are: Group 1: n1 = ", format_numeric(n1_final, 0),
+            ", Group 2: n2 = ", format_numeric(n2_final, 0), " (total N = ",
+            format_numeric(n_total_final, 0), ").",
+            if (md_vals$adjust_missing) {
+              paste0(" <strong>After adjusting for ", md_vals$missing_pct,
+                     "% missing data.</strong>")
+            } else {
+              ""
+            },
+            " Cohen's d is the standardized mean difference (difference in means / pooled SD)."
+          ))
+          HTML(paste0(text0, text1, text2, text3, missing_data_text))
+
+        } else {
+          # Calculate Effect Size (Minimal Detectable Effect)
+          n1_nominal <- tab5_inputs$cont_ss_n1_fixed
+          n2_nominal <- n1_nominal * ratio
+
+          # Account for missing data to get effective sample sizes
+          md_vals <- tab5_vals$missing_data_vals()
+          if (md_vals$adjust_missing) {
+            p_missing <- md_vals$missing_pct / 100
+            n1_effective <- ceiling(n1_nominal * (1 - p_missing))
+            n2_effective <- ceiling(n2_nominal * (1 - p_missing))
+            missing_note <- paste0(" After accounting for ", md_vals$missing_pct,
+              "% missing data (", tolower(substr(md_vals$missing_mechanism, 1, 4)),
+              "), effective sample sizes are n1=", format_numeric(n1_effective, 0),
+              ", n2=", format_numeric(n2_effective, 0), ".")
+          } else {
+            n1_effective <- n1_nominal
+            n2_effective <- n2_nominal
+            missing_note <- ""
+          }
+
+          # Solve for minimal detectable d
+          d_detectable <- pwr.t2n.test(
+            n1 = n1_effective, n2 = n2_effective, d = NULL,
+            sig.level = tab5_inputs$cont_ss_alpha, power = power,
+            alternative = tab5_inputs$cont_ss_sided
+          )$d
+
+          text0 <- hr()
+          text1 <- h1("Results of this analysis")
+          text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+          text3 <- p(paste0(
+            "<strong>Minimal Detectable Effect Size Analysis</strong><br>",
+            "With available sample sizes of n1=", format_numeric(n1_nominal, 0), " (Group 1) and n2=",
+            format_numeric(n2_nominal, 0), " (Group 2, ratio=", ratio, "),",
+            missing_note,
+            " With ", format_numeric(power * 100, 0), "% power and α = ", tab5_inputs$cont_ss_alpha,
+            " (", tab5_inputs$cont_ss_sided, " test), ",
+            "the <strong>minimal detectable effect size is Cohen's d = ",
+            format_numeric(d_detectable, 3), "</strong> (", format_cohens_d(d_detectable), "). ",
+            "This is the smallest standardized mean difference that can be reliably detected."
+          ))
+
+          effect_size_box <- HTML(paste0(
+            "<p style='background-color: #d4edda; border-left: 4px solid #28a745; padding: 10px; margin-top: 15px;'>",
+            "<strong>Minimal Detectable Effect:</strong><br>",
+            "<strong>Cohen's d:</strong> ", format_numeric(d_detectable, 3),
+            " (", format_cohens_d(d_detectable), ")<br>",
+            "<strong>Interpretation:</strong> The study can detect ", format_cohens_d(d_detectable),
+            " differences in means (standardized).",
+            "</p>"
+          ))
+
+          HTML(paste0(text0, text1, text2, text3, effect_size_box))
+        }
+
+      # Tab 6: Non-Inferiority (using sidebar_page)
+      } else if (input$sidebar_page == "noninf") {
+        tab6_inputs <- tab6_vals$inputs()
+        calc_mode <- tab6_inputs$noninf_calc_mode
+        p1 <- tab6_inputs$noninf_p1 / 100
+        p2 <- tab6_inputs$noninf_p2 / 100
+        power <- tab6_inputs$noninf_power / 100
+        ratio <- tab6_inputs$noninf_ratio
+
+        if (calc_mode == "calc_n") {
+          # Calculate Sample Size
+          margin <- tab6_inputs$noninf_margin / 100
+
+          # Non-inferiority sample size calculation
+          # H0: p1 - p2 >= margin (inferior), H1: p1 - p2 < margin (non-inferior)
+          # Use one-sided test
+
+          # Calculate effect size h for the margin test
+          h <- ES.h(p1, p2 + margin)
+
+          if (ratio == 1) {
+            n <- pwr.2p.test(
+              h = abs(h), sig.level = tab6_inputs$noninf_alpha,
+              power = power, alternative = "less"
+            )$n
+            n1_base <- n
+            n2_base <- n
+          } else {
+            f <- function(n1) {
+              n2 <- n1 * ratio
+              pwr.2p2n.test(
+                h = abs(h), n1 = n1, n2 = n2,
+                sig.level = tab6_inputs$noninf_alpha,
+                alternative = "less"
+              )$power - power
+            }
+            n1_base <- tryCatch(
+              {
+                uniroot(f, c(2, 1e6), extendInt = "yes")$root
+              },
+              error = function(e) {
+                pwr.2p.test(
+                  h = abs(h), sig.level = tab6_inputs$noninf_alpha,
+                  power = power, alternative = "less"
+                )$n
+              }
+            )
+            n2_base <- n1_base * ratio
+          }
+          n_total_base <- ceiling(n1_base + n2_base)
+
+          # Apply missing data adjustment if enabled
+          md_vals <- tab6_vals$missing_data_vals()
+          if (md_vals$adjust_missing) {
+            missing_adj <- calc_missing_data_inflation(
+              n_total_base,
+              md_vals$missing_pct,
+              md_vals$missing_mechanism,
+              md_vals$missing_analysis,
+              md_vals$mi_imputations,
+              md_vals$mi_r_squared
+            )
+            n_total_final <- missing_adj$n_inflated
+            # Maintain allocation ratio
+            n1_final <- ceiling(n_total_final / (1 + ratio))
+            n2_final <- n_total_final - n1_final
+
+            missing_data_text <- format_missing_data_text(missing_adj, n_total_base)
+          } else {
+            n1_final <- ceiling(n1_base)
+            n2_final <- ceiling(n2_base)
+            n_total_final <- n1_final + n2_final
+            missing_data_text <- HTML("")
+          }
+
+          text0 <- hr()
+          text1 <- h1("Results of this analysis")
+          text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+          text3 <- p(paste0(
+            "For a non-inferiority trial comparing a test treatment (expected event rate: ",
+            format_numeric(p1 * 100, 2, 1), "%) to a reference treatment (expected event rate: ",
+            format_numeric(p2 * 100, 2, 1), "%) with a non-inferiority margin of ",
+            format_numeric(margin * 100, 2, 1), " percentage points, to demonstrate non-inferiority with ",
+            format_numeric(power * 100, 0, 0), "% power at α = ", tab6_inputs$noninf_alpha,
+            " (one-sided test), the required sample sizes are: Test Group: n1 = ",
+            format_numeric(n1_final, 0, 0), ", Reference Group: n2 = ",
+            format_numeric(n2_final, 0, 0), " (total N = ",
+            format_numeric(n_total_final, 0, 0), ").",
+            if (md_vals$adjust_missing) {
+              paste0(" <strong>After adjusting for ", md_vals$missing_pct,
+                     "% missing data.</strong>")
+            } else {
+              ""
+            },
+            " Non-inferiority will be demonstrated if the upper bound of the confidence interval for the difference (Test - Reference) is less than the margin."
+          ))
+          HTML(paste0(text0, text1, text2, text3, missing_data_text))
+
+        } else {
+          # Calculate Margin (Minimal Detectable Effect)
+          n1_nominal <- tab6_inputs$noninf_n1_fixed
+          n2_nominal <- n1_nominal * ratio
+
+          # Account for missing data to get effective sample sizes
+          md_vals <- tab6_vals$missing_data_vals()
+          if (md_vals$adjust_missing) {
+            p_missing <- md_vals$missing_pct / 100
+            n1_effective <- ceiling(n1_nominal * (1 - p_missing))
+            n2_effective <- ceiling(n2_nominal * (1 - p_missing))
+            missing_note <- paste0(" After accounting for ", md_vals$missing_pct,
+              "% missing data (", tolower(substr(md_vals$missing_mechanism, 1, 4)),
+              "), effective sample sizes are n1=", format_numeric(n1_effective, 0, 0),
+              ", n2=", format_numeric(n2_effective, 0, 0), ".")
+          } else {
+            n1_effective <- n1_nominal
+            n2_effective <- n2_nominal
+            missing_note <- ""
+          }
+
+          # Solve for minimal detectable margin using binary search
+          margin_lower <- 0.001
+          margin_upper <- 0.5
+          tolerance <- 0.001
+          max_iter <- 100
+
+          for (i in 1:max_iter) {
+            margin_mid <- (margin_lower + margin_upper) / 2
+            h <- ES.h(p1, p2 + margin_mid)
+
+            power_achieved <- pwr.2p2n.test(
+              h = abs(h), n1 = n1_effective, n2 = n2_effective,
+              sig.level = tab6_inputs$noninf_alpha,
+              alternative = "less"
+            )$power
+
+            if (abs(power_achieved - power) < 0.01) {
+              break
+            } else if (power_achieved > power) {
+              # Margin too large, decrease it
+              margin_upper <- margin_mid
+            } else {
+              # Margin too small, increase it
+              margin_lower <- margin_mid
+            }
+          }
+
+          margin_detectable <- margin_mid
+
+          text0 <- hr()
+          text1 <- h1("Results of this analysis")
+          text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+          text3 <- p(paste0(
+            "<strong>Minimal Detectable Margin Analysis</strong><br>",
+            "With available sample sizes of n1=", format_numeric(n1_nominal, 0, 0), " (Test Group) and n2=",
+            format_numeric(n2_nominal, 0, 0), " (Reference Group, ratio=", format_numeric(ratio, 1, 1), "),",
+            missing_note,
+            " With ", format_numeric(power * 100, 0, 0), "% power and α = ", tab6_inputs$noninf_alpha,
+            " (one-sided test), for a non-inferiority trial comparing test treatment (expected event rate: ",
+            format_numeric(p1 * 100, 2, 1), "%) to reference treatment (expected event rate: ",
+            format_numeric(p2 * 100, 2, 1), "%), ",
+            "the <strong>minimal detectable non-inferiority margin is ",
+            format_numeric(margin_detectable * 100, 2, 2), " percentage points</strong>. ",
+            "This is the largest margin that can be reliably tested for non-inferiority with this sample size. ",
+            "Non-inferiority will be demonstrated if the upper bound of the confidence interval for the difference (Test - Reference) is less than this margin."
+          ))
+
+          effect_size_box <- HTML(paste0(
+            "<p style='background-color: #d4edda; border-left: 4px solid #28a745; padding: 10px; margin-top: 15px;'>",
+            "<strong>Minimal Detectable Margin:</strong><br>",
+            "<strong>Non-Inferiority Margin:</strong> ", format_numeric(margin_detectable * 100, 2, 2), " percentage points<br>",
+            "<strong>Interpretation:</strong> Can demonstrate non-inferiority if the true difference (Test - Reference) is less than ",
+            format_numeric(margin_detectable * 100, 2, 2), " percentage points",
+            "</p>"
+          ))
 
           HTML(paste0(text0, text1, text2, text3, effect_size_box))
         }
@@ -2425,6 +3141,112 @@ app_server <- function(input, output, session) {
               paper_bgcolor = "white",
               legend = list(x = 0.7, y = 0.2)
             ) %>%
+            config(displayModeBar = TRUE, displaylogo = FALSE)
+
+        # Tab 3: Survival - Power Analysis (using sidebar_page)
+        } else if (input$sidebar_page == "power_survival") {
+          tab3_inputs <- tab3_vals$inputs()
+          hr <- tab3_inputs$surv_pow_hr
+          k <- tab3_inputs$surv_pow_k / 100
+          pE <- tab3_inputs$surv_pow_pE / 100
+          alpha <- tab3_inputs$surv_pow_alpha
+          current_n <- tab3_inputs$surv_pow_n
+
+          n_range <- seq(from = max(50, current_n * 0.5), to = current_n * 2, length.out = 50)
+          power_vals <- vapply(n_range, function(n) {
+            powerEpi(n = n, theta = hr, k = k, pE = pE, RR = hr, alpha = alpha)
+          }, FUN.VALUE = numeric(1))
+
+          plot_ly() %>%
+            add_trace(
+              x = n_range, y = power_vals, type = "scatter", mode = "lines",
+              line = list(color = "#2B5876", width = 3), name = "Power Curve",
+              hovertemplate = paste0("<b>Sample Size (N):</b> %{x:.0f}<br><b>Power:</b> %{y:.3f}<br><b>HR:</b> ", round(hr, 3), "<br><extra></extra>")
+            ) %>%
+            add_trace(x = range(n_range), y = c(0.8, 0.8), type = "scatter", mode = "lines",
+              line = list(color = "red", width = 2, dash = "dash"), name = "80% Power Target") %>%
+            add_trace(x = c(current_n, current_n), y = c(0, 1), type = "scatter", mode = "lines",
+              line = list(color = "green", width = 2, dash = "dot"), name = "Current N") %>%
+            layout(title = list(text = "Interactive Power Curve - Survival Analysis", font = list(size = 16)),
+              xaxis = list(title = "Total Sample Size (N)"), yaxis = list(title = "Power", range = c(0, 1))) %>%
+            config(displayModeBar = TRUE, displaylogo = FALSE)
+
+        # Tab 3: Survival - Sample Size (using sidebar_page)
+        } else if (input$sidebar_page == "ss_survival") {
+          tab3_inputs <- tab3_vals$inputs()
+          hr <- tab3_inputs$surv_ss_hr
+          k <- tab3_inputs$surv_ss_k / 100
+          pE <- tab3_inputs$surv_ss_pE / 100
+          alpha <- tab3_inputs$surv_ss_alpha
+          current_n <- ssizeEpi(power = tab3_inputs$surv_ss_power / 100, theta = hr, k = k, pE = pE, RR = hr, alpha = alpha)
+
+          n_range <- seq(from = max(50, current_n * 0.5), to = current_n * 2, length.out = 50)
+          power_vals <- vapply(n_range, function(n) {
+            powerEpi(n = n, theta = hr, k = k, pE = pE, RR = hr, alpha = alpha)
+          }, FUN.VALUE = numeric(1))
+
+          plot_ly() %>%
+            add_trace(x = n_range, y = power_vals, type = "scatter", mode = "lines",
+              line = list(color = "#2B5876", width = 3), name = "Power Curve") %>%
+            add_trace(x = range(n_range), y = c(0.8, 0.8), type = "scatter", mode = "lines",
+              line = list(color = "red", width = 2, dash = "dash"), name = "80% Power Target") %>%
+            add_trace(x = c(current_n, current_n), y = c(0, 1), type = "scatter", mode = "lines",
+              line = list(color = "green", width = 2, dash = "dot"), name = "Required N") %>%
+            layout(title = list(text = "Interactive Power Curve - Survival Analysis", font = list(size = 16)),
+              xaxis = list(title = "Total Sample Size (N)"), yaxis = list(title = "Power", range = c(0, 1))) %>%
+            config(displayModeBar = TRUE, displaylogo = FALSE)
+
+        # Tab 5: Continuous - Power Analysis (using sidebar_page)
+        } else if (input$sidebar_page == "power_continuous") {
+          tab5_inputs <- tab5_vals$inputs()
+          n1 <- tab5_inputs$cont_pow_n1
+          n2 <- tab5_inputs$cont_pow_n2
+          d <- tab5_inputs$cont_pow_d
+          alpha <- tab5_inputs$cont_pow_alpha
+          sided <- tab5_inputs$cont_pow_sided
+
+          n1_range <- seq(from = max(5, floor(n1 * 0.25)), to = floor(n1 * 3), length.out = 100)
+          power_vals <- vapply(n1_range, function(n1_val) {
+            pwr.t2n.test(d = d, n1 = n1_val, n2 = n2, sig.level = alpha, alternative = sided)$power
+          }, FUN.VALUE = numeric(1))
+
+          plot_ly() %>%
+            add_trace(x = n1_range, y = power_vals, type = "scatter", mode = "lines",
+              line = list(color = "#2B5876", width = 3), name = "Power Curve") %>%
+            add_trace(x = range(n1_range), y = c(0.8, 0.8), type = "scatter", mode = "lines",
+              line = list(color = "red", width = 2, dash = "dash"), name = "80% Power Target") %>%
+            add_trace(x = c(n1, n1), y = c(0, 1), type = "scatter", mode = "lines",
+              line = list(color = "green", width = 2, dash = "dot"), name = "Current n1") %>%
+            layout(title = list(text = "Interactive Power Curve - Continuous Outcomes", font = list(size = 16)),
+              xaxis = list(title = "Sample Size Group 1 (n1)"), yaxis = list(title = "Power", range = c(0, 1))) %>%
+            config(displayModeBar = TRUE, displaylogo = FALSE)
+
+        # Tab 5: Continuous - Sample Size (using sidebar_page)
+        } else if (input$sidebar_page == "ss_continuous") {
+          tab5_inputs <- tab5_vals$inputs()
+          d <- tab5_inputs$cont_ss_d
+          alpha <- tab5_inputs$cont_ss_alpha
+          sided <- tab5_inputs$cont_ss_sided
+          ratio <- tab5_inputs$cont_ss_ratio
+          target_power <- tab5_inputs$cont_ss_power / 100
+
+          n1_test <- pwr.t2n.test(d = d, n1 = NULL, n2 = NULL, sig.level = alpha, power = target_power, alternative = sided)$n1
+          current_n1 <- ceiling(n1_test)
+
+          n1_range <- seq(from = max(5, floor(current_n1 * 0.25)), to = floor(current_n1 * 3), length.out = 100)
+          power_vals <- vapply(n1_range, function(n1_val) {
+            pwr.t2n.test(d = d, n1 = n1_val, n2 = n1_val * ratio, sig.level = alpha, alternative = sided)$power
+          }, FUN.VALUE = numeric(1))
+
+          plot_ly() %>%
+            add_trace(x = n1_range, y = power_vals, type = "scatter", mode = "lines",
+              line = list(color = "#2B5876", width = 3), name = "Power Curve") %>%
+            add_trace(x = range(n1_range), y = c(0.8, 0.8), type = "scatter", mode = "lines",
+              line = list(color = "red", width = 2, dash = "dash"), name = "80% Power Target") %>%
+            add_trace(x = c(current_n1, current_n1), y = c(0, 1), type = "scatter", mode = "lines",
+              line = list(color = "green", width = 2, dash = "dot"), name = "Required n1") %>%
+            layout(title = list(text = "Interactive Power Curve - Continuous Outcomes", font = list(size = 16)),
+              xaxis = list(title = "Sample Size Group 1 (n1)"), yaxis = list(title = "Power", range = c(0, 1))) %>%
             config(displayModeBar = TRUE, displaylogo = FALSE)
 
         # Legacy tabset checks for non-migrated tabs
