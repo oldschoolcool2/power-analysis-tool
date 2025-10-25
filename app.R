@@ -664,7 +664,7 @@ ui <- fluidPage(
 
         # Contextual help for Matched Case-Control
         conditionalPanel(
-          condition = "input.sidebar_page == 'ss_matched'",
+          condition = "input.sidebar_page == 'match_casecontrol'",
           div(class = "content-card help-section",
             create_contextual_help("matched")
           )
@@ -672,7 +672,7 @@ ui <- fluidPage(
 
         # Contextual help for Continuous Outcomes
         conditionalPanel(
-          condition = "input.sidebar_page == 'power_cont' || input.sidebar_page == 'ss_cont'",
+          condition = "input.sidebar_page == 'power_continuous' || input.sidebar_page == 'ss_continuous'",
           div(class = "content-card help-section",
             create_contextual_help("continuous")
           )
@@ -680,7 +680,7 @@ ui <- fluidPage(
 
         # Contextual help for Non-Inferiority
         conditionalPanel(
-          condition = "input.sidebar_page == 'ss_noninf'",
+          condition = "input.sidebar_page == 'noninf'",
           div(class = "content-card help-section",
             create_contextual_help("noninferiority")
           )
