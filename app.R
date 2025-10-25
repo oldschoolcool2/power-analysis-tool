@@ -653,12 +653,14 @@ ui <- fluidPage(
             hr(),
 
             # RCT-based sample size input
-            numericInput("vif_n_rct",
+            create_numeric_input_with_tooltip(
+              "vif_n_rct",
               "Required Sample Size (RCT Calculation):",
-              500, min = 10, step = 10),
-            bsTooltip("vif_n_rct",
-              "Sample size calculated from standard power analysis (as if it were a randomized trial)",
-              "right"),
+              value = 500,
+              min = 10,
+              step = 10,
+              tooltip = "Sample size calculated from standard power analysis (as if it were a randomized trial)"
+            ),
 
             # Propensity score model characteristics
             hr(),
@@ -2338,7 +2340,7 @@ server <- function(input, output, session) {
         # Calculate adjusted sample sizes
         n_adjusted <- ceiling(n_rct * vif)
         n_increase <- n_adjusted - n_rct
-        pct_increase <- round((vif - 1) * 100, 1)
+        pct_increase <- (vif - 1) * 100
         n_effective <- floor(n_rct / vif)
 
         # Interpret VIF
@@ -2438,27 +2440,27 @@ server <- function(input, output, session) {
 
           "<hr>",
           "<h4>Variance Inflation Factor (VIF)</h4>",
-          "<p style='font-size: 1.2em;'><strong>VIF = ", vif, "</strong> ",
+          "<p style='font-size: 1.2em;'><strong>VIF = ", format_numeric(vif, 3), "</strong> ",
           "<span style='color: ", vif_interp$color, "; font-weight: bold;'>", vif_interp$icon, " ", vif_interp$level, " Efficiency Loss</span></p>",
           "<p>", vif_interp$message, "</p>",
 
           "<hr>",
           "<h4>Sample Size Adjustment</h4>",
           "<div style='background-color: #e3f2fd; border-left: 4px solid #2196f3; padding: 15px; margin: 10px 0;'>",
-          "<p><strong>RCT-based sample size:</strong> ", format(n_rct, big.mark = ","), "</p>",
-          "<p><strong>Inflation needed:</strong> +", pct_increase, "% (+", format(n_increase, big.mark = ","), " participants)</p>",
-          "<p style='font-size: 1.3em; color: #d32f2f;'><strong>Adjusted sample size:</strong> ", format(n_adjusted, big.mark = ","), " participants</p>",
-          "<p><strong>Effective sample size after weighting:</strong> ≈", format(n_effective, big.mark = ","), " (statistical information equivalent)</p>",
+          "<p><strong>RCT-based sample size:</strong> ", format_numeric(n_rct, 0), "</p>",
+          "<p><strong>Inflation needed:</strong> +", format_numeric(pct_increase, 1), "% (+", format_numeric(n_increase, 0), " participants)</p>",
+          "<p style='font-size: 1.3em; color: #d32f2f;'><strong>Adjusted sample size:</strong> ", format_numeric(n_adjusted, 0), " participants</p>",
+          "<p><strong>Effective sample size after weighting:</strong> ≈", format_numeric(n_effective, 0), " (statistical information equivalent)</p>",
           "</div>",
 
           "<hr>",
           "<h4>Interpretation</h4>",
-          "<p>To achieve the same statistical power as a randomized trial with N=", format(n_rct, big.mark = ","),
+          "<p>To achieve the same statistical power as a randomized trial with N=", format_numeric(n_rct, 0),
           ", an observational study using <strong>", method_desc$name, "</strong> weighting requires approximately <strong>N=",
-          format(n_adjusted, big.mark = ","), " participants</strong> (assuming c-statistic=", c_stat, ").</p>",
+          format_numeric(n_adjusted, 0), " participants</strong> (assuming c-statistic=", format_numeric(c_stat, 2), ").</p>",
 
           "<p>The effective sample size after propensity score weighting will be approximately ",
-          format(n_effective, big.mark = ","),
+          format_numeric(n_effective, 0),
           ", which provides statistical information equivalent to a randomized trial of that size.</p>",
 
           "<hr>",
