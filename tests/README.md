@@ -166,57 +166,19 @@ test_that("Sample Size calculation workflow", {
 - **E2E tests:** All three main tabs (Sample Size, MDE, Power)
 - **Integration tests:** Tab navigation, responsive design, performance
 
-### Coverage Goals
+### Testing Philosophy
 
-- 80%+ unit test coverage for utility functions
-- E2E tests for all critical user paths
-- Visual regression testing for plots
+For Shiny applications, we focus on:
+- **Unit test coverage** for helper functions and calculations
+- **E2E test coverage** for all critical user workflows
+- **Visual regression testing** via screenshots
+- **Manual QA** for UX and edge cases
 
-### Running Code Coverage Analysis
-
-We use the `covr` package to track code coverage:
-
-```bash
-# Full coverage report with HTML output
-./run_coverage.sh
-
-# Quick summary only (faster)
-./run_coverage.sh --summary
-
-# Run in Docker
-./run_coverage.sh --docker
-```
-
-**Direct R script execution:**
-
-```r
-# Full coverage analysis
-Rscript tests/run_coverage.R
-
-# Quick summary
-Rscript tests/coverage_summary.R
-```
-
-**Output:**
-- Console summary with overall coverage percentage
-- File-by-file breakdown with line counts
-- Specific uncovered lines that need tests
-- Interactive HTML report in `tests/coverage_report/coverage_report.html`
-
-**Coverage Thresholds:**
-- **Excellent:** ≥90%
-- **Good:** ≥80%
-- **Fair:** ≥70%
-- **Fail:** <70% (blocks CI/CD)
-
-**Configuration Files:**
-- `.covrignore` - Files excluded from coverage (tests, docs, static assets)
-- `tests/run_coverage.R` - Full coverage analysis script
-- `tests/coverage_summary.R` - Quick summary for CI/CD
-- `run_coverage.sh` - Convenience wrapper script
-
-For detailed coverage tracking documentation, see:
-- [How to Track Code Coverage](../docs/002-how-to-guides/005-code-coverage-tracking.md)
+**Why we don't use code coverage metrics (covr):**
+- Shiny apps are interaction-driven, not package-driven
+- Line coverage doesn't measure reactive behavior
+- E2E tests provide better quality signals
+- Coverage percentage can be misleading for UI-heavy code
 
 ## Debugging Failed Tests
 

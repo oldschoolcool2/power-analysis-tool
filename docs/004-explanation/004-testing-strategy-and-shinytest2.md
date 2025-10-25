@@ -428,23 +428,40 @@ We would reconsider shinytest2 if:
 
 ### Current Coverage (as of 2025-10-25)
 
-- **Unit tests:** ~85% of utility functions
-- **Server tests:** ~60% of reactive logic
+- **Unit tests:** Core calculation functions and helpers
+- **Server tests:** Key reactive logic patterns
 - **E2E tests:** Core workflows for 3 main tabs
 
 ### Goals
 
-- Maintain >80% unit test coverage
-- E2E tests for all critical user paths
+- Comprehensive unit tests for all calculation functions
+- E2E tests for all critical user workflows
 - Zero high-severity bugs in production
 - <5% test flakiness rate
 
 ### How We Measure Success
 
+We use **qualitative metrics** rather than coverage percentages:
+
 ✅ **Prevented regressions:** Tests caught before production
 ✅ **Refactoring safety:** Code improvements without breakage
 ✅ **Development velocity:** Confidence to move faster
 ✅ **Bug detection rate:** Issues found in tests vs. production
+✅ **All E2E tests passing:** User workflows work correctly
+
+### Why We Don't Track Code Coverage Percentage
+
+For Shiny applications, traditional line coverage metrics (like those from `covr`) are misleading because:
+
+1. **Reactive code is hard to measure** - Coverage tools don't understand Shiny's reactive graph
+2. **UI interactions matter more** - High coverage of server code doesn't mean the UI works
+3. **False confidence** - 90% coverage doesn't guarantee the app works for users
+4. **Better alternatives exist** - E2E tests provide stronger quality signals
+
+Instead, we focus on:
+- **Test what matters:** User workflows, calculations, edge cases
+- **Visual regression:** Screenshots catch UI changes
+- **Integration testing:** Full-stack validation with shinytest2
 
 ## Conclusion
 
