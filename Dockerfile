@@ -14,7 +14,8 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install renv for package management
-RUN R --quiet -e "install.packages('renv', repos = c(CRAN = 'https://cloud.r-project.org'))"
+RUN R --quiet -e "install.packages('renv', repos = c(CRAN = 'https://cloud.r-project.org'))" && \
+    R -e "cat('renv installed at:', find.package('renv'), '\n')"
 
 # Set working directory
 WORKDIR /srv/shiny-server
@@ -26,15 +27,16 @@ COPY .Rprofile .Rprofile
 COPY renv/activate.R renv/activate.R
 COPY renv/settings.json renv/settings.json
 
-# Configure renv to use system library (avoids permission issues)
+# Create cache directory and restore packages
+# This is the heavy operation that gets cached
+# Explicitly load renv from system library before activating project
+RUN mkdir -p /opt/renv/cache && \
+    Rscript -e "library(renv, lib.loc = '/usr/local/lib/R/site-library'); renv::restore()"
+
+# Configure renv runtime environment (after restore to avoid bootstrap conflicts)
 ENV RENV_CONFIG_SANDBOX_ENABLED=FALSE
 ENV RENV_PATHS_LIBRARY=/usr/local/lib/R/site-library
 ENV RENV_PATHS_CACHE=/opt/renv/cache
-
-# Create cache directory and restore packages
-# This is the heavy operation that gets cached
-RUN mkdir -p /opt/renv/cache && \
-    R --quiet -e "renv::restore()"
 
 # Install TinyTeX for PDF generation (after renv restore)
 RUN R --quiet -e "tinytex::install_tinytex()"
