@@ -67,7 +67,7 @@ shiny::runApp("app.R")
 3. Click **Calculate**
 4. Result: n₁=303, n₂=303, Total N=606
 
-### Example 3: Continuous Outcomes (TIER 4)
+### Example 3: Continuous Outcomes
 **Scenario:** Comparing mean HbA1c between two drugs, Cohen's d=0.5
 
 1. Navigate to **"Power (Continuous)"** tab
@@ -75,7 +75,7 @@ shiny::runApp("app.R")
 3. Click **Calculate**
 4. Result: ~81.8% power to detect difference
 
-### Example 4: Non-Inferiority (TIER 4)
+### Example 4: Non-Inferiority
 **Scenario:** Generic vs. branded drug, 5% non-inferiority margin
 
 1. Navigate to **"Non-Inferiority"** tab
@@ -107,7 +107,7 @@ shiny::runApp("app.R")
 
 ## Version History
 
-### Version 5.0 - Tier 4 Advanced Statistical Methods (Current)
+### Version 5.0 - Continuous Outcomes and Equivalence (Current)
 
 **KEY FEATURES:**
 1. ✅ **Continuous Outcomes (t-tests)** - Two new tabs
@@ -140,7 +140,7 @@ shiny::runApp("app.R")
 - Comprehensive help system for advanced methods
 - All calculations use existing `pwr` package (no new dependencies)
 
-### Version 4.0 - Tier 3 Professional Polish
+### Version 4.0 - Professional Polish
 - Modern bslib theme with Bootstrap 5
 - Mobile-responsive design
 - Example and reset buttons (all 7 tabs)
@@ -148,13 +148,13 @@ shiny::runApp("app.R")
 - FDA/EMA regulatory guidance links
 - Infrastructure: R 4.4.0, renv support
 
-### Version 3.0 - Tier 2 Advanced Methods
+### Version 3.0 - UI/UX Modernization
 - Survival analysis (Cox regression)
 - Matched case-control studies
 - Extended CSV export
 - Scenario comparison
 
-### Version 2.0 - Tier 1 Core Features
+### Version 2.0 - Advanced Statistical Features
 - Two-group proportion comparisons
 - Adjustable significance level (α)
 - Input validation and tooltips
@@ -271,13 +271,13 @@ See [Contributing Guidelines](docs/development/CONTRIBUTING.md) for detailed ins
 
 ### Feature Requests
 All major feature categories now implemented:
-- ✅ Binary outcomes (Tiers 1-2)
-- ✅ Continuous outcomes (Tier 4)
-- ✅ Survival analysis (Tier 2)
-- ✅ Matched designs (Tier 2)
-- ✅ Non-inferiority (Tier 4)
-- ✅ Modern UI/UX (Tier 3)
-- ✅ Documentation & help (Tier 3)
+- ✅ Binary outcomes
+- ✅ Continuous outcomes
+- ✅ Survival analysis
+- ✅ Matched designs
+- ✅ Non-inferiority
+- ✅ Modern UI/UX
+- ✅ Documentation & help
 
 Potential future enhancements:
 - Equivalence testing (two-sided non-inferiority)
@@ -302,5 +302,5 @@ Enhanced for real-world evidence applications based on:
 - Contemporary epidemiological research best practices
 - User feedback from pharmaceutical epidemiologists
 
-**Current Version:** 5.0 (Tier 4 - Advanced Statistical Methods)
+**Current Version:** 5.0 (Continuous Outcomes and Equivalence)
 **Last Updated:** 2025

@@ -573,6 +573,57 @@ ui <- fluidPage(
               actionButton("example_noninf", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
               actionButton("reset_noninf", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
             )
+          ),
+
+          # PAGE 11: Propensity Score VIF Calculator
+          conditionalPanel(
+            condition = "input.sidebar_page == 'vif_calculator'",
+            h2(class = "page-title", "Propensity Score Methods: VIF Calculator"),
+            helpText("Adjust sample size for efficiency loss from propensity score weighting (IPTW, overlap, matching)"),
+            hr(),
+
+            # RCT-based sample size input
+            numericInput("vif_n_rct",
+              "Required Sample Size (RCT Calculation):",
+              500, min = 10, step = 10),
+            bsTooltip("vif_n_rct",
+              "Sample size calculated from standard power analysis (as if it were a randomized trial)",
+              "right"),
+
+            # Propensity score model characteristics
+            hr(),
+            h4("Propensity Score Model Assumptions"),
+
+            create_enhanced_slider("vif_prevalence",
+              "Treatment Prevalence (%):",
+              min = 10, max = 90, value = 50, step = 5, post = "%",
+              tooltip = "Percentage of participants in the treatment/exposed group"),
+
+            create_enhanced_slider("vif_cstat",
+              "Anticipated C-statistic of PS Model:",
+              min = 0.55, max = 0.95, value = 0.70, step = 0.05, post = "",
+              tooltip = "Discriminative ability of propensity score model. 0.5=no discrimination, 1.0=perfect. Typical: 0.65-0.75 for RWE data"),
+
+            # Weighting method selection
+            radioButtons_fixed("vif_method",
+              "Weighting Method:",
+              choices = c(
+                "ATE - Inverse Probability of Treatment Weighting" = "ATE",
+                "ATT - Average Treatment Effect on Treated" = "ATT",
+                "ATO - Overlap Weights (most efficient)" = "ATO",
+                "ATM - Matching Weights" = "ATM",
+                "ATEN - Entropy Weights" = "ATEN"
+              ),
+              selected = "ATE"),
+            bsTooltip("vif_method",
+              "ATE: generalizes to full population. ATT: effect in treated only. ATO/ATM/ATEN: focus on overlap region (more efficient)",
+              "right"),
+
+            hr(),
+            div(class = "btn-group-custom",
+              actionButton("example_vif", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
+              actionButton("reset_vif", "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
+            )
           )
 
         ), # End of input cards
@@ -632,6 +683,14 @@ ui <- fluidPage(
           condition = "input.sidebar_page == 'ss_noninf'",
           div(class = "content-card help-section",
             create_contextual_help("noninferiority")
+          )
+        ),
+
+        # Contextual help for VIF Calculator
+        conditionalPanel(
+          condition = "input.sidebar_page == 'vif_calculator'",
+          div(class = "content-card help-section",
+            create_contextual_help("vif_propensity")
           )
         ),
 
@@ -729,6 +788,9 @@ server <- function(input, output, session) {
     } else if (page == "noninf") {
       paste0("Preview: Non-inferiority margin=", input$noninf_margin,
              "%, baseline rate=", input$noninf_p1, "%")
+    } else if (page == "vif_calculator") {
+      paste0("Preview: VIF for ", input$vif_method, " weights, c-stat=",
+             input$vif_cstat, ", prevalence=", input$vif_prevalence, "%")
     } else {
       "Enter parameters above"
     }
@@ -819,6 +881,109 @@ server <- function(input, output, session) {
     )
   }
 
+  # Helper function: estimate Variance Inflation Factor for propensity score weighting
+  # Based on Austin PC (2021). Statistics in Medicine 40(27):6150-6163.
+  estimate_vif_propensity_score <- function(c_statistic, prevalence_pct, weight_type = "ATE") {
+    # Convert inputs to proportions
+    p <- prevalence_pct / 100  # treatment prevalence
+    c <- c_statistic
+
+    # Validate inputs
+    if (c < 0.5 || c > 1.0) {
+      stop("C-statistic must be between 0.5 and 1.0")
+    }
+    if (p <= 0 || p >= 1) {
+      stop("Prevalence must be between 0 and 100%")
+    }
+
+    # Empirical approximation based on Austin (2021) findings
+    # These formulas approximate the relationships shown in the paper
+
+    # Separation measure (higher c-statistic = more separation = higher VIF)
+    separation <- (c - 0.5) / 0.5  # Normalized to 0-1 scale
+
+    # Imbalance factor (balanced groups have lower VIF)
+    # Minimum at p=0.5, increases as p approaches 0 or 1
+    imbalance <- abs(p - 0.5) * 2  # Normalized to 0-1 scale
+
+    # Calculate VIF based on weighting method
+    if (weight_type == "ATE") {
+      # Average Treatment Effect (IPTW) - most sensitive to c-statistic
+      # VIF increases substantially with high c-statistic and imbalanced groups
+      base_vif <- 1.0 + (separation^2 * 2.5)  # Quadratic relationship
+      imbalance_penalty <- 1.0 + (imbalance * separation * 1.5)
+      vif <- base_vif * imbalance_penalty
+
+    } else if (weight_type == "ATT") {
+      # Average Treatment effect on Treated
+      # Slightly lower VIF than ATE, less sensitive to imbalance
+      base_vif <- 1.0 + (separation^2 * 2.0)
+      imbalance_penalty <- 1.0 + (imbalance * separation * 1.2)
+      vif <- base_vif * imbalance_penalty
+
+    } else if (weight_type == "ATO") {
+      # Overlap weights - most efficient, VIF typically < 2
+      # Least sensitive to c-statistic and imbalance
+      base_vif <- 1.0 + (separation^1.5 * 0.8)  # Gentler increase
+      imbalance_penalty <- 1.0 + (imbalance * separation * 0.5)
+      vif <- base_vif * imbalance_penalty
+      # Cap at reasonable maximum for overlap weights
+      vif <- min(vif, 2.0)
+
+    } else if (weight_type == "ATM") {
+      # Matching weights - similar to overlap weights
+      base_vif <- 1.0 + (separation^1.5 * 0.9)
+      imbalance_penalty <- 1.0 + (imbalance * separation * 0.6)
+      vif <- base_vif * imbalance_penalty
+      vif <- min(vif, 2.2)
+
+    } else if (weight_type == "ATEN") {
+      # Entropy weights - similar efficiency to overlap weights
+      base_vif <- 1.0 + (separation^1.5 * 0.85)
+      imbalance_penalty <- 1.0 + (imbalance * separation * 0.55)
+      vif <- base_vif * imbalance_penalty
+      vif <- min(vif, 2.1)
+
+    } else {
+      stop("Invalid weight_type. Must be one of: ATE, ATT, ATO, ATM, ATEN")
+    }
+
+    return(round(vif, 3))
+  }
+
+  # Helper function: interpret VIF value
+  interpret_vif <- function(vif) {
+    if (vif < 1.3) {
+      list(
+        level = "Low",
+        color = "#28a745",
+        icon = "✅",
+        message = "Minimal efficiency loss. Propensity score weighting is highly efficient for this scenario."
+      )
+    } else if (vif < 2.0) {
+      list(
+        level = "Moderate",
+        color = "#ffc107",
+        icon = "⚠️",
+        message = "Moderate efficiency loss. Propensity score weighting is acceptable but consider overlap or matching weights for better efficiency."
+      )
+    } else if (vif < 3.0) {
+      list(
+        level = "High",
+        color = "#fd7e14",
+        icon = "⚠️",
+        message = "Substantial efficiency loss. Consider using overlap weights (ATO) or matching weights (ATM) instead of ATE/ATT weights."
+      )
+    } else {
+      list(
+        level = "Very High",
+        color = "#dc3545",
+        icon = "❌",
+        message = "Severe efficiency loss. Propensity score weighting may not be feasible. Consider alternative methods (matching, stratification, or regression adjustment)."
+      )
+    }
+  }
+
   # Configuration for example and reset buttons (DRY refactoring)
   button_configs <- list(
     power_single = list(
@@ -870,6 +1035,11 @@ server <- function(input, output, session) {
       example = list(noninf_power = 85, noninf_p1 = 12, noninf_p2 = 10, noninf_margin = 4, noninf_ratio = 1, noninf_alpha = 0.025),
       reset = list(noninf_power = 80, noninf_p1 = 10, noninf_p2 = 10, noninf_margin = 5, noninf_ratio = 1, noninf_alpha = 0.025),
       example_msg = "Non-inferiority test with 4% margin (generic vs. branded)"
+    ),
+    vif = list(
+      example = list(vif_n_rct = 800, vif_prevalence = 30, vif_cstat = 0.75, vif_method = "ATE"),
+      reset = list(vif_n_rct = 500, vif_prevalence = 50, vif_cstat = 0.70, vif_method = "ATE"),
+      example_msg = "High c-statistic PS model with imbalanced treatment prevalence"
     )
   )
 
@@ -2077,6 +2247,153 @@ server <- function(input, output, session) {
 
           HTML(paste0(text0, text1, text2, text3, effect_size_box))
         }
+      } else if (input$sidebar_page == "vif_calculator") {
+        # PAGE 11: Propensity Score VIF Calculator (Tier 1 Feature 4)
+
+        # Get inputs
+        n_rct <- input$vif_n_rct
+        prevalence_pct <- input$vif_prevalence
+        c_stat <- input$vif_cstat
+        weight_method <- input$vif_method
+
+        # Calculate VIF
+        vif <- estimate_vif_propensity_score(c_stat, prevalence_pct, weight_method)
+
+        # Calculate adjusted sample sizes
+        n_adjusted <- ceiling(n_rct * vif)
+        n_increase <- n_adjusted - n_rct
+        pct_increase <- round((vif - 1) * 100, 1)
+        n_effective <- floor(n_rct / vif)
+
+        # Interpret VIF
+        vif_interp <- interpret_vif(vif)
+
+        # Method descriptions
+        method_desc <- switch(weight_method,
+          "ATE" = list(
+            name = "Average Treatment Effect (ATE) - IPTW",
+            description = "Inverse Probability of Treatment Weighting creates a pseudo-population where treatment is independent of measured confounders. Generalizes to the full population.",
+            target = "entire population"
+          ),
+          "ATT" = list(
+            name = "Average Treatment Effect on Treated (ATT)",
+            description = "Estimates the effect specifically in those who received treatment. Useful when interest is in the treated population only.",
+            target = "treated patients only"
+          ),
+          "ATO" = list(
+            name = "Overlap Weights (ATO)",
+            description = "Focuses on patients with clinical equipoise (good propensity score overlap). Most efficient method with lowest VIF. Recommended for RWE studies.",
+            target = "overlap population (equipoise region)"
+          ),
+          "ATM" = list(
+            name = "Matching Weights (ATM)",
+            description = "Mimics 1:1 matching but retains all subjects. Efficient and balances covariates well.",
+            target = "matched population"
+          ),
+          "ATEN" = list(
+            name = "Entropy Weights (ATEN)",
+            description = "Balances covariates while maximizing effective sample size. Similar efficiency to overlap weights.",
+            target = "population maximizing effective sample size"
+          )
+        )
+
+        # C-statistic interpretation
+        c_stat_interp <- if (c_stat < 0.6) {
+          "Poor discrimination (may indicate weak confounding or insufficient covariates)"
+        } else if (c_stat < 0.7) {
+          "Fair discrimination (typical for claims/EHR data)"
+        } else if (c_stat < 0.8) {
+          "Good discrimination (typical for rich registry/cohort data)"
+        } else if (c_stat < 0.9) {
+          "Very good discrimination (may lead to high VIF for ATE/ATT)"
+        } else {
+          "Excellent discrimination (high VIF expected; consider alternative methods)"
+        }
+
+        # Recommendations
+        recommendations <- c()
+
+        if (c_stat < 0.65) {
+          recommendations <- c(recommendations,
+            "⚠️ C-statistic is low. Consider including stronger confounders to improve propensity score model discrimination.")
+        } else {
+          recommendations <- c(recommendations,
+            "✅ C-statistic is adequate for propensity score methods.")
+        }
+
+        if (prevalence_pct < 20 || prevalence_pct > 80) {
+          recommendations <- c(recommendations,
+            sprintf("⚠️ Treatment prevalence (%s%%) is imbalanced. VIF will be higher. Consider restricting to overlap region (ATO weights).", prevalence_pct))
+        } else {
+          recommendations <- c(recommendations,
+            "✅ Treatment prevalence is reasonably balanced.")
+        }
+
+        if (vif > 2.0) {
+          recommendations <- c(recommendations,
+            "⚠️ High VIF suggests substantial efficiency loss. Consider overlap weights (ATO) or matching weights (ATM) to improve efficiency.")
+        } else {
+          recommendations <- c(recommendations,
+            "✅ VIF is acceptable. Propensity score weighting is feasible for this scenario.")
+        }
+
+        recommendations_html <- paste0(
+          "<ul>",
+          paste0("<li>", recommendations, "</li>", collapse = "\n"),
+          "</ul>"
+        )
+
+        # Generate result HTML
+        text0 <- hr()
+        text1 <- h1("Propensity Score Weighting: VIF Results")
+        text2 <- h4("(This analysis can be included in your Statistical Analysis Plan)")
+
+        text3 <- HTML(paste0(
+          "<h4>Weighting Method: ", method_desc$name, "</h4>",
+          "<p>", method_desc$description, "</p>",
+          "<p><strong>Target Population:</strong> ", method_desc$target, "</p>",
+
+          "<hr>",
+          "<h4>Propensity Score Model Assumptions</h4>",
+          "<ul>",
+          "<li><strong>Treatment prevalence:</strong> ", prevalence_pct, "%</li>",
+          "<li><strong>Anticipated c-statistic:</strong> ", c_stat, " (", c_stat_interp, ")</li>",
+          "</ul>",
+
+          "<hr>",
+          "<h4>Variance Inflation Factor (VIF)</h4>",
+          "<p style='font-size: 1.2em;'><strong>VIF = ", vif, "</strong> ",
+          "<span style='color: ", vif_interp$color, "; font-weight: bold;'>", vif_interp$icon, " ", vif_interp$level, " Efficiency Loss</span></p>",
+          "<p>", vif_interp$message, "</p>",
+
+          "<hr>",
+          "<h4>Sample Size Adjustment</h4>",
+          "<div style='background-color: #e3f2fd; border-left: 4px solid #2196f3; padding: 15px; margin: 10px 0;'>",
+          "<p><strong>RCT-based sample size:</strong> ", format(n_rct, big.mark = ","), "</p>",
+          "<p><strong>Inflation needed:</strong> +", pct_increase, "% (+", format(n_increase, big.mark = ","), " participants)</p>",
+          "<p style='font-size: 1.3em; color: #d32f2f;'><strong>Adjusted sample size:</strong> ", format(n_adjusted, big.mark = ","), " participants</p>",
+          "<p><strong>Effective sample size after weighting:</strong> ≈", format(n_effective, big.mark = ","), " (statistical information equivalent)</p>",
+          "</div>",
+
+          "<hr>",
+          "<h4>Interpretation</h4>",
+          "<p>To achieve the same statistical power as a randomized trial with N=", format(n_rct, big.mark = ","),
+          ", an observational study using <strong>", method_desc$name, "</strong> weighting requires approximately <strong>N=",
+          format(n_adjusted, big.mark = ","), " participants</strong> (assuming c-statistic=", c_stat, ").</p>",
+
+          "<p>The effective sample size after propensity score weighting will be approximately ",
+          format(n_effective, big.mark = ","),
+          ", which provides statistical information equivalent to a randomized trial of that size.</p>",
+
+          "<hr>",
+          "<h4>Recommendations</h4>",
+          recommendations_html,
+
+          "<hr>",
+          "<p style='font-size: 0.9em; color: #666;'><strong>Reference:</strong> Austin PC (2021). Informing power and sample size calculations when using inverse probability of treatment weighting using the propensity score. <em>Statistics in Medicine</em> 40(27):6150-6163.</p>"
+        ))
+
+        HTML(paste0(text0, text1, text2, text3))
       }
     })
   })

@@ -209,6 +209,20 @@ create_sidebar_nav <- function() {
           tags$span(class = "nav-group-icon", icon("balance-scale")),
           tags$span(class = "nav-group-label", "Non-Inferiority Testing")
         )
+      ),
+
+      # Group 7: Propensity Score Methods (single item)
+      tags$div(
+        class = "nav-group",
+        tags$a(
+          href = "#",
+          class = "nav-item-single",
+          `data-page` = "vif_calculator",
+          role = "button",
+          tabindex = "0",
+          tags$span(class = "nav-group-icon", icon("chart-bar")),
+          tags$span(class = "nav-group-label", "Propensity Score VIF")
+        )
       )
     ),
 

@@ -30,7 +30,7 @@ Recent research (2024-2025) shows that observational study sample size calculati
 
 ---
 
-## TIER 1: Critical Additions for Propensity Score Methods
+## Priority 1: Critical Additions for Propensity Score Methods
 
 ### 1. Variance Inflation Factor (VIF) Calculator
 
@@ -148,7 +148,7 @@ Add radio button to each tab:
 
 ---
 
-## TIER 2: Missing Data & Bias Adjustments
+## Priority 2: Missing Data & Bias Adjustments
 
 ### 4. Missing Data Inflation Factor
 
@@ -237,7 +237,7 @@ Add radio button to each tab:
 
 ---
 
-## TIER 3: Advanced RWE Study Designs
+## Priority 3: Advanced RWE Study Designs
 
 ### 6. Difference-in-Differences (DiD) Power Analysis
 
@@ -365,7 +365,7 @@ Add radio button to each tab:
 
 ---
 
-## TIER 4: Clustering & Hierarchical Data
+## Priority 4: Clustering & Hierarchical Data
 
 ### 9. Design Effect for Clustered Data
 
@@ -1336,7 +1336,7 @@ power-analysis-tool/
 
 ### Package Dependencies to Add
 
-**Tier 1 (MUST HAVE):**
+**Priority 1 (MUST HAVE):**
 ```r
 install.packages(c(
   "PSweight",      # Propensity score weighting VIF
@@ -1346,7 +1346,7 @@ install.packages(c(
 ))
 ```
 
-**Tier 2 (SHOULD HAVE):**
+**Priority 2 (SHOULD HAVE):**
 ```r
 install.packages(c(
   "EValue",        # Sensitivity to unmeasured confounding
@@ -1357,7 +1357,7 @@ install.packages(c(
 ))
 ```
 
-**Tier 3 (NICE TO HAVE):**
+**Priority 3 (NICE TO HAVE):**
 ```r
 install.packages(c(
   "CRTSize",       # Cluster randomized trials
@@ -1573,13 +1573,13 @@ Before finalizing design, run checklist:
 
 ### Development Costs
 
-**Must Have Features (Tier 1):**
+**Must Have Features (Priority 1):**
 - Developer time: 8-10 weeks
 - Testing/QA: 2-3 weeks
 - Documentation: 1-2 weeks
 - **Total: ~3 months, 1 developer**
 
-**Should Have Features (Tier 2):**
+**Should Have Features (Priority 2):**
 - Developer time: 12-15 weeks
 - Testing/QA: 3-4 weeks
 - Documentation: 2 weeks

@@ -1,6 +1,6 @@
-# Tier 1 Features - Implementation Reports
+# Advanced Statistical Features - Implementation Reports
 
-This directory contains documentation for Tier 1 enhancement features focused on advanced statistical capabilities for real-world evidence studies.
+This directory contains documentation for advanced statistical enhancement features focused on advanced capabilities for real-world evidence studies.
 
 ## Files
 
@@ -14,7 +14,7 @@ This directory contains documentation for Tier 1 enhancement features focused on
 - **implementation-status.md** - Earlier status document (older, may be outdated)
   - Use `progress-summary.md` as the primary reference
 
-## Tier 1 Features Overview
+## Features Overview
 
 ### Feature 1: Missing Data Adjustment
 Inflate sample sizes to account for expected missingness (MCAR, MAR, MNAR mechanisms). Implemented across all 6 sample size calculation tabs.
@@ -30,10 +30,10 @@ PSWeight-based VIF calculations for propensity score methods (ATE, ATT, ATO, ATM
 
 ## Related Documentation
 
-- Implementation guide: `docs/002-how-to-guides/002-tier1-implementation.md`
+- Implementation guide: `docs/002-how-to-guides/002-advanced-statistical-features-implementation.md`
 - Feature proposals: `docs/004-explanation/001-feature-proposals.md`
 
 ## Status
 
 **Overall Progress:** 84% (16/19 components complete)
-**Time Remaining:** ~9 hours to complete all Tier 1 features
+**Time Remaining:** ~9 hours to complete all advanced statistical features

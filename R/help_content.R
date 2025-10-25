@@ -261,7 +261,110 @@ create_contextual_help <- function(analysis_type) {
         )
       )
     ),
-    
+
+    # ============================================================
+    # PROPENSITY SCORE VIF CALCULATOR
+    # ============================================================
+    "vif_propensity" = accordion(
+      id = paste0("help_", analysis_type),
+      open = FALSE,
+      accordion_panel(
+        title = "About this Analysis",
+        icon = icon("chart-bar"),
+        p("The Variance Inflation Factor (VIF) quantifies the efficiency loss when using propensity score weighting methods in observational studies. VIF describes how much larger your sample size needs to be compared to a randomized trial to achieve the same statistical power."),
+        p(strong("Method:"), "Based on Austin (2021) methodology for estimating VIF from anticipated treatment prevalence and propensity score model c-statistic."),
+        p(strong("Example:"), "If VIF = 2.0, you need 2× the sample size of an RCT (e.g., 1,000 instead of 500) to achieve the same power.")
+      ),
+      accordion_panel(
+        title = "Weighting Methods Explained",
+        icon = icon("balance-scale-right"),
+        tags$dl(
+          tags$dt(strong("ATE (Average Treatment Effect) - IPTW")),
+          tags$dd("Inverse probability of treatment weighting. Creates a pseudo-population where treatment is independent of measured confounders. Generalizes to the entire population. Most common but can have high VIF."),
+
+          tags$dt(strong("ATT (Average Treatment effect on Treated)")),
+          tags$dd("Estimates the effect specifically in those who received treatment. Useful when interest is in the treated population only (e.g., comparative effectiveness in treated patients)."),
+
+          tags$dt(strong("ATO (Overlap Weights)")),
+          tags$dd("Focuses on patients with clinical equipoise (good propensity score overlap). Most efficient method—typically has lowest VIF. Recommended for RWE studies."),
+
+          tags$dt(strong("ATM (Matching Weights)")),
+          tags$dd("Mimics 1:1 matching but retains all subjects. Efficient and balances covariates well. Similar VIF to overlap weights."),
+
+          tags$dt(strong("ATEN (Entropy Weights)")),
+          tags$dd("Balances covariates while maximizing effective sample size. Similar efficiency to overlap and matching weights.")
+        )
+      ),
+      accordion_panel(
+        title = "C-statistic Guidelines",
+        icon = icon("chart-line"),
+        p("The c-statistic (area under the ROC curve) measures how well the propensity score model discriminates between treated and untreated groups."),
+        tags$ul(
+          tags$li(strong("0.5 - 0.6:"), "Poor discrimination. May indicate weak confounding or insufficient covariates."),
+          tags$li(strong("0.6 - 0.7:"), "Fair discrimination. Typical for claims/EHR data with standard covariates."),
+          tags$li(strong("0.7 - 0.8:"), "Good discrimination. Typical for rich registry or cohort data."),
+          tags$li(strong("0.8 - 0.9:"), "Very good discrimination. Can lead to high VIF for ATE/ATT; use overlap weights."),
+          tags$li(strong("> 0.9:"), "Excellent discrimination. High VIF expected. Consider alternative methods.")
+        ),
+        p(strong("Typical c-statistics by data source:")),
+        tags$ul(
+          tags$li("Claims data: 0.60 - 0.70"),
+          tags$li("EHR data: 0.65 - 0.75"),
+          tags$li("Registry data: 0.70 - 0.80"),
+          tags$li("Rich cohort studies: 0.75 - 0.85")
+        )
+      ),
+      accordion_panel(
+        title = "VIF Interpretation",
+        icon = icon("tachometer-alt"),
+        tags$ul(
+          tags$li(strong("VIF < 1.3:"), "✅ Minimal efficiency loss. Propensity score weighting is highly efficient."),
+          tags$li(strong("VIF 1.3 - 2.0:"), "⚠️ Moderate efficiency loss. Acceptable for most studies. Consider overlap weights for better efficiency."),
+          tags$li(strong("VIF 2.0 - 3.0:"), "⚠️ Substantial efficiency loss. Strongly recommend overlap/matching weights instead of ATE/ATT."),
+          tags$li(strong("VIF > 3.0:"), "❌ Severe efficiency loss. Propensity score weighting may not be feasible. Consider matching, stratification, or regression adjustment.")
+        )
+      ),
+      accordion_panel(
+        title = "Sample Size Adjustment Workflow",
+        icon = icon("project-diagram"),
+        p("Follow these steps to adjust your sample size for propensity score methods:"),
+        tags$ol(
+          tags$li(strong("Step 1:"), "Calculate required sample size using standard power analysis (as if it were a randomized trial). Use the other tabs in this tool."),
+          tags$li(strong("Step 2:"), "Estimate the c-statistic of your propensity score model based on pilot data, literature, or data source type."),
+          tags$li(strong("Step 3:"), "Determine treatment prevalence in your data source."),
+          tags$li(strong("Step 4:"), "Select your weighting method (ATE, ATT, ATO, ATM, or ATEN)."),
+          tags$li(strong("Step 5:"), "Calculate VIF using this tool."),
+          tags$li(strong("Step 6:"), "Multiply your RCT-based sample size by the VIF to get the adjusted sample size: N_adjusted = N_RCT × VIF"),
+          tags$li(strong("Step 7:"), "Review the sensitivity analysis table to understand how VIF varies with different assumptions.")
+        )
+      ),
+      accordion_panel(
+        title = "Important Cautions",
+        icon = icon("exclamation-triangle"),
+        tags$ul(
+          tags$li(strong("Assumption:"), "VIF estimation assumes the propensity score model will be correctly specified and achieve the anticipated c-statistic."),
+          tags$li(strong("Positivity:"), "VIF methods assume positivity (overlap). If there are regions of no overlap, estimates may be inaccurate."),
+          tags$li(strong("Pilot data:"), "When possible, use pilot data or similar studies to inform c-statistic estimates."),
+          tags$li(strong("2025 update:"), "Recent research (Li & Liu 2025) suggests VIF methods may lack theoretical foundation and can be inaccurate with limited overlap. Use sensitivity analyses."),
+          tags$li(strong("Alternative:"), "Consider using methods that focus on the overlap region (ATO, ATM) which are more robust.")
+        )
+      ),
+      accordion_panel(
+        title = "References",
+        icon = icon("book"),
+        tags$ul(
+          tags$li(strong("Key methodology:"), "Austin PC (2021). Informing power and sample size calculations when using inverse probability of treatment weighting using the propensity score. Statistics in Medicine 40(27):6150-6163."),
+          tags$li("Li F, Thomas LE, Li F (2019). Addressing extreme propensity scores via the overlap weights. American Journal of Epidemiology 188(1):250-257."),
+          tags$li("Li F, Morgan KL, Zaslavsky AM (2018). Balancing covariates via propensity score weighting. Journal of the American Statistical Association 113(521):390-400."),
+          tags$li("Zhou Y, et al. (2020). A comprehensive evaluation of methods for studying continuous exposures using propensity score weighting. Biometrics 76(2):557-569."),
+          tags$li(a("PSweight R package documentation",
+                    href = "https://cran.r-project.org/package=PSweight",
+                    target = "_blank")),
+          tags$li("Recent 2025 developments: Li F, Liu L (2025). Sample size and power calculations for causal inference of observational studies. arXiv 2501.11181.")
+        )
+      )
+    ),
+
     # Default fallback
     NULL
   )

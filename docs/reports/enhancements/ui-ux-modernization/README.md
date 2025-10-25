@@ -21,7 +21,7 @@ This directory contains documentation related to the UI/UX modernization effort 
 ## Related Documentation
 
 - Main plan: `docs/004-explanation/002-ui-ux-modernization.md`
-- How-to guide: `docs/002-how-to-guides/002-tier1-implementation.md`
+- How-to guide: `docs/002-how-to-guides/002-advanced-statistical-features-implementation.md`
 
 ## Status
 

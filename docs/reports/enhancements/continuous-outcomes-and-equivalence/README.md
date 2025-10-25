@@ -1,17 +1,17 @@
-# Tier 4: Advanced Statistical Methods - Enhancement Report
+# Continuous Outcomes and Equivalence - Enhancement Report
 
-This directory contains documentation for Tier 4 enhancements that extend the tool beyond binary outcomes to support continuous endpoints and non-inferiority designs.
+This directory contains documentation for enhancements that extend the tool beyond binary outcomes to support continuous endpoints and non-inferiority designs.
 
 ## Files
 
-- **enhancements.md** - Comprehensive summary of Tier 4 implementation
+- **enhancements.md** - Comprehensive summary of continuous outcomes and equivalence implementation
   - Continuous outcomes (t-tests)
   - Non-inferiority testing
   - Enhanced documentation and help systems
   - Example/reset functionality
   - CSV export support
 
-## Tier 4 Features Overview
+## Features Overview
 
 ### 1. Continuous Outcomes (t-tests)
 
@@ -57,13 +57,13 @@ This directory contains documentation for Tier 4 enhancements that extend the to
 
 ## Status
 
-✅ **100% Complete** - All Tier 4 requirements successfully implemented
+✅ **100% Complete** - All continuous outcomes and equivalence requirements successfully implemented
 
 **Coverage:**
-- Binary outcomes ✅ (Tiers 1-3)
-- Continuous outcomes ✅ (Tier 4)
-- Survival analysis ✅ (Tiers 1-3)
-- Non-inferiority designs ✅ (Tier 4)
+- Binary outcomes ✅
+- Continuous outcomes ✅
+- Survival analysis ✅
+- Non-inferiority designs ✅
 - **~90% of common RWE study designs now supported**
 
 ## Technical Details
@@ -85,4 +85,4 @@ This directory contains documentation for Tier 4 enhancements that extend the to
 ## Related Documentation
 
 - Feature proposals: `docs/004-explanation/001-feature-proposals.md`
-- Main README: `README.md` (Tier 4 section)
+- Main README: `README.md` (Continuous outcomes and equivalence section)

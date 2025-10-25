@@ -1,4 +1,4 @@
-# Tier 1 Features Implementation Guide
+# Advanced Statistical Features Implementation Guide
 
 **Document Version:** 1.0
 **Date:** 2025-10-24
@@ -9,7 +9,7 @@
 
 ## Overview
 
-This document provides step-by-step implementation instructions for the 4 Tier 1 enhancement features:
+This document provides step-by-step implementation instructions for the 4 advanced statistical enhancement features:
 
 1. **Missing Data Adjustment** - Simple inflation factors (EASIEST, HIGHEST IMPACT)
 2. **Minimal Detectable Effect Size** - Reverse power calculator (MODERATE)
@@ -1022,7 +1022,7 @@ accordion_panel(
 
 1. **Unit Tests**: Create tests for each new helper function
    ```r
-   # tests/testthat/test-tier1-features.R
+   # tests/testthat/test-advanced-statistical-features.R
    test_that("Missing data inflation calculates correctly", {
      result <- calc_missing_data_inflation(400, 20, "mar")
      expect_equal(result$n_inflated, 500)
@@ -1059,7 +1059,7 @@ accordion_panel(
 ### Deployment Plan
 
 1. **Phase 1: Development Branch** (Week 1-2)
-   - Create `tier1-enhancements` branch
+   - Create `advanced-statistical-features` branch
    - Implement features 1-2 (Missing Data + Minimal Detectable)
    - Test thoroughly
 
@@ -1093,7 +1093,7 @@ accordion_panel(
 
 ## Summary
 
-This implementation guide provides complete code for all 4 Tier 1 features:
+This implementation guide provides complete code for all 4 advanced statistical features:
 
 1. ✅ **Missing Data Adjustment** - ~150 lines, 2-3 hours
 2. ✅ **Minimal Detectable Effect** - ~350 lines, 6-8 hours
@@ -1115,7 +1115,7 @@ The code is production-ready and follows the existing app architecture. Implemen
 ---
 
 **Next Steps:**
-1. Create `tier1-enhancements` branch
+1. Create `advanced-statistical-features` branch
 2. Start with Feature 1 (quickest win)
 3. Test each feature before moving to next
 4. Deploy incrementally to production

@@ -30,7 +30,7 @@ docs/
 │   └── (link to 003-reference/003-developer-guide.md#getting-started-tutorials)
 ├── 002-how-to-guides/             # Task-oriented instructions
 │   ├── 001-contributing.md        # How to contribute to the project
-│   ├── 002-tier1-implementation.md # Implementation guide
+│   ├── 002-advanced-statistical-features-implementation.md # Implementation guide
 │   └── 003-quick-start-guide.md   # Quick start for development
 ├── 003-reference/                 # Information-oriented specifications
 │   ├── 001-code-quality-tools.md  # Code quality tools reference
@@ -312,10 +312,10 @@ grep -r "search term" docs/ --exclude-dir=reports
 
 ## 📜 Version History
 
-- **v5.0** - Tier 4: Continuous outcomes, non-inferiority testing (current)
-- **v4.0** - Tier 3: Modern UI, Bootstrap 5, help system
-- **v3.0** - Tier 2: Survival analysis, matched case-control
-- **v2.0** - Tier 1: Two-group comparisons, effect measures
+- **v5.0** - Continuous outcomes and equivalence: Continuous outcomes, non-inferiority testing (current)
+- **v4.0** - Professional polish: Modern UI, Bootstrap 5, help system
+- **v3.0** - UI/UX modernization: Survival analysis, matched case-control
+- **v2.0** - Advanced statistical features: Two-group comparisons, effect measures
 
 See [Enhancement Reports](reports/enhancements/) for detailed version documentation.
 
