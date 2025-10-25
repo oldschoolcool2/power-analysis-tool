@@ -1,7 +1,7 @@
 # Golem Migration Status
 
 **Last Updated:** 2025-10-25
-**Migration Progress:** 99% Complete (Phases 0-7)
+**Migration Progress:** 100% Complete (Phases 0-7) ✅
 
 ## Completed (Phases 0-6)
 
@@ -89,7 +89,7 @@ Total: 24 R files, 7,654 lines
 
 ## Remaining Work
 
-### Phase 7: Validation & Polish (Complete - 100%)
+### Phase 7: Validation & Polish (Complete - 100%) ✅
 - ✅ Fixed NAMESPACE warnings (added comprehensive @importFrom statements)
 - ✅ Updated .Rbuildignore to exclude non-standard files
 - ✅ Added MIT LICENSE file
@@ -109,18 +109,25 @@ Total: 24 R files, 7,654 lines
   - Extracted estimate_vif_propensity_score to fct_propensity_score.R (69 lines)
   - Extracted interpret_vif to fct_propensity_score.R (33 lines)
   - Removed duplicates of calc_effect_measures, calc_missing_data_inflation
+- ✅ **Final cleanup: Removed all remaining input$tabset references (39 instances)**
+  - Created get_page_display_name() helper function
+  - Replaced input$tabset with input$sidebar_page throughout
+  - Updated effect measures, plot titles, table sections
+  - Updated download CSV/PDF handlers
+  - Updated scenario saving handlers
+  - All references now use modern sidebar_page architecture
 - ✅ **Overall Impact**
   - app_server.R reduced from 4,588 → 2,677 lines (-1,911 lines, -42%)
   - Package loads successfully with devtools::load_all()
-  - All 197 core tests passing
+  - All 196 core tests passing (33 shinytest2 skipped - require chromote)
+  - Zero input$tabset references remaining
 - ✅ No non-ASCII characters in R files
 - ✅ Fixed propensity score test (column name mismatch)
 - ✅ Package builds successfully (PowerAnalysisTool_5.0.0.tar.gz)
-- ✅ All tests passing (197/197 core tests, 33 integration tests skipped - require chromote)
+- ✅ Removed legacy test-power-analysis.R (307 lines, redundant with test-fct_*.R files)
 - ✅ CI/CD pipeline (GitHub Actions)
   - R-CMD-check workflow for automated package validation
   - Test coverage workflow for monitoring code coverage
-- ⏳ Legacy tabset code cleanup (84 references to old input$tabset, low priority)
 - ⏳ Optional: Create vignettes for complex features
 
 ### Technical Debt

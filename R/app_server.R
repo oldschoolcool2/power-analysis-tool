@@ -66,6 +66,28 @@ app_server <- function(input, output, session) {
   })
 
   # ============================================================
+  # Helper Functions
+  # ============================================================
+
+  # Convert sidebar_page value to display name (for filenames, titles, etc.)
+  get_page_display_name <- function(page) {
+    switch(page,
+      "power_single" = "Power (Single)",
+      "ss_single" = "Sample Size (Single)",
+      "power_twogrp" = "Power (Two-Group)",
+      "ss_twogrp" = "Sample Size (Two-Group)",
+      "power_survival" = "Power (Survival)",
+      "ss_survival" = "Sample Size (Survival)",
+      "match_casecontrol" = "Matched Case-Control",
+      "power_continuous" = "Power (Continuous)",
+      "ss_continuous" = "Sample Size (Continuous)",
+      "noninf" = "Non-Inferiority",
+      "vif_calculator" = "Propensity Score VIF Calculator",
+      "Unknown"
+    )
+  }
+
+  # ============================================================
   # Quick Preview Footer Updates
   # ============================================================
 
@@ -1639,15 +1661,15 @@ app_server <- function(input, output, session) {
     if (!v$doAnalysis) {
       return()
     }
-    if (!grepl("Two-Group|Survival", input$tabset)) {
+    if (!grepl("twogrp|survival", input$sidebar_page)) {
       return()
     }
 
     isolate({
       validate_inputs()
 
-      if (grepl("Two-Group", input$tabset)) {
-        if (input$tabset == "Power (Two-Group)") {
+      if (grepl("twogrp", input$sidebar_page)) {
+        if (input$sidebar_page == "power_twogrp") {
           p1 <- input$twogrp_pow_p1 / 100
           p2 <- input$twogrp_pow_p2 / 100
         } else {
@@ -1666,8 +1688,8 @@ app_server <- function(input, output, session) {
         ))
 
         HTML(paste0(text1, text2))
-      } else if (grepl("Survival", input$tabset)) {
-        if (input$tabset == "Power (Survival)") {
+      } else if (grepl("survival", input$sidebar_page)) {
+        if (input$sidebar_page == "power_survival") {
           hr <- input$surv_pow_hr
         } else {
           hr <- input$surv_ss_hr
@@ -1698,20 +1720,20 @@ app_server <- function(input, output, session) {
     if (!v$doAnalysis) {
       return()
     }
-    if (input$tabset == "Matched Case-Control") {
+    if (input$sidebar_page == "match_casecontrol") {
       return()
     } # No plot for matched case-control
 
     isolate({
       text1 <- hr()
-      if (grepl("Two-Group", input$tabset)) {
-        if (input$tabset == "Power (Two-Group)") {
+      if (grepl("twogrp", input$sidebar_page)) {
+        if (input$sidebar_page == "power_twogrp") {
           ratio <- round(input$twogrp_pow_n2 / input$twogrp_pow_n1, 3)
         } else {
           ratio <- input$twogrp_ss_ratio
         }
         text2 <- h4(paste0("Estimated power vs. n1 (Group 1 sample size) with allocation ratio n2/n1 = ", ratio, "."))
-      } else if (grepl("Survival", input$tabset)) {
+      } else if (grepl("survival", input$sidebar_page)) {
         text2 <- h4("Power curve for survival analysis at different sample sizes.")
       } else {
         text2 <- h4("Estimated power for the given conditions at different sample sizes.")
@@ -1985,7 +2007,7 @@ app_server <- function(input, output, session) {
     }
   ) %>%
     bindCache(
-      input$tabset,
+      input$sidebar_page,
       # Single Proportion inputs
       input$power_n, input$power_p, input$power_alpha,
       input$ss_power, input$ss_p, input$ss_alpha,
@@ -2018,14 +2040,14 @@ app_server <- function(input, output, session) {
     if (!v$doAnalysis) {
       return()
     }
-    if (grepl("Two-Group", input$tabset)) {
+    if (grepl("twogrp", input$sidebar_page)) {
       return()
     } # Only show for single proportion
 
     isolate({
       validate_inputs()
 
-      if (input$tabset == "Power (Single)") {
+      if (input$sidebar_page == "power_single") {
         sample_size <- input$power_n
       } else {
         sample_size <- pwr.p.test(
@@ -2051,14 +2073,14 @@ app_server <- function(input, output, session) {
       if (!v$doAnalysis) {
         return()
       }
-      if (grepl("Two-Group", input$tabset)) {
+      if (grepl("twogrp", input$sidebar_page)) {
         return()
       } # Only show for single proportion
 
       isolate({
         validate_inputs()
 
-        if (input$tabset == "Power (Single)") {
+        if (input$sidebar_page == "power_single") {
           sample_size <- input$power_n
         } else {
           sample_size <- pwr.p.test(
@@ -2100,7 +2122,7 @@ app_server <- function(input, output, session) {
     if (!v$doAnalysis) {
       return()
     }
-    if (grepl("Two-Group", input$tabset)) {
+    if (grepl("twogrp", input$sidebar_page)) {
       return()
     } # Only show for single proportion
 
@@ -2131,10 +2153,10 @@ app_server <- function(input, output, session) {
 
   output$report_csv <- downloadHandler(
     filename = function() {
-      paste("Power-Analysis-", input$tabset, "-", Sys.Date(), ".csv", sep = "")
+      paste("Power-Analysis-", get_page_display_name(input$sidebar_page), "-", Sys.Date(), ".csv", sep = "")
     },
     content = function(file) {
-      if (input$tabset == "Power (Single)") {
+      if (input$sidebar_page == "power_single") {
         results <- data.frame(
           Analysis_Type = "Single Proportion - Power Calculation",
           Sample_Size = input$power_n,
@@ -2150,7 +2172,7 @@ app_server <- function(input, output, session) {
           Adjusted_Sample_Size = ceiling(input$power_n * (1 + input$power_discon / 100)),
           Date = Sys.Date()
         )
-      } else if (input$tabset == "Sample Size (Single)") {
+      } else if (input$sidebar_page == "ss_single") {
         sample_size <- pwr.p.test(
           sig.level = input$ss_alpha, power = input$ss_power / 100,
           h = ES.h(1 / input$ss_p, 0), alt = "greater", n = NULL
@@ -2166,7 +2188,7 @@ app_server <- function(input, output, session) {
           Adjusted_Sample_Size = ceiling(sample_size * (1 + input$ss_discon / 100)),
           Date = Sys.Date()
         )
-      } else if (input$tabset == "Power (Two-Group)") {
+      } else if (input$sidebar_page == "power_twogrp") {
         p1 <- input$twogrp_pow_p1 / 100
         p2 <- input$twogrp_pow_p2 / 100
         power <- pwr.2p2n.test(
@@ -2189,7 +2211,7 @@ app_server <- function(input, output, session) {
           Odds_Ratio = eff$odds_ratio,
           Date = Sys.Date()
         )
-      } else if (input$tabset == "Sample Size (Two-Group)") {
+      } else if (input$sidebar_page == "ss_twogrp") {
         p1 <- input$twogrp_ss_p1 / 100
         p2 <- input$twogrp_ss_p2 / 100
         n1 <- solve_n1_for_ratio(
@@ -2215,7 +2237,7 @@ app_server <- function(input, output, session) {
           Odds_Ratio = eff$odds_ratio,
           Date = Sys.Date()
         )
-      } else if (input$tabset == "Power (Survival)") {
+      } else if (input$sidebar_page == "power_survival") {
         n <- input$surv_pow_n
         hr <- input$surv_pow_hr
         k <- input$surv_pow_k / 100
@@ -2232,7 +2254,7 @@ app_server <- function(input, output, session) {
           Method = "Schoenfeld (1983)",
           Date = Sys.Date()
         )
-      } else if (input$tabset == "Sample Size (Survival)") {
+      } else if (input$sidebar_page == "ss_survival") {
         hr <- input$surv_ss_hr
         k <- input$surv_ss_k / 100
         pE <- input$surv_ss_pE / 100
@@ -2249,7 +2271,7 @@ app_server <- function(input, output, session) {
           Method = "Schoenfeld (1983)",
           Date = Sys.Date()
         )
-      } else if (input$tabset == "Matched Case-Control") {
+      } else if (input$sidebar_page == "match_casecontrol") {
         or <- input$match_or
         p0 <- input$match_p0 / 100
         m <- input$match_ratio
@@ -2274,7 +2296,7 @@ app_server <- function(input, output, session) {
           Test_Type = input$match_sided,
           Date = Sys.Date()
         )
-      } else if (input$tabset == "Power (Continuous)") {
+      } else if (input$sidebar_page == "power_continuous") {
         n1 <- input$cont_pow_n1
         n2 <- input$cont_pow_n2
         d <- input$cont_pow_d
@@ -2293,7 +2315,7 @@ app_server <- function(input, output, session) {
           Test_Type = input$cont_pow_sided,
           Date = Sys.Date()
         )
-      } else if (input$tabset == "Sample Size (Continuous)") {
+      } else if (input$sidebar_page == "ss_continuous") {
         d <- input$cont_ss_d
         power <- input$cont_ss_power / 100
         ratio <- input$cont_ss_ratio
@@ -2340,7 +2362,7 @@ app_server <- function(input, output, session) {
           Test_Type = input$cont_ss_sided,
           Date = Sys.Date()
         )
-      } else if (input$tabset == "Non-Inferiority") {
+      } else if (input$sidebar_page == "noninf") {
         p1 <- input$noninf_p1 / 100
         p2 <- input$noninf_p2 / 100
         margin <- input$noninf_margin / 100
@@ -2401,15 +2423,15 @@ app_server <- function(input, output, session) {
     filename = paste("Rule-of-3-Analysis-", Sys.Date(), ".pdf", sep = ""),
     content = function(file) {
       # Only works for single proportion analyses
-      if (grepl("Two-Group", input$tabset)) {
+      if (grepl("twogrp", input$sidebar_page)) {
         showNotification("PDF export not yet available for two-group analyses. Please use CSV export.",
           type = "warning", duration = 5
         )
         return()
       }
 
-      incidence_rate <- ifelse(input$tabset == "Power (Single)", input$power_p, input$ss_p)
-      sample_size <- if (input$tabset == "Power (Single)") {
+      incidence_rate <- ifelse(input$sidebar_page == "power_single", input$power_p, input$ss_p)
+      sample_size <- if (input$sidebar_page == "power_single") {
         input$power_n
       } else {
         pwr.p.test(
@@ -2418,7 +2440,7 @@ app_server <- function(input, output, session) {
         )$n
       }
 
-      power <- if (input$tabset == "Power (Single)") {
+      power <- if (input$sidebar_page == "power_single") {
         pwr.p.test(
           sig.level = input$power_alpha, power = NULL,
           h = ES.h(1 / input$power_p, 0), alt = "greater", n = input$power_n
@@ -2427,7 +2449,7 @@ app_server <- function(input, output, session) {
         input$ss_power / 100
       }
 
-      discon <- if (input$tabset == "Power (Single)") {
+      discon <- if (input$sidebar_page == "power_single") {
         input$power_discon / 100
       } else {
         input$ss_discon / 100
@@ -2444,7 +2466,7 @@ app_server <- function(input, output, session) {
 
       # Set up parameters to pass to Rmd document
       params <- list(
-        tabset = input$tabset,
+        tabset = get_page_display_name(input$sidebar_page),
         incidence_rate = incidence_rate,
         sample_size = sample_size,
         power = power,
@@ -2474,7 +2496,7 @@ app_server <- function(input, output, session) {
 
       v$scenario_counter <- v$scenario_counter + 1
 
-      if (input$tabset == "Power (Single)") {
+      if (input$sidebar_page == "power_single") {
         new_scenario <- data.frame(
           Scenario = v$scenario_counter,
           Type = "Single Prop - Power",
@@ -2490,7 +2512,7 @@ app_server <- function(input, output, session) {
           Adj_N = ceiling(input$power_n * (1 + input$power_discon / 100)),
           stringsAsFactors = FALSE
         )
-      } else if (input$tabset == "Sample Size (Single)") {
+      } else if (input$sidebar_page == "ss_single") {
         sample_size <- pwr.p.test(
           sig.level = input$ss_alpha, power = input$ss_power / 100,
           h = ES.h(1 / input$ss_p, 0), alt = "greater", n = NULL
@@ -2506,7 +2528,7 @@ app_server <- function(input, output, session) {
           Adj_N = ceiling(sample_size * (1 + input$ss_discon / 100)),
           stringsAsFactors = FALSE
         )
-      } else if (input$tabset == "Power (Two-Group)") {
+      } else if (input$sidebar_page == "power_twogrp") {
         p1 <- input$twogrp_pow_p1 / 100
         p2 <- input$twogrp_pow_p2 / 100
         power <- pwr.2p2n.test(
@@ -2529,7 +2551,7 @@ app_server <- function(input, output, session) {
           OR = if (is.na(eff$odds_ratio)) NA_real_ else round(eff$odds_ratio, 3),
           stringsAsFactors = FALSE
         )
-      } else if (input$tabset == "Sample Size (Two-Group)") {
+      } else if (input$sidebar_page == "ss_twogrp") {
         p1 <- input$twogrp_ss_p1 / 100
         p2 <- input$twogrp_ss_p2 / 100
         n1 <- solve_n1_for_ratio(
@@ -2553,7 +2575,7 @@ app_server <- function(input, output, session) {
           OR = if (is.na(eff$odds_ratio)) NA_real_ else round(eff$odds_ratio, 3),
           stringsAsFactors = FALSE
         )
-      } else if (input$tabset == "Power (Survival)") {
+      } else if (input$sidebar_page == "power_survival") {
         n <- input$surv_pow_n
         hr <- input$surv_pow_hr
         k <- input$surv_pow_k / 100
@@ -2570,7 +2592,7 @@ app_server <- function(input, output, session) {
           Alpha = input$surv_pow_alpha,
           stringsAsFactors = FALSE
         )
-      } else if (input$tabset == "Sample Size (Survival)") {
+      } else if (input$sidebar_page == "ss_survival") {
         hr <- input$surv_ss_hr
         k <- input$surv_ss_k / 100
         pE <- input$surv_ss_pE / 100
@@ -2587,7 +2609,7 @@ app_server <- function(input, output, session) {
           Alpha = input$surv_ss_alpha,
           stringsAsFactors = FALSE
         )
-      } else if (input$tabset == "Matched Case-Control") {
+      } else if (input$sidebar_page == "match_casecontrol") {
         or <- input$match_or
         p0 <- input$match_p0 / 100
         m <- input$match_ratio
