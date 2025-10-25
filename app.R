@@ -223,13 +223,25 @@ ui <- fluidPage(
                                   tooltip = "Probability of detecting the effect if it exists (typically 80% or 90%)"),
             conditionalPanel(
               condition = "input.ss_single_calc_mode == 'calc_n'",
-              numericInput("ss_p", "Event Frequency (1 in x):", 100, min = 1, step = 1),
-              bsTooltip("ss_p", "Expected frequency of the event. E.g., 100 means 1 event per 100 participants", "right")
+              create_numeric_input_with_tooltip(
+                "ss_p",
+                "Event Frequency (1 in x):",
+                value = 100,
+                min = 1,
+                step = 1,
+                tooltip = "Expected frequency of the event. E.g., 100 means 1 event per 100 participants"
+              )
             ),
             conditionalPanel(
               condition = "input.ss_single_calc_mode == 'calc_effect'",
-              numericInput("ss_n_fixed", "Available Sample Size:", 500, min = 10, step = 1),
-              bsTooltip("ss_n_fixed", "Fixed sample size available for the study", "right")
+              create_numeric_input_with_tooltip(
+                "ss_n_fixed",
+                "Available Sample Size:",
+                value = 500,
+                min = 10,
+                step = 1,
+                tooltip = "Fixed sample size available for the study"
+              )
             ),
             create_enhanced_slider("ss_discon", "Withdrawal/Discontinuation Rate (%):",
                                   min = 0, max = 50, value = 10, step = 1, post = "%",
@@ -238,46 +250,7 @@ ui <- fluidPage(
                                   selected = 0.05,
                                   tooltip = "Type I error rate (typically 0.05). Lower values are more conservative."),
             hr(),
-            checkboxInput("adjust_missing_ss_single", "Adjust for Missing Data", value = FALSE),
-            conditionalPanel(
-              condition = "input.adjust_missing_ss_single",
-              create_enhanced_slider("missing_pct_ss_single", "Expected Missingness (%):",
-                                    min = 5, max = 50, value = 20, step = 5, post = "%",
-                                    tooltip = "Percentage of participants with missing exposure, outcome, or covariate data"),
-              radioButtons_fixed("missing_mechanism_ss_single",
-                "Missing Data Mechanism:",
-                choices = c(
-                  "MCAR (Missing Completely At Random)" = "mcar",
-                  "MAR (Missing At Random)" = "mar",
-                  "MNAR (Missing Not At Random)" = "mnar"
-                ),
-                selected = "mar"
-              ),
-              bsTooltip("missing_mechanism_ss_single",
-                "MCAR: minimal bias. MAR: controllable with observed data. MNAR: potential substantial bias",
-                "right"
-              ),
-              radioButtons_fixed("missing_analysis_ss_single",
-                "Planned Analysis Approach:",
-                choices = c(
-                  "Complete Case Analysis" = "complete_case",
-                  "Multiple Imputation (MI)" = "multiple_imputation"
-                ),
-                selected = "complete_case"
-              ),
-              bsTooltip("missing_analysis_ss_single",
-                "Complete case: only use observations with no missing data (more conservative). MI: impute missing values (more efficient)",
-                "right"
-              ),
-              conditionalPanel(
-                condition = "input.missing_analysis_ss_single == 'multiple_imputation'",
-                numericInput("mi_imputations_ss_single", "Number of Imputations (m):", 5, min = 3, max = 100, step = 1),
-                bsTooltip("mi_imputations_ss_single", "Typical values: 5-20. More imputations increase precision but require more computation", "right"),
-                create_enhanced_slider("mi_r_squared_ss_single", "Expected Imputation Model R²:",
-                                      min = 0.1, max = 0.9, value = 0.5, step = 0.1,
-                                      tooltip = "Predictive power of imputation model (0.3=weak, 0.5=moderate, 0.7=strong). Higher R² means better imputation quality and less inflation needed")
-              )
-            ),
+            missing_data_ui("ss_single-missing_data"),
             hr(),
             div(class = "btn-group-custom",
               actionButton("example_ss_single", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
@@ -983,6 +956,13 @@ ui <- fluidPage(
 server <- function(input, output, session) {
 
   # ============================================================
+  # Missing Data Module Initialization
+  # ============================================================
+
+  # Initialize missing data modules for all tabs that use them
+  missing_data_ss_single <- missing_data_server("ss_single-missing_data")
+
+  # ============================================================
   # Sidebar Navigation Initialization
   # ============================================================
 
@@ -1579,26 +1559,18 @@ server <- function(input, output, session) {
           sample_size_after_discon <- ceiling(sample_size_base * (1 + discon))
 
           # Apply missing data adjustment if enabled (Tier 1 Enhancement)
-          if (input$adjust_missing_ss_single) {
+          md_vals <- missing_data_ss_single()
+          if (md_vals$adjust_missing) {
             missing_adj <- calc_missing_data_inflation(
               sample_size_after_discon,
-              input$missing_pct_ss_single,
-              input$missing_mechanism_ss_single,
-              input$missing_analysis_ss_single,
-              ifelse(input$missing_analysis_ss_single == "multiple_imputation", input$mi_imputations_ss_single, 5),
-              ifelse(input$missing_analysis_ss_single == "multiple_imputation", input$mi_r_squared_ss_single, 0.5)
+              md_vals$missing_pct,
+              md_vals$missing_mechanism,
+              md_vals$missing_analysis,
+              md_vals$mi_imputations,
+              md_vals$mi_r_squared
             )
             sample_size_final <- missing_adj$n_inflated
-            missing_data_text <- HTML(paste0(
-              "<p style='background-color: #fff3cd; border-left: 4px solid #f39c12; padding: 10px; margin-top: 15px;'>",
-              "<strong>Missing Data Adjustment (Tier 1 Enhancement):</strong> ",
-              missing_adj$interpretation,
-              "<br><strong>Sample size before missing data adjustment:</strong> ",
-              sample_size_after_discon,
-              "<br><strong>Inflation factor:</strong> ", missing_adj$inflation_factor,
-              "<br><strong>Additional participants needed:</strong> ", missing_adj$n_increase,
-              "</p>"
-            ))
+            missing_data_text <- format_missing_data_text(missing_adj, sample_size_after_discon)
           } else {
             sample_size_final <- sample_size_after_discon
             missing_data_text <- HTML("")
@@ -1617,8 +1589,8 @@ server <- function(input, output, session) {
             input$ss_alpha, "). Accounting for a possible withdrawal or discontinuation rate of ",
             format(discon * 100, digits = 0), "%, the target number of participants is set as ",
             format(sample_size_after_discon, digits = 0), ".",
-            if (input$adjust_missing_ss_single) {
-              paste0(" <strong>After adjusting for ", input$missing_pct_ss_single,
+            if (md_vals$adjust_missing) {
+              paste0(" <strong>After adjusting for ", md_vals$missing_pct,
                      "% missing data, the final target sample size is ",
                      format(sample_size_final, digits = 0), " participants.</strong>")
             } else {
@@ -1633,12 +1605,13 @@ server <- function(input, output, session) {
           n_nominal <- input$ss_n_fixed
           n_after_discon <- ceiling(n_nominal * (1 - discon))
 
-          if (input$adjust_missing_ss_single) {
-            p_missing <- input$missing_pct_ss_single / 100
+          md_vals <- missing_data_ss_single()
+          if (md_vals$adjust_missing) {
+            p_missing <- md_vals$missing_pct / 100
             n_effective <- ceiling(n_after_discon * (1 - p_missing))
             missing_note <- paste0(" After accounting for ",
-              input$missing_pct_ss_single, "% missing data (",
-              tolower(substr(input$missing_mechanism_ss_single, 1, 4)), "), ",
+              md_vals$missing_pct, "% missing data (",
+              tolower(substr(md_vals$missing_mechanism, 1, 4)), "), ",
               "the effective sample size is ", n_effective, " participants.")
           } else {
             n_effective <- n_after_discon
@@ -2812,10 +2785,8 @@ server <- function(input, output, session) {
             sig.level = input$ss_alpha, power = target_power,
             h = ES.h(1 / input$ss_p, 0), alt = "greater", n = NULL
           )$n
-          n_seq <- seq(max(10, floor(n_required * 0.25)),
-            floor(n_required * 3),
-            length.out = 100
-          )
+          n_seq <- generate_n_sequence_for_ss(n_required = n_required)
+
           pow <- vapply(n_seq, function(n) {
             pwr.p.test(
               sig.level = input$ss_alpha, power = NULL,
@@ -2823,42 +2794,15 @@ server <- function(input, output, session) {
             )$power
           }, FUN.VALUE = numeric(1))
 
-          # Create interactive plotly
-          plot_ly() %>%
-            add_trace(
-              x = n_seq, y = pow, type = "scatter", mode = "lines",
-              line = list(color = "#2B5876", width = 3),
-              name = "Power Curve",
-              hovertemplate = paste0(
-                "<b>Sample Size:</b> %{x:.0f}<br>",
-                "<b>Power:</b> %{y:.3f}<br>",
-                "<extra></extra>"
-              )
-            ) %>%
-            add_trace(
-              x = range(n_seq), y = c(target_power, target_power),
-              type = "scatter", mode = "lines",
-              line = list(color = "red", width = 2, dash = "dash"),
-              name = paste0("Target Power (", round(target_power * 100), "%)"),
-              hovertemplate = paste0("<b>Target Power:</b> ", round(target_power * 100), "%<extra></extra>")
-            ) %>%
-            add_trace(
-              x = c(n_required, n_required), y = c(0, 1),
-              type = "scatter", mode = "lines",
-              line = list(color = "green", width = 2, dash = "dot"),
-              name = "Required N",
-              hovertemplate = paste0("<b>Required N:</b> ", round(n_required), "<extra></extra>")
-            ) %>%
-            layout(
-              title = list(text = "Interactive Power Curve (Tier 1 Enhancement)", font = list(size = 16)),
-              xaxis = list(title = "Sample Size (N)", gridcolor = "#e0e0e0"),
-              yaxis = list(title = "Power", range = c(0, 1), gridcolor = "#e0e0e0"),
-              hovermode = "closest",
-              plot_bgcolor = "#f8f9fa",
-              paper_bgcolor = "white",
-              legend = list(x = 0.7, y = 0.2)
-            ) %>%
-            config(displayModeBar = TRUE, displaylogo = FALSE)
+          # Create plot using helper function
+          create_power_curve_plot(
+            n_seq = n_seq,
+            power_vals = pow,
+            n_current = n_required,
+            target_power = target_power,
+            plot_title = "Interactive Power Curve (Tier 1 Enhancement)",
+            n_reference_label = "Required N"
+          )
         } else if (input$tabset == "Power (Two-Group)") {
           # Ratio-aware interactive plot for unequal allocation
           p1 <- input$twogrp_pow_p1 / 100
