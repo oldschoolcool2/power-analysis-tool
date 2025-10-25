@@ -15,7 +15,6 @@
 #' Measures the overlap between treatment and control propensity score distributions.
 #' The Bhattacharyya coefficient quantifies distributional overlap.
 #'
-#' @param treatment_prop Proportion of subjects receiving treatment (0-1)
 #' @param ps_params_treated Parameters for Beta distribution of PS in treated (list with a, b)
 #' @param ps_params_control Parameters for Beta distribution of PS in control (list with a, b)
 #' @return Bhattacharyya coefficient (0-1), where 1 = perfect overlap, 0 = no overlap

@@ -10,8 +10,6 @@ calculate_bhattacharyya_coefficient(ps_params_treated, ps_params_control)
 \item{ps_params_treated}{Parameters for Beta distribution of PS in treated (list with a, b)}
 
 \item{ps_params_control}{Parameters for Beta distribution of PS in control (list with a, b)}
-
-\item{treatment_prop}{Proportion of subjects receiving treatment (0-1)}
 }
 \value{
 Bhattacharyya coefficient (0-1), where 1 = perfect overlap, 0 = no overlap

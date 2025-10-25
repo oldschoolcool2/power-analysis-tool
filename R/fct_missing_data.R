@@ -1,8 +1,18 @@
-#' Missing Data Adjustment Functions
+#' Calculate Sample Size Inflation for Missing Data
 #'
 #' Business logic for calculating sample size inflation to account for missing data.
 #' Supports complete case analysis and multiple imputation approaches.
-
+#'
+#' @param n_required Required sample size without missingness
+#' @param missing_pct Percentage of expected missing data (0-100)
+#' @param mechanism Missing data mechanism: "mcar", "mar", or "mnar"
+#' @param analysis_type Analysis approach: "complete_case" or "multiple_imputation"
+#' @param mi_imputations Number of imputations for MI (default 5)
+#' @param mi_r_squared R-squared for MI recovery (default 0.5)
+#'
+#' @return List with inflation factor, inflated sample size, and interpretation
+#'
+#' @noRd
 calc_missing_data_inflation <- function(n_required, missing_pct, mechanism = "mar", analysis_type = "complete_case", mi_imputations = 5, mi_r_squared = 0.5) {
   if (missing_pct == 0) {
     return(list(
