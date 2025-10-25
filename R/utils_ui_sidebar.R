@@ -223,6 +223,43 @@ create_sidebar_nav <- function() {
           tags$span(class = "nav-group-icon", icon("chart-bar")),
           tags$span(class = "nav-group-label", "Propensity Score Calculator")
         )
+      ),
+
+      # Group 8: Mediation Analysis (single item)
+      tags$div(
+        class = "nav-group",
+        tags$a(
+          href = "#",
+          class = "nav-item-single",
+          `data-page` = "mediation_analysis",
+          role = "button",
+          tabindex = "0",
+          tags$span(class = "nav-group-icon", icon("project-diagram")),
+          tags$span(class = "nav-group-label", "Mediation Analysis")
+        )
+      ),
+
+      # Divider before Resources section
+      tags$hr(class = "sidebar-divider"),
+
+      # Resources Section Header
+      tags$div(
+        class = "sidebar-section-header",
+        "Resources"
+      ),
+
+      # Group 8: Documentation (single item)
+      tags$div(
+        class = "nav-group",
+        tags$a(
+          href = "#",
+          class = "nav-item-single",
+          `data-page` = "documentation",
+          role = "button",
+          tabindex = "0",
+          tags$span(class = "nav-group-icon", icon("book")),
+          tags$span(class = "nav-group-label", "Documentation")
+        )
       )
     ),
 

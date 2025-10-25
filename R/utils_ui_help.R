@@ -4,6 +4,7 @@
 #' Create contextual help accordion for a specific analysis
 #' @param analysis_type The type of analysis (e.g., "single_proportion", "two_group")
 #' @return A bslib accordion component with contextual help
+#' @importFrom bslib accordion accordion_panel
 create_contextual_help <- function(analysis_type) {
   
   help_content <- switch(analysis_type,
@@ -424,6 +425,131 @@ create_contextual_help <- function(analysis_type) {
           tags$li("Zhou Y, et al. (2020). A comprehensive evaluation of methods for studying continuous exposures using propensity score weighting. Biometrics 76(2):557-569."),
           tags$li(a("PSweight R package documentation",
                     href = "https://cran.r-project.org/package=PSweight",
+                    target = "_blank"))
+        )
+      )
+    ),
+
+    # ============================================================
+    # MEDIATION ANALYSIS
+    # ============================================================
+    "mediation_analysis" = accordion(
+      id = paste0("help_", analysis_type),
+      open = FALSE,
+      accordion_panel(
+        title = "About Mediation Analysis",
+        icon = icon("project-diagram"),
+        p("Mediation analysis examines how an independent variable (X) affects an outcome (Y) through an intermediary variable (M), called the mediator. This analysis quantifies both the ", strong("direct effect"), " (X → Y) and the ", strong("indirect effect"), " (X → M → Y)."),
+        p(strong("Path Coefficients:")),
+        tags$ul(
+          tags$li(strong("Path a:"), "Effect of X on mediator M (X → M)"),
+          tags$li(strong("Path b:"), "Effect of mediator M on outcome Y, controlling for X (M → Y|X)"),
+          tags$li(strong("Path c':"), "Direct effect of X on Y, controlling for M (X → Y|M)"),
+          tags$li(strong("Indirect effect:"), "a × b (the mediated effect)")
+        ),
+        p(strong("Method:"), "This calculator uses the ", em("Sobel test"), " approach for power calculations, which provides conservative estimates. Path coefficients should be standardized (like Cohen's d).")
+      ),
+      accordion_panel(
+        title = "Use Cases in RWE",
+        icon = icon("lightbulb"),
+        tags$ul(
+          tags$li(strong("Drug → Adherence → Clinical Outcome:"), "Does a drug work by improving medication adherence?"),
+          tags$li(strong("Intervention → Biomarker → Disease:"), "Does a treatment affect disease by changing a biological marker?"),
+          tags$li(strong("Policy → Access → Health:"), "Does a policy change health by improving healthcare access?"),
+          tags$li(strong("Exposure → Pathway → Risk:"), "Does an exposure cause disease through a specific biological pathway?")
+        ),
+        p(style = "margin-top: 10px; color: #0066cc; background: #e6f2ff; padding: 10px; border-radius: 5px;",
+          icon("info-circle"), " ",
+          strong("Key Insight:"), " Mediation analysis helps answer ", em("\"how\""), " and ", em("\"why\""), " a treatment works, not just ", em("\"if\""), " it works.")
+      ),
+      accordion_panel(
+        title = "Calculation Modes",
+        icon = icon("calculator"),
+        tags$dl(
+          tags$dt(strong("1. Calculate Power")),
+          tags$dd("Given your available sample size and expected path coefficients, what is the power to detect the indirect effect?"),
+          tags$dt(strong("2. Calculate Sample Size")),
+          tags$dd("Given your expected path coefficients and desired power (typically 80%), how many participants do you need?"),
+          tags$dt(strong("3. Calculate Minimal Detectable Effect")),
+          tags$dd("Given your available sample size and desired power, what is the smallest indirect effect (path b, given path a) you can reliably detect?")
+        )
+      ),
+      accordion_panel(
+        title = "Interpreting Path Coefficients",
+        icon = icon("chart-line"),
+        p("Path coefficients are typically standardized (like Cohen's d). Guidelines for interpretation:"),
+        tags$div(
+          style = "background-color: #f8f9fa; padding: 10px; border-left: 3px solid #007bff; margin: 10px 0;",
+          tags$table(
+            class = "table table-sm",
+            tags$thead(
+              tags$tr(
+                tags$th("Effect Size"),
+                tags$th("Interpretation"),
+                tags$th("Example")
+              )
+            ),
+            tags$tbody(
+              tags$tr(
+                tags$td(strong("< 0.1")),
+                tags$td("Negligible"),
+                tags$td("Minimal practical impact")
+              ),
+              tags$tr(
+                tags$td(strong("0.1 - 0.3")),
+                tags$td("Small"),
+                tags$td("Detectable but modest effect")
+              ),
+              tags$tr(
+                tags$td(strong("0.3 - 0.5")),
+                tags$td("Medium"),
+                tags$td("Substantial, meaningful effect")
+              ),
+              tags$tr(
+                tags$td(strong("> 0.5")),
+                tags$td("Large"),
+                tags$td("Strong, important effect")
+              )
+            )
+          )
+        ),
+        p(strong("Indirect Effect (a × b):"), " The product of paths a and b. Even with moderate individual paths (e.g., a=0.3, b=0.3), the indirect effect is small (0.3 × 0.3 = 0.09), requiring larger sample sizes.")
+      ),
+      accordion_panel(
+        title = "Important Considerations",
+        icon = icon("exclamation-triangle"),
+        tags$ul(
+          tags$li(strong("Temporal ordering:"), "The mediator (M) must occur after the exposure (X) and before the outcome (Y). Cross-sectional data cannot establish mediation."),
+          tags$li(strong("Confounding:"), "Confounders can bias mediation analysis. Consider unmeasured confounding of M → Y relationship."),
+          tags$li(strong("Sample size:"), "Mediation analysis typically requires larger samples than testing direct effects because the indirect effect (a × b) is often small."),
+          tags$li(strong("Sobel test limitations:"), "The Sobel test assumes normality and may be conservative. Bootstrap methods provide more accurate power but require simulation."),
+          tags$li(strong("Effect size estimation:"), "Base path coefficients on pilot data, literature, or domain expertise. Overestimating effect sizes leads to underpowered studies."),
+          tags$li(strong("Multiple mediators:"), "This calculator handles single mediator models. Multiple mediators require more complex approaches.")
+        )
+      ),
+      accordion_panel(
+        title = "Sample Size Guidelines",
+        icon = icon("users"),
+        p("Rule of thumb for detecting indirect effects at 80% power (α = 0.05, two-sided):"),
+        tags$ul(
+          tags$li(strong("Small indirect effect (a × b = 0.01 - 0.09):"), "N ≥ 500 - 1,500"),
+          tags$li(strong("Medium indirect effect (a × b = 0.09 - 0.25):"), "N ≥ 200 - 500"),
+          tags$li(strong("Large indirect effect (a × b > 0.25):"), "N ≥ 100 - 200")
+        ),
+        p(style = "margin-top: 10px; color: #856404; background: #fff3cd; padding: 10px; border-radius: 5px;",
+          icon("exclamation-triangle"), " ",
+          strong("Warning:"), " Many mediation studies in the literature are underpowered. Always conduct a prospective power analysis!")
+      ),
+      accordion_panel(
+        title = "References",
+        icon = icon("book"),
+        tags$ul(
+          tags$li("Preacher KJ, Hayes AF (2008). Asymptotic and resampling strategies for assessing and comparing indirect effects in multiple mediator models. Behavior Research Methods 40(3):879-891."),
+          tags$li("Fritz MS, MacKinnon DP (2007). Required sample size to detect the mediated effect. Psychological Science 18(3):233-239."),
+          tags$li("Schoemann AM, et al. (2017). Determining power and sample size for simple and complex mediation models. Social Psychological and Personality Science 8(4):379-386."),
+          tags$li("VanderWeele TJ (2015). Explanation in Causal Inference: Methods for Mediation and Interaction. Oxford University Press."),
+          tags$li(a("powerMediation R package documentation",
+                    href = "https://cran.r-project.org/package=powerMediation",
                     target = "_blank"))
         )
       )

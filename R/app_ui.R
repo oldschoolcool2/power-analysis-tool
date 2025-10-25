@@ -5,6 +5,7 @@
 #' 
 #' @importFrom shiny fluidPage tags
 #' @importFrom bslib bs_theme font_google
+#' @importFrom shinyBS bsModal
 app_ui <- function(request) {
   tagList(
     # Leave this function for adding external resources
@@ -38,6 +39,7 @@ app_ui <- function(request) {
     tags$link(rel = "stylesheet", type = "text/css", href = "www/css/progressive-disclosure.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "www/css/loading-spinner.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "www/css/success-animations.css"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "www/css/documentation.css"),
     # JavaScript - Bootstrap 5 fix must load before other scripts
     tags$script(src = "www/js/bootstrap5-shinyBS-fix.js"),
     tags$script(src = "www/js/theme-switcher.js"),
@@ -151,8 +153,24 @@ app_ui <- function(request) {
       div(class = "main-content",
 
         # ============================================================
+        # DOCUMENTATION PAGE (Full page replacement)
+        # ============================================================
+
+        # NEW: Documentation Page
+        conditionalPanel(
+          condition = "input.sidebar_page == 'documentation'",
+          div(class = "content-card",
+            create_documentation_page()
+          )
+        ),
+
+        # ============================================================
         # INPUT PANELS (Conditional based on sidebar selection)
         # ============================================================
+
+        # Wrap all analysis content so it's hidden when documentation is shown
+        conditionalPanel(
+          condition = "input.sidebar_page != 'documentation'",
 
         div(class = "content-card",
 
@@ -187,9 +205,14 @@ app_ui <- function(request) {
           mod_06_non_inferiority_ui("tab6"),
 
           # ==============================================================================
-          # TAB 7: VIF/PROPENSITY SCORE [PLACEHOLDER]
+          # TAB 7: VIF/PROPENSITY SCORE [MODULARIZED]
           # ==============================================================================
-          mod_07_vif_ps_ui("tab7")
+          mod_07_vif_ps_ui("tab7"),
+
+          # ==============================================================================
+          # TAB 8: MEDIATION ANALYSIS [MODULARIZED]
+          # ==============================================================================
+          mod_08_mediation_ui("tab8")
 
         ), # End of input cards
 
@@ -259,6 +282,14 @@ app_ui <- function(request) {
           )
         ),
 
+        # Contextual help for Mediation Analysis
+        conditionalPanel(
+          condition = "input.sidebar_page == 'mediation_analysis'",
+          div(class = "content-card help-section",
+            create_contextual_help("mediation_analysis")
+          )
+        ),
+
         # Live preview (debounced)
         uiOutput("live_preview"),
 
@@ -274,6 +305,9 @@ app_ui <- function(request) {
 
         # Scenario comparison section
         uiOutput("scenario_comparison")
+
+        ) # End of conditionalPanel (analysis content)
+
       ) # End of main-content
     ) # End of main-content-wrapper
   ), # End of app-container
