@@ -1,0 +1,16 @@
+# Trivy Ignore File
+# ===================
+# This file is used to ignore specific vulnerabilities or misconfigurations
+# that have been reviewed and accepted by the team.
+#
+# Format:
+# CVE-YYYY-NNNNN  # Reason for ignoring
+#
+# IMPORTANT: Every ignored vulnerability MUST have a documented reason
+# and should be reviewed periodically.
+#
+# Example:
+# CVE-2023-12345  # False positive - this package is not used in production
+# CVE-2023-67890  # Accepted risk - fix not available, workaround in place
+
+# Add your ignored vulnerabilities below with justification:

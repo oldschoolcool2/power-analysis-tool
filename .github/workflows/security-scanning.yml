@@ -1,0 +1,238 @@
+name: Docker Security Scanning
+
+on:
+  pull_request:
+    branches: [master, main]
+  push:
+    branches: [master, main]
+  schedule:
+    # Run weekly on Monday at 9:00 AM UTC to catch new vulnerabilities
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+jobs:
+  trivy-scan:
+    name: Trivy Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # Required for uploading SARIF results
+      actions: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image (development)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: development
+          push: false
+          load: true
+          tags: power-analysis-tool:dev-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build Docker image (production)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: production
+          push: false
+          load: true
+          tags: power-analysis-tool:prod-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Run Trivy vulnerability scanner (Development image)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: power-analysis-tool:dev-${{ github.sha }}
+          format: 'sarif'
+          output: 'trivy-results-dev.sarif'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+          scanners: 'vuln,secret,misconfig'
+          ignore-unfixed: false
+          exit-code: 0 # Don't fail the build on vulnerabilities in this step
+
+      - name: Run Trivy vulnerability scanner (Production image)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: power-analysis-tool:prod-${{ github.sha }}
+          format: 'sarif'
+          output: 'trivy-results-prod.sarif'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+          scanners: 'vuln,secret,misconfig'
+          ignore-unfixed: false
+          exit-code: 0 # Don't fail the build on vulnerabilities in this step
+
+      - name: Upload Trivy results to GitHub Security tab (Development)
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results-dev.sarif'
+          category: 'trivy-dev-image'
+
+      - name: Upload Trivy results to GitHub Security tab (Production)
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results-prod.sarif'
+          category: 'trivy-prod-image'
+
+      - name: Run Trivy scanner with table output (Development - for PR comments)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: power-analysis-tool:dev-${{ github.sha }}
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          scanners: 'vuln,secret,misconfig'
+          ignore-unfixed: false
+          exit-code: 0
+
+      - name: Run Trivy scanner with table output (Production - for PR comments)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: power-analysis-tool:prod-${{ github.sha }}
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          scanners: 'vuln,secret,misconfig'
+          ignore-unfixed: false
+          exit-code: 0
+
+      - name: Fail on CRITICAL vulnerabilities (Development)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: power-analysis-tool:dev-${{ github.sha }}
+          format: 'table'
+          severity: 'CRITICAL'
+          scanners: 'vuln'
+          ignore-unfixed: false
+          exit-code: 1 # Fail the build on CRITICAL vulnerabilities
+
+      - name: Fail on CRITICAL vulnerabilities (Production)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: power-analysis-tool:prod-${{ github.sha }}
+          format: 'table'
+          severity: 'CRITICAL'
+          scanners: 'vuln'
+          ignore-unfixed: false
+          exit-code: 1 # Fail the build on CRITICAL vulnerabilities
+
+  trivy-repo-scan:
+    name: Trivy Repository Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Trivy scanner on repository
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-repo-results.sarif'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+          scanners: 'vuln,secret,misconfig'
+          ignore-unfixed: false
+          exit-code: 0
+
+      - name: Upload Trivy repository results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-repo-results.sarif'
+          category: 'trivy-repository'
+
+      - name: Run Trivy scanner with table output (Repository)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          scanners: 'vuln,secret,misconfig'
+          ignore-unfixed: false
+          exit-code: 0
+
+      - name: Fail on CRITICAL issues in repository
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          severity: 'CRITICAL'
+          scanners: 'vuln,secret'
+          ignore-unfixed: false
+          exit-code: 1 # Fail on CRITICAL vulnerabilities or secrets
+
+  trivy-config-scan:
+    name: Trivy Config Scan (Dockerfile & Docker Compose)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Trivy misconfiguration scanner
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: 'config'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-config-results.sarif'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+          exit-code: 0
+
+      - name: Upload Trivy config results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-config-results.sarif'
+          category: 'trivy-config'
+
+      - name: Run Trivy config scanner with table output
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: 'config'
+          scan-ref: '.'
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          exit-code: 0
+
+      - name: Generate summary report
+        if: always()
+        run: |
+          echo "## Trivy Security Scanning Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Scans Performed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Development Docker image vulnerability scan" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Production Docker image vulnerability scan" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Repository filesystem scan (dependencies, secrets)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Configuration scan (Dockerfile, docker-compose.yml)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Security Scanners Enabled" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔍 Vulnerability detection (OS packages and language dependencies)" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔐 Secret scanning (API keys, tokens, credentials)" >> $GITHUB_STEP_SUMMARY
+          echo "- ⚙️ Misconfiguration detection (Docker best practices)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Policy" >> $GITHUB_STEP_SUMMARY
+          echo "- ❌ **CRITICAL** vulnerabilities will fail the build" >> $GITHUB_STEP_SUMMARY
+          echo "- ⚠️ **HIGH/MEDIUM** vulnerabilities are reported but don't fail the build" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "View detailed results in the Security tab → Code scanning alerts" >> $GITHUB_STEP_SUMMARY
