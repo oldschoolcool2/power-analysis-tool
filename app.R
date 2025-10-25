@@ -264,14 +264,40 @@ ui <- fluidPage(
             h2(class = "page-title", "Two-Group Comparison: Power Analysis"),
             helpText("Calculate power for comparing two proportions (e.g., exposed vs. unexposed in cohort studies)"),
             hr(),
-            numericInput("twogrp_pow_n1", "Sample Size Group 1:", 200, min = 1, step = 1),
-            numericInput("twogrp_pow_n2", "Sample Size Group 2:", 200, min = 1, step = 1),
-            bsTooltip("twogrp_pow_n1", "Number of participants in exposed/treatment group", "right"),
-            bsTooltip("twogrp_pow_n2", "Number of participants in unexposed/control group", "right"),
-            numericInput("twogrp_pow_p1", "Event Rate Group 1 (%):", 10, min = 0, max = 100, step = 0.1),
-            numericInput("twogrp_pow_p2", "Event Rate Group 2 (%):", 5, min = 0, max = 100, step = 0.1),
-            bsTooltip("twogrp_pow_p1", "Expected event rate in exposed/treatment group (as percentage)", "right"),
-            bsTooltip("twogrp_pow_p2", "Expected event rate in unexposed/control group (as percentage)", "right"),
+            create_numeric_input_with_tooltip(
+              "twogrp_pow_n1",
+              "Sample Size Group 1:",
+              value = 200,
+              min = 1,
+              step = 1,
+              tooltip = "Number of participants in exposed/treatment group"
+            ),
+            create_numeric_input_with_tooltip(
+              "twogrp_pow_n2",
+              "Sample Size Group 2:",
+              value = 200,
+              min = 1,
+              step = 1,
+              tooltip = "Number of participants in unexposed/control group"
+            ),
+            create_numeric_input_with_tooltip(
+              "twogrp_pow_p1",
+              "Event Rate Group 1 (%):",
+              value = 10,
+              min = 0,
+              max = 100,
+              step = 0.1,
+              tooltip = "Expected event rate in exposed/treatment group (as percentage)"
+            ),
+            create_numeric_input_with_tooltip(
+              "twogrp_pow_p2",
+              "Event Rate Group 2 (%):",
+              value = 5,
+              min = 0,
+              max = 100,
+              step = 0.1,
+              tooltip = "Expected event rate in unexposed/control group (as percentage)"
+            ),
             create_segmented_alpha("twogrp_pow_alpha", "Significance Level (α):",
                                   selected = 0.05,
                                   tooltip = "Type I error rate (typically 0.05)"),
@@ -2811,10 +2837,8 @@ server <- function(input, output, session) {
           n1_current <- input$twogrp_pow_n1
 
           # Generate power curve varying n1
-          n1_seq <- seq(max(5, floor(n1_current * 0.25)),
-            floor(n1_current * 4),
-            length.out = 100
-          )
+          n1_seq <- generate_n_sequence(n_reference = n1_current, absolute_min = 5)
+
           pow <- vapply(n1_seq, function(n1) {
             pwr.2p2n.test(
               h = ES.h(p1, p2), n1 = n1, n2 = n1 * ratio,
@@ -2823,43 +2847,15 @@ server <- function(input, output, session) {
             )$power
           }, FUN.VALUE = numeric(1))
 
-          # Create interactive plotly
-          plot_ly() %>%
-            add_trace(
-              x = n1_seq, y = pow, type = "scatter", mode = "lines",
-              line = list(color = "#2B5876", width = 3),
-              name = "Power Curve",
-              hovertemplate = paste0(
-                "<b>n1 (Group 1):</b> %{x:.0f}<br>",
-                "<b>n2 (Group 2):</b> ", round(n1_seq * ratio, 0), "<br>",
-                "<b>Power:</b> %{y:.3f}<br>",
-                "<extra></extra>"
-              )
-            ) %>%
-            add_trace(
-              x = range(n1_seq), y = c(0.8, 0.8),
-              type = "scatter", mode = "lines",
-              line = list(color = "red", width = 2, dash = "dash"),
-              name = "80% Power Target",
-              hovertemplate = "<b>Target Power:</b> 80%<extra></extra>"
-            ) %>%
-            add_trace(
-              x = c(n1_current, n1_current), y = c(0, 1),
-              type = "scatter", mode = "lines",
-              line = list(color = "green", width = 2, dash = "dot"),
-              name = "Current n1",
-              hovertemplate = paste0("<b>Current n1:</b> ", n1_current, "<extra></extra>")
-            ) %>%
-            layout(
-              title = list(text = paste0("Interactive Power Curve (n2/n1 = ", round(ratio, 3), ")"), font = list(size = 16)),
-              xaxis = list(title = "Sample Size n1 (Group 1)", gridcolor = "#e0e0e0"),
-              yaxis = list(title = "Power", range = c(0, 1), gridcolor = "#e0e0e0"),
-              hovermode = "closest",
-              plot_bgcolor = "#f8f9fa",
-              paper_bgcolor = "white",
-              legend = list(x = 0.7, y = 0.2)
-            ) %>%
-            config(displayModeBar = TRUE, displaylogo = FALSE)
+          # Create plot using helper function
+          create_power_curve_plot_twogroup(
+            n_seq = n1_seq,
+            power_vals = pow,
+            n_current = n1_current,
+            target_power = 0.8,
+            plot_title = paste0("Interactive Power Curve (n2/n1 = ", round(ratio, 3), ")"),
+            per_group = TRUE
+          )
 
         } else if (input$tabset == "Sample Size (Two-Group)") {
           # Ratio-aware interactive plot for sample size calculation
