@@ -757,11 +757,12 @@ tr:hover {
 }
 
 .tooltip-inner {
-  background-color: var(--color-neutral-900);
-  color: var(--text-inverse);
+  background-color: #1A202C !important;  /* Force dark background for WCAG AA */
+  color: #FFFFFF !important;             /* Force white text for WCAG AA */
   padding: var(--space-2) var(--space-3);
   border-radius: var(--border-radius-md);
   max-width: 300px;
+  font-weight: var(--font-weight-medium);  /* Improve readability */
 }
 
 /* ========================================================================
