@@ -8,6 +8,7 @@ if (interactive()) {
 library(shiny)
 library(bslib)
 library(shinyBS)
+library(shinyjs)
 library(pwr)
 library(binom)
 library(kableExtra)
@@ -109,6 +110,9 @@ ui <- fluidPage(
       }
     "))
   ),
+
+  # Enable shinyjs for JavaScript interactions
+  useShinyjs(),
 
   # App Header
   create_app_header(),
@@ -648,7 +652,26 @@ ui <- fluidPage(
         uiOutput("scenario_comparison")
       ) # End of main-content
     ) # End of main-content-wrapper
-  ) # End of app-container
+  ), # End of app-container
+
+  # Quick Preview Footer (Phase 3: Layout Simplification)
+  tags$div(
+    class = "quick-preview-footer",
+    id = "quick-preview-footer",
+    tags$div(
+      class = "quick-preview-content",
+      tags$span(class = "quick-preview-icon", icon("info-circle")),
+      tags$span(
+        class = "quick-preview-text",
+        id = "preview-text",
+        "Select an analysis type from the sidebar to begin"
+      ),
+      tags$span(
+        class = "quick-preview-cta",
+        "(Enter parameters and click Calculate to run analysis)"
+      )
+    )
+  )
 )
 
 # Define server logic
@@ -663,6 +686,55 @@ server <- function(input, output, session) {
     if (is.null(input$sidebar_page) || length(input$sidebar_page) == 0) {
       session$sendCustomMessage("set_active_page", "power_single")
     }
+  })
+
+  # ============================================================
+  # Quick Preview Footer Updates
+  # ============================================================
+
+  observe({
+    # Get current page
+    page <- input$sidebar_page
+
+    # Build preview text based on active page and inputs
+    preview_text <- if (is.null(page) || page == "") {
+      "Select an analysis type from the sidebar"
+    } else if (page == "power_single") {
+      paste0("Preview: Testing n=", input$power_n,
+             " participants for event rate 1 in ", input$power_p)
+    } else if (page == "ss_single") {
+      paste0("Preview: Rule of Three for event rate 1 in ",
+             input$ss_p, " with ",
+             input$ss_power, "% power")
+    } else if (page == "power_two") {
+      paste0("Preview: Comparing p1=", input$twogrp_pow_p1,
+             "% vs p2=", input$twogrp_pow_p2, "% with n1=",
+             input$twogrp_pow_n1, " and n2=", input$twogrp_pow_n2)
+    } else if (page == "ss_two") {
+      paste0("Preview: Sample size needed for p1=", input$twogrp_ss_p1,
+             "% vs p2=", input$twogrp_ss_p2, "% with ",
+             input$twogrp_ss_power, "% power")
+    } else if (page == "power_surv") {
+      paste0("Preview: Survival analysis with HR=", input$surv_power_hr,
+             ", ", input$surv_power_n, " total participants")
+    } else if (page == "ss_surv") {
+      paste0("Preview: Sample size for HR=", input$surv_ss_hr,
+             " with ", input$surv_ss_power, "% power")
+    } else if (page == "matched") {
+      paste0("Preview: Matched case-control with ",
+             input$match_n_pairs, " pairs, OR=", input$match_or)
+    } else if (page == "ss_cont") {
+      paste0("Preview: Continuous outcome sample size, effect size d=",
+             input$cont_ss_d, ", ", input$cont_ss_power, "% power")
+    } else if (page == "noninf") {
+      paste0("Preview: Non-inferiority margin=", input$noninf_margin,
+             "%, baseline rate=", input$noninf_p1, "%")
+    } else {
+      "Enter parameters above"
+    }
+
+    # Update footer text using shinyjs
+    shinyjs::html("preview-text", preview_text)
   })
 
   # Helper function: safely calculate effect measures (avoid division by zero)
@@ -2358,20 +2430,121 @@ server <- function(input, output, session) {
             powerEpi(n = n, theta = hr, k = k, pE = pE, RR = hr, alpha = alpha)
           }, FUN.VALUE = numeric(1))
 
-          # Create plot
-          plot(n_range, power_vals,
-            type = "l", lwd = 2, col = "blue",
-            xlab = "Total Sample Size (N)", ylab = "Power",
-            main = "Power vs. Sample Size for Survival Analysis",
-            ylim = c(0, 1), las = 1
-          )
-          abline(h = 0.80, lty = 2, col = "red")
-          abline(v = current_n, lty = 2, col = "green")
-          grid()
-          legend("bottomright",
-            legend = c("Power curve", "80% Power", "Current N"),
-            col = c("blue", "red", "green"), lty = c(1, 2, 2), lwd = c(2, 1, 1)
-          )
+          # Create interactive plotly
+          plot_ly() %>%
+            add_trace(
+              x = n_range, y = power_vals, type = "scatter", mode = "lines",
+              line = list(color = "#2B5876", width = 3),
+              name = "Power Curve",
+              hovertemplate = paste0(
+                "<b>Sample Size (N):</b> %{x:.0f}<br>",
+                "<b>Power:</b> %{y:.3f}<br>",
+                "<b>HR:</b> ", round(hr, 3), "<br>",
+                "<extra></extra>"
+              )
+            ) %>%
+            add_trace(
+              x = range(n_range), y = c(0.8, 0.8),
+              type = "scatter", mode = "lines",
+              line = list(color = "red", width = 2, dash = "dash"),
+              name = "80% Power Target",
+              hovertemplate = "<b>Target Power:</b> 80%<extra></extra>"
+            ) %>%
+            add_trace(
+              x = c(current_n, current_n), y = c(0, 1),
+              type = "scatter", mode = "lines",
+              line = list(color = "green", width = 2, dash = "dot"),
+              name = paste(if(input$tabset == "Power (Survival)") "Current N" else "Required N"),
+              hovertemplate = paste0("<b>", if(input$tabset == "Power (Survival)") "Current N" else "Required N", ":</b> ", round(current_n), "<extra></extra>")
+            ) %>%
+            layout(
+              title = list(text = "Interactive Power Curve - Survival Analysis (Tier 1 Enhancement)", font = list(size = 16)),
+              xaxis = list(title = "Total Sample Size (N)", gridcolor = "#e0e0e0"),
+              yaxis = list(title = "Power", range = c(0, 1), gridcolor = "#e0e0e0"),
+              hovermode = "closest",
+              plot_bgcolor = "#f8f9fa",
+              paper_bgcolor = "white",
+              legend = list(x = 0.7, y = 0.2)
+            ) %>%
+            config(displayModeBar = TRUE, displaylogo = FALSE)
+        } else if (grepl("Continuous", input$tabset)) {
+          # Generate power curve for continuous outcomes (t-test)
+          if (input$tabset == "Power (Continuous)") {
+            n1 <- input$cont_pow_n1
+            n2 <- input$cont_pow_n2
+            d <- input$cont_pow_d
+            alpha <- input$cont_pow_alpha
+            sided <- input$cont_pow_sided
+            current_n1 <- n1
+          } else {
+            # Sample Size (Continuous)
+            d <- input$cont_ss_d
+            alpha <- input$cont_ss_alpha
+            sided <- input$cont_ss_sided
+            ratio <- input$cont_ss_ratio
+            target_power <- input$cont_ss_power / 100
+
+            # Calculate required n1
+            n1_test <- pwr.t2n.test(
+              d = d, n1 = NULL, n2 = NULL,
+              sig.level = alpha, power = target_power,
+              alternative = sided
+            )$n1
+            n1 <- n1_test
+            n2 <- n1 * ratio
+            current_n1 <- ceiling(n1)
+          }
+
+          # Generate sample size range for n1
+          n1_range <- seq(from = max(5, floor(current_n1 * 0.25)), to = floor(current_n1 * 3), length.out = 100)
+          power_vals <- vapply(n1_range, function(n1_val) {
+            n2_val <- if(input$tabset == "Power (Continuous)") n2 else n1_val * ratio
+            pwr.t2n.test(
+              d = d, n1 = n1_val, n2 = n2_val,
+              sig.level = alpha, alternative = sided
+            )$power
+          }, FUN.VALUE = numeric(1))
+
+          # Create interactive plotly
+          plot_ly() %>%
+            add_trace(
+              x = n1_range, y = power_vals, type = "scatter", mode = "lines",
+              line = list(color = "#2B5876", width = 3),
+              name = "Power Curve",
+              hovertemplate = paste0(
+                "<b>n1 (Group 1):</b> %{x:.0f}<br>",
+                "<b>n2 (Group 2):</b> ",
+                if(input$tabset == "Power (Continuous)") round(n2, 0) else "varies with ratio",
+                "<br>",
+                "<b>Power:</b> %{y:.3f}<br>",
+                "<b>Cohen's d:</b> ", round(d, 3), "<br>",
+                "<extra></extra>"
+              )
+            ) %>%
+            add_trace(
+              x = range(n1_range), y = c(0.8, 0.8),
+              type = "scatter", mode = "lines",
+              line = list(color = "red", width = 2, dash = "dash"),
+              name = "80% Power Target",
+              hovertemplate = "<b>Target Power:</b> 80%<extra></extra>"
+            ) %>%
+            add_trace(
+              x = c(current_n1, current_n1), y = c(0, 1),
+              type = "scatter", mode = "lines",
+              line = list(color = "green", width = 2, dash = "dot"),
+              name = paste(if(input$tabset == "Power (Continuous)") "Current n1" else "Required n1"),
+              hovertemplate = paste0("<b>", if(input$tabset == "Power (Continuous)") "Current n1" else "Required n1", ":</b> ", round(current_n1), "<extra></extra>")
+            ) %>%
+            layout(
+              title = list(text = "Interactive Power Curve - Continuous Outcomes (Tier 1 Enhancement)", font = list(size = 16)),
+              xaxis = list(title = "Sample Size Group 1 (n1)", gridcolor = "#e0e0e0"),
+              yaxis = list(title = "Power", range = c(0, 1), gridcolor = "#e0e0e0"),
+              hovermode = "closest",
+              plot_bgcolor = "#f8f9fa",
+              paper_bgcolor = "white",
+              legend = list(x = 0.7, y = 0.2)
+            ) %>%
+            config(displayModeBar = TRUE, displaylogo = FALSE)
         }
       })
     }
@@ -2389,6 +2562,9 @@ server <- function(input, output, session) {
       # Survival inputs
       input$surv_pow_n, input$surv_pow_hr, input$surv_pow_k, input$surv_pow_pE, input$surv_pow_alpha,
       input$surv_ss_hr, input$surv_ss_k, input$surv_ss_pE, input$surv_ss_alpha, input$surv_ss_power,
+      # Continuous Outcomes inputs
+      input$cont_pow_n1, input$cont_pow_n2, input$cont_pow_d, input$cont_pow_alpha, input$cont_pow_sided,
+      input$cont_ss_d, input$cont_ss_alpha, input$cont_ss_sided, input$cont_ss_ratio, input$cont_ss_power,
       # Include doAnalysis flag to invalidate cache when Calculate is pressed
       v$doAnalysis
     )

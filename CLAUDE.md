@@ -27,11 +27,14 @@ This project uses the **[Diataxis documentation framework](https://diataxis.fr/)
 ###-document-name.md
 ```
 
+This convention applies to **all directories** including `reports/` subdirectories. Files are numbered in logical order so readers can navigate to any folder and read through documents sequentially to understand the full picture.
+
 ### Rules:
 
 1. **Three-digit number** with leading zeros (e.g., `001`, `002`, `010`)
 2. **Kebab-case** for the document name (lowercase, hyphen-separated)
 3. **`.md` extension** for Markdown files
+4. **Sequential ordering** - number files in the order they should be read
 
 ### Examples:
 
@@ -39,7 +42,7 @@ This project uses the **[Diataxis documentation framework](https://diataxis.fr/)
 - `001-contributing.md`
 - `002-antipatterns-guide.md`
 - `010-advanced-features.md`
-- `100-migration-guide.md`
+- `001-initial-analysis.md` (in reports subdirectory)
 
 ❌ **Incorrect:**
 - `1-contributing.md` (missing leading zeros)
@@ -47,6 +50,7 @@ This project uses the **[Diataxis documentation framework](https://diataxis.fr/)
 - `001_contributing.md` (underscore instead of hyphen)
 - `001-Contributing.md` (capital letters in name)
 - `001-contributing` (missing .md extension)
+- `IMPLEMENTATION_STATUS.md` (ALL_CAPS, missing number)
 
 ---
 
@@ -63,9 +67,14 @@ docs/
 │   └── ###-reference-name.md
 ├── 004-explanation/               # 💡 Understanding-oriented discussions
 │   └── ###-explanation-name.md
-└── reports/                       # 📊 Historical reports (no renaming needed)
+└── reports/                       # 📊 Historical reports (also use ###-name.md)
     ├── enhancements/
+    │   └── topic-name/
+    │       ├── README.md          # Optional: topic overview
+    │       └── ###-report-name.md
     └── quality/
+        └── topic-name/
+            └── ###-report-name.md
 ```
 
 ---
