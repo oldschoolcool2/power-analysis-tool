@@ -49,6 +49,7 @@ app_ui <- function(request) {
     tags$script(src = "www/js/mobile-sidebar-toggle.js"),
     tags$script(src = "www/js/session-restore.js"),
     tags$script(src = "www/js/example-scenarios.js"),
+    tags$script(src = "www/js/initialize-popovers.js"),
     tags$style(HTML("
       /* Clean background color definitions */
       :root {

@@ -6,7 +6,7 @@
 #'
 #' @noRd
 #'
-#' @importFrom shiny NS tagList conditionalPanel h2 helpText hr div actionButton icon radioButtons
+#' @importFrom shiny NS tagList conditionalPanel h2 helpText hr div actionButton icon radioButtons HTML
 mod_03_survival_ui <- function(id) {
   ns <- NS(id)
 
@@ -32,7 +32,20 @@ mod_03_survival_ui <- function(id) {
         min = 0.01,
         max = 10,
         step = 0.05,
-        tooltip = "Expected hazard ratio (HR < 1 indicates protective effect, HR > 1 indicates risk)"
+        tooltip = "Expected hazard ratio (HR < 1 indicates protective effect, HR > 1 indicates risk)",
+        validation_type = "hazard_ratio",
+        help_content = HTML("
+          <strong>Hazard Ratio (HR)</strong><br>
+          Ratio of hazard rates between two groups in time-to-event analysis.<br><br>
+          <strong>Interpretation:</strong><br>
+          • HR = 1.0: No effect (equal hazard)<br>
+          • HR < 1.0: Protective effect (e.g., 0.70 = 30% reduction)<br>
+          • HR > 1.0: Increased risk (e.g., 1.50 = 50% increase)<br><br>
+          <strong>Examples:</strong><br>
+          <em>Cardiovascular trials:</em> HR = 0.75-0.85 (moderate)<br>
+          <em>Oncology trials:</em> HR = 0.65-0.80 (typical)<br>
+          <em>Minimal clinically important:</em> HR ≤ 0.85 or ≥ 1.15
+        ")
       ),
       create_enhanced_slider(
         ns("surv_pow_k"),

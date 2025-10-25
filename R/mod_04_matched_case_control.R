@@ -6,7 +6,7 @@
 #'
 #' @noRd
 #'
-#' @importFrom shiny NS tagList conditionalPanel h2 helpText hr div actionButton icon radioButtons
+#' @importFrom shiny NS tagList conditionalPanel h2 helpText hr div actionButton icon radioButtons HTML
 mod_04_matched_case_control_ui <- function(id) {
   ns <- NS(id)
 
@@ -47,7 +47,21 @@ mod_04_matched_case_control_ui <- function(id) {
           min = 0.01,
           max = 20,
           step = 0.1,
-          tooltip = "Expected odds ratio to detect (OR < 1 protective, OR > 1 risk factor)"
+          tooltip = "Expected odds ratio to detect (OR < 1 protective, OR > 1 risk factor)",
+          validation_type = "odds_ratio",
+          help_content = HTML("
+            <strong>Odds Ratio (OR)</strong><br>
+            Measure of association between exposure and outcome in case-control studies.<br><br>
+            <strong>Interpretation:</strong><br>
+            • OR = 1.0: No association<br>
+            • OR < 1.0: Protective factor (e.g., 0.50 = 50% lower odds)<br>
+            • OR > 1.0: Risk factor (e.g., 2.0 = 2× higher odds)<br><br>
+            <strong>Examples:</strong><br>
+            <em>Smoking & lung cancer:</em> OR = 10-20 (strong)<br>
+            <em>Diet & diabetes:</em> OR = 1.5-2.0 (moderate)<br>
+            <em>Vaccine protection:</em> OR = 0.3-0.6 (protective)<br><br>
+            <strong>Note:</strong> OR approximates relative risk when outcome is rare (<10%)
+          ")
         )
       ),
       conditionalPanel(
