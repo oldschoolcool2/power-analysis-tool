@@ -1,0 +1,123 @@
+# .dockerignore for R/Shiny Power Analysis Tool
+# Excludes files from Docker build context to improve build speed and reduce image size
+# See: https://docs.docker.com/go/build-context-dockerignore/
+
+# -------------------------------
+# Version Control
+# -------------------------------
+.git/
+.gitignore
+.github/
+
+# -------------------------------
+# R Development Files
+# -------------------------------
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+.build
+
+# -------------------------------
+# renv Library (installed during build)
+# -------------------------------
+# Keep renv.lock, .Rprofile, renv/activate.R, renv/settings.json (needed for restore)
+# Exclude the actual library since it will be restored during Docker build
+renv/library/
+renv/local/
+renv/cellar/
+renv/lock/
+renv/python/
+renv/sandbox/
+renv/staging/
+
+# -------------------------------
+# Documentation & Reports
+# -------------------------------
+docs/
+README.md
+*.md
+!analysis-report.Rmd
+TECH_DEBT_RESOLVED.md
+
+# -------------------------------
+# Claude Code Configuration
+# -------------------------------
+.claude/
+CLAUDE.md
+
+# -------------------------------
+# Docker Files (avoid recursive copying)
+# -------------------------------
+Dockerfile
+Dockerfile~
+.dockerignore
+docker-compose.yml
+docker-compose.override.yml
+
+# -------------------------------
+# Backup and Temporary Files
+# -------------------------------
+*.backup
+*.bak
+*.tmp
+*.log
+*~
+.DS_Store
+Thumbs.db
+
+# -------------------------------
+# Editor and IDE Configuration
+# -------------------------------
+.vscode/
+.idea/
+.editorconfig
+*.swp
+*.swo
+
+# -------------------------------
+# Code Quality Tools (installed separately in Dockerfile)
+# -------------------------------
+.lintr
+.pre-commit-config.yaml
+check_antipatterns.R
+validate_code_quality.R
+
+# -------------------------------
+# Testing (tests copied in dev stage, excluded from prod)
+# -------------------------------
+# Note: We'll handle tests separately in multi-stage build
+
+# -------------------------------
+# Screenshots and Test Artifacts
+# -------------------------------
+capture.png
+*.png
+*.jpg
+*.jpeg
+*.gif
+!www/**/*.png
+!www/**/*.jpg
+!www/**/*.jpeg
+!www/**/*.gif
+
+# -------------------------------
+# Environment and Secrets
+# -------------------------------
+.env
+.env.*
+*.env.local
+secrets.dev.yaml
+values.dev.yaml
+
+# -------------------------------
+# CI/CD
+# -------------------------------
+.github/
+
+# -------------------------------
+# Cache directories
+# -------------------------------
+.cache/
+app_cache/

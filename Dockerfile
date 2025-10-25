@@ -1,4 +1,15 @@
-FROM rocker/shiny:4.4.0
+# ==============================================================================
+# Multi-Stage Dockerfile for R/Shiny Power Analysis Tool
+# ==============================================================================
+# Stage 1: Base dependencies (shared by dev and prod)
+# Stage 2: Development environment (includes testing tools)
+# Stage 3: Production runtime (minimal, optimized)
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Stage 1: Base - System dependencies and renv setup
+# ------------------------------------------------------------------------------
+FROM rocker/shiny:4.4.0 AS base
 
 USER root
 
@@ -44,6 +55,13 @@ RUN R --quiet -e "tinytex::install_tinytex()"
 # Install LaTeX packages using R/tinytex (avoids PATH issues)
 RUN R --quiet -e "tinytex::tlmgr_install(c('threeparttable', 'float', 'booktabs'))"
 
+# ------------------------------------------------------------------------------
+# Stage 2: Development - Includes testing and code quality tools
+# ------------------------------------------------------------------------------
+FROM base AS development
+
+USER root
+
 # Install code quality tools (lintr, styler, precommit)
 # These are development dependencies, not in renv.lock
 RUN R --quiet -e "install.packages(c('lintr', 'styler', 'precommit'), repos = 'https://cloud.r-project.org')"
@@ -52,13 +70,35 @@ RUN R --quiet -e "install.packages(c('lintr', 'styler', 'precommit'), repos = 'h
 RUN mkdir -p /srv/shiny-server/app_cache && \
     chown -R shiny:shiny /srv/shiny-server/app_cache
 
-# Copy application code LAST (changes most frequently)
-# This layer rebuilds on every code change but uses cached dependencies
+# Copy application code INCLUDING tests
 COPY --chown=shiny:shiny app.R app.R
 COPY --chown=shiny:shiny analysis-report.Rmd analysis-report.Rmd
 COPY --chown=shiny:shiny R/ R/
 COPY --chown=shiny:shiny www/ www/
 COPY --chown=shiny:shiny tests/ tests/
+
+USER shiny
+
+EXPOSE 3838
+
+CMD ["R", "-e", "shiny::runApp('/srv/shiny-server/app.R', host='0.0.0.0', port=3838)"]
+
+# ------------------------------------------------------------------------------
+# Stage 3: Production - Minimal runtime, no dev tools or tests
+# ------------------------------------------------------------------------------
+FROM base AS production
+
+USER root
+
+# Create cache directory with proper permissions for shiny user
+RUN mkdir -p /srv/shiny-server/app_cache && \
+    chown -R shiny:shiny /srv/shiny-server/app_cache
+
+# Copy ONLY application code (no tests, no dev tools)
+COPY --chown=shiny:shiny app.R app.R
+COPY --chown=shiny:shiny analysis-report.Rmd analysis-report.Rmd
+COPY --chown=shiny:shiny R/ R/
+COPY --chown=shiny:shiny www/ www/
 
 USER shiny
 

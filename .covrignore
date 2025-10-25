@@ -1,0 +1,23 @@
+# .covrignore - Files and directories excluded from code coverage analysis
+# See: https://covr.r-lib.org/
+
+# Exclude renv infrastructure
+renv/
+renv.lock
+
+# Exclude test files (we measure app code coverage, not test code coverage)
+tests/
+testthat/
+
+# Exclude validation and quality check scripts
+validate_code_quality.R
+check_antipatterns.R
+
+# Exclude documentation examples
+docs/
+
+# Exclude CSS, JavaScript, and static assets
+www/
+
+# Exclude R environment activation
+renv/activate.R
