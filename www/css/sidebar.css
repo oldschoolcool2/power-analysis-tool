@@ -39,7 +39,7 @@
 
 .sidebar-header {
   padding: var(--space-6);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--border-color-sidebar-subtle);
   background: linear-gradient(135deg, var(--color-primary-800) 0%, var(--color-primary-900) 100%);
 }
 
@@ -65,7 +65,7 @@
 
 .sidebar-logo-text p {
   font-size: var(--font-size-xs);
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-sidebar-dimmed);
   margin: var(--space-1) 0 0 0;
   line-height: var(--line-height-normal);
 }
@@ -89,7 +89,7 @@
   font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
   letter-spacing: var(--letter-spacing-wide);
-  color: rgba(255, 255, 255, 0.7);  /* Increased opacity for WCAG AA */
+  color: var(--text-sidebar-dimmed);  /* Increased opacity for WCAG AA */
 }
 
 /* ==========================================================================
@@ -112,11 +112,11 @@
 }
 
 .nav-group-header:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-sidebar-overlay-subtle);
 }
 
 .nav-group-header.active {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-sidebar-overlay-medium);
   border-left-color: var(--color-accent-600);
 }
 
@@ -141,12 +141,12 @@
 .nav-group-label {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--text-sidebar-primary);
 }
 
 .nav-group-chevron {
   font-size: var(--font-size-sm);
-  color: rgba(255, 255, 255, 0.75);  /* Increased opacity for WCAG AA */
+  color: var(--text-sidebar-medium);  /* Increased opacity for WCAG AA */
   transition: transform 0.3s ease;
 }
 
@@ -162,7 +162,7 @@
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.3s ease;
-  background: rgba(0, 0, 0, 0.1);
+  background: var(--bg-sidebar-overlay-dark);
 }
 
 .nav-group-children.expanded {
@@ -178,17 +178,17 @@
   transition: all 0.2s ease;
   border-left: 3px solid transparent;
   text-decoration: none;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-sidebar-bright);
   font-size: var(--font-size-sm);
 }
 
 .nav-item:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-sidebar-overlay-subtle);
   color: var(--text-inverse);
 }
 
 .nav-item.active {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--bg-sidebar-overlay-strong);
   border-left-color: var(--color-accent-600);
   color: var(--text-inverse);
   font-weight: var(--font-weight-semibold);
@@ -215,17 +215,17 @@
   transition: all 0.2s ease;
   border-left: 3px solid transparent;
   text-decoration: none;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--text-sidebar-primary);
   font-size: var(--font-size-sm);
 }
 
 .nav-item-single:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-sidebar-overlay-subtle);
   color: var(--text-inverse);
 }
 
 .nav-item-single.active {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--bg-sidebar-overlay-strong);
   border-left-color: var(--color-accent-600);
   font-weight: var(--font-weight-semibold);
 }
@@ -245,13 +245,13 @@
 
 .sidebar-footer {
   padding: var(--space-4) var(--space-6);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.1);
+  border-top: 1px solid var(--border-color-sidebar-subtle);
+  background: var(--bg-sidebar-overlay-dark);
 }
 
 .sidebar-footer-text {
   font-size: var(--font-size-xs);
-  color: rgba(255, 255, 255, 0.75);  /* Increased opacity for WCAG AA */
+  color: var(--text-sidebar-medium);  /* Increased opacity for WCAG AA */
   text-align: center;
 }
 
@@ -314,7 +314,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--bg-overlay);
   z-index: 999;
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -429,14 +429,14 @@
 }
 
 .sidebar::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.1);
+  background: var(--bg-sidebar-overlay-dark);
 }
 
 .sidebar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--border-color-sidebar-medium);
   border-radius: 4px;
 }
 
 .sidebar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--text-sidebar-bright);
 }

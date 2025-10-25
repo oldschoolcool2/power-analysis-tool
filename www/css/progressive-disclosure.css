@@ -287,7 +287,7 @@
 [data-theme="dark"] .progressive-disclosure-content {
   background: var(--bg-card);
   border-color: var(--border-color-subtle);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-dark-md);
 }
 
 [data-theme="dark"] .tabbed-options-wrapper .nav-tabs {

@@ -296,7 +296,8 @@ create_numeric_input_with_tooltip <- function(inputId,
                                               max = NULL,
                                               step = 1,
                                               tooltip = NULL,
-                                              validation_type = NULL) {
+                                              validation_type = NULL,
+                                              help_content = NULL) {
 
   # Create the numeric input
   input_element <- numericInput(
@@ -315,6 +316,11 @@ create_numeric_input_with_tooltip <- function(inputId,
     if (!is.null(input_tag) && inherits(input_tag, "shiny.tag")) {
       input_tag$attribs$`data-validate` <- validation_type
     }
+  }
+
+  # Wrap with contextual help icon if help_content is provided
+  if (!is.null(help_content)) {
+    input_element <- create_input_with_help_icon(inputId, input_element, help_content)
   }
 
   # Add tooltip if provided
@@ -469,5 +475,57 @@ create_tabbed_options <- function(id, tabs) {
     class = "tabbed-options-wrapper",
     nav_tabs,
     tab_content
+  )
+}
+
+
+#' Create Input with Contextual Help Icon
+#'
+#' Wraps an input element with a "?" help icon that shows detailed contextual help.
+#' The help icon appears next to the label and opens a popover with examples and guidance.
+#'
+#' @param inputId The input element's ID
+#' @param input_element The Shiny input element to wrap
+#' @param help_content HTML content to display in the help popover (can include examples, formulas, etc.)
+#'
+#' @return A Shiny tag element with input and help icon
+#'
+#' @examples
+#' create_input_with_help_icon(
+#'   "icc",
+#'   numericInput("icc", "ICC:", 0.05),
+#'   HTML("<strong>Intraclass Correlation Coefficient</strong><br>
+#'         Measures similarity within clusters.<br>
+#'         <em>Example:</em> ICC = 0.05 is typical for community interventions")
+#' )
+#'
+#' @importFrom shiny tags HTML icon
+#' @importFrom shinyBS bsPopover
+create_input_with_help_icon <- function(inputId, input_element, help_content) {
+  help_icon_id <- paste0(inputId, "_help_icon")
+
+  # Create wrapper with input and help icon
+  tags$div(
+    class = "input-with-help-wrapper",
+    style = "position: relative;",
+
+    # Original input
+    input_element,
+
+    # Help icon (positioned after label)
+    tags$button(
+      id = help_icon_id,
+      class = "contextual-help-icon",
+      type = "button",
+      style = "position: absolute; top: 8px; right: 0; background: none; border: none; color: var(--color-primary); cursor: pointer; font-size: 16px; padding: 2px 6px;",
+      icon("circle-question"),
+      `data-bs-toggle` = "popover",
+      `data-bs-placement` = "right",
+      `data-bs-trigger` = "focus",
+      `data-bs-html` = "true",
+      `data-bs-content` = as.character(help_content),
+      title = "Help",
+      tabindex = "0"
+    )
   )
 }

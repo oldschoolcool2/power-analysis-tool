@@ -170,7 +170,7 @@ body {
 
   /* Typography can scale further */
   body {
-    font-size: 18px; /* Base size increases */
+    font-size: var(--font-size-lg); /* Base size increases */
   }
 }
 
@@ -618,12 +618,12 @@ body {
 
   /* Stronger shadows */
   .content-card {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-high-contrast);
   }
 
   /* Higher contrast text */
   body {
-    color: #000;
+    color: var(--color-neutral-900);
   }
 
   a {

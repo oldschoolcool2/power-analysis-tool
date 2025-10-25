@@ -92,6 +92,13 @@
   --bg-input-focus: var(--color-white);        /* Input focus state */
   --bg-input-disabled: var(--color-neutral-100);
   --bg-overlay: rgba(0, 0, 0, 0.5);            /* Modal overlays */
+  --bg-loading-overlay: rgba(15, 23, 42, 0.8); /* Loading spinner overlay */
+  
+  /* Sidebar overlay backgrounds (for dark sidebar) */
+  --bg-sidebar-overlay-subtle: rgba(255, 255, 255, 0.05);
+  --bg-sidebar-overlay-medium: rgba(255, 255, 255, 0.1);
+  --bg-sidebar-overlay-strong: rgba(255, 255, 255, 0.15);
+  --bg-sidebar-overlay-dark: rgba(0, 0, 0, 0.1);
 
   /* ========================================================================
      SEMANTIC APPLICATION TOKENS - Text Colors
@@ -109,6 +116,12 @@
   --text-warning: var(--color-warning-600);
   --text-error: var(--color-error-600);
   --text-info: var(--color-info-600);
+  
+  /* Sidebar text with opacity (on dark backgrounds) */
+  --text-sidebar-dimmed: rgba(255, 255, 255, 0.7);
+  --text-sidebar-medium: rgba(255, 255, 255, 0.75);
+  --text-sidebar-bright: rgba(255, 255, 255, 0.8);
+  --text-sidebar-primary: rgba(255, 255, 255, 0.9);
 
   /* ========================================================================
      BORDERS
@@ -118,6 +131,10 @@
   --border-color-default: var(--color-neutral-300);
   --border-color-strong: var(--color-neutral-400);
   --border-color-primary: var(--color-primary-600);
+  
+  /* Sidebar borders (semi-transparent on dark background) */
+  --border-color-sidebar-subtle: rgba(255, 255, 255, 0.1);
+  --border-color-sidebar-medium: rgba(255, 255, 255, 0.2);
 
   --border-subtle: 1px solid var(--border-color-subtle);
   --border-default: 1px solid var(--border-color-default);
@@ -145,6 +162,12 @@
   /* Focus shadow with primary color */
   --shadow-focus: 0 0 0 3px var(--color-primary-100);
   --shadow-focus-error: 0 0 0 3px var(--color-error-100);
+  
+  /* Validation focus shadows */
+  --shadow-validation-error: 0 0 0 0.2rem rgba(220, 38, 38, 0.15);
+  --shadow-validation-error-focus: 0 0 0 0.25rem rgba(220, 38, 38, 0.25);
+  --shadow-validation-success: 0 0 0 0.2rem rgba(16, 185, 129, 0.15);
+  --shadow-validation-info: 0 0 0 0.2rem rgba(37, 99, 235, 0.1);
 
   /* ========================================================================
      SPACING SYSTEM (8px base)
@@ -322,6 +345,17 @@
   --bg-input-focus: #1E293B;               /* Input focus */
   --bg-input-disabled: #0F172A;
   --bg-overlay: rgba(0, 0, 0, 0.75);       /* Darker overlay */
+  --bg-loading-overlay: rgba(15, 23, 42, 0.95); /* Loading spinner overlay (dark mode) */
+  
+  /* Dark mode sidebar overlays */
+  --bg-sidebar-overlay-subtle: rgba(255, 255, 255, 0.03);
+  --bg-sidebar-overlay-medium: rgba(255, 255, 255, 0.08);
+  --bg-sidebar-overlay-strong: rgba(255, 255, 255, 0.12);
+  --bg-sidebar-overlay-dark: rgba(0, 0, 0, 0.2);
+  
+  /* Dark mode validation feedback backgrounds */
+  --bg-validation-error-dark: rgba(220, 38, 38, 0.2);
+  --bg-validation-info-dark: rgba(37, 99, 235, 0.2);
 
   /* Text Colors - Dark Mode */
   --text-primary: #F8F9FA;                 /* Almost white */
@@ -351,6 +385,13 @@
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
   --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
   --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.3);
+  
+  /* Dark mode specific shadows for enhanced depth */
+  --shadow-dark-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+  --shadow-dark-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  
+  /* High contrast mode shadow */
+  --shadow-high-contrast: 0 4px 8px rgba(0, 0, 0, 0.3);
 
   --shadow-focus: 0 0 0 3px rgba(107, 158, 199, 0.3);
   --shadow-focus-error: 0 0 0 3px rgba(248, 113, 113, 0.3);
