@@ -153,9 +153,34 @@ app_ui <- function(request) {
           # ==============================================================================
           mod_02_two_group_ui("tab2"),
 
-          # PAGE 5: Survival Analysis - Power Analysis
+          # ==============================================================================
+          # TAB 3: SURVIVAL ANALYSIS [MODULARIZED]
+          # ==============================================================================
+          mod_03_survival_ui("tab3"),
+
+          # ==============================================================================
+          # TAB 4: MATCHED CASE-CONTROL [MODULARIZED]
+          # ==============================================================================
+          mod_04_matched_case_control_ui("tab4"),
+
+          # ==============================================================================
+          # TAB 5: CONTINUOUS OUTCOMES [MODULARIZED]
+          # ==============================================================================
+          mod_05_continuous_ui("tab5"),
+
+          # ==============================================================================
+          # TAB 6: NON-INFERIORITY [MODULARIZED]
+          # ==============================================================================
+          mod_06_non_inferiority_ui("tab6"),
+
+          # ==============================================================================
+          # TAB 7: VIF/PROPENSITY SCORE [PLACEHOLDER]
+          # ==============================================================================
+          mod_07_vif_ps_ui("tab7"),
+
+          # PAGE 5: Survival Analysis - Power Analysis (OLD - kept for reference, will be removed)
           conditionalPanel(
-            condition = "input.sidebar_page == 'power_survival'",
+            condition = "input.sidebar_page == 'power_survival_OLD'",
             h2(class = "page-title", "Survival Analysis (Cox): Power Analysis"),
             helpText("Calculate power for time-to-event outcomes using Cox regression (common in RWE studies)"),
             hr(),

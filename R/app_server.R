@@ -19,12 +19,26 @@ app_server <- function(input, output, session) {
   # Tab 2: Two-Group Comparisons (includes missing data module)
   tab2_vals <- mod_02_two_group_server("tab2")
 
-  # Missing data modules for other tabs (will be migrated to modules)
-  # missing_data_twogrp_ss <- missing_data_server("twogrp_ss-missing_data")  # Now in tab2 module
-  missing_data_surv_ss <- missing_data_server("surv_ss-missing_data")
-  missing_data_match <- missing_data_server("match-missing_data")
-  missing_data_cont_ss <- missing_data_server("cont_ss-missing_data")
-  missing_data_noninf <- missing_data_server("noninf-missing_data")
+  # Tab 3: Survival Analysis (includes missing data module)
+  tab3_vals <- mod_03_survival_server("tab3")
+
+  # Tab 4: Matched Case-Control (includes missing data module)
+  tab4_vals <- mod_04_matched_case_control_server("tab4")
+
+  # Tab 5: Continuous Outcomes (includes missing data module)
+  tab5_vals <- mod_05_continuous_server("tab5")
+
+  # Tab 6: Non-Inferiority (includes missing data module)
+  tab6_vals <- mod_06_non_inferiority_server("tab6")
+
+  # Tab 7: VIF/Propensity Score (placeholder)
+  tab7_vals <- mod_07_vif_ps_server("tab7")
+
+  # Missing data modules for tabs not yet fully migrated
+  # missing_data_surv_ss <- missing_data_server("surv_ss-missing_data")  # Now in tab3 module
+  # missing_data_match <- missing_data_server("match-missing_data")  # Now in tab4 module
+  # missing_data_cont_ss <- missing_data_server("cont_ss-missing_data")  # Now in tab5 module
+  # missing_data_noninf <- missing_data_server("noninf-missing_data")  # Now in tab6 module
 
   # ============================================================
   # Sidebar Navigation Initialization
