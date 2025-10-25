@@ -237,6 +237,26 @@ ui <- fluidPage(
               bsTooltip("missing_mechanism_ss_single",
                 "MCAR: minimal bias. MAR: controllable with observed data. MNAR: potential substantial bias",
                 "right"
+              ),
+              radioButtons_fixed("missing_analysis_ss_single",
+                "Planned Analysis Approach:",
+                choices = c(
+                  "Complete Case Analysis" = "complete_case",
+                  "Multiple Imputation (MI)" = "multiple_imputation"
+                ),
+                selected = "complete_case"
+              ),
+              bsTooltip("missing_analysis_ss_single",
+                "Complete case: only use observations with no missing data (more conservative). MI: impute missing values (more efficient)",
+                "right"
+              ),
+              conditionalPanel(
+                condition = "input.missing_analysis_ss_single == 'multiple_imputation'",
+                numericInput("mi_imputations_ss_single", "Number of Imputations (m):", 5, min = 3, max = 100, step = 1),
+                bsTooltip("mi_imputations_ss_single", "Typical values: 5-20. More imputations increase precision but require more computation", "right"),
+                create_enhanced_slider("mi_r_squared_ss_single", "Expected Imputation Model R²:",
+                                      min = 0.1, max = 0.9, value = 0.5, step = 0.1,
+                                      tooltip = "Predictive power of imputation model (0.3=weak, 0.5=moderate, 0.7=strong). Higher R² means better imputation quality and less inflation needed")
               )
             ),
             hr(),
@@ -316,6 +336,26 @@ ui <- fluidPage(
               bsTooltip("missing_mechanism_twogrp_ss",
                 "MCAR: minimal bias. MAR: controllable with observed data. MNAR: potential substantial bias",
                 "right"
+              ),
+              radioButtons_fixed("missing_analysis_twogrp_ss",
+                "Planned Analysis Approach:",
+                choices = c(
+                  "Complete Case Analysis" = "complete_case",
+                  "Multiple Imputation (MI)" = "multiple_imputation"
+                ),
+                selected = "complete_case"
+              ),
+              bsTooltip("missing_analysis_twogrp_ss",
+                "Complete case: only use observations with no missing data (more conservative). MI: impute missing values (more efficient)",
+                "right"
+              ),
+              conditionalPanel(
+                condition = "input.missing_analysis_twogrp_ss == 'multiple_imputation'",
+                numericInput("mi_imputations_twogrp_ss", "Number of Imputations (m):", 5, min = 3, max = 100, step = 1),
+                bsTooltip("mi_imputations_twogrp_ss", "Typical values: 5-20. More imputations increase precision but require more computation", "right"),
+                create_enhanced_slider("mi_r_squared_twogrp_ss", "Expected Imputation Model R²:",
+                                      min = 0.1, max = 0.9, value = 0.5, step = 0.1,
+                                      tooltip = "Predictive power of imputation model (0.3=weak, 0.5=moderate, 0.7=strong). Higher R² means better imputation quality and less inflation needed")
               )
             ),
             hr(),
@@ -390,6 +430,26 @@ ui <- fluidPage(
               bsTooltip("missing_mechanism_surv_ss",
                 "MCAR: minimal bias. MAR: controllable with observed data. MNAR: potential substantial bias",
                 "right"
+              ),
+              radioButtons_fixed("missing_analysis_surv_ss",
+                "Planned Analysis Approach:",
+                choices = c(
+                  "Complete Case Analysis" = "complete_case",
+                  "Multiple Imputation (MI)" = "multiple_imputation"
+                ),
+                selected = "complete_case"
+              ),
+              bsTooltip("missing_analysis_surv_ss",
+                "Complete case: only use observations with no missing data (more conservative). MI: impute missing values (more efficient)",
+                "right"
+              ),
+              conditionalPanel(
+                condition = "input.missing_analysis_surv_ss == 'multiple_imputation'",
+                numericInput("mi_imputations_surv_ss", "Number of Imputations (m):", 5, min = 3, max = 100, step = 1),
+                bsTooltip("mi_imputations_surv_ss", "Typical values: 5-20. More imputations increase precision but require more computation", "right"),
+                create_enhanced_slider("mi_r_squared_surv_ss", "Expected Imputation Model R²:",
+                                      min = 0.1, max = 0.9, value = 0.5, step = 0.1,
+                                      tooltip = "Predictive power of imputation model (0.3=weak, 0.5=moderate, 0.7=strong). Higher R² means better imputation quality and less inflation needed")
               )
             ),
             hr(),
@@ -442,6 +502,26 @@ ui <- fluidPage(
               bsTooltip("missing_mechanism_match",
                 "MCAR: minimal bias. MAR: controllable with observed data. MNAR: potential substantial bias",
                 "right"
+              ),
+              radioButtons_fixed("missing_analysis_match",
+                "Planned Analysis Approach:",
+                choices = c(
+                  "Complete Case Analysis" = "complete_case",
+                  "Multiple Imputation (MI)" = "multiple_imputation"
+                ),
+                selected = "complete_case"
+              ),
+              bsTooltip("missing_analysis_match",
+                "Complete case: only use observations with no missing data (more conservative). MI: impute missing values (more efficient)",
+                "right"
+              ),
+              conditionalPanel(
+                condition = "input.missing_analysis_match == 'multiple_imputation'",
+                numericInput("mi_imputations_match", "Number of Imputations (m):", 5, min = 3, max = 100, step = 1),
+                bsTooltip("mi_imputations_match", "Typical values: 5-20. More imputations increase precision but require more computation", "right"),
+                create_enhanced_slider("mi_r_squared_match", "Expected Imputation Model R²:",
+                                      min = 0.1, max = 0.9, value = 0.5, step = 0.1,
+                                      tooltip = "Predictive power of imputation model (0.3=weak, 0.5=moderate, 0.7=strong). Higher R² means better imputation quality and less inflation needed")
               )
             ),
             hr(),
@@ -517,6 +597,26 @@ ui <- fluidPage(
               bsTooltip("missing_mechanism_cont_ss",
                 "MCAR: minimal bias. MAR: controllable with observed data. MNAR: potential substantial bias",
                 "right"
+              ),
+              radioButtons_fixed("missing_analysis_cont_ss",
+                "Planned Analysis Approach:",
+                choices = c(
+                  "Complete Case Analysis" = "complete_case",
+                  "Multiple Imputation (MI)" = "multiple_imputation"
+                ),
+                selected = "complete_case"
+              ),
+              bsTooltip("missing_analysis_cont_ss",
+                "Complete case: only use observations with no missing data (more conservative). MI: impute missing values (more efficient)",
+                "right"
+              ),
+              conditionalPanel(
+                condition = "input.missing_analysis_cont_ss == 'multiple_imputation'",
+                numericInput("mi_imputations_cont_ss", "Number of Imputations (m):", 5, min = 3, max = 100, step = 1),
+                bsTooltip("mi_imputations_cont_ss", "Typical values: 5-20. More imputations increase precision but require more computation", "right"),
+                create_enhanced_slider("mi_r_squared_cont_ss", "Expected Imputation Model R²:",
+                                      min = 0.1, max = 0.9, value = 0.5, step = 0.1,
+                                      tooltip = "Predictive power of imputation model (0.3=weak, 0.5=moderate, 0.7=strong). Higher R² means better imputation quality and less inflation needed")
               )
             ),
             hr(),
@@ -566,6 +666,26 @@ ui <- fluidPage(
               bsTooltip("missing_mechanism_noninf",
                 "MCAR: minimal bias. MAR: controllable with observed data. MNAR: potential substantial bias",
                 "right"
+              ),
+              radioButtons_fixed("missing_analysis_noninf",
+                "Planned Analysis Approach:",
+                choices = c(
+                  "Complete Case Analysis" = "complete_case",
+                  "Multiple Imputation (MI)" = "multiple_imputation"
+                ),
+                selected = "complete_case"
+              ),
+              bsTooltip("missing_analysis_noninf",
+                "Complete case: only use observations with no missing data (more conservative). MI: impute missing values (more efficient)",
+                "right"
+              ),
+              conditionalPanel(
+                condition = "input.missing_analysis_noninf == 'multiple_imputation'",
+                numericInput("mi_imputations_noninf", "Number of Imputations (m):", 5, min = 3, max = 100, step = 1),
+                bsTooltip("mi_imputations_noninf", "Typical values: 5-20. More imputations increase precision but require more computation", "right"),
+                create_enhanced_slider("mi_r_squared_noninf", "Expected Imputation Model R²:",
+                                      min = 0.1, max = 0.9, value = 0.5, step = 0.1,
+                                      tooltip = "Predictive power of imputation model (0.3=weak, 0.5=moderate, 0.7=strong). Higher R² means better imputation quality and less inflation needed")
               )
             ),
             hr(),
@@ -840,7 +960,7 @@ server <- function(input, output, session) {
   }
 
   # Helper function: inflate sample size for missing data (Tier 1 Enhancement)
-  calc_missing_data_inflation <- function(n_required, missing_pct, mechanism = "mar") {
+  calc_missing_data_inflation <- function(n_required, missing_pct, mechanism = "mar", analysis_type = "complete_case", mi_imputations = 5, mi_r_squared = 0.5) {
     if (missing_pct == 0) {
       return(list(
         n_inflated = n_required,
@@ -853,24 +973,56 @@ server <- function(input, output, session) {
 
     p_missing <- missing_pct / 100
 
-    # Complete case analysis: conservative inflation
-    inflation_factor <- 1 / (1 - p_missing)
-    n_inflated <- ceiling(n_required * inflation_factor)
-    n_increase <- n_inflated - n_required
-    pct_increase <- round((inflation_factor - 1) * 100, 1)
+    # Calculate inflation based on analysis type
+    if (analysis_type == "complete_case") {
+      # Complete case analysis: conservative inflation
+      # N_inflated = N_required / (1 - p_missing)
+      inflation_factor <- 1 / (1 - p_missing)
+      n_inflated <- ceiling(n_required * inflation_factor)
+      n_increase <- n_inflated - n_required
+      pct_increase <- round((inflation_factor - 1) * 100, 1)
 
-    # Interpretation text based on mechanism
-    mechanism_text <- switch(mechanism,
-      "mcar" = "MCAR (minimal bias expected)",
-      "mar" = "MAR (bias controllable with observed covariates)",
-      "mnar" = "MNAR (potential for substantial bias; sensitivity analysis recommended)",
-      "MAR"  # default
-    )
+      # Interpretation text based on mechanism
+      mechanism_text <- switch(mechanism,
+        "mcar" = "MCAR (minimal bias expected)",
+        "mar" = "MAR (bias controllable with observed covariates)",
+        "mnar" = "MNAR (potential for substantial bias; sensitivity analysis recommended)",
+        "MAR"  # default
+      )
 
-    interpretation <- sprintf(
-      "Assuming %s%% missingness (%s), inflate sample size by %s%% (add %s participants) to ensure adequate complete-case sample.",
-      missing_pct, mechanism_text, pct_increase, n_increase
-    )
+      interpretation <- sprintf(
+        "Assuming %s%% missingness (%s) with complete-case analysis, inflate sample size by %s%% (add %s participants) to ensure adequate complete-case sample.",
+        missing_pct, mechanism_text, pct_increase, n_increase
+      )
+
+    } else if (analysis_type == "multiple_imputation") {
+      # Multiple Imputation: Less inflation needed due to increased efficiency
+      # Formula based on variance inflation: VarMI / VarComplete ≈ (1 + 1/m) × (1 - R²)
+      # Where m = number of imputations, R² = predictive power of imputation model
+
+      # Relative efficiency of MI vs complete case
+      # RE = 1 / [(1 + 1/m) × (1 - R²_imp)]
+      re_mi <- 1 / ((1 + 1/mi_imputations) * (1 - mi_r_squared))
+
+      # Inflation factor accounts for both missing data and MI efficiency
+      # Less conservative than complete case because MI recovers information
+      inflation_factor <- (1 / (1 - p_missing)) * (1 / re_mi)
+      n_inflated <- ceiling(n_required * inflation_factor)
+      n_increase <- n_inflated - n_required
+      pct_increase <- round((inflation_factor - 1) * 100, 1)
+
+      mechanism_text <- switch(mechanism,
+        "mcar" = "MCAR (minimal bias, MI highly efficient)",
+        "mar" = "MAR (MI can provide unbiased estimates with good imputation model)",
+        "mnar" = "MNAR (MI may reduce but not eliminate bias; sensitivity analysis required)",
+        "MAR"  # default
+      )
+
+      interpretation <- sprintf(
+        "Assuming %s%% missingness (%s) with multiple imputation (m=%s imputations, R²=%s), inflate sample size by %s%% (add %s participants). MI is more efficient than complete-case analysis.",
+        missing_pct, mechanism_text, mi_imputations, mi_r_squared, pct_increase, n_increase
+      )
+    }
 
     list(
       n_inflated = n_inflated,
@@ -1313,7 +1465,10 @@ server <- function(input, output, session) {
             missing_adj <- calc_missing_data_inflation(
               sample_size_after_discon,
               input$missing_pct_ss_single,
-              input$missing_mechanism_ss_single
+              input$missing_mechanism_ss_single,
+              input$missing_analysis_ss_single,
+              ifelse(input$missing_analysis_ss_single == "multiple_imputation", input$mi_imputations_ss_single, 5),
+              ifelse(input$missing_analysis_ss_single == "multiple_imputation", input$mi_r_squared_ss_single, 0.5)
             )
             sample_size_final <- missing_adj$n_inflated
             missing_data_text <- HTML(paste0(
@@ -1457,7 +1612,10 @@ server <- function(input, output, session) {
             missing_adj <- calc_missing_data_inflation(
               n_total_base,
               input$missing_pct_twogrp_ss,
-              input$missing_mechanism_twogrp_ss
+              input$missing_mechanism_twogrp_ss,
+              input$missing_analysis_twogrp_ss,
+              ifelse(input$missing_analysis_twogrp_ss == "multiple_imputation", input$mi_imputations_twogrp_ss, 5),
+              ifelse(input$missing_analysis_twogrp_ss == "multiple_imputation", input$mi_r_squared_twogrp_ss, 0.5)
             )
             n_total_final <- missing_adj$n_inflated
             # Maintain allocation ratio after adjustment
@@ -1616,7 +1774,10 @@ server <- function(input, output, session) {
             missing_adj <- calc_missing_data_inflation(
               n_base,
               input$missing_pct_surv_ss,
-              input$missing_mechanism_surv_ss
+              input$missing_mechanism_surv_ss,
+              input$missing_analysis_surv_ss,
+              ifelse(input$missing_analysis_surv_ss == "multiple_imputation", input$mi_imputations_surv_ss, 5),
+              ifelse(input$missing_analysis_surv_ss == "multiple_imputation", input$mi_r_squared_surv_ss, 0.5)
             )
             n_final <- missing_adj$n_inflated
             missing_data_text <- HTML(paste0(
@@ -1760,7 +1921,10 @@ server <- function(input, output, session) {
             missing_adj <- calc_missing_data_inflation(
               n_total_base,
               input$missing_pct_match,
-              input$missing_mechanism_match
+              input$missing_mechanism_match,
+              input$missing_analysis_match,
+              ifelse(input$missing_analysis_match == "multiple_imputation", input$mi_imputations_match, 5),
+              ifelse(input$missing_analysis_match == "multiple_imputation", input$mi_r_squared_match, 0.5)
             )
             n_total_final <- missing_adj$n_inflated
             # Maintain matching ratio
@@ -1969,7 +2133,10 @@ server <- function(input, output, session) {
             missing_adj <- calc_missing_data_inflation(
               n_total_base,
               input$missing_pct_cont_ss,
-              input$missing_mechanism_cont_ss
+              input$missing_mechanism_cont_ss,
+              input$missing_analysis_cont_ss,
+              ifelse(input$missing_analysis_cont_ss == "multiple_imputation", input$mi_imputations_cont_ss, 5),
+              ifelse(input$missing_analysis_cont_ss == "multiple_imputation", input$mi_r_squared_cont_ss, 0.5)
             )
             n_total_final <- missing_adj$n_inflated
             # Maintain allocation ratio
@@ -2123,7 +2290,10 @@ server <- function(input, output, session) {
             missing_adj <- calc_missing_data_inflation(
               n_total_base,
               input$missing_pct_noninf,
-              input$missing_mechanism_noninf
+              input$missing_mechanism_noninf,
+              input$missing_analysis_noninf,
+              ifelse(input$missing_analysis_noninf == "multiple_imputation", input$mi_imputations_noninf, 5),
+              ifelse(input$missing_analysis_noninf == "multiple_imputation", input$mi_r_squared_noninf, 0.5)
             )
             n_total_final <- missing_adj$n_inflated
             # Maintain allocation ratio

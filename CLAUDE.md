@@ -200,6 +200,25 @@ def hello():
 - Use numbers for ordered lists
 - Keep items parallel in structure
 
+### Implementation Plans
+
+When documenting implementation plans or feature roadmaps:
+
+- **Focus on what needs to be done**, not how long it will take
+- **Do not include time estimates** (e.g., "2 hours", "1 day", "1 week")
+- **Do not include scheduling details** (e.g., "by Friday", "next sprint")
+- Keep steps actionable and clear without temporal commitments
+
+**Why?** Time estimates become outdated quickly and add unnecessary detail. We care about the logical sequence of work, not calendar predictions.
+
+✅ **Good:**
+- "Implement input validation for sample size calculation"
+- "Add unit tests for new effect size functions"
+
+❌ **Avoid:**
+- "Implement input validation (2 hours)"
+- "Add unit tests by end of week"
+
 ---
 
 ## Moving or Renaming Files
