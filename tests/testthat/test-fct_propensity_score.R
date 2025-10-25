@@ -324,5 +324,5 @@ test_that("generate_ps_sensitivity_analysis requires estimate_vif_propensity_sco
 
   expect_s3_class(result, "data.frame")
   expect_gt(nrow(result), 0)
-  expect_true(all(c("Overlap", "Rho_Squared", "N_Li_2025", "VIF_Li") %in% names(result)))
+  expect_true(all(c("Overlap", "Confounding_R2", "N_Li_2025", "VIF_Li") %in% names(result)))
 })
