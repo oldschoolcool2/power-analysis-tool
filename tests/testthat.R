@@ -4,4 +4,4 @@
 library(testthat)
 
 # Run all tests in the testthat directory
-test_check("power-analysis-tool")
+test_check("PowerAnalysisTool")

@@ -1,2 +1,17 @@
 ^renv$
 ^renv\.lock$
+^.*\.Rproj$
+^\.Rproj\.user$
+^app\.R$
+^app_legacy\.R\.bak$
+^rsconnect$
+^deploy$
+^\.github$
+^\.dockerignore$
+^docker-compose\.yml$
+^docs/002-how-to-guides$
+^docs/004-explanation$
+^PHASE2.*\.md$
+^MIGRATION_STATUS\.md$
+^\.claude$
+^CLAUDE\.md$
