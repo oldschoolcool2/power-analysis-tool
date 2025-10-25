@@ -37,4 +37,4 @@ Suggests:
     chromote (>= 0.3.1),
     lintr (>= 3.2.0),
     styler (>= 1.11.0)
-RoxygenNote: 7.3.0
+RoxygenNote: 7.3.3
