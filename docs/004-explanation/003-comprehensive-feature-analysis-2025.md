@@ -317,12 +317,12 @@ This document synthesizes current implementation status, existing feature propos
 
 | # | Feature | Validation | Priority | Status |
 |---|---------|------------|----------|--------|
-| 5 | **E-value Sensitivity Analysis** | FDA/EMA increasingly require | ⭐⭐⭐⭐⭐ | Pending |
+| 5 | **E-value Sensitivity Analysis** ✅ | FDA/EMA increasingly require | ⭐⭐⭐⭐⭐ | **COMPLETED (2025-10-26)** |
 | 9 | **Design Effect for Clustered Data** ✅ | Critical for EHR/claims data | ⭐⭐⭐⭐⭐ | **COMPLETED (2025-10-25)** |
 | 11 | **Multiple Testing Corrections** | Standard regulatory requirement | ⭐⭐⭐⭐ | Pending |
 | 15 | **Enhanced Protocol Text Generator** | High user value, time savings | ⭐⭐⭐⭐ | Pending |
 
-**Feature #9 COMPLETED. Remaining features validated - proceed as planned**
+**Features #5 and #9 COMPLETED. Remaining features validated - proceed as planned**
 
 ---
 
@@ -1261,8 +1261,8 @@ Each feature scored on:
 | **2025 PS Methods** | ✅ **DONE** | ❌ | ❌ | ❌ | ✅ YES |
 | **Interactive Viz** | ✅ **DONE** | ✅ | ✅ | ✅ | ❌ |
 | **Clustering** | ✅ **DONE** | ❌ | ✅ | ✅ | **Better UX** |
+| **E-values** | ✅ **DONE** | ❌ | ❌ | ❌ | ✅ YES |
 | **Mediation** | 🔜 | ❌ | ✅ | ✅ | Partial |
-| **E-values** | 🔜 | ❌ | ❌ | ❌ | ✅ YES |
 | **DiD/ITS** | 🔜 (Tier 3) | ❌ | Partial | Partial | ✅ |
 | **Bayesian** | 🔜 (Tier 3) | ❌ | ✅ | ✅ | Partial |
 | **Open Source** | ✅ | Partial | ❌ | ❌ | ✅ |
@@ -1272,10 +1272,10 @@ Each feature scored on:
 **Competitive Advantages (Current):**
 1. ✅ **Only free tool with 2025 PS methods** (massive differentiation) - DONE
 2. ✅ **RWE-specific clustering with literature ICC values** (better UX than competitors) - DONE
-3. ✅ **Best UX** (modern web interface vs. desktop apps)
-4. ✅ **RWE-specific** (our niche vs. generalists)
-5. ✅ **Open source** (reproducibility, transparency)
-6. 🔜 **Only tool with E-value calculator** (regulatory advantage) - Next priority
+3. ✅ **Only tool with E-value calculator** (regulatory advantage) - DONE
+4. ✅ **Best UX** (modern web interface vs. desktop apps)
+5. ✅ **RWE-specific** (our niche vs. generalists)
+6. ✅ **Open source** (reproducibility, transparency)
 
 **Remaining Gaps vs. Commercial:**
 - ❌ Fewer total methods (we'll have ~30 vs. PASS's 680)
@@ -1356,7 +1356,7 @@ Each feature scored on:
 
 **Deliverables:**
 1. ✅ **Design Effect for Clustering** - **COMPLETED (2025-10-25)**
-2. E-value Sensitivity Analysis
+2. ✅ **E-value Sensitivity Analysis** - **COMPLETED (2025-10-26)**
 3. Mediation Analysis Power - NEW
 4. Time-to-Event Equivalence/NI - NEW
 5. Multiple Testing Corrections
@@ -1364,11 +1364,11 @@ Each feature scored on:
 7. Enhanced Protocol Text Generator
 
 **Timeline:**
-- ~~Month 5-6: Features 1-2~~ → Feature 1 DONE, proceed with Feature 2
+- ~~Month 5-6: Features 1-2~~ → Features 1-2 DONE ✅
 - Month 7-8: Features 3-4
 - Month 9-10: Features 5-7
 
-**Progress:** 1/7 complete (14%)
+**Progress:** 2/7 complete (29%)
 
 ---
 
