@@ -31,14 +31,17 @@ docs/
 ├── 002-how-to-guides/             # Task-oriented instructions
 │   ├── 001-contributing.md        # How to contribute to the project
 │   ├── 002-advanced-statistical-features-implementation.md # Implementation guide
-│   └── 003-quick-start-guide.md   # Quick start for development
+│   ├── 003-quick-start-guide.md   # Quick start for development
+│   └── 004-end-to-end-testing-with-shinytest2.md # E2E testing guide
 ├── 003-reference/                 # Information-oriented specifications
 │   ├── 001-code-quality-tools.md  # Code quality tools reference
 │   ├── 002-antipatterns-guide.md  # Antipatterns reference
 │   └── 003-developer-guide.md     # Comprehensive developer guide (Diataxis)
 ├── 004-explanation/               # Understanding-oriented discussions
 │   ├── 001-feature-proposals.md   # Feature enhancement ideas
-│   └── 002-ui-ux-modernization.md # UI/UX design rationale
+│   ├── 002-ui-ux-modernization.md # UI/UX design rationale
+│   ├── 003-comprehensive-feature-analysis-2025.md # Feature analysis
+│   └── 004-testing-strategy-and-shinytest2.md # Testing strategy rationale
 └── reports/                       # Historical reports & analysis
     ├── enhancements/              # Feature implementation reports
     └── quality/                   # Code quality reports
@@ -293,11 +296,16 @@ grep -r "search term" docs/ --exclude-dir=reports
 | Topic | Location |
 |-------|----------|
 | Contributing to the project | [002-how-to-guides/001-contributing.md](002-how-to-guides/001-contributing.md) |
+| Advanced features implementation | [002-how-to-guides/002-advanced-statistical-features-implementation.md](002-how-to-guides/002-advanced-statistical-features-implementation.md) |
+| Quick start guide | [002-how-to-guides/003-quick-start-guide.md](002-how-to-guides/003-quick-start-guide.md) |
+| E2E testing with shinytest2 | [002-how-to-guides/004-end-to-end-testing-with-shinytest2.md](002-how-to-guides/004-end-to-end-testing-with-shinytest2.md) |
 | Code quality tools | [003-reference/001-code-quality-tools.md](003-reference/001-code-quality-tools.md) |
 | Antipatterns | [003-reference/002-antipatterns-guide.md](003-reference/002-antipatterns-guide.md) |
 | Developer guide (comprehensive) | [003-reference/003-developer-guide.md](003-reference/003-developer-guide.md) |
 | Feature proposals | [004-explanation/001-feature-proposals.md](004-explanation/001-feature-proposals.md) |
 | UI/UX design | [004-explanation/002-ui-ux-modernization.md](004-explanation/002-ui-ux-modernization.md) |
+| Comprehensive feature analysis | [004-explanation/003-comprehensive-feature-analysis-2025.md](004-explanation/003-comprehensive-feature-analysis-2025.md) |
+| Testing strategy and shinytest2 | [004-explanation/004-testing-strategy-and-shinytest2.md](004-explanation/004-testing-strategy-and-shinytest2.md) |
 
 ---
 

@@ -14,3 +14,24 @@ services:
       - './R:/srv/shiny-server/R:ro'
       - './www:/srv/shiny-server/www:ro'
       # Note: tests are not mounted in production mode
+
+  # Development service with testing tools and code coverage
+  development:
+    build:
+      context: .
+      target: development
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    volumes:
+      # Mount all code including tests for development
+      - './app.R:/srv/shiny-server/app.R'
+      - './analysis-report.Rmd:/srv/shiny-server/analysis-report.Rmd'
+      - './R:/srv/shiny-server/R'
+      - './www:/srv/shiny-server/www'
+      - './tests:/srv/shiny-server/tests'
+      # Mount coverage output directory for reports
+      - './tests/coverage_report:/srv/shiny-server/tests/coverage_report'
+    # Override CMD to prevent auto-starting the app
+    # This service is for running tests/coverage, not serving the app
+    command: ["tail", "-f", "/dev/null"]

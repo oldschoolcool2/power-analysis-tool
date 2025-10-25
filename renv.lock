@@ -104,6 +104,18 @@
       "Version": "1.1.8",
       "Source": "Repository",
       "Repository": "CRAN"
+    },
+    "shinytest2": {
+      "Package": "shinytest2",
+      "Version": "0.3.2",
+      "Source": "Repository",
+      "Repository": "CRAN"
+    },
+    "chromote": {
+      "Package": "chromote",
+      "Version": "0.3.1",
+      "Source": "Repository",
+      "Repository": "CRAN"
     }
   }
 }

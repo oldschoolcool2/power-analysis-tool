@@ -88,6 +88,7 @@ validate_code_quality.R
 # Testing (tests copied in dev stage, excluded from prod)
 # -------------------------------
 # Note: We'll handle tests separately in multi-stage build
+tests/coverage_report/
 
 # -------------------------------
 # Screenshots and Test Artifacts

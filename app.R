@@ -299,15 +299,38 @@ ui <- fluidPage(
           conditionalPanel(
             condition = "input.sidebar_page == 'ss_twogrp'",
             h2(class = "page-title", "Two-Group Comparison: Sample Size Calculation"),
-            helpText("Calculate required sample size per group to achieve desired power"),
+            helpText("Calculate required sample size OR minimal detectable effect size"),
+            hr(),
+            radioButtons_fixed("twogrp_ss_calc_mode",
+              "Calculation Mode:",
+              choices = c(
+                "Calculate Sample Size (given effect size)" = "calc_n",
+                "Calculate Effect Size (given sample size)" = "calc_effect"
+              ),
+              selected = "calc_n"
+            ),
+            bsTooltip("twogrp_ss_calc_mode",
+              "Choose whether to calculate required sample size or minimal detectable effect size",
+              "right"
+            ),
             hr(),
             create_segmented_power("twogrp_ss_power", "Desired Power:",
                                   selected = 80,
                                   tooltip = "Probability of detecting the effect if it exists"),
-            numericInput("twogrp_ss_p1", "Event Rate Group 1 (%):", 10, min = 0, max = 100, step = 0.1),
-            numericInput("twogrp_ss_p2", "Event Rate Group 2 (%):", 5, min = 0, max = 100, step = 0.1),
-            bsTooltip("twogrp_ss_p1", "Expected event rate in exposed/treatment group (as percentage)", "right"),
-            bsTooltip("twogrp_ss_p2", "Expected event rate in unexposed/control group (as percentage)", "right"),
+            conditionalPanel(
+              condition = "input.twogrp_ss_calc_mode == 'calc_n'",
+              numericInput("twogrp_ss_p1", "Event Rate Group 1 (%):", 10, min = 0, max = 100, step = 0.1),
+              numericInput("twogrp_ss_p2", "Event Rate Group 2 (%):", 5, min = 0, max = 100, step = 0.1),
+              bsTooltip("twogrp_ss_p1", "Expected event rate in exposed/treatment group (as percentage)", "right"),
+              bsTooltip("twogrp_ss_p2", "Expected event rate in unexposed/control group (as percentage)", "right")
+            ),
+            conditionalPanel(
+              condition = "input.twogrp_ss_calc_mode == 'calc_effect'",
+              numericInput("twogrp_ss_n1_fixed", "Available Sample Size (Group 1):", 500, min = 10, step = 1),
+              bsTooltip("twogrp_ss_n1_fixed", "Fixed sample size available for Group 1", "right"),
+              numericInput("twogrp_ss_p2_baseline", "Baseline Event Rate Group 2 (%):", 10, min = 0, max = 100, step = 0.1),
+              bsTooltip("twogrp_ss_p2_baseline", "Expected event rate in control/unexposed group (as percentage)", "right")
+            ),
             numericInput("twogrp_ss_ratio", "Allocation Ratio (n2/n1):", 1, min = 0.1, max = 10, step = 0.1),
             bsTooltip("twogrp_ss_ratio", "Ratio of Group 2 to Group 1 sample size. 1 = equal groups, 2 = twice as many in Group 2", "right"),
             create_segmented_alpha("twogrp_ss_alpha", "Significance Level (α):",
@@ -395,13 +418,34 @@ ui <- fluidPage(
           conditionalPanel(
             condition = "input.sidebar_page == 'ss_survival'",
             h2(class = "page-title", "Survival Analysis (Cox): Sample Size Calculation"),
-            helpText("Calculate required sample size for time-to-event analysis"),
+            helpText("Calculate required sample size OR minimal detectable hazard ratio"),
+            hr(),
+            radioButtons_fixed("surv_ss_calc_mode",
+              "Calculation Mode:",
+              choices = c(
+                "Calculate Sample Size (given hazard ratio)" = "calc_n",
+                "Calculate Hazard Ratio (given sample size)" = "calc_effect"
+              ),
+              selected = "calc_n"
+            ),
+            bsTooltip("surv_ss_calc_mode",
+              "Choose whether to calculate required sample size or minimal detectable hazard ratio",
+              "right"
+            ),
             hr(),
             create_segmented_power("surv_ss_power", "Desired Power:",
                                   selected = 80,
                                   tooltip = "Probability of detecting the effect if it exists"),
-            numericInput("surv_ss_hr", "Hazard Ratio (HR):", 0.7, min = 0.01, max = 10, step = 0.05),
-            bsTooltip("surv_ss_hr", "Expected hazard ratio to detect", "right"),
+            conditionalPanel(
+              condition = "input.surv_ss_calc_mode == 'calc_n'",
+              numericInput("surv_ss_hr", "Hazard Ratio (HR):", 0.7, min = 0.01, max = 10, step = 0.05),
+              bsTooltip("surv_ss_hr", "Expected hazard ratio to detect", "right")
+            ),
+            conditionalPanel(
+              condition = "input.surv_ss_calc_mode == 'calc_effect'",
+              numericInput("surv_ss_n_fixed", "Available Sample Size:", 500, min = 10, step = 10),
+              bsTooltip("surv_ss_n_fixed", "Fixed total sample size available for the study", "right")
+            ),
             create_enhanced_slider("surv_ss_k", "Proportion Exposed (%):",
                                   min = 10, max = 90, value = 50, step = 5, post = "%",
                                   tooltip = "Proportion of participants in the exposed/treatment group"),
@@ -463,13 +507,34 @@ ui <- fluidPage(
           conditionalPanel(
             condition = "input.sidebar_page == 'match_casecontrol'",
             h2(class = "page-title", "Matched Case-Control Study"),
-            helpText("Calculate sample size for matched case-control studies (e.g., propensity score matching)"),
+            helpText("Calculate sample size OR minimal detectable odds ratio"),
+            hr(),
+            radioButtons_fixed("match_calc_mode",
+              "Calculation Mode:",
+              choices = c(
+                "Calculate Sample Size (given odds ratio)" = "calc_n",
+                "Calculate Odds Ratio (given sample size)" = "calc_effect"
+              ),
+              selected = "calc_n"
+            ),
+            bsTooltip("match_calc_mode",
+              "Choose whether to calculate required sample size or minimal detectable odds ratio",
+              "right"
+            ),
             hr(),
             create_segmented_power("match_power", "Desired Power:",
                                   selected = 80,
                                   tooltip = "Probability of detecting the effect if it exists"),
-            numericInput("match_or", "Odds Ratio (OR):", 2.0, min = 0.01, max = 20, step = 0.1),
-            bsTooltip("match_or", "Expected odds ratio to detect (OR < 1 protective, OR > 1 risk factor)", "right"),
+            conditionalPanel(
+              condition = "input.match_calc_mode == 'calc_n'",
+              numericInput("match_or", "Odds Ratio (OR):", 2.0, min = 0.01, max = 20, step = 0.1),
+              bsTooltip("match_or", "Expected odds ratio to detect (OR < 1 protective, OR > 1 risk factor)", "right")
+            ),
+            conditionalPanel(
+              condition = "input.match_calc_mode == 'calc_effect'",
+              numericInput("match_n_pairs_fixed", "Available Number of Matched Pairs:", 100, min = 10, step = 5),
+              bsTooltip("match_n_pairs_fixed", "Fixed number of matched case-control pairs available", "right")
+            ),
             create_enhanced_slider("match_p0", "Exposure Probability in Controls (%):",
                                   min = 5, max = 95, value = 20, step = 5, post = "%",
                                   tooltip = "Expected proportion of controls exposed to the risk factor"),
@@ -562,13 +627,34 @@ ui <- fluidPage(
           conditionalPanel(
             condition = "input.sidebar_page == 'ss_continuous'",
             h2(class = "page-title", "Continuous Outcomes (t-test): Sample Size Calculation"),
-            helpText("Calculate required sample size to detect a difference in means"),
+            helpText("Calculate required sample size OR minimal detectable effect size"),
+            hr(),
+            radioButtons_fixed("cont_ss_calc_mode",
+              "Calculation Mode:",
+              choices = c(
+                "Calculate Sample Size (given effect size)" = "calc_n",
+                "Calculate Effect Size (given sample size)" = "calc_effect"
+              ),
+              selected = "calc_n"
+            ),
+            bsTooltip("cont_ss_calc_mode",
+              "Choose whether to calculate required sample size or minimal detectable effect size (Cohen's d)",
+              "right"
+            ),
             hr(),
             create_segmented_power("cont_ss_power", "Desired Power:",
                                   selected = 80,
                                   tooltip = "Probability of detecting the effect if it exists"),
-            numericInput("cont_ss_d", "Effect Size (Cohen's d):", 0.5, min = 0.01, max = 5, step = 0.1),
-            bsTooltip("cont_ss_d", "Standardized mean difference: Small=0.2, Medium=0.5, Large=0.8", "right"),
+            conditionalPanel(
+              condition = "input.cont_ss_calc_mode == 'calc_n'",
+              numericInput("cont_ss_d", "Effect Size (Cohen's d):", 0.5, min = 0.01, max = 5, step = 0.1),
+              bsTooltip("cont_ss_d", "Standardized mean difference: Small=0.2, Medium=0.5, Large=0.8", "right")
+            ),
+            conditionalPanel(
+              condition = "input.cont_ss_calc_mode == 'calc_effect'",
+              numericInput("cont_ss_n1_fixed", "Available Sample Size (Group 1):", 100, min = 2, step = 1),
+              bsTooltip("cont_ss_n1_fixed", "Fixed sample size available for Group 1", "right")
+            ),
             numericInput("cont_ss_ratio", "Allocation Ratio (n2/n1):", 1, min = 0.1, max = 10, step = 0.1),
             bsTooltip("cont_ss_ratio", "Ratio of Group 2 to Group 1 sample size. 1 = equal groups", "right"),
             create_segmented_alpha("cont_ss_alpha", "Significance Level (α):",
@@ -630,7 +716,20 @@ ui <- fluidPage(
           conditionalPanel(
             condition = "input.sidebar_page == 'noninf'",
             h2(class = "page-title", "Non-Inferiority Testing"),
-            helpText("Calculate sample size for non-inferiority trials (common in generic/biosimilar studies)"),
+            helpText("Calculate sample size OR minimal detectable non-inferiority margin"),
+            hr(),
+            radioButtons_fixed("noninf_calc_mode",
+              "Calculation Mode:",
+              choices = c(
+                "Calculate Sample Size (given margin)" = "calc_n",
+                "Calculate Margin (given sample size)" = "calc_effect"
+              ),
+              selected = "calc_n"
+            ),
+            bsTooltip("noninf_calc_mode",
+              "Choose whether to calculate required sample size or minimal detectable non-inferiority margin",
+              "right"
+            ),
             hr(),
             create_segmented_power("noninf_power", "Desired Power:",
                                   selected = 80,
@@ -639,8 +738,16 @@ ui <- fluidPage(
             numericInput("noninf_p2", "Event Rate Reference Group (%):", 10, min = 0, max = 100, step = 0.1),
             bsTooltip("noninf_p1", "Expected event rate in test/generic group (as percentage)", "right"),
             bsTooltip("noninf_p2", "Expected event rate in reference/branded group (as percentage)", "right"),
-            numericInput("noninf_margin", "Non-Inferiority Margin (%):", 5, min = 0.1, max = 50, step = 0.5),
-            bsTooltip("noninf_margin", "Maximum clinically acceptable difference (percentage points). Test is non-inferior if difference < margin.", "right"),
+            conditionalPanel(
+              condition = "input.noninf_calc_mode == 'calc_n'",
+              numericInput("noninf_margin", "Non-Inferiority Margin (%):", 5, min = 0.1, max = 50, step = 0.5),
+              bsTooltip("noninf_margin", "Maximum clinically acceptable difference (percentage points). Test is non-inferior if difference < margin.", "right")
+            ),
+            conditionalPanel(
+              condition = "input.noninf_calc_mode == 'calc_effect'",
+              numericInput("noninf_n1_fixed", "Available Sample Size (Test Group):", 500, min = 10, step = 10),
+              bsTooltip("noninf_n1_fixed", "Fixed sample size available for test/generic group", "right")
+            ),
             numericInput("noninf_ratio", "Allocation Ratio (n2/n1):", 1, min = 0.1, max = 10, step = 0.1),
             bsTooltip("noninf_ratio", "Ratio of Reference to Test group size. 1 = equal groups", "right"),
             create_segmented_alpha("noninf_alpha", "Significance Level (α):",

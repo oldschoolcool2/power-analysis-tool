@@ -62,9 +62,9 @@ FROM base AS development
 
 USER root
 
-# Install code quality tools (lintr, styler, precommit)
+# Install code quality and testing tools (lintr, styler, precommit, covr, here)
 # These are development dependencies, not in renv.lock
-RUN R --quiet -e "install.packages(c('lintr', 'styler', 'precommit'), repos = 'https://cloud.r-project.org')"
+RUN R --quiet -e "install.packages(c('lintr', 'styler', 'precommit', 'covr', 'here'), repos = 'https://cloud.r-project.org')"
 
 # Create cache directory with proper permissions for shiny user
 RUN mkdir -p /srv/shiny-server/app_cache && \
