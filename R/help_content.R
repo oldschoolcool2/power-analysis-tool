@@ -339,28 +339,86 @@ create_contextual_help <- function(analysis_type) {
         )
       ),
       accordion_panel(
+        title = "Comparison: Austin (2021) vs. Li et al. (2025)",
+        icon = icon("balance-scale"),
+        p(strong("This calculator now offers TWO methods:")),
+        tags$dl(
+          tags$dt(strong("Austin (2021) - VIF Method (Traditional)")),
+          tags$dd(tags$ul(
+            tags$li(strong("Inputs:"), "C-statistic + treatment prevalence"),
+            tags$li(strong("Pros:"), "Simple, widely used, only requires PS model discrimination"),
+            tags$li(strong("Cons:"), "Does NOT account for confounder-outcome association; may underestimate sample size"),
+            tags$li(strong("When to use:"), "Quick estimates, when confounder-outcome strength unknown")
+          )),
+
+          tags$dt(strong("Li et al. (2025) - Overlap + Confounding Method (NEW)")),
+          tags$dd(tags$ul(
+            tags$li(strong("Inputs:"), "Overlap coefficient (φ) + confounder-outcome R² + treatment prevalence"),
+            tags$li(strong("Pros:"), "Theoretically sound; accounts for BOTH overlap AND confounding strength; more accurate"),
+            tags$li(strong("Cons:"), "Requires estimating two additional parameters (φ and R²)"),
+            tags$li(strong("When to use:"), "Pilot data available; want accurate estimates; strong confounding expected")
+          ))
+        ),
+        p(strong("Key Innovation of Li et al. (2025):"), "Explicitly models the confounder-outcome association (via R²), which VIF methods omit. This can prevent substantial underestimation of required sample size.")
+      ),
+      accordion_panel(
+        title = "Understanding Li et al. (2025) Parameters",
+        icon = icon("info-circle"),
+        tags$dl(
+          tags$dt(strong("Overlap Coefficient (φ) - Bhattacharyya Measure")),
+          tags$dd(tags$ul(
+            tags$li("Measures distributional overlap between treated/control propensity scores"),
+            tags$li("Range: 0 (no overlap) to 1 (perfect overlap)"),
+            tags$li(strong("Interpretation:"),
+              tags$ul(
+                tags$li("φ ≥ 0.9: Excellent overlap"),
+                tags$li("φ = 0.75-0.89: Good overlap"),
+                tags$li("φ = 0.5-0.74: Fair overlap"),
+                tags$li("φ < 0.5: Poor overlap")
+              )),
+            tags$li(strong("How to estimate:"), "Pilot study PS distributions, clinical judgment of equipoise, or assume 0.7-0.8 for moderate overlap")
+          )),
+
+          tags$dt(strong("Confounder-Outcome R² (ρ²)")),
+          tags$dd(tags$ul(
+            tags$li("Proportion of outcome variance explained by confounders"),
+            tags$li("Bounds the correlation between confounders and outcome"),
+            tags$li(strong("Interpretation:"),
+              tags$ul(
+                tags$li("ρ² < 0.02: Weak confounding (minimal inflation)"),
+                tags$li("ρ² = 0.02-0.13: Moderate confounding"),
+                tags$li("ρ² = 0.13-0.26: Strong confounding"),
+                tags$li("ρ² > 0.26: Very strong confounding (large sample needed)")
+              )),
+            tags$li(strong("How to estimate:"), "Literature on confounders' effects, regression models from prior studies, or domain knowledge")
+          ))
+        ),
+        p(style = "margin-top: 10px; color: #666;", icon("lightbulb"), " ", strong("Tip:"), " Conduct sensitivity analysis across plausible ranges of φ and R² rather than relying on single values.")
+      ),
+      accordion_panel(
         title = "Important Cautions",
         icon = icon("exclamation-triangle"),
         tags$ul(
-          tags$li(strong("Assumption:"), "VIF estimation assumes the propensity score model will be correctly specified and achieve the anticipated c-statistic."),
-          tags$li(strong("Positivity:"), "VIF methods assume positivity (overlap). If there are regions of no overlap, estimates may be inaccurate."),
-          tags$li(strong("Pilot data:"), "When possible, use pilot data or similar studies to inform c-statistic estimates."),
-          tags$li(strong("2025 update:"), "Recent research (Li & Liu 2025) suggests VIF methods may lack theoretical foundation and can be inaccurate with limited overlap. Use sensitivity analyses."),
-          tags$li(strong("Alternative:"), "Consider using methods that focus on the overlap region (ATO, ATM) which are more robust.")
+          tags$li(strong("Assumption (Both methods):"), "Propensity score model will be correctly specified and achieve anticipated performance."),
+          tags$li(strong("Positivity:"), "Both methods assume positivity (overlap). If there are regions of no overlap, estimates may be inaccurate. Li et al. (2025) is more robust via explicit overlap modeling."),
+          tags$li(strong("Pilot data:"), "When possible, use pilot data to inform parameter estimates (c-statistic, φ, R²)."),
+          tags$li(strong("Austin method limitation:"), "VIF methods based solely on c-statistic may underestimate sample size when confounder-outcome associations are strong."),
+          tags$li(strong("Li et al. recommendation:"), "Authors recommend sensitivity analysis across reasonable ranges of φ and R² based on domain knowledge."),
+          tags$li(strong("Overlap weights (ATO):"), "Most efficient weighting method for both approaches; strongly recommended when overlap is limited.")
         )
       ),
       accordion_panel(
         title = "References",
         icon = icon("book"),
         tags$ul(
-          tags$li(strong("Key methodology:"), "Austin PC (2021). Informing power and sample size calculations when using inverse probability of treatment weighting using the propensity score. Statistics in Medicine 40(27):6150-6163."),
+          tags$li(strong("Li et al. (2025) - NEW:"), "Li F, Liu B (2025). Sample size and power calculations for causal inference of observational studies. arXiv 2501.11181. [", a("PDF", href = "https://arxiv.org/pdf/2501.11181", target = "_blank"), "]"),
+          tags$li(strong("Austin (2021):"), "Austin PC (2021). Informing power and sample size calculations when using inverse probability of treatment weighting using the propensity score. Statistics in Medicine 40(27):6150-6163."),
           tags$li("Li F, Thomas LE, Li F (2019). Addressing extreme propensity scores via the overlap weights. American Journal of Epidemiology 188(1):250-257."),
           tags$li("Li F, Morgan KL, Zaslavsky AM (2018). Balancing covariates via propensity score weighting. Journal of the American Statistical Association 113(521):390-400."),
           tags$li("Zhou Y, et al. (2020). A comprehensive evaluation of methods for studying continuous exposures using propensity score weighting. Biometrics 76(2):557-569."),
           tags$li(a("PSweight R package documentation",
                     href = "https://cran.r-project.org/package=PSweight",
-                    target = "_blank")),
-          tags$li("Recent 2025 developments: Li F, Liu L (2025). Sample size and power calculations for causal inference of observational studies. arXiv 2501.11181.")
+                    target = "_blank"))
         )
       )
     ),

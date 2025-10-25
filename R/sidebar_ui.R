@@ -221,7 +221,7 @@ create_sidebar_nav <- function() {
           role = "button",
           tabindex = "0",
           tags$span(class = "nav-group-icon", icon("chart-bar")),
-          tags$span(class = "nav-group-label", "Propensity Score VIF")
+          tags$span(class = "nav-group-label", "Propensity Score Calculator")
         )
       )
     ),

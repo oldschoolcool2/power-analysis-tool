@@ -30,6 +30,7 @@ source("R/modules/001-missing-data-module.R")
 # Source helper functions
 source("R/helpers/001-plot-helpers.R")
 source("R/helpers/002-result-text-helpers.R")
+source("R/helpers/003-propensity-score-helpers.R")
 
 # Define UI
 ui <- fluidPage(
@@ -645,11 +646,25 @@ ui <- fluidPage(
             )
           ),
 
-          # PAGE 11: Propensity Score VIF Calculator
+          # PAGE 11: Propensity Score Calculator (Austin 2021 + Li et al. 2025)
           conditionalPanel(
             condition = "input.sidebar_page == 'vif_calculator'",
-            h2(class = "page-title", "Propensity Score Methods: VIF Calculator"),
-            helpText("Adjust sample size for efficiency loss from propensity score weighting (IPTW, overlap, matching)"),
+            h2(class = "page-title", "Propensity Score Methods: Sample Size Calculator"),
+            helpText("Calculate required sample size for propensity score studies using Austin (2021) VIF or Li et al. (2025) methods"),
+            hr(),
+
+            # Method selection
+            radioButtons_fixed("ps_calc_method",
+              "Calculation Method:",
+              choices = c(
+                "Austin (2021) - VIF Method (Traditional)" = "austin",
+                "Li et al. (2025) - Overlap + Confounding Method (NEW)" = "li_2025"
+              ),
+              selected = "austin"),
+            bsTooltip("ps_calc_method",
+              "Austin (2021): Uses c-statistic to estimate VIF. Li et al. (2025): More accurate, accounts for overlap AND confounder-outcome association",
+              "right"),
+
             hr(),
 
             # RCT-based sample size input
@@ -671,12 +686,35 @@ ui <- fluidPage(
               min = 10, max = 90, value = 50, step = 5, post = "%",
               tooltip = "Percentage of participants in the treatment/exposed group"),
 
-            create_enhanced_slider("vif_cstat",
-              "Anticipated C-statistic of PS Model:",
-              min = 0.55, max = 0.95, value = 0.70, step = 0.05, post = "",
-              tooltip = "Discriminative ability of propensity score model. 0.5=no discrimination, 1.0=perfect. Typical: 0.65-0.75 for RWE data"),
+            # Austin method inputs
+            conditionalPanel(
+              condition = "input.ps_calc_method == 'austin'",
+              create_enhanced_slider("vif_cstat",
+                "Anticipated C-statistic of PS Model:",
+                min = 0.55, max = 0.95, value = 0.70, step = 0.05, post = "",
+                tooltip = "Discriminative ability of propensity score model. 0.5=no discrimination, 1.0=perfect. Typical: 0.65-0.75 for RWE data")
+            ),
 
-            # Weighting method selection
+            # Li et al. (2025) method inputs
+            conditionalPanel(
+              condition = "input.ps_calc_method == 'li_2025'",
+              create_enhanced_slider("vif_overlap_phi",
+                "Overlap Coefficient (φ):",
+                min = 0.2, max = 1.0, value = 0.75, step = 0.05, post = "",
+                tooltip = "Bhattacharyya coefficient measuring propensity score overlap. 1.0=perfect overlap, 0=no overlap. Typical: 0.6-0.8 for moderate overlap"),
+
+              create_enhanced_slider("vif_rho_squared",
+                "Confounder-Outcome Association (R²):",
+                min = 0, max = 0.5, value = 0.10, step = 0.05, post = "",
+                tooltip = "R-squared from regression of outcome on confounders. Quantifies confounding strength. Weak: <0.02, Moderate: 0.02-0.13, Strong: 0.13-0.26, Very Strong: >0.26"),
+
+              helpText(style = "color: #666; font-size: 0.9em; margin-top: 10px;",
+                icon("info-circle"),
+                " The overlap coefficient (φ) can be estimated from pilot data or assumed based on clinical equipoise. R² can be obtained from previous studies or literature.")
+            ),
+
+            # Weighting method selection (common to both methods)
+            hr(),
             radioButtons_fixed("vif_method",
               "Weighting Method:",
               choices = c(
@@ -1153,9 +1191,25 @@ server <- function(input, output, session) {
       example_msg = "Non-inferiority test with 4% margin (generic vs. branded)"
     ),
     vif = list(
-      example = list(vif_n_rct = 800, vif_prevalence = 30, vif_cstat = 0.75, vif_method = "ATE"),
-      reset = list(vif_n_rct = 500, vif_prevalence = 50, vif_cstat = 0.70, vif_method = "ATE"),
-      example_msg = "High c-statistic PS model with imbalanced treatment prevalence"
+      example = list(
+        ps_calc_method = "li_2025",
+        vif_n_rct = 800,
+        vif_prevalence = 30,
+        vif_cstat = 0.75,
+        vif_overlap_phi = 0.60,
+        vif_rho_squared = 0.15,
+        vif_method = "ATE"
+      ),
+      reset = list(
+        ps_calc_method = "austin",
+        vif_n_rct = 500,
+        vif_prevalence = 50,
+        vif_cstat = 0.70,
+        vif_overlap_phi = 0.75,
+        vif_rho_squared = 0.10,
+        vif_method = "ATE"
+      ),
+      example_msg = "Li et al. (2025) method with moderate overlap and strong confounding"
     )
   )
 
@@ -1198,9 +1252,9 @@ server <- function(input, output, session) {
       for (param in names(config$example)) {
         value <- config$example[[param]]
         # Determine input type and update accordingly
-        if (grepl("_sided$", param)) {
+        if (grepl("_sided$|_method$|ps_calc_method", param)) {
           updateRadioButtons(session, param, selected = value)
-        } else if (grepl("power|alpha|discon|k|pE|p0", param)) {
+        } else if (grepl("power|alpha|discon|k|pE|p0|prevalence|cstat|overlap_phi|rho_squared", param)) {
           updateSliderInput(session, param, value = value)
         } else {
           updateNumericInput(session, param, value = value)
@@ -1216,9 +1270,9 @@ server <- function(input, output, session) {
       for (param in names(config$reset)) {
         value <- config$reset[[param]]
         # Determine input type and update accordingly
-        if (grepl("_sided$", param)) {
+        if (grepl("_sided$|_method$|ps_calc_method", param)) {
           updateRadioButtons(session, param, selected = value)
-        } else if (grepl("power|alpha|discon|k|pE|p0", param)) {
+        } else if (grepl("power|alpha|discon|k|pE|p0|prevalence|cstat|overlap_phi|rho_squared", param)) {
           updateSliderInput(session, param, value = value)
         } else {
           updateNumericInput(session, param, value = value)
@@ -2326,24 +2380,95 @@ server <- function(input, output, session) {
           HTML(paste0(text0, text1, text2, text3, effect_size_box))
         }
       } else if (input$sidebar_page == "vif_calculator") {
-        # PAGE 11: Propensity Score VIF Calculator (Tier 1 Feature 4)
+        # PAGE 11: Propensity Score Calculator (Austin 2021 + Li et al. 2025)
 
-        # Get inputs
+        # Get common inputs
         n_rct <- input$vif_n_rct
         prevalence_pct <- input$vif_prevalence
-        c_stat <- input$vif_cstat
         weight_method <- input$vif_method
+        ps_calc_method <- input$ps_calc_method
 
-        # Calculate VIF
-        vif <- estimate_vif_propensity_score(c_stat, prevalence_pct, weight_method)
+        # Calculate based on selected method
+        if (ps_calc_method == "austin") {
+          # ========== AUSTIN (2021) VIF METHOD ==========
+          c_stat <- input$vif_cstat
 
-        # Calculate adjusted sample sizes
-        n_adjusted <- ceiling(n_rct * vif)
-        n_increase <- n_adjusted - n_rct
-        pct_increase <- (vif - 1) * 100
-        n_effective <- floor(n_rct / vif)
+          # Calculate VIF
+          vif <- estimate_vif_propensity_score(c_stat, prevalence_pct, weight_method)
 
-        # Interpret VIF
+          # Calculate adjusted sample sizes
+          n_adjusted <- ceiling(n_rct * vif)
+          n_increase <- n_adjusted - n_rct
+          pct_increase <- (vif - 1) * 100
+          n_effective <- floor(n_rct / vif)
+
+          # Interpret VIF
+          vif_interp <- interpret_vif(vif)
+
+          # C-statistic interpretation
+          c_stat_interp <- if (c_stat < 0.6) {
+            "Poor discrimination (may indicate weak confounding or insufficient covariates)"
+          } else if (c_stat < 0.7) {
+            "Fair discrimination (typical for claims/EHR data)"
+          } else if (c_stat < 0.8) {
+            "Good discrimination (typical for rich registry/cohort data)"
+          } else if (c_stat < 0.9) {
+            "Very good discrimination (may lead to high VIF for ATE/ATT)"
+          } else {
+            "Excellent discrimination (high VIF expected; consider alternative methods)"
+          }
+
+          method_source <- "Austin (2021)"
+          method_inputs_html <- paste0(
+            "<ul>",
+            "<li><strong>Treatment prevalence:</strong> ", prevalence_pct, "%</li>",
+            "<li><strong>Anticipated c-statistic:</strong> ", c_stat, " (", c_stat_interp, ")</li>",
+            "</ul>"
+          )
+
+        } else {
+          # ========== LI ET AL. (2025) METHOD ==========
+          overlap_phi <- input$vif_overlap_phi
+          rho_squared <- input$vif_rho_squared
+
+          # Use Li et al. (2025) calculations
+          treatment_prop <- prevalence_pct / 100
+          effect_size <- 0.2  # Standardized effect size placeholder
+
+          li_result <- calculate_n_li_2025(
+            effect_size = effect_size,
+            alpha = 0.05,
+            power = 0.80,
+            treatment_prop = treatment_prop,
+            overlap_phi = overlap_phi,
+            rho_squared = rho_squared,
+            weight_type = weight_method,
+            outcome_var = 1
+          )
+
+          # Extract results
+          vif <- li_result$vif
+          n_adjusted <- li_result$n_required
+          n_increase <- n_adjusted - n_rct
+          pct_increase <- (vif - 1) * 100
+          n_effective <- li_result$n_effective
+
+          # Interpret components
+          vif_interp <- interpret_vif(vif)
+          overlap_interp <- interpret_overlap_coefficient(overlap_phi)
+          rho_interp <- interpret_rho_squared(rho_squared)
+
+          method_source <- "Li et al. (2025)"
+          method_inputs_html <- paste0(
+            "<ul>",
+            "<li><strong>Treatment prevalence:</strong> ", prevalence_pct, "%</li>",
+            "<li><strong>Overlap coefficient (φ):</strong> ", format_numeric(overlap_phi, 2), " <span style='color: ", overlap_interp$color, ";'>(", overlap_interp$level, ")</span></li>",
+            "<li><strong>Confounder-outcome R²:</strong> ", format_numeric(rho_squared, 2), " <span style='color: ", rho_interp$color, ";'>(", rho_interp$level, ")</span></li>",
+            "</ul>"
+          )
+        }
+
+        # Interpret VIF (common to both methods)
         vif_interp <- interpret_vif(vif)
 
         # Method descriptions
@@ -2375,28 +2500,23 @@ server <- function(input, output, session) {
           )
         )
 
-        # C-statistic interpretation
-        c_stat_interp <- if (c_stat < 0.6) {
-          "Poor discrimination (may indicate weak confounding or insufficient covariates)"
-        } else if (c_stat < 0.7) {
-          "Fair discrimination (typical for claims/EHR data)"
-        } else if (c_stat < 0.8) {
-          "Good discrimination (typical for rich registry/cohort data)"
-        } else if (c_stat < 0.9) {
-          "Very good discrimination (may lead to high VIF for ATE/ATT)"
-        } else {
-          "Excellent discrimination (high VIF expected; consider alternative methods)"
-        }
-
-        # Recommendations
+        # Recommendations (common logic for both methods)
         recommendations <- c()
 
-        if (c_stat < 0.65) {
+        if (ps_calc_method == "austin" && c_stat < 0.65) {
           recommendations <- c(recommendations,
             "⚠️ C-statistic is low. Consider including stronger confounders to improve propensity score model discrimination.")
+        } else if (ps_calc_method == "li_2025" && overlap_phi < 0.5) {
+          recommendations <- c(recommendations,
+            "⚠️ Overlap coefficient is low. Propensity score distributions have poor overlap. Overlap weights (ATO) strongly recommended.")
         } else {
           recommendations <- c(recommendations,
-            "✅ C-statistic is adequate for propensity score methods.")
+            "✅ Propensity score model assumptions are adequate.")
+        }
+
+        if (ps_calc_method == "li_2025" && rho_squared > 0.2) {
+          recommendations <- c(recommendations,
+            "⚠️ Strong confounder-outcome association (R² > 0.2) requires substantial sample size inflation. Consider whether all important confounders can be measured.")
         }
 
         if (prevalence_pct < 20 || prevalence_pct > 80) {
@@ -2415,6 +2535,11 @@ server <- function(input, output, session) {
             "✅ VIF is acceptable. Propensity score weighting is feasible for this scenario.")
         }
 
+        if (ps_calc_method == "austin") {
+          recommendations <- c(recommendations,
+            "💡 <strong>Try Li et al. (2025) method:</strong> Provides more accurate sample size by accounting for confounder-outcome association strength.")
+        }
+
         recommendations_html <- paste0(
           "<ul>",
           paste0("<li>", recommendations, "</li>", collapse = "\n"),
@@ -2423,20 +2548,28 @@ server <- function(input, output, session) {
 
         # Generate result HTML
         text0 <- hr()
-        text1 <- h1("Propensity Score Weighting: VIF Results")
+        text1 <- h1("Propensity Score Weighting: Sample Size Results")
         text2 <- h4("(This analysis can be included in your Statistical Analysis Plan)")
 
+        # Method-specific reference
+        method_reference <- if (ps_calc_method == "austin") {
+          "<p style='font-size: 0.9em; color: #666;'><strong>Reference:</strong> Austin PC (2021). Informing power and sample size calculations when using inverse probability of treatment weighting using the propensity score. <em>Statistics in Medicine</em> 40(27):6150-6163.</p>"
+        } else {
+          "<p style='font-size: 0.9em; color: #666;'><strong>Reference:</strong> Li F, Liu B (2025). Sample size and power calculations for causal inference of observational studies. <em>arXiv</em> 2501.11181.</p>"
+        }
+
         text3 <- HTML(paste0(
+          "<div style='background-color: #f8f9fa; border-left: 4px solid #6c757d; padding: 15px; margin-bottom: 15px;'>",
+          "<strong>Calculation Method:</strong> ", method_source,
+          "</div>",
+
           "<h4>Weighting Method: ", method_desc$name, "</h4>",
           "<p>", method_desc$description, "</p>",
           "<p><strong>Target Population:</strong> ", method_desc$target, "</p>",
 
           "<hr>",
           "<h4>Propensity Score Model Assumptions</h4>",
-          "<ul>",
-          "<li><strong>Treatment prevalence:</strong> ", prevalence_pct, "%</li>",
-          "<li><strong>Anticipated c-statistic:</strong> ", c_stat, " (", c_stat_interp, ")</li>",
-          "</ul>",
+          method_inputs_html,
 
           "<hr>",
           "<h4>Variance Inflation Factor (VIF)</h4>",
@@ -2457,18 +2590,29 @@ server <- function(input, output, session) {
           "<h4>Interpretation</h4>",
           "<p>To achieve the same statistical power as a randomized trial with N=", format_numeric(n_rct, 0),
           ", an observational study using <strong>", method_desc$name, "</strong> weighting requires approximately <strong>N=",
-          format_numeric(n_adjusted, 0), " participants</strong> (assuming c-statistic=", format_numeric(c_stat, 2), ").</p>",
+          format_numeric(n_adjusted, 0), " participants</strong>.</p>",
 
           "<p>The effective sample size after propensity score weighting will be approximately ",
           format_numeric(n_effective, 0),
           ", which provides statistical information equivalent to a randomized trial of that size.</p>",
+
+          if (ps_calc_method == "li_2025") {
+            paste0(
+              "<p><strong>Key Insight (Li et al. 2025):</strong> This calculation accounts for both ",
+              "<strong>overlap</strong> (via φ=", format_numeric(overlap_phi, 2), ") and ",
+              "<strong>confounding strength</strong> (via R²=", format_numeric(rho_squared, 2), "), ",
+              "providing a more theoretically sound sample size estimate than VIF methods based solely on c-statistic.</p>"
+            )
+          } else {
+            ""
+          },
 
           "<hr>",
           "<h4>Recommendations</h4>",
           recommendations_html,
 
           "<hr>",
-          "<p style='font-size: 0.9em; color: #666;'><strong>Reference:</strong> Austin PC (2021). Informing power and sample size calculations when using inverse probability of treatment weighting using the propensity score. <em>Statistics in Medicine</em> 40(27):6150-6163.</p>"
+          method_reference
         ))
 
         HTML(paste0(text0, text1, text2, text3))
