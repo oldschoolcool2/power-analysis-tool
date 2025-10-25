@@ -1,7 +1,7 @@
 # Golem Migration Status
 
 **Last Updated:** 2025-10-25
-**Migration Progress:** 90% Complete (Phases 0-6)
+**Migration Progress:** 95% Complete (Phases 0-7)
 
 ## Completed (Phases 0-6)
 
@@ -52,15 +52,15 @@
 
 ```
 R/
-├── run_app.R (launcher)
-├── app_ui.R (UI - 315 lines)
-├── app_server.R (server - 4,577 lines)
-├── app_config.R (golem helpers)
-├── mod_*.R (8 modules)
-├── fct_*.R (4 business logic files)
-└── utils_*.R (5 utility files)
+├── run_app.R (launcher - 58 lines)
+├── app_ui.R (UI - 313 lines)
+├── app_server.R (server - 4,345 lines)
+├── app_config.R (golem helpers - 30 lines)
+├── mod_*.R (8 modules - 1,296 lines)
+├── fct_*.R (4 business logic files - 809 lines)
+└── utils_*.R (6 utility files - 1,706 lines)
 
-Total: 21 R files, 8,661 lines
+Total: 21 R files, 8,557 lines
 ```
 
 ### Phase 4: Testing (Complete)
@@ -89,39 +89,43 @@ Total: 21 R files, 8,661 lines
 
 ## Remaining Work
 
-### Phase 7: Validation & Polish (In Progress - 70% Complete)
+### Phase 7: Validation & Polish (In Progress - 85% Complete)
 - ✅ Fixed NAMESPACE warnings (added comprehensive @importFrom statements)
 - ✅ Updated .Rbuildignore to exclude non-standard files
 - ✅ Added MIT LICENSE file
+- ✅ Added Author and Maintainer fields to DESCRIPTION
 - ✅ Fixed roxygen documentation mismatches (calc_missing_data_inflation, calculate_bhattacharyya_coefficient)
 - ✅ Removed unused imports from DESCRIPTION (PSweight, pkgload)
 - ✅ Reduced R CMD check warnings significantly (from ~40 to ~15)
-- ⏳ Non-ASCII characters in R files (cosmetic, low priority for non-CRAN)
-- ⏳ Legacy function call cleanup (missing_data_* functions in app_server.R)
+- ✅ Removed duplicate function definitions from app_server.R
+  - Extracted estimate_vif_propensity_score to fct_propensity_score.R
+  - Extracted interpret_vif to fct_propensity_score.R
+  - Removed duplicates of calc_effect_measures, calc_missing_data_inflation
+  - app_server.R reduced from 4,588 to 4,345 lines (-243 lines, -5%)
+- ✅ No non-ASCII characters in R files
+- ⏳ Legacy tabset code cleanup (84 references to old input$tabset, low priority)
 - ⏳ Optional: Create vignettes for complex features
 - ⏳ Optional: CI/CD pipeline (GitHub Actions)
 
 ### Technical Debt
 
-1. **Duplicate Function Definitions**
-   - Functions exist in both fct_*.R and app_server.R
-   - app_server.R defines functions locally (inside app_server scope)
-   - Should remove local definitions and use package functions
+1. **Legacy Code in app_server.R** (Low Priority)
+   - 84 references to old input$tabset navigation
+   - Legacy validation and preview logic for old workflow
+   - Non-blocking; current sidebar_page navigation works correctly
+   - Could be cleaned up in future refactoring
 
-2. **Legacy Code in app_server.R**
-   - 84 references to old input$tabset (vs 54 to sidebar_page)
-   - Legacy validation and preview logic for non-migrated workflow
-   - Could be cleaned up for consistency
-
-3. **Module Completion**
+2. **Module Completion** (Low Priority)
    - mod_07_vif_ps.R is a minimal placeholder
    - VIF/PS UI could be fully extracted to module
+   - Current implementation functional via conditional panels
 
 ## Commits
 
-Total commits on feature/golem-migration: 52+
+Total commits on feature/golem-migration: 54+
 
 Recent key commits (Phase 7):
+- 8ed3937: refactor: remove duplicate function definitions from app_server.R
 - 2495a18: fix: resolve additional R CMD check warnings (documentation fixes)
 - d5cbf2c: fix: Phase 7 validation - address R CMD check warnings (imports & licensing)
 
@@ -183,8 +187,9 @@ Previous commits:
 - **Documentation:** ⭐⭐⭐⭐⭐ (5/5) - Full roxygen docs, 37 man files
 - **Deployment:** ⭐⭐⭐⭐⭐ (5/5) - Multi-platform ready (shinyapps.io, Docker)
 
-Overall: **Phases 0-7: 93% complete**
+Overall: **Phases 0-7: 95% complete**
 
-- Phase 7 validation: 70% complete (major warnings resolved, cosmetic issues remain)
+- Phase 7 validation: 85% complete (duplicate functions removed, DESCRIPTION fixed)
 - Package quality: Production-ready for deployment
-- R CMD check: Significantly improved (from ~40 warnings to ~15 minor notes)
+- R CMD check: Significantly improved (major issues resolved)
+- Code deduplication: All business logic properly extracted to fct_*.R files
