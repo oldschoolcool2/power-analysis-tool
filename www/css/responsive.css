@@ -179,54 +179,181 @@ body {
    ======================================================================== */
 
 @media print {
-  /* Hide interactive elements */
+  /* Hide navigation and UI chrome */
+  .sidebar,
+  .app-header,
+  .quick-preview-footer,
+  .theme-toggle-button,
+  .mobile-toggle,
   .btn,
   button,
-  .quick-preview-footer,
-  .app-header,
-  .nav-tabs {
+  .nav-tabs,
+  .navbar,
+  .help-button,
+  .tooltip,
+  .modal-backdrop,
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"] {
     display: none !important;
   }
 
-  /* Ensure content is visible */
+  /* Full width content */
+  .main-content {
+    margin-left: 0 !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Expand all accordions for print */
+  .accordion-collapse {
+    display: block !important;
+    height: auto !important;
+  }
+
+  .accordion-button:not(.collapsed)::after {
+    display: none; /* Hide chevron icon */
+  }
+
+  /* Ensure content cards are visible */
   .content-card {
-    box-shadow: none;
-    border: var(--border-default);
+    box-shadow: none !important;
+    border: 1px solid #ccc;
     page-break-inside: avoid;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: #fff !important;
   }
 
   /* Better typography for print */
   body {
-    color: #000;
-    background: #fff;
+    color: #000 !important;
+    background: #fff !important;
+    font-size: 12pt;
+    line-height: 1.5;
   }
 
+  h1 {
+    font-size: 18pt;
+    color: #000 !important;
+    page-break-after: avoid;
+  }
+
+  h2 {
+    font-size: 16pt;
+    color: #000 !important;
+    page-break-after: avoid;
+  }
+
+  h3 {
+    font-size: 14pt;
+    color: #000 !important;
+    page-break-after: avoid;
+  }
+
+  p, li, td, th {
+    color: #000 !important;
+  }
+
+  /* Links */
   a {
     text-decoration: underline;
-    color: #000;
+    color: #000 !important;
   }
 
-  /* Show link URLs after link text */
-  a[href]:after {
+  /* Show link URLs after link text (except for anchors) */
+  a[href^="http"]:after {
     content: " (" attr(href) ")";
     font-size: 0.8em;
     font-style: italic;
   }
 
-  /* Remove shadows and backgrounds */
+  /* Don't show URLs for anchor links */
+  a[href^="#"]:after {
+    content: "";
+  }
+
+  /* Remove all shadows and colored backgrounds */
   * {
     box-shadow: none !important;
-    background: transparent !important;
+    text-shadow: none !important;
   }
 
   /* Ensure tables fit */
   table {
-    font-size: 0.9em;
+    font-size: 10pt;
+    border-collapse: collapse;
+    width: 100%;
+    page-break-inside: auto;
+  }
+
+  thead {
+    display: table-header-group; /* Repeat header on each page */
+  }
+
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  th, td {
+    border: 1px solid #ccc;
+    padding: 0.5rem;
   }
 
   /* Page breaks */
-  h1, h2, h3 {
+  h1, h2, h3, h4, h5, h6 {
     page-break-after: avoid;
+  }
+
+  figure, img {
+    page-break-inside: avoid;
+  }
+
+  /* Plot/chart containers */
+  .plotly,
+  .shiny-plot-output,
+  .html-widget {
+    page-break-inside: avoid;
+    max-width: 100%;
+  }
+
+  /* Form inputs should show values */
+  input[type="text"],
+  input[type="number"],
+  select,
+  textarea {
+    border: 1px solid #ccc;
+    background: #fff !important;
+  }
+
+  /* Hide input spinners */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    display: none;
+  }
+
+  /* Ensure white background for cards */
+  .card,
+  .well,
+  .panel {
+    background: #fff !important;
+    border: 1px solid #ccc;
+  }
+
+  /* Page margins for binding */
+  @page {
+    margin: 2cm;
+  }
+
+  /* Add page number footer */
+  @page :footer {
+    content: "Page " counter(page);
   }
 }
 
@@ -267,9 +394,24 @@ body {
     margin-bottom: var(--space-3);
   }
 
-  /* Smaller buttons on mobile */
+  /* Touch target optimization - Minimum 44px height for all interactive elements */
+
+  /* Primary buttons - ensure adequate touch targets */
+  .btn-primary,
   .btn-primary.btn-lg {
+    min-height: 44px;
     padding: var(--space-3) var(--space-6);
+    font-size: var(--font-size-base);
+  }
+
+  /* Secondary and other buttons - increase padding for touch */
+  .btn,
+  .btn-secondary,
+  .btn-info,
+  .btn-outline-primary,
+  .btn-sm {
+    min-height: 44px;
+    padding: var(--space-3) var(--space-4);
     font-size: var(--font-size-base);
   }
 
@@ -281,6 +423,96 @@ body {
 
   .btn-group .btn {
     width: 100%;
+    min-height: 44px;
+  }
+
+  /* Navigation links - ensure adequate touch targets */
+  .nav-link,
+  a.nav-link {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    padding: var(--space-3) var(--space-4);
+  }
+
+  /* Sidebar navigation items */
+  .sidebar-nav-item,
+  .sidebar-nav-link {
+    min-height: 44px;
+    padding: var(--space-3) var(--space-4);
+  }
+
+  /* Segmented control buttons */
+  .segmented-control-wrapper .radio label {
+    min-height: 44px;
+    min-width: 44px;
+    padding: var(--space-3) var(--space-4);
+  }
+
+  /* Accordion buttons/headers */
+  .accordion-button,
+  .panel-title a {
+    min-height: 44px;
+    padding: var(--space-3) var(--space-4);
+  }
+
+  /* Form inputs - increase height for easier touch */
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="password"],
+  select,
+  textarea {
+    min-height: 44px;
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--font-size-base);
+  }
+
+  /* Checkbox and radio inputs - increase touch area */
+  input[type="checkbox"],
+  input[type="radio"] {
+    min-width: 24px;
+    min-height: 24px;
+  }
+
+  /* Checkbox/radio labels - increase touch area */
+  .checkbox label,
+  .radio label {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    padding: var(--space-2) 0;
+  }
+
+  /* Tab navigation */
+  .nav-tabs .nav-link {
+    min-height: 44px;
+    padding: var(--space-3) var(--space-4);
+  }
+
+  /* Links in content - add more padding */
+  .content-card a,
+  .accordion-body a,
+  .panel-body a {
+    padding: var(--space-1) var(--space-2);
+    margin: calc(-1 * var(--space-1)) calc(-1 * var(--space-2));
+  }
+
+  /* Icon-only buttons - ensure square touch target */
+  .btn-icon,
+  button[aria-label]:not([aria-label=""]):empty {
+    min-width: 44px;
+    min-height: 44px;
+    padding: var(--space-3);
+  }
+
+  /* Theme toggle and other header buttons */
+  .theme-toggle-button,
+  .help-button,
+  .mobile-toggle {
+    min-width: 44px;
+    min-height: 44px;
+    padding: var(--space-3);
   }
 
   /* Compact tables on mobile */
