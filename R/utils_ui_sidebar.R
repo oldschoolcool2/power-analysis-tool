@@ -253,6 +253,29 @@ create_sidebar_nav <- function() {
         )
       ),
 
+      # Divider before Sensitivity Analyses section
+      tags$hr(class = "sidebar-divider"),
+
+      # Sensitivity Analyses Section Header
+      tags$div(
+        class = "sidebar-section-header",
+        "Sensitivity Analyses"
+      ),
+
+      # Group 10: E-value Sensitivity Analysis (single item)
+      tags$div(
+        class = "nav-group",
+        tags$a(
+          href = "#",
+          class = "nav-item-single",
+          `data-page` = "sensitivity_evalue",
+          role = "button",
+          tabindex = "0",
+          tags$span(class = "nav-group-icon", icon("shield-alt")),
+          tags$span(class = "nav-group-label", "E-value Calculator")
+        )
+      ),
+
       # Divider before Resources section
       tags$hr(class = "sidebar-divider"),
 

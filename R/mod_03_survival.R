@@ -66,9 +66,6 @@ mod_03_survival_ui <- function(id) {
         tooltip = "Type I error rate (typically 0.05)"
       ),
       hr(),
-      h4("E-value Sensitivity Analysis"),
-      evalue_ui(ns("evalue"), effect_type = "HR"),
-      hr(),
       div(class = "btn-group-custom",
         actionButton(ns("example_surv_pow"), "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
         actionButton(ns("reset_surv_pow"), "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
@@ -152,9 +149,6 @@ mod_03_survival_ui <- function(id) {
       h4("Multiple Testing Corrections"),
       multiple_testing_ui(ns("multiple_testing")),
       hr(),
-      h4("E-value Sensitivity Analysis"),
-      evalue_ui(ns("evalue_ss"), effect_type = "HR"),
-      hr(),
       div(class = "btn-group-custom",
         actionButton(ns("example_surv_ss"), "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
         actionButton(ns("reset_surv_ss"), "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
@@ -179,10 +173,6 @@ mod_03_survival_server <- function(id){
 
     # Initialize multiple testing module for sample size tab
     multiple_testing_vals <- multiple_testing_server("multiple_testing")
-
-    # Initialize E-value modules
-    evalue_vals_pow <- evalue_server("evalue", effect_type = "HR")
-    evalue_vals_ss <- evalue_server("evalue_ss", effect_type = "HR")
 
     # Example button - Power Analysis
     observeEvent(input$example_surv_pow, {

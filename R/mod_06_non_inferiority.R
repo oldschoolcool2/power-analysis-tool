@@ -39,9 +39,6 @@ mod_06_non_inferiority_ui <- function(id) {
       h4("Multiple Testing Corrections"),
       multiple_testing_ui(ns("multiple_testing")),
       hr(),
-      h4("E-value Sensitivity Analysis"),
-      evalue_ui(ns("evalue"), effect_type = "RR"),
-      hr(),
       div(class = "btn-group-custom",
         actionButton(ns("example_noninf"), "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
         actionButton(ns("reset_noninf"), "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm"))
@@ -60,9 +57,6 @@ mod_06_non_inferiority_server <- function(id){
 
     # Initialize multiple testing module
     multiple_testing_vals <- multiple_testing_server("multiple_testing")
-
-    # Initialize E-value module
-    evalue_vals <- evalue_server("evalue", effect_type = "RR")
 
     observeEvent(input$example_noninf, {
       updateRadioButtons(session, "noninf_calc_mode", selected = "calc_n")

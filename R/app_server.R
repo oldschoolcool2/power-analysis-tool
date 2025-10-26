@@ -54,6 +54,9 @@ app_server <- function(input, output, session) {
   # Tab 9: Time-to-Event Equivalence/NI
   tab9_vals <- mod_09_survival_equivalence_server("tab9")
 
+  # Tab 10: Sensitivity Analyses
+  tab10_vals <- mod_10_sensitivity_analyses_server("tab10")
+
   # Missing data modules for tabs not yet fully migrated
   # missing_data_surv_ss <- missing_data_server("surv_ss-missing_data")  # Now in tab3 module
   # missing_data_match <- missing_data_server("match-missing_data")  # Now in tab4 module
@@ -91,6 +94,7 @@ app_server <- function(input, output, session) {
       "survival_ni_equiv" = "Time-to-Event Equivalence/Non-Inferiority",
       "vif_calculator" = "Propensity Score VIF Calculator",
       "mediation_analysis" = "Mediation Analysis",
+      "sensitivity_evalue" = "E-value Sensitivity Analysis",
       "documentation" = "Documentation",
       "Unknown"
     )

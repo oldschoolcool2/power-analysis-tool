@@ -192,10 +192,6 @@ mod_09_survival_equivalence_ui <- function(id) {
       multiple_testing_ui(ns("multiple_testing")),
 
       hr(),
-      h4("E-value Sensitivity Analysis"),
-      evalue_ui(ns("evalue"), effect_type = "HR"),
-
-      hr(),
       div(class = "btn-group-custom",
         actionButton(ns("example"), "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
         actionButton(ns("reset"), "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
@@ -220,8 +216,6 @@ mod_09_survival_equivalence_server <- function(id){
 
     # Initialize multiple testing module
     multiple_testing_vals <- multiple_testing_server("multiple_testing")
-
-    evalue_vals <- evalue_server("evalue", effect_type = "HR")
 
     # Example button
     observeEvent(input$example, {

@@ -56,9 +56,6 @@ mod_05_continuous_ui <- function(id) {
       ),
       bsTooltip(ns("cont_pow_sided"), "Two-sided: test if groups differ. One-sided: test directional hypothesis", "right"),
       hr(),
-      h4("E-value Sensitivity Analysis"),
-      evalue_ui(ns("evalue"), effect_type = "MD"),
-      hr(),
       div(class = "btn-group-custom",
         actionButton(ns("example_cont_pow"), "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
         actionButton(ns("reset_cont_pow"), "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
@@ -145,9 +142,6 @@ mod_05_continuous_ui <- function(id) {
       h4("Multiple Testing Corrections"),
       multiple_testing_ui(ns("multiple_testing")),
       hr(),
-      h4("E-value Sensitivity Analysis"),
-      evalue_ui(ns("evalue_ss"), effect_type = "MD"),
-      hr(),
       div(class = "btn-group-custom",
         actionButton(ns("example_cont_ss"), "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
         actionButton(ns("reset_cont_ss"), "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
@@ -169,10 +163,6 @@ mod_05_continuous_server <- function(id){
 
     # Initialize multiple testing module for sample size tab
     multiple_testing_vals <- multiple_testing_server("multiple_testing")
-
-    # Initialize E-value modules
-    evalue_vals_pow <- evalue_server("evalue", effect_type = "MD")
-    evalue_vals_ss <- evalue_server("evalue_ss", effect_type = "MD")
 
     # Example button - Power Analysis
     observeEvent(input$example_cont_pow, {

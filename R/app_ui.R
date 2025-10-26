@@ -37,6 +37,7 @@ app_ui <- function(request) {
     tags$link(rel = "stylesheet", type = "text/css", href = "www/css/responsive.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "www/css/sidebar.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "www/css/result-cards.css"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "www/css/evalue-cards.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "www/css/validation.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "www/css/progressive-disclosure.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "www/css/loading-spinner.css"),
@@ -195,7 +196,12 @@ app_ui <- function(request) {
           # ==============================================================================
           # TAB 9: TIME-TO-EVENT EQUIVALENCE/NON-INFERIORITY [MODULARIZED]
           # ==============================================================================
-          mod_09_survival_equivalence_ui("tab9")
+          mod_09_survival_equivalence_ui("tab9"),
+
+          # ==============================================================================
+          # TAB 10: SENSITIVITY ANALYSES [MODULARIZED]
+          # ==============================================================================
+          mod_10_sensitivity_analyses_ui("tab10")
 
         ), # End of input cards
 
@@ -270,6 +276,14 @@ app_ui <- function(request) {
           condition = "input.sidebar_page == 'mediation_analysis'",
           div(class = "content-card help-section",
             create_contextual_help("mediation_analysis")
+          )
+        ),
+
+        # Contextual help for Sensitivity Analyses (E-value)
+        conditionalPanel(
+          condition = "input.sidebar_page == 'sensitivity_evalue'",
+          div(class = "content-card help-section",
+            create_contextual_help("sensitivity_evalue")
           )
         ),
 

@@ -589,7 +589,7 @@ create_global_help <- function() {
           target = "_blank"
         )),
         tags$li(a("EMA - Real World Evidence Framework",
-          href = "https://www.ema.europa.eu/en/about-us/how-we-work/big-data/real-world-evidence",
+          href = "https://www.ema.europa.eu/en/about-us/how-we-work/data-regulation-big-data-other-sources/real-world-evidence",
           target = "_blank"
         ))
       ),
@@ -622,6 +622,132 @@ create_global_help <- function() {
         tags$li(strong("Hazard Ratio (HR):"), "HR < 1 = protective, HR > 1 = increased risk, HR = 1 = no effect"),
         tags$li(strong("Odds Ratio (OR):"), "Similar interpretation to HR for rare outcomes"),
         tags$li(strong("Relative Risk (RR):"), "More intuitive than OR; directly interpretable as relative increase/decrease in risk")
+      )
+    ),
+
+    # ============================================================
+    # SENSITIVITY ANALYSES - E-VALUE
+    # ============================================================
+    "sensitivity_evalue" = accordion(
+      id = paste0("help_", analysis_type),
+      open = FALSE,
+      accordion_panel(
+        title = "About E-values",
+        icon = icon("shield-alt"),
+        p("E-values quantify the minimum strength of association that an unmeasured confounder would need to have with both the treatment and outcome to fully explain away an observed association. Higher E-values indicate greater robustness to unmeasured confounding."),
+        p(strong("When to use:"), "E-values are calculated in the ", strong("report phase"), " after completing your analysis. They are ", em("not"), " used during protocol design or sample size planning."),
+        p(strong("Example:"), "If your study found RR = 2.5 with E-value = 4.0, an unmeasured confounder would need to be associated with both treatment and outcome by a risk ratio of 4.0-fold each to completely explain away your finding.")
+      ),
+      accordion_panel(
+        title = "When to Use E-values",
+        icon = icon("calendar-check"),
+        tags$ul(
+          tags$li(strong("Report phase:"), "After data analysis is complete and effect estimates are obtained"),
+          tags$li(strong("Observational studies:"), "Particularly important when randomization is not feasible"),
+          tags$li(strong("Sensitivity analysis:"), "To assess robustness of findings to unmeasured confounding"),
+          tags$li(strong("Publication:"), "Many journals now request E-values for observational research"),
+          tags$li(strong("Regulatory submissions:"), "Increasingly expected for real-world evidence studies")
+        ),
+        p(style = "margin-top: 10px; color: #dc3545; background: #f8d7da; padding: 10px; border-radius: 5px;",
+          icon("exclamation-triangle"), " ",
+          strong("Important:"), " E-values do NOT replace good study design, randomization, or careful confounder control. They help quantify robustness of results but cannot prove causation.")
+      ),
+      accordion_panel(
+        title = "Interpreting E-values",
+        icon = icon("chart-line"),
+        p("E-value magnitude provides insight into how robust your findings are to unmeasured confounding:"),
+        tags$div(
+          style = "background-color: #f8f9fa; padding: 10px; border-left: 3px solid #007bff; margin: 10px 0;",
+          tags$table(
+            class = "table table-sm",
+            tags$thead(
+              tags$tr(
+                tags$th("E-value Range"),
+                tags$th("Robustness"),
+                tags$th("Interpretation")
+              )
+            ),
+            tags$tbody(
+              tags$tr(
+                tags$td(strong("< 1.5")),
+                tags$td(style = "color: #dc3545;", "Weak"),
+                tags$td("Minor unmeasured confounding could explain away the effect")
+              ),
+              tags$tr(
+                tags$td(strong("1.5 - 2.0")),
+                tags$td(style = "color: #fd7e14;", "Moderate"),
+                tags$td("Requires moderate confounding to explain away the effect")
+              ),
+              tags$tr(
+                tags$td(strong("2.0 - 3.0")),
+                tags$td(style = "color: #28a745;", "Strong"),
+                tags$td("Requires strong confounding to explain away the effect")
+              ),
+              tags$tr(
+                tags$td(strong("> 3.0")),
+                tags$td(style = "color: #007bff;", "Very Strong"),
+                tags$td("Effect is highly robust to unmeasured confounding")
+              )
+            )
+          )
+        ),
+        p(strong("Practical consideration:"), "Ask yourself: 'Is an unmeasured confounder of this magnitude plausible in my study?' Consider known confounders and compare their effect sizes to the E-value.")
+      ),
+      accordion_panel(
+        title = "Effect Measure Types",
+        icon = icon("calculator"),
+        tags$dl(
+          tags$dt(strong("Relative Risk (RR)")),
+          tags$dd("Used for cohort studies and RCTs. Most intuitive measure. RR > 1 indicates increased risk."),
+
+          tags$dt(strong("Odds Ratio (OR)")),
+          tags$dd("Used for case-control studies and logistic regression. For rare outcomes (<15%), OR approximates RR. For common outcomes, OR is converted to RR before calculating E-values."),
+
+          tags$dt(strong("Hazard Ratio (HR)")),
+          tags$dd("Used for survival analysis and Cox regression. Represents instantaneous risk over time."),
+
+          tags$dt(strong("Mean Difference (MD)")),
+          tags$dd("Used for continuous outcomes. The tool converts MD to risk ratio scale for E-value calculation.")
+        )
+      ),
+      accordion_panel(
+        title = "Confidence Interval E-values",
+        icon = icon("chart-area"),
+        p("You can optionally calculate E-values for the confidence interval bounds:"),
+        tags$ul(
+          tags$li(strong("Point estimate E-value:"), "Confounding needed to shift point estimate to null"),
+          tags$li(strong("CI limit E-value:"), "Confounding needed to shift confidence interval to include null"),
+          tags$li(strong("Conservative interpretation:"), "Use the CI E-value for most conservative assessment")
+        ),
+        p(style = "margin-top: 10px;",
+          strong("Recommendation:"), " Always report both point estimate and CI E-values. The CI E-value is more conservative and accounts for statistical uncertainty.")
+      ),
+      accordion_panel(
+        title = "Limitations & Important Notes",
+        icon = icon("exclamation-circle"),
+        tags$ul(
+          tags$li(strong("Single unmeasured confounder:"), "E-values assume a single unmeasured confounder. Multiple weak confounders could jointly explain away findings."),
+          tags$li(strong("Not a hypothesis test:"), "E-values do not provide p-values or formal tests. They are descriptive sensitivity measures."),
+          tags$li(strong("Assumes no measurement error:"), "E-values assume measured confounders are correctly measured. Measurement error in covariates can bias results."),
+          tags$li(strong("Binary exposure assumption:"), "Standard E-values assume binary exposure/treatment. Extensions exist for continuous exposures."),
+          tags$li(strong("Does not prove causation:"), "A high E-value suggests robustness but does not prove causal relationship."),
+          tags$li(strong("Subject matter knowledge required:"), "Interpretation requires domain expertise to assess plausibility of unmeasured confounders.")
+        ),
+        p(style = "margin-top: 10px; background: #fff3cd; padding: 10px; border-radius: 5px;",
+          icon("lightbulb"), " ",
+          strong("Best Practice:"), " Use E-values as one component of a comprehensive sensitivity analysis strategy. Combine with negative controls, dose-response analyses, and triangulation across study designs.")
+      ),
+      accordion_panel(
+        title = "References",
+        icon = icon("book"),
+        tags$ul(
+          tags$li(strong("Original E-value paper:"), "VanderWeele TJ, Ding P. Sensitivity Analysis in Observational Research: Introducing the E-Value. Annals of Internal Medicine. 2017;167(4):268-274. [",
+            a("doi:10.7326/M16-2607", href = "https://doi.org/10.7326/M16-2607", target = "_blank"), "]"),
+          tags$li(strong("Technical details:"), "Ding P, VanderWeele TJ. Sensitivity Analysis Without Assumptions. Epidemiology. 2016;27(3):368-377."),
+          tags$li(strong("Applied examples:"), "VanderWeele TJ, Ding P, Mathur M. Technical Considerations in the Use of the E-Value. Journal of Causal Inference. 2019;7(2):20180007."),
+          tags$li(strong("E-value calculator website:"), a("www.evalue-calculator.com", href = "https://www.evalue-calculator.com", target = "_blank")),
+          tags$li(strong("EValue R package:"), a("CRAN - EValue package", href = "https://cran.r-project.org/package=EValue", target = "_blank"))
+        )
       )
     )
   )

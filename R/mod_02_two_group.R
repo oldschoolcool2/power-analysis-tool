@@ -60,9 +60,6 @@ mod_02_two_group_ui <- function(id) {
       ),
       bsTooltip(ns("twogrp_pow_sided"), "Two-sided: test if groups differ. One-sided: test if Group 1 > Group 2", "right"),
       hr(),
-      h4("E-value Sensitivity Analysis"),
-      evalue_ui(ns("evalue"), effect_type = "RR"),
-      hr(),
       div(class = "btn-group-custom",
         actionButton(ns("example_twogrp_pow"), "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
         actionButton(ns("reset_twogrp_pow"), "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
@@ -128,9 +125,6 @@ mod_02_two_group_ui <- function(id) {
       h4("Multiple Testing Corrections"),
       multiple_testing_ui(ns("multiple_testing")),
       hr(),
-      h4("E-value Sensitivity Analysis"),
-      evalue_ui(ns("evalue_ss"), effect_type = "RR"),
-      hr(),
       div(class = "btn-group-custom",
         actionButton(ns("example_twogrp_ss"), "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
         actionButton(ns("reset_twogrp_ss"), "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
@@ -157,10 +151,6 @@ mod_02_two_group_server <- function(id){
 
     # Initialize multiple testing module for sample size tab
     multiple_testing_vals <- multiple_testing_server("multiple_testing")
-
-    # Initialize E-value modules
-    evalue_vals_pow <- evalue_server("evalue", effect_type = "RR")
-    evalue_vals_ss <- evalue_server("evalue_ss", effect_type = "RR")
 
     # Example button - Power Analysis
     observeEvent(input$example_twogrp_pow, {
