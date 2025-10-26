@@ -2177,9 +2177,9 @@ app_server <- function(input, output, session) {
 
         text1 <- h4("Effect Measures")
         text2 <- p(paste0(
-          "Risk Difference: ", format(eff$risk_diff, digits = 2, nsmall = 2), " percentage points", br(),
-          "Relative Risk: ", if (is.na(eff$relative_risk)) "N/A (Group 2 rate = 0%)" else format(eff$relative_risk, digits = 3, nsmall = 3), br(),
-          "Odds Ratio: ", if (is.na(eff$odds_ratio)) "N/A (rate = 0% or 100%)" else format(eff$odds_ratio, digits = 3, nsmall = 3)
+          "Risk Difference: ", format(eff$RD, digits = 2, nsmall = 2), " percentage points", br(),
+          "Relative Risk: ", if (is.na(eff$RR)) "N/A (Group 2 rate = 0%)" else format(eff$RR, digits = 3, nsmall = 3), br(),
+          "Odds Ratio: ", if (is.na(eff$OR)) "N/A (rate = 0% or 100%)" else format(eff$OR, digits = 3, nsmall = 3)
         ))
 
         HTML(paste0(text1, text2))
