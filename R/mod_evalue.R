@@ -192,7 +192,20 @@ evalue_ui <- function(id, effect_type = "RR") {
       hr(),
 
       # E-value results display
-      uiOutput(ns("evalue_results"))
+      uiOutput(ns("evalue_results")),
+
+      # E-value visualization
+      conditionalPanel(
+        condition = sprintf("input['%s']", ns("calculate_evalue")),
+        hr(),
+        h4("Sensitivity Visualization"),
+        helpText(
+          "This plot shows the minimum strength of association an unmeasured confounder ",
+          "would need with both the exposure and outcome to explain away the observed effect. ",
+          "The shaded region represents confounding combinations sufficient to nullify the effect."
+        ),
+        plotly::plotlyOutput(ns("evalue_plot"), height = "450px")
+      )
     )
   )
 }
@@ -295,6 +308,25 @@ evalue_server <- function(id, effect_type = "RR") {
           warnings_html,
           format_evalue_result(result, effect_type)
         )
+      }
+    })
+
+    # Render E-value plot
+    output$evalue_plot <- plotly::renderPlotly({
+      req(input$calculate_evalue)
+
+      result <- evalue_calc()
+
+      # Only render plot if calculation was successful
+      if (is.null(result$valid) || result$valid) {
+        create_evalue_bias_plot(
+          rr_converted = result$rr_converted,
+          evalue_point = result$evalue_point,
+          evalue_ci = result$evalue_ci,
+          effect_type = effect_type
+        )
+      } else {
+        NULL
       }
     })
 

@@ -442,3 +442,164 @@ validate_evalue_inputs <- function(effect_estimate, lo = NA, hi = NA, effect_typ
     messages = messages
   )
 }
+
+
+#' Create Interactive E-value Bias Plot
+#'
+#' Creates an interactive plotly visualization showing the confounding strength
+#' needed to explain away an observed effect. The plot displays how the bias
+#' factor varies with different strengths of confounder associations.
+#'
+#' @param rr_converted The effect estimate converted to RR scale
+#' @param evalue_point The E-value for the point estimate
+#' @param evalue_ci The E-value for the confidence interval (optional)
+#' @param effect_type Type of effect measure for labeling
+#'
+#' @return A plotly object
+#'
+#' @details
+#' The plot shows:
+#' - X-axis: Confounder-exposure association (RR scale)
+#' - Y-axis: Confounder-outcome association (RR scale)
+#' - Shaded region: Combinations sufficient to explain away the effect
+#' - Red line: E-value threshold
+#'
+#' @noRd
+create_evalue_bias_plot <- function(rr_converted, evalue_point, evalue_ci = NA, effect_type = "RR") {
+
+  # Create sequence of RR values for confounder associations
+  rr_seq <- seq(1, max(evalue_point * 1.5, 5), length.out = 100)
+
+  # Calculate the minimum confounder-outcome RR needed for each confounder-exposure RR
+  # Based on the E-value formula: E-value = RR + sqrt(RR * (RR - 1))
+  # Rearranged to find the bias factor
+  calc_bias_rr <- function(rr_confound_exposure, observed_rr) {
+    # For a given confounder-exposure association, what confounder-outcome
+    # association is needed to produce the observed effect?
+    if (observed_rr >= 1) {
+      # For harmful effects
+      (observed_rr / rr_confound_exposure) *
+        (rr_confound_exposure + sqrt(rr_confound_exposure * (rr_confound_exposure - 1))) /
+        (sqrt(rr_confound_exposure * (rr_confound_exposure - 1)) + 1)
+    } else {
+      # For protective effects
+      1 / calc_bias_rr(1 / rr_confound_exposure, 1 / observed_rr)
+    }
+  }
+
+  # For simplicity, use the symmetric E-value relationship
+  # If confounder-exposure RR = confounder-outcome RR = B, then:
+  # The bias factor B needed is the E-value when both associations are equal
+  bias_factors <- sapply(rr_seq, function(x) {
+    # Minimum confounder-outcome RR for this confounder-exposure RR
+    # to explain away the observed RR
+    if (x >= evalue_point) {
+      evalue_point  # On the E-value curve
+    } else {
+      # Below E-value, need stronger outcome association
+      evalue_point^2 / x
+    }
+  })
+
+  # Create plotly visualization
+  p <- plotly::plot_ly() %>%
+    # Add the bias curve
+    plotly::add_trace(
+      x = rr_seq,
+      y = bias_factors,
+      type = "scatter",
+      mode = "lines",
+      fill = "tozeroy",
+      fillcolor = "rgba(220, 38, 38, 0.1)",
+      line = list(color = "#DC2626", width = 3),
+      name = "Sufficient to Explain Away Effect",
+      hovertemplate = paste0(
+        "<b>Confounder-Exposure RR:</b> %{x:.2f}<br>",
+        "<b>Confounder-Outcome RR Needed:</b> %{y:.2f}<br>",
+        "<extra></extra>"
+      )
+    ) %>%
+    # Add E-value point
+    plotly::add_trace(
+      x = evalue_point,
+      y = evalue_point,
+      type = "scatter",
+      mode = "markers",
+      marker = list(
+        size = 12,
+        color = "#DC2626",
+        symbol = "diamond"
+      ),
+      name = sprintf("E-value = %.2f", evalue_point),
+      hovertemplate = paste0(
+        "<b>E-value:</b> ", sprintf("%.2f", evalue_point), "<br>",
+        "Minimum balanced confounding<br>",
+        "<extra></extra>"
+      )
+    ) %>%
+    # Add diagonal reference line (equal associations)
+    plotly::add_trace(
+      x = c(1, max(rr_seq)),
+      y = c(1, max(rr_seq)),
+      type = "scatter",
+      mode = "lines",
+      line = list(color = "#6B7280", width = 1, dash = "dash"),
+      name = "Equal Associations",
+      hoverinfo = "skip"
+    ) %>%
+    plotly::layout(
+      title = list(
+        text = sprintf("E-value Sensitivity Analysis (%s = %.2f)",
+                      effect_type, rr_converted),
+        font = list(size = 14, color = "#1F2937")
+      ),
+      xaxis = list(
+        title = "Confounder-Exposure Association (RR)",
+        titlefont = list(size = 12),
+        gridcolor = "#E5E7EB",
+        range = c(1, max(rr_seq))
+      ),
+      yaxis = list(
+        title = "Confounder-Outcome Association (RR)",
+        titlefont = list(size = 12),
+        gridcolor = "#E5E7EB",
+        range = c(1, max(bias_factors))
+      ),
+      plot_bgcolor = "#FFFFFF",
+      paper_bgcolor = "#FFFFFF",
+      hovermode = "closest",
+      showlegend = TRUE,
+      legend = list(
+        x = 0.7,
+        y = 0.95,
+        bgcolor = "rgba(255, 255, 255, 0.8)",
+        bordercolor = "#E5E7EB",
+        borderwidth = 1
+      ),
+      margin = list(l = 60, r = 40, t = 60, b = 60)
+    )
+
+  # Add CI E-value if available
+  if (!is.na(evalue_ci)) {
+    p <- p %>%
+      plotly::add_trace(
+        x = evalue_ci,
+        y = evalue_ci,
+        type = "scatter",
+        mode = "markers",
+        marker = list(
+          size = 10,
+          color = "#F59E0B",
+          symbol = "circle"
+        ),
+        name = sprintf("E-value (CI) = %.2f", evalue_ci),
+        hovertemplate = paste0(
+          "<b>E-value (CI):</b> ", sprintf("%.2f", evalue_ci), "<br>",
+          "Shifts CI to include null<br>",
+          "<extra></extra>"
+        )
+      )
+  }
+
+  p
+}

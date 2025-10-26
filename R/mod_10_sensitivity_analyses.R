@@ -113,6 +113,7 @@ mod_10_sensitivity_analyses_ui <- function(id){
       hr(),
 
       div(class = "btn-group-custom",
+        actionButton(ns("example_evalue"), "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
         actionButton(ns("reset_evalue"), "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
       )
     )
@@ -133,6 +134,50 @@ mod_10_sensitivity_analyses_server <- function(id){
     evalue_vals_or <- evalue_server("evalue_or", effect_type = "OR")
     evalue_vals_hr <- evalue_server("evalue_hr", effect_type = "HR")
     evalue_vals_md <- evalue_server("evalue_md", effect_type = "MD")
+
+    # Load Example button - uses classic smoking-lung cancer example from VanderWeele & Ding (2017)
+    observeEvent(input$example_evalue, {
+      # Get current effect type
+      current_type <- input$effect_type
+
+      # Load example based on current effect type
+      if (current_type == "RR") {
+        # Example: Smoking and lung cancer (Wynder & Graham, 1950)
+        # RR = 10.73 (95% CI: 8.02, 14.36)
+        session$sendInputMessage("evalue_rr-calculate_evalue", list(value = TRUE))
+        session$sendInputMessage("evalue_rr-effect_estimate", list(value = 10.73))
+        session$sendInputMessage("evalue_rr-include_ci", list(value = TRUE))
+        session$sendInputMessage("evalue_rr-ci_lower", list(value = 8.02))
+        session$sendInputMessage("evalue_rr-ci_upper", list(value = 14.36))
+      } else if (current_type == "OR") {
+        # Example: Breastfeeding and infant death by respiratory infection
+        # OR = 3.9 (95% CI: 1.8, 8.7)
+        session$sendInputMessage("evalue_or-calculate_evalue", list(value = TRUE))
+        session$sendInputMessage("evalue_or-effect_estimate", list(value = 3.9))
+        session$sendInputMessage("evalue_or-include_ci", list(value = TRUE))
+        session$sendInputMessage("evalue_or-ci_lower", list(value = 1.8))
+        session$sendInputMessage("evalue_or-ci_upper", list(value = 8.7))
+        session$sendInputMessage("evalue_or-outcome_rare", list(value = TRUE))
+      } else if (current_type == "HR") {
+        # Example: Treatment effect on survival
+        # HR = 1.8 (95% CI: 1.3, 2.5)
+        session$sendInputMessage("evalue_hr-calculate_evalue", list(value = TRUE))
+        session$sendInputMessage("evalue_hr-effect_estimate", list(value = 1.8))
+        session$sendInputMessage("evalue_hr-include_ci", list(value = TRUE))
+        session$sendInputMessage("evalue_hr-ci_lower", list(value = 1.3))
+        session$sendInputMessage("evalue_hr-ci_upper", list(value = 2.5))
+        session$sendInputMessage("evalue_hr-outcome_rare", list(value = TRUE))
+      } else if (current_type == "MD") {
+        # Example: Mean difference in blood pressure
+        # MD = 0.5 (SE = 0.1)
+        session$sendInputMessage("evalue_md-calculate_evalue", list(value = TRUE))
+        session$sendInputMessage("evalue_md-effect_estimate", list(value = 0.5))
+        session$sendInputMessage("evalue_md-include_ci", list(value = TRUE))
+        session$sendInputMessage("evalue_md-ci_lower", list(value = 0.3))
+        session$sendInputMessage("evalue_md-ci_upper", list(value = 0.7))
+        session$sendInputMessage("evalue_md-md_se", list(value = 0.1))
+      }
+    })
 
     # Reset button
     observeEvent(input$reset_evalue, {
