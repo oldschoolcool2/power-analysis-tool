@@ -323,29 +323,39 @@ create_sample_size_result_text <- function(main_text,
 #'
 #' @return HTML formatted text
 format_effect_measures <- function(effect_measures) {
+  # Validate input
+  if (is.null(effect_measures) || !is.list(effect_measures)) {
+    return(HTML(""))
+  }
+  
+  # Get values with safe defaults
+  rd <- if (!is.null(effect_measures$RD)) effect_measures$RD else NA_real_
+  rr <- if (!is.null(effect_measures$RR)) effect_measures$RR else NA_real_
+  or <- if (!is.null(effect_measures$OR)) effect_measures$OR else NA_real_
+  
   tagList(
     h4("Effect Measures"),
     p(paste0(
       strong("Risk Difference (RD): "),
-      format_numeric(effect_measures$RD, digits = 3),
-      if (!is.na(effect_measures$RD) && effect_measures$RD > 0) {
-        paste0(" (", format_numeric(effect_measures$RD, as_percent = TRUE, digits = 1), " absolute increase)")
-      } else if (!is.na(effect_measures$RD) && effect_measures$RD < 0) {
-        paste0(" (", format_numeric(abs(effect_measures$RD), as_percent = TRUE, digits = 1), " absolute decrease)")
+      format_numeric(rd, digits = 3),
+      if (!is.na(rd) && isTRUE(rd > 0)) {
+        paste0(" (", format_numeric(rd, as_percent = TRUE, digits = 1), " absolute increase)")
+      } else if (!is.na(rd) && isTRUE(rd < 0)) {
+        paste0(" (", format_numeric(abs(rd), as_percent = TRUE, digits = 1), " absolute decrease)")
       } else {
         ""
       },
       "<br>",
       strong("Relative Risk (RR): "),
-      if (!is.na(effect_measures$RR)) {
-        format_numeric(effect_measures$RR, digits = 2)
+      if (!is.na(rr)) {
+        format_numeric(rr, digits = 2)
       } else {
         "Not calculable (baseline rate = 0)"
       },
       "<br>",
       strong("Odds Ratio (OR): "),
-      if (!is.na(effect_measures$OR)) {
-        format_numeric(effect_measures$OR, digits = 2)
+      if (!is.na(or)) {
+        format_numeric(or, digits = 2)
       } else {
         "Not calculable"
       }

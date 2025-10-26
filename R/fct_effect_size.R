@@ -24,19 +24,37 @@
 #'
 #' @noRd
 calc_effect_measures <- function(p1, p2) {
+  # Validate inputs
+  if (is.null(p1) || is.null(p2) || length(p1) == 0 || length(p2) == 0) {
+    return(list(RD = NA_real_, RR = NA_real_, OR = NA_real_))
+  }
+  
+  # Take first element if vectors
+  if (length(p1) > 1) p1 <- p1[1]
+  if (length(p2) > 1) p2 <- p2[1]
+  
+  # Convert to numeric and validate
+  p1 <- as.numeric(p1)
+  p2 <- as.numeric(p2)
+  
+  if (is.na(p1) || is.na(p2)) {
+    return(list(RD = NA_real_, RR = NA_real_, OR = NA_real_))
+  }
+  
   risk_diff <- (p1 - p2) * 100
 
   # Relative Risk: undefined when p2 = 0
-  relative_risk <- if (p2 == 0) NA_real_ else p1 / p2
+  relative_risk <- if (isTRUE(all.equal(p2, 0))) NA_real_ else p1 / p2
 
   # Odds Ratio: undefined when either rate is 0% or 100%
-  odds1 <- if (p1 %in% c(0, 1)) NA_real_ else p1 / (1 - p1)
-  odds2 <- if (p2 %in% c(0, 1)) NA_real_ else p2 / (1 - p2)
+  odds1 <- if (isTRUE(all.equal(p1, 0)) || isTRUE(all.equal(p1, 1))) NA_real_ else p1 / (1 - p1)
+  odds2 <- if (isTRUE(all.equal(p2, 0)) || isTRUE(all.equal(p2, 1))) NA_real_ else p2 / (1 - p2)
   odds_ratio <- if (is.na(odds1) || is.na(odds2)) NA_real_ else odds1 / odds2
 
+  # Return with uppercase keys to match format_effect_measures expectations
   list(
-    risk_diff = risk_diff,
-    relative_risk = relative_risk,
-    odds_ratio = odds_ratio
+    RD = risk_diff,
+    RR = relative_risk,
+    OR = odds_ratio
   )
 }
