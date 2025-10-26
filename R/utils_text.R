@@ -116,6 +116,10 @@ format_numeric <- function(value,
   # Ensure digits is at least 1 (R's format() requires this)
   if (digits < 1) {
     digits <- 1
+    # When digits is 0 for percentages, we want 0 decimal places
+    if (as_percent && nsmall == 2) {
+      nsmall <- 0
+    }
   }
 
   if (as_integer) {
@@ -191,7 +195,7 @@ create_power_single_result_text <- function(incidence_rate,
   recommendations <- c(
     paste0(
       "Accounting for ", format_numeric(discon, as_percent = TRUE, digits = 0),
-      "% discontinuation, the adjusted sample size is ",
+      " discontinuation, the adjusted sample size is ",
       format_numeric(ceiling(sample_size * (1 + discon)), as_integer = TRUE),
       " participants"
     )
@@ -213,12 +217,12 @@ create_power_single_result_text <- function(incidence_rate,
     p(paste0(
       "Based on the Binomial distribution and a true event incidence rate of 1 in ",
       format_numeric(incidence_rate, as_integer = TRUE), " (or ",
-      format_numeric(1 / incidence_rate, as_percent = TRUE), "%), with ",
+      format_numeric(1 / incidence_rate, as_percent = TRUE), "), with ",
       format_numeric(sample_size, as_integer = TRUE),
       " participants, the probability of observing at least one event is ",
       format_numeric(power, as_percent = TRUE, digits = 0), " (α = ",
       alpha, "). Accounting for a possible withdrawal or discontinuation rate of ",
-      format_numeric(discon, as_percent = TRUE, digits = 0), "%, the adjusted sample size is ",
+      format_numeric(discon, as_percent = TRUE, digits = 0), ", the adjusted sample size is ",
       format_numeric(ceiling(sample_size * (1 + discon)), as_integer = TRUE),
       " to maintain this power."
     ))
@@ -268,7 +272,7 @@ create_sample_size_result_text <- function(main_text,
       p(paste0(
         "After accounting for a withdrawal/discontinuation rate of ",
         format_numeric(discon, as_percent = TRUE, digits = 0),
-        "%, the required sample size increases from ",
+        ", the required sample size increases from ",
         format_numeric(n_base, as_integer = TRUE), " to ",
         format_numeric(n_after_discon, as_integer = TRUE), "."
       ))
@@ -443,7 +447,7 @@ create_survival_power_result_text <- function(n, hr, k, pE, power, alpha) {
     p(paste0(
       "For a survival analysis with N = ", n, " total participants, ",
       format_numeric(k, as_percent = TRUE, digits = 1), " exposed/treated, an overall event rate of ",
-      format_numeric(pE, as_percent = TRUE, digits = 1), "%, and an expected hazard ratio of ",
+      format_numeric(pE, as_percent = TRUE, digits = 1), ", and an expected hazard ratio of ",
       format_numeric(hr, digits = 2), ", the study has ",
       format_numeric(power, as_percent = TRUE, digits = 1), " power to detect this effect using Cox regression at α = ",
       alpha, " (two-sided test). This calculation uses the Schoenfeld (1983) method for Cox proportional hazards models."
@@ -518,7 +522,7 @@ create_survival_ni_samplesize_text <- function(n_total, n_test, n_ref, d_events,
     )),
     p(paste0(
       "This calculation assumes an overall event rate of ",
-      format_numeric(event_rate, as_percent = TRUE, digits = 1), "% during the study follow-up period, ",
+      format_numeric(event_rate, as_percent = TRUE, digits = 1), " during the study follow-up period, ",
       "which translates to approximately <strong>", d_events,
       " events</strong> needed to achieve the target power. ",
       "The method is based on the Schoenfeld (1983) approach adapted for non-inferiority testing."
@@ -572,7 +576,7 @@ create_survival_equiv_samplesize_text <- function(n_total, n_test, n_ref, d_even
     )),
     p(paste0(
       "This calculation assumes an overall event rate of ",
-      format_numeric(event_rate, as_percent = TRUE, digits = 1), "% during the study follow-up period, ",
+      format_numeric(event_rate, as_percent = TRUE, digits = 1), " during the study follow-up period, ",
       "which translates to approximately <strong>", d_events,
       " events</strong> needed. ",
       "Equivalence will be declared if the 90% confidence interval for HR lies entirely within [",
