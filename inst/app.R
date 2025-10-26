@@ -867,7 +867,7 @@ server <- function(input, output, session) {
       paste0("Preview: Testing n=", input$power_n,
              " participants for event rate 1 in ", input$power_p)
     } else if (page == "ss_single") {
-      paste0("Preview: Rule of Three for event rate 1 in ",
+      paste0("Preview: Single proportion sample size for event rate 1 in ",
              input$ss_p, " with ",
              input$ss_power, "% power")
     } else if (page == "power_two") {
@@ -1695,7 +1695,7 @@ server <- function(input, output, session) {
             }
           ))
 
-          effect_text <- format_effect_measures(effect_measures, p1 * 100, p2 * 100)
+          effect_text <- format_effect_measures(effect_measures)
 
           HTML(paste0(text0, text1, text2, text3, effect_text, missing_data_text))
 
@@ -1765,9 +1765,9 @@ server <- function(input, output, session) {
         pE <- input$surv_pow_pE / 100
 
         # Calculate power using powerSurvEpi
-        power <- powerEpi(
-          n = n, theta = hr, k = k, pE = pE,
-          RR = hr, alpha = input$surv_pow_alpha
+        power <- powerEpi.default(
+          n = n, theta = hr, p = k, psi = pE,
+          rho2 = 0, alpha = input$surv_pow_alpha
         )
 
         # Use helper function for result text
@@ -1785,9 +1785,9 @@ server <- function(input, output, session) {
           hr <- input$surv_ss_hr
 
           # Calculate base sample size using powerSurvEpi
-          n_base <- ssizeEpi(
-            power = power, theta = hr, k = k, pE = pE,
-            RR = hr, alpha = input$surv_ss_alpha
+          n_base <- ssizeEpi.default(
+            power = power, theta = hr, p = k, psi = pE,
+            rho2 = 0, alpha = input$surv_ss_alpha
           )
 
           # Apply missing data adjustment if enabled using module values
@@ -2717,20 +2717,20 @@ server <- function(input, output, session) {
     if (!v$doAnalysis) {
       return()
     }
-    if (input$tabset == "Matched Case-Control") {
+    if (input$sidebar_page == "match_casecontrol") {
       return()
     } # No plot for matched case-control
 
     isolate({
       text1 <- hr()
-      if (grepl("Two-Group", input$tabset)) {
-        if (input$tabset == "Power (Two-Group)") {
+      if (grepl("twogrp", input$sidebar_page)) {
+        if (input$sidebar_page == "power_twogrp") {
           ratio <- round(input$twogrp_pow_n2 / input$twogrp_pow_n1, 3)
         } else {
           ratio <- input$twogrp_ss_ratio
         }
         text2 <- h4(paste0("Estimated power vs. n1 (Group 1 sample size) with allocation ratio n2/n1 = ", ratio, "."))
-      } else if (grepl("Survival", input$tabset)) {
+      } else if (grepl("survival", input$sidebar_page)) {
         text2 <- h4("Power curve for survival analysis at different sample sizes.")
       } else {
         text2 <- h4("Estimated power for the given conditions at different sample sizes.")
@@ -2897,16 +2897,16 @@ server <- function(input, output, session) {
             k <- input$surv_ss_k / 100
             pE <- input$surv_ss_pE / 100
             alpha <- input$surv_ss_alpha
-            current_n <- ssizeEpi(
-              power = input$surv_ss_power / 100, theta = hr, k = k,
-              pE = pE, RR = hr, alpha = alpha
+            current_n <- ssizeEpi.default(
+              power = input$surv_ss_power / 100, theta = hr, p = k,
+              psi = pE, rho2 = 0, alpha = alpha
             )
           }
 
           # Generate sample size range
           n_range <- seq(from = max(50, current_n * 0.5), to = current_n * 2, length.out = 50)
           power_vals <- vapply(n_range, function(n) {
-            powerEpi(n = n, theta = hr, k = k, pE = pE, RR = hr, alpha = alpha)
+            powerEpi.default(n = n, theta = hr, p = k, psi = pE, rho2 = 0, alpha = alpha)
           }, FUN.VALUE = numeric(1))
 
           # Create interactive plotly
@@ -3516,7 +3516,7 @@ server <- function(input, output, session) {
 
     isolate({
       text1 <- hr()
-      text2 <- downloadButton("report_pdf", "Download Analysis (PDF) [Experimental]")
+      text2 <- downloadButton("report_pdf", "Download Analysis (PDF)")
       text3 <- downloadButton("report_csv", "Download Results (CSV)", class = "btn-info")
       text4 <- hr()
       HTML(paste0(text1, " ", text2, " ", text3, " ", text4))
@@ -3616,7 +3616,7 @@ server <- function(input, output, session) {
         hr <- input$surv_pow_hr
         k <- input$surv_pow_k / 100
         pE <- input$surv_pow_pE / 100
-        power <- powerEpi(n = n, theta = hr, k = k, pE = pE, RR = hr, alpha = input$surv_pow_alpha)
+        power <- powerEpi.default(n = n, theta = hr, p = k, psi = pE, rho2 = 0, alpha = input$surv_pow_alpha)
         results <- data.frame(
           Analysis_Type = "Survival Analysis - Power Calculation",
           Total_Sample_Size = n,
@@ -3633,7 +3633,7 @@ server <- function(input, output, session) {
         k <- input$surv_ss_k / 100
         pE <- input$surv_ss_pE / 100
         power <- input$surv_ss_power / 100
-        n_est <- ssizeEpi(power = power, theta = hr, k = k, pE = pE, RR = hr, alpha = input$surv_ss_alpha)
+        n_est <- ssizeEpi.default(power = power, theta = hr, p = k, psi = pE, rho2 = 0, alpha = input$surv_ss_alpha)
         results <- data.frame(
           Analysis_Type = "Survival Analysis - Sample Size Calculation",
           Desired_Power_Percent = input$surv_ss_power,
@@ -3953,7 +3953,7 @@ server <- function(input, output, session) {
         hr <- input$surv_pow_hr
         k <- input$surv_pow_k / 100
         pE <- input$surv_pow_pE / 100
-        power <- powerEpi(n = n, theta = hr, k = k, pE = pE, RR = hr, alpha = input$surv_pow_alpha)
+        power <- powerEpi.default(n = n, theta = hr, p = k, psi = pE, rho2 = 0, alpha = input$surv_pow_alpha)
         new_scenario <- data.frame(
           Scenario = v$scenario_counter,
           Type = "Survival - Power",
@@ -3970,7 +3970,7 @@ server <- function(input, output, session) {
         k <- input$surv_ss_k / 100
         pE <- input$surv_ss_pE / 100
         power <- input$surv_ss_power / 100
-        n_est <- ssizeEpi(power = power, theta = hr, k = k, pE = pE, RR = hr, alpha = input$surv_ss_alpha)
+        n_est <- ssizeEpi.default(power = power, theta = hr, p = k, psi = pE, rho2 = 0, alpha = input$surv_ss_alpha)
         new_scenario <- data.frame(
           Scenario = v$scenario_counter,
           Type = "Survival - SS",

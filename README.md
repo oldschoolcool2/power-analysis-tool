@@ -6,7 +6,7 @@ A comprehensive R Shiny application for calculating statistical power and sample
 
 ### Study Design Types
 
-1. **Single Proportion Analysis** (Rule of Three) - Rare event detection in post-marketing surveillance
+1. **Single Proportion Analysis** (Cohen's arcsine transformation) - Hypothesis testing for single proportions, rare event detection in post-marketing surveillance
 2. **Two-Group Comparisons** - Cohort studies, case-control studies, comparative effectiveness
 3. **Survival Analysis** (Cox Regression) - Time-to-event outcomes using Schoenfeld method
 4. **Matched Case-Control** - Propensity score matching, traditional matching designs

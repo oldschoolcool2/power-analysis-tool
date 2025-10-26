@@ -9,8 +9,8 @@ This is the first CRAN submission of PowerAnalysisTool, a comprehensive Shiny ap
 #### Core Analysis Types
 
 * **Single Proportion Tests**
-  - Sample size calculation for single proportions
-  - Rule of Three for safety monitoring
+  - Sample size calculation for single proportions using Cohen's arcsine transformation
+  - Power analysis for hypothesis testing of single proportions
   - Confidence interval calculations using exact methods (Clopper-Pearson)
 
 * **Two-Group Comparisons**

@@ -19,8 +19,9 @@ create_contextual_help <- function(analysis_type) {
       accordion_panel(
         title = "About this Analysis",
         icon = icon("info-circle"),
-        p("The 'Rule of Three' states that if a certain event did not occur in a sample with n participants, the interval from 0 to 3/n is a 95% confidence interval for the rate of occurrences in the population. When n is greater than 30, this is a good approximation."),
-        p(strong("Example:"), "If a drug is tested on 1,500 participants and no adverse event is recorded, we can conclude with 95% confidence that fewer than 1 person in 500 (or 3/1500 = 0.2%) will experience an adverse event.")
+        p("This analysis performs power and sample size calculations for single proportion hypothesis testing using Cohen's arcsine transformation method. This approach tests whether an observed event rate differs significantly from a null hypothesis (typically zero events)."),
+        p(strong("Method:"), "Uses the arcsine transformation for proportions (Cohen, 1988), implemented via the pwr.p.test function in R. This is the standard statistical approach for single proportion hypothesis testing."),
+        p(strong("Example:"), "Testing whether an adverse event rate of 1 in 500 (0.2%) can be detected with a sample of 1,500 participants at 80% power and α = 0.05.")
       ),
       accordion_panel(
         title = "Use Cases",
@@ -38,9 +39,10 @@ create_contextual_help <- function(analysis_type) {
         title = "References",
         icon = icon("book"),
         tags$ul(
-          tags$li(a("Hanley JA, Lippman-Hand A. If nothing goes wrong, is everything all right? Interpreting zero numerators. JAMA. 1983;249(13):1743-1745.",
-                    href = "Hanley-1983-1743.pdf", target = "_blank")),
-          tags$li("Eypasch E, et al. Probability of adverse events that have not yet occurred: a statistical reminder. BMJ. 1995;311(7005):619-620.")
+          tags$li(strong("Primary method:"), "Cohen J. Statistical Power Analysis for the Behavioral Sciences. 2nd ed. Routledge; 1988."),
+          tags$li(strong("Implementation:"), "Champely S. pwr: Basic Functions for Power Analysis. R package. CRAN."),
+          tags$li(strong("Additional context:"), a("Hanley JA, Lippman-Hand A. If nothing goes wrong, is everything all right? Interpreting zero numerators. JAMA. 1983;249(13):1743-1745.",
+                    href = "Hanley-1983-1743.pdf", target = "_blank"), " (Note: The 'Rule of Three' from this paper is for confidence intervals when zero events occur, not for power analysis)")
         )
       )
     ),

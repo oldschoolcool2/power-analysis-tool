@@ -80,7 +80,7 @@ app_server <- function(input, output, session) {
 
   # Get current sidebar page with default fallback
   get_current_page <- function() {
-    if (is.null(input$sidebar_page) || length(input$sidebar_page) == 0 || input$sidebar_page == "") {
+    if (is.null(input$sidebar_page) || length(input$sidebar_page) == 0 || identical(input$sidebar_page, "")) {
       "power_single"
     } else {
       input$sidebar_page
@@ -124,7 +124,7 @@ app_server <- function(input, output, session) {
       paste0("Preview: Testing n=", input$power_n,
              " participants for event rate 1 in ", input$power_p)
     } else if (page == "ss_single") {
-      paste0("Preview: Rule of Three for event rate 1 in ",
+      paste0("Preview: Single proportion sample size for event rate 1 in ",
              input$ss_p, " with ",
              input$ss_power, "% power")
     } else if (page == "power_two") {
@@ -561,19 +561,70 @@ app_server <- function(input, output, session) {
         tab1_inputs <- tab1_vals$inputs()
         incidence_rate <- tab1_inputs$power_p
         sample_size <- tab1_inputs$power_n
-        power <- pwr.p.test(
-          sig.level = tab1_inputs$power_alpha, power = NULL,
-          h = ES.h(1 / tab1_inputs$power_p, 0), alt = "greater", n = tab1_inputs$power_n
-        )$power
         discon <- tab1_inputs$power_discon / 100
 
-        create_power_single_result_text(
+        # Get multiple testing adjustment
+        mt_vals <- tab1_vals$multiple_testing_vals()
+        alpha_to_use <- if (mt_vals$adjust_alpha) {
+          mt_adj <- calc_adjusted_alpha(
+            tab1_inputs$power_alpha,
+            mt_vals$n_tests,
+            mt_vals$correction_method
+          )
+          mt_adj$alpha_adjusted
+        } else {
+          tab1_inputs$power_alpha
+        }
+
+        # Get clustering adjustment - use effective sample size
+        clust_vals <- tab1_vals$clustering_vals()
+        n_to_use <- if (clust_vals$adjust_clustering) {
+          de <- calc_design_effect(clust_vals$cluster_size, clust_vals$icc)
+          calc_effective_n(sample_size, de)
+        } else {
+          sample_size
+        }
+
+        # Calculate power with adjustments
+        power <- pwr.p.test(
+          sig.level = alpha_to_use, power = NULL,
+          h = ES.h(1 / tab1_inputs$power_p, 0), alt = "greater", n = n_to_use
+        )$power
+
+        # Build adjustment notes
+        adjustment_notes <- ""
+        if (mt_vals$adjust_alpha || clust_vals$adjust_clustering) {
+          adjustment_notes <- "<div style='background-color: #e7f3ff; border-left: 4px solid #0066cc; padding: 15px; margin: 15px 0;'><h5 style='margin-top: 0;'>Adjustments Applied</h5>"
+
+          if (mt_vals$adjust_alpha) {
+            adjustment_notes <- paste0(adjustment_notes,
+              "<p><strong>Multiple Testing:</strong> Using ", mt_vals$correction_method,
+              " correction for ", mt_vals$n_tests, " tests. Adjusted α = ",
+              format(alpha_to_use, digits = 4), " (original α = ", tab1_inputs$power_alpha, ").</p>")
+          }
+
+          if (clust_vals$adjust_clustering) {
+            adjustment_notes <- paste0(adjustment_notes,
+              "<p><strong>Clustering:</strong> With ", sample_size, " total participants, ICC = ",
+              clust_vals$icc, ", cluster size = ", clust_vals$cluster_size,
+              ", design effect = ", format(de, digits = 2),
+              ", the effective sample size is ", n_to_use, " participants.</p>")
+          }
+
+          adjustment_notes <- paste0(adjustment_notes, "</div>")
+        }
+
+        # Create base result text
+        base_result <- create_power_single_result_text(
           incidence_rate = incidence_rate,
           sample_size = sample_size,
           power = power,
           alpha = tab1_inputs$power_alpha,
           discon = discon
         )
+
+        # Combine with adjustment notes
+        HTML(paste0(base_result, adjustment_notes))
       # Tab 1: Single Proportion - Sample Size (using sidebar_page)
       } else if (page == "ss_single") {
         tab1_inputs <- tab1_vals$inputs()
@@ -584,8 +635,22 @@ app_server <- function(input, output, session) {
         if (calc_mode == "calc_n") {
           # Calculate Sample Size
           incidence_rate <- tab1_inputs$ss_p
+
+          # Get multiple testing adjustment
+          mt_vals <- tab1_vals$multiple_testing_vals()
+          alpha_to_use <- if (mt_vals$adjust_alpha) {
+            mt_adj <- calc_adjusted_alpha(
+              tab1_inputs$ss_alpha,
+              mt_vals$n_tests,
+              mt_vals$correction_method
+            )
+            mt_adj$alpha_adjusted
+          } else {
+            tab1_inputs$ss_alpha
+          }
+
           sample_size_base <- pwr.p.test(
-            sig.level = tab1_inputs$ss_alpha, power = power,
+            sig.level = alpha_to_use, power = power,
             h = ES.h(1 / tab1_inputs$ss_p, 0), alt = "greater", n = NULL
           )$n
 
@@ -610,6 +675,23 @@ app_server <- function(input, output, session) {
             missing_data_text <- HTML("")
           }
 
+          # Apply clustering adjustment if enabled
+          clust_vals <- tab1_vals$clustering_vals()
+          if (clust_vals$adjust_clustering) {
+            de <- calc_design_effect(clust_vals$cluster_size, clust_vals$icc)
+            sample_size_before_clustering <- sample_size_final
+            sample_size_final <- ceiling(sample_size_final * de)
+          }
+
+          # Build multiple testing text
+          mt_text <- if (mt_vals$adjust_alpha) {
+            paste0(" <strong>Multiple testing correction:</strong> Using ",
+                   mt_vals$correction_method, " correction for ", mt_vals$n_tests,
+                   " tests, adjusted α = ", format(alpha_to_use, digits = 4), ".")
+          } else {
+            ""
+          }
+
           text0 <- hr()
           text1 <- h1("Results of this analysis")
           text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
@@ -620,12 +702,23 @@ app_server <- function(input, output, session) {
             format(ceiling(sample_size_base), digits = 1, nsmall = 0),
             " participants would be needed to observe at least one event with ",
             format(power * 100, digits = 1, nsmall = 0), "% probability (α = ",
-            tab1_inputs$ss_alpha, "). Accounting for a possible withdrawal or discontinuation rate of ",
+            tab1_inputs$ss_alpha, ").",
+            mt_text,
+            " Accounting for a possible withdrawal or discontinuation rate of ",
             format(discon * 100, digits = 1), "%, the target number of participants is set as ",
             format(sample_size_after_discon, digits = 1), ".",
             if (md_vals$adjust_missing) {
+              before_clust_n <- if (clust_vals$adjust_clustering) sample_size_before_clustering else sample_size_final
               paste0(" <strong>After adjusting for ", md_vals$missing_pct,
-                     "% missing data, the final target sample size is ",
+                     "% missing data, the target sample size is ",
+                     format(before_clust_n, digits = 1), ".</strong>")
+            } else {
+              ""
+            },
+            if (clust_vals$adjust_clustering) {
+              paste0(" <strong>After adjusting for clustering</strong> (ICC = ", clust_vals$icc,
+                     ", cluster size = ", clust_vals$cluster_size, ", design effect = ",
+                     format(de, digits = 2), "), <strong>the final target sample size is ",
                      format(sample_size_final, digits = 1), ".</strong>")
             } else {
               ""
@@ -845,9 +938,9 @@ app_server <- function(input, output, session) {
         pE <- tab3_inputs$surv_pow_pE / 100
 
         # Calculate power using powerSurvEpi
-        power <- powerEpi(
-          n = n, theta = hr, k = k, pE = pE,
-          RR = hr, alpha = tab3_inputs$surv_pow_alpha
+        power <- powerEpi.default(
+          n = n, theta = hr, p = k, psi = pE,
+          rho2 = 0, alpha = tab3_inputs$surv_pow_alpha
         )
 
         # Use helper function for result text
@@ -867,9 +960,9 @@ app_server <- function(input, output, session) {
           hr <- tab3_inputs$surv_ss_hr
 
           # Calculate base sample size using powerSurvEpi
-          n_base <- ssizeEpi(
-            power = power, theta = hr, k = k, pE = pE,
-            RR = hr, alpha = tab3_inputs$surv_ss_alpha
+          n_base <- ssizeEpi.default(
+            power = power, theta = hr, p = k, psi = pE,
+            rho2 = 0, alpha = tab3_inputs$surv_ss_alpha
           )
 
           # Apply missing data adjustment if enabled
@@ -933,9 +1026,9 @@ app_server <- function(input, output, session) {
 
           for (i in 1:max_iter) {
             hr_mid <- (hr_lower + hr_upper) / 2
-            power_achieved <- powerEpi(
-              n = n_effective, theta = hr_mid, k = k, pE = pE,
-              RR = hr_mid, alpha = tab3_inputs$surv_ss_alpha
+            power_achieved <- powerEpi.default(
+              n = n_effective, theta = hr_mid, p = k, psi = pE,
+              rho2 = 0, alpha = tab3_inputs$surv_ss_alpha
             )
 
             if (abs(power_achieved - power) < 0.001) {
@@ -2071,7 +2164,7 @@ app_server <- function(input, output, session) {
       validate_inputs()
 
       if (grepl("twogrp", input$sidebar_page)) {
-        if (input$sidebar_page == "power_twogrp") {
+        if (identical(input$sidebar_page, "power_twogrp")) {
           p1 <- input$twogrp_pow_p1 / 100
           p2 <- input$twogrp_pow_p2 / 100
         } else {
@@ -2091,7 +2184,7 @@ app_server <- function(input, output, session) {
 
         HTML(paste0(text1, text2))
       } else if (grepl("survival", input$sidebar_page)) {
-        if (input$sidebar_page == "power_survival") {
+        if (identical(input$sidebar_page, "power_survival")) {
           hr <- input$surv_pow_hr
         } else {
           hr <- input$surv_ss_hr
@@ -2128,17 +2221,19 @@ app_server <- function(input, output, session) {
       return(NULL)
     }
 
-    if (input$sidebar_page == "match_casecontrol") {
+    if (identical(input$sidebar_page, "match_casecontrol")) {
       return()
     } # No plot for matched case-control
 
     isolate({
       text1 <- hr()
       if (grepl("twogrp", input$sidebar_page)) {
-        if (input$sidebar_page == "power_twogrp") {
-          ratio <- round(input$twogrp_pow_n2 / input$twogrp_pow_n1, 3)
+        if (identical(input$sidebar_page, "power_twogrp")) {
+          tab2_inputs <- tab2_vals$inputs()
+          ratio <- round(tab2_inputs$twogrp_pow_n2 / tab2_inputs$twogrp_pow_n1, 3)
         } else {
-          ratio <- input$twogrp_ss_ratio
+          tab2_inputs <- tab2_vals$inputs()
+          ratio <- tab2_inputs$twogrp_ss_ratio
         }
         text2 <- h4(paste0("Estimated power vs. n1 (Group 1 sample size) with allocation ratio n2/n1 = ", ratio, "."))
       } else if (grepl("survival", input$sidebar_page)) {
@@ -2166,7 +2261,7 @@ app_server <- function(input, output, session) {
         validate_inputs()
 
         # Tab 1: Single Proportion - Power Analysis (using sidebar_page)
-        if (input$sidebar_page == "power_single") {
+        if (identical(input$sidebar_page, "power_single")) {
           tab1_inputs <- tab1_vals$inputs()
           # Generate power curve data
           n_current <- tab1_inputs$power_n
@@ -2190,7 +2285,7 @@ app_server <- function(input, output, session) {
           )
 
         # Tab 1: Single Proportion - Sample Size (using sidebar_page)
-        } else if (input$sidebar_page == "ss_single") {
+        } else if (identical(input$sidebar_page, "ss_single")) {
           tab1_inputs <- tab1_vals$inputs()
           # Generate power curve data
           target_power <- tab1_inputs$ss_power / 100
@@ -2218,7 +2313,7 @@ app_server <- function(input, output, session) {
           )
 
         # Tab 2: Two-Group Comparison - Power Analysis (using sidebar_page)
-        } else if (input$sidebar_page == "power_twogrp") {
+        } else if (identical(input$sidebar_page, "power_twogrp")) {
           tab2_inputs <- tab2_vals$inputs()
           # Ratio-aware interactive plot for unequal allocation
           p1 <- tab2_inputs$twogrp_pow_p1 / 100
@@ -2248,7 +2343,7 @@ app_server <- function(input, output, session) {
           )
 
         # Tab 2: Two-Group Comparison - Sample Size (using sidebar_page)
-        } else if (input$sidebar_page == "ss_twogrp") {
+        } else if (identical(input$sidebar_page, "ss_twogrp")) {
           tab2_inputs <- tab2_vals$inputs()
           # Ratio-aware interactive plot for sample size calculation
           p1 <- tab2_inputs$twogrp_ss_p1 / 100
@@ -2311,7 +2406,7 @@ app_server <- function(input, output, session) {
             config(displayModeBar = TRUE, displaylogo = FALSE)
 
         # Tab 3: Survival - Power Analysis (using sidebar_page)
-        } else if (input$sidebar_page == "power_survival") {
+        } else if (identical(input$sidebar_page, "power_survival")) {
           tab3_inputs <- tab3_vals$inputs()
           hr <- tab3_inputs$surv_pow_hr
           k <- tab3_inputs$surv_pow_k / 100
@@ -2321,7 +2416,7 @@ app_server <- function(input, output, session) {
 
           n_range <- seq(from = max(50, current_n * 0.5), to = current_n * 2, length.out = 50)
           power_vals <- vapply(n_range, function(n) {
-            powerEpi(n = n, theta = hr, k = k, pE = pE, RR = hr, alpha = alpha)
+            powerEpi.default(n = n, theta = hr, p = k, psi = pE, rho2 = 0, alpha = alpha)
           }, FUN.VALUE = numeric(1))
 
           plot_ly() %>%
@@ -2339,17 +2434,17 @@ app_server <- function(input, output, session) {
             config(displayModeBar = TRUE, displaylogo = FALSE)
 
         # Tab 3: Survival - Sample Size (using sidebar_page)
-        } else if (input$sidebar_page == "ss_survival") {
+        } else if (identical(input$sidebar_page, "ss_survival")) {
           tab3_inputs <- tab3_vals$inputs()
           hr <- tab3_inputs$surv_ss_hr
           k <- tab3_inputs$surv_ss_k / 100
           pE <- tab3_inputs$surv_ss_pE / 100
           alpha <- tab3_inputs$surv_ss_alpha
-          current_n <- ssizeEpi(power = tab3_inputs$surv_ss_power / 100, theta = hr, k = k, pE = pE, RR = hr, alpha = alpha)
+          current_n <- ssizeEpi.default(power = tab3_inputs$surv_ss_power / 100, theta = hr, p = k, psi = pE, rho2 = 0, alpha = alpha)
 
           n_range <- seq(from = max(50, current_n * 0.5), to = current_n * 2, length.out = 50)
           power_vals <- vapply(n_range, function(n) {
-            powerEpi(n = n, theta = hr, k = k, pE = pE, RR = hr, alpha = alpha)
+            powerEpi.default(n = n, theta = hr, p = k, psi = pE, rho2 = 0, alpha = alpha)
           }, FUN.VALUE = numeric(1))
 
           plot_ly() %>%
@@ -2364,7 +2459,7 @@ app_server <- function(input, output, session) {
             config(displayModeBar = TRUE, displaylogo = FALSE)
 
         # Tab 5: Continuous - Power Analysis (using sidebar_page)
-        } else if (input$sidebar_page == "power_continuous") {
+        } else if (identical(input$sidebar_page, "power_continuous")) {
           tab5_inputs <- tab5_vals$inputs()
           n1 <- tab5_inputs$cont_pow_n1
           n2 <- tab5_inputs$cont_pow_n2
@@ -2389,7 +2484,7 @@ app_server <- function(input, output, session) {
             config(displayModeBar = TRUE, displaylogo = FALSE)
 
         # Tab 5: Continuous - Sample Size (using sidebar_page)
-        } else if (input$sidebar_page == "ss_continuous") {
+        } else if (identical(input$sidebar_page, "ss_continuous")) {
           tab5_inputs <- tab5_vals$inputs()
           d <- tab5_inputs$cont_ss_d
           alpha <- tab5_inputs$cont_ss_alpha
@@ -2416,7 +2511,7 @@ app_server <- function(input, output, session) {
               xaxis = list(title = "Sample Size Group 1 (n1)"), yaxis = list(title = "Power", range = c(0, 1))) %>%
             config(displayModeBar = TRUE, displaylogo = FALSE)
 
-        } else if (input$sidebar_page == "mediation_analysis") {
+        } else if (identical(input$sidebar_page, "mediation_analysis")) {
           # Mediation Analysis Power Curve
           med_inputs <- tab8_vals$inputs()
           calc_mode <- med_inputs$calc_mode
@@ -2595,7 +2690,7 @@ app_server <- function(input, output, session) {
               config(displayModeBar = TRUE, displaylogo = FALSE)
           }
 
-        } else if (input$sidebar_page == "survival_ni_equiv") {
+        } else if (identical(input$sidebar_page, "survival_ni_equiv")) {
           # Time-to-Event Equivalence/Non-Inferiority Power Curve
           tab9_inputs <- tab9_vals$inputs()
           test_type <- tab9_inputs$test_type
@@ -2866,10 +2961,10 @@ app_server <- function(input, output, session) {
     isolate({
       validate_inputs()
 
-      if (input$sidebar_page == "power_single") {
+      if (identical(input$sidebar_page, "power_single")) {
         tab1_inputs <- tab1_vals$inputs()
         sample_size <- tab1_inputs$power_n
-      } else if (input$sidebar_page == "ss_single") {
+      } else if (identical(input$sidebar_page, "ss_single")) {
         tab1_inputs <- tab1_vals$inputs()
         sample_size <- pwr.p.test(
           sig.level = tab1_inputs$ss_alpha, 
@@ -2912,10 +3007,10 @@ app_server <- function(input, output, session) {
       isolate({
         validate_inputs()
 
-        if (input$sidebar_page == "power_single") {
+        if (identical(input$sidebar_page, "power_single")) {
           tab1_inputs <- tab1_vals$inputs()
           sample_size <- tab1_inputs$power_n
-        } else if (input$sidebar_page == "ss_single") {
+        } else if (identical(input$sidebar_page, "ss_single")) {
           tab1_inputs <- tab1_vals$inputs()
           sample_size <- pwr.p.test(
             sig.level = tab1_inputs$ss_alpha, 
@@ -2987,7 +3082,7 @@ app_server <- function(input, output, session) {
 
     isolate({
       text1 <- hr()
-      text2 <- downloadButton("report_pdf", "Download Analysis (PDF) [Experimental]")
+      text2 <- downloadButton("report_pdf", "Download Analysis (PDF)")
       text3 <- downloadButton("report_csv", "Download Results (CSV)", class = "btn-info")
       text4 <- hr()
       HTML(paste0(text1, " ", text2, " ", text3, " ", text4))
@@ -3001,7 +3096,7 @@ app_server <- function(input, output, session) {
       paste("Power-Analysis-", get_page_display_name(input$sidebar_page), "-", Sys.Date(), ".csv", sep = "")
     },
     content = function(file) {
-      if (input$sidebar_page == "power_single") {
+      if (identical(input$sidebar_page, "power_single")) {
         tab1_inputs <- tab1_vals$inputs()
         results <- data.frame(
           Analysis_Type = "Single Proportion - Power Calculation",
@@ -3018,7 +3113,7 @@ app_server <- function(input, output, session) {
           Adjusted_Sample_Size = ceiling(tab1_inputs$power_n * (1 + tab1_inputs$power_discon / 100)),
           Date = Sys.Date()
         )
-      } else if (input$sidebar_page == "ss_single") {
+      } else if (identical(input$sidebar_page, "ss_single")) {
         tab1_inputs <- tab1_vals$inputs()
         sample_size <- pwr.p.test(
           sig.level = tab1_inputs$ss_alpha, power = tab1_inputs$ss_power / 100,
@@ -3035,7 +3130,7 @@ app_server <- function(input, output, session) {
           Adjusted_Sample_Size = ceiling(sample_size * (1 + tab1_inputs$ss_discon / 100)),
           Date = Sys.Date()
         )
-      } else if (input$sidebar_page == "power_twogrp") {
+      } else if (identical(input$sidebar_page, "power_twogrp")) {
         p1 <- input$twogrp_pow_p1 / 100
         p2 <- input$twogrp_pow_p2 / 100
         power <- pwr.2p2n.test(
@@ -3058,7 +3153,7 @@ app_server <- function(input, output, session) {
           Odds_Ratio = eff$odds_ratio,
           Date = Sys.Date()
         )
-      } else if (input$sidebar_page == "ss_twogrp") {
+      } else if (identical(input$sidebar_page, "ss_twogrp")) {
         p1 <- input$twogrp_ss_p1 / 100
         p2 <- input$twogrp_ss_p2 / 100
         n1 <- solve_n1_for_ratio(
@@ -3084,12 +3179,12 @@ app_server <- function(input, output, session) {
           Odds_Ratio = eff$odds_ratio,
           Date = Sys.Date()
         )
-      } else if (input$sidebar_page == "power_survival") {
+      } else if (identical(input$sidebar_page, "power_survival")) {
         n <- input$surv_pow_n
         hr <- input$surv_pow_hr
         k <- input$surv_pow_k / 100
         pE <- input$surv_pow_pE / 100
-        power <- powerEpi(n = n, theta = hr, k = k, pE = pE, RR = hr, alpha = input$surv_pow_alpha)
+        power <- powerEpi.default(n = n, theta = hr, p = k, psi = pE, rho2 = 0, alpha = input$surv_pow_alpha)
         results <- data.frame(
           Analysis_Type = "Survival Analysis - Power Calculation",
           Total_Sample_Size = n,
@@ -3101,12 +3196,12 @@ app_server <- function(input, output, session) {
           Method = "Schoenfeld (1983)",
           Date = Sys.Date()
         )
-      } else if (input$sidebar_page == "ss_survival") {
+      } else if (identical(input$sidebar_page, "ss_survival")) {
         hr <- input$surv_ss_hr
         k <- input$surv_ss_k / 100
         pE <- input$surv_ss_pE / 100
         power <- input$surv_ss_power / 100
-        n_est <- ssizeEpi(power = power, theta = hr, k = k, pE = pE, RR = hr, alpha = input$surv_ss_alpha)
+        n_est <- ssizeEpi.default(power = power, theta = hr, p = k, psi = pE, rho2 = 0, alpha = input$surv_ss_alpha)
         results <- data.frame(
           Analysis_Type = "Survival Analysis - Sample Size Calculation",
           Desired_Power_Percent = input$surv_ss_power,
@@ -3118,7 +3213,7 @@ app_server <- function(input, output, session) {
           Method = "Schoenfeld (1983)",
           Date = Sys.Date()
         )
-      } else if (input$sidebar_page == "match_casecontrol") {
+        } else if (identical(input$sidebar_page, "match_casecontrol")) {
         or <- input$match_or
         p0 <- input$match_p0 / 100
         m <- input$match_ratio
@@ -3143,7 +3238,7 @@ app_server <- function(input, output, session) {
           Test_Type = input$match_sided,
           Date = Sys.Date()
         )
-      } else if (input$sidebar_page == "power_continuous") {
+      } else if (identical(input$sidebar_page, "power_continuous")) {
         n1 <- input$cont_pow_n1
         n2 <- input$cont_pow_n2
         d <- input$cont_pow_d
@@ -3162,7 +3257,7 @@ app_server <- function(input, output, session) {
           Test_Type = input$cont_pow_sided,
           Date = Sys.Date()
         )
-      } else if (input$sidebar_page == "ss_continuous") {
+      } else if (identical(input$sidebar_page, "ss_continuous")) {
         d <- input$cont_ss_d
         power <- input$cont_ss_power / 100
         ratio <- input$cont_ss_ratio
@@ -3209,7 +3304,7 @@ app_server <- function(input, output, session) {
           Test_Type = input$cont_ss_sided,
           Date = Sys.Date()
         )
-      } else if (input$sidebar_page == "noninf") {
+        } else if (identical(input$sidebar_page, "noninf")) {
         p1 <- input$noninf_p1 / 100
         p2 <- input$noninf_p2 / 100
         margin <- input$noninf_margin / 100
@@ -3259,7 +3354,7 @@ app_server <- function(input, output, session) {
           Date = Sys.Date()
         )
 
-      } else if (input$sidebar_page == "survival_ni_equiv") {
+      } else if (identical(input$sidebar_page, "survival_ni_equiv")) {
         tab9_inputs <- tab9_vals$inputs()
         test_type <- tab9_inputs$test_type
         calc_mode <- tab9_inputs$calc_mode
@@ -3390,68 +3485,83 @@ app_server <- function(input, output, session) {
   output$report_pdf <- downloadHandler(
     filename = paste("Rule-of-3-Analysis-", Sys.Date(), ".pdf", sep = ""),
     content = function(file) {
-      # Only works for single proportion analyses
-      if (grepl("twogrp", input$sidebar_page)) {
-        showNotification("PDF export not yet available for two-group analyses. Please use CSV export.",
-          type = "warning", duration = 5
+      tryCatch({
+        # Only works for single proportion analyses
+        if (grepl("twogrp", input$sidebar_page)) {
+          showNotification("PDF export not yet available for two-group analyses. Please use CSV export.",
+            type = "warning", duration = 5
+          )
+          return()
+        }
+
+        tab1_inputs <- tab1_vals$inputs()
+        
+        # Safe comparison using identical() to avoid comparison errors
+        is_power_single <- identical(input$sidebar_page, "power_single")
+        
+        incidence_rate <- if (is_power_single) {
+          tab1_inputs$power_p
+        } else {
+          tab1_inputs$ss_p
+        }
+        
+        sample_size <- if (is_power_single) {
+          tab1_inputs$power_n
+        } else {
+          pwr.p.test(
+            sig.level = tab1_inputs$ss_alpha, power = tab1_inputs$ss_power / 100,
+            h = ES.h(1 / tab1_inputs$ss_p, 0), alt = "greater", n = NULL
+          )$n
+        }
+
+        power <- if (is_power_single) {
+          pwr.p.test(
+            sig.level = tab1_inputs$power_alpha, power = NULL,
+            h = ES.h(1 / tab1_inputs$power_p, 0), alt = "greater", n = tab1_inputs$power_n
+          )$power
+        } else {
+          tab1_inputs$ss_power / 100
+        }
+
+        discon <- if (is_power_single) {
+          tab1_inputs$power_discon / 100
+        } else {
+          tab1_inputs$ss_discon / 100
+        }
+
+        # Copy the report file to a temporary directory
+        tempReport <- file.path(tempdir(), "analysis-report.Rmd")
+        file.copy("analysis-report.Rmd", tempReport, overwrite = TRUE)
+
+        # Create a Progress object
+        progress <- shiny::Progress$new(style = "notification")
+        on.exit(progress$close())
+        progress$set(message = "Creating Analysis Report File", value = 0)
+
+        # Set up parameters to pass to Rmd document
+        params <- list(
+          tabset = get_page_display_name(input$sidebar_page),
+          incidence_rate = incidence_rate,
+          sample_size = sample_size,
+          power = power,
+          discon = discon,
+          adj_n = 100,
+          progress = progress
         )
-        return()
-      }
 
-      tab1_inputs <- tab1_vals$inputs()
-      
-      incidence_rate <- ifelse(input$sidebar_page == "power_single", tab1_inputs$power_p, tab1_inputs$ss_p)
-      sample_size <- if (input$sidebar_page == "power_single") {
-        tab1_inputs$power_n
-      } else {
-        pwr.p.test(
-          sig.level = tab1_inputs$ss_alpha, power = tab1_inputs$ss_power / 100,
-          h = ES.h(1 / tab1_inputs$ss_p, 0), alt = "greater", n = NULL
-        )$n
-      }
-
-      power <- if (input$sidebar_page == "power_single") {
-        pwr.p.test(
-          sig.level = tab1_inputs$power_alpha, power = NULL,
-          h = ES.h(1 / tab1_inputs$power_p, 0), alt = "greater", n = tab1_inputs$power_n
-        )$power
-      } else {
-        tab1_inputs$ss_power / 100
-      }
-
-      discon <- if (input$sidebar_page == "power_single") {
-        tab1_inputs$power_discon / 100
-      } else {
-        tab1_inputs$ss_discon / 100
-      }
-
-      # Copy the report file to a temporary directory
-      tempReport <- file.path(tempdir(), "analysis-report.Rmd")
-      file.copy("analysis-report.Rmd", tempReport, overwrite = TRUE)
-
-      # Create a Progress object
-      progress <- shiny::Progress$new(style = "notification")
-      on.exit(progress$close())
-      progress$set(message = "Creating Analysis Report File", value = 0)
-
-      # Set up parameters to pass to Rmd document
-      params <- list(
-        tabset = get_page_display_name(input$sidebar_page),
-        incidence_rate = incidence_rate,
-        sample_size = sample_size,
-        power = power,
-        discon = discon,
-        adj_n = 100,
-        progress = progress
-      )
-
-      # Knit the document
-      rmarkdown::render(tempReport,
-        output_file = file,
-        params = params,
-        envir = new.env(parent = globalenv())
-      )
-      progress$inc(1 / 6, detail = "Done!")
+        # Knit the document
+        rmarkdown::render(tempReport,
+          output_file = file,
+          params = params,
+          envir = new.env(parent = globalenv())
+        )
+        progress$inc(1 / 6, detail = "Done!")
+        
+      }, error = function(e) {
+        cat("PDF generation error:", e$message, "\n")
+        showNotification(paste("PDF generation failed:", e$message), 
+                        type = "error", duration = 10)
+      })
     }
   )
 
@@ -3466,7 +3576,7 @@ app_server <- function(input, output, session) {
 
       v$scenario_counter <- v$scenario_counter + 1
 
-      if (input$sidebar_page == "power_single") {
+      if (identical(input$sidebar_page, "power_single")) {
         tab1_inputs <- tab1_vals$inputs()
         new_scenario <- data.frame(
           Scenario = v$scenario_counter,
@@ -3483,7 +3593,7 @@ app_server <- function(input, output, session) {
           Adj_N = ceiling(tab1_inputs$power_n * (1 + tab1_inputs$power_discon / 100)),
           stringsAsFactors = FALSE
         )
-      } else if (input$sidebar_page == "ss_single") {
+      } else if (identical(input$sidebar_page, "ss_single")) {
         tab1_inputs <- tab1_vals$inputs()
         sample_size <- pwr.p.test(
           sig.level = tab1_inputs$ss_alpha, power = tab1_inputs$ss_power / 100,
@@ -3500,7 +3610,7 @@ app_server <- function(input, output, session) {
           Adj_N = ceiling(sample_size * (1 + tab1_inputs$ss_discon / 100)),
           stringsAsFactors = FALSE
         )
-      } else if (input$sidebar_page == "power_twogrp") {
+      } else if (identical(input$sidebar_page, "power_twogrp")) {
         p1 <- input$twogrp_pow_p1 / 100
         p2 <- input$twogrp_pow_p2 / 100
         power <- pwr.2p2n.test(
@@ -3523,7 +3633,7 @@ app_server <- function(input, output, session) {
           OR = if (is.na(eff$odds_ratio)) NA_real_ else round(eff$odds_ratio, 3),
           stringsAsFactors = FALSE
         )
-      } else if (input$sidebar_page == "ss_twogrp") {
+      } else if (identical(input$sidebar_page, "ss_twogrp")) {
         p1 <- input$twogrp_ss_p1 / 100
         p2 <- input$twogrp_ss_p2 / 100
         n1 <- solve_n1_for_ratio(
@@ -3547,12 +3657,12 @@ app_server <- function(input, output, session) {
           OR = if (is.na(eff$odds_ratio)) NA_real_ else round(eff$odds_ratio, 3),
           stringsAsFactors = FALSE
         )
-      } else if (input$sidebar_page == "power_survival") {
+      } else if (identical(input$sidebar_page, "power_survival")) {
         n <- input$surv_pow_n
         hr <- input$surv_pow_hr
         k <- input$surv_pow_k / 100
         pE <- input$surv_pow_pE / 100
-        power <- powerEpi(n = n, theta = hr, k = k, pE = pE, RR = hr, alpha = input$surv_pow_alpha)
+        power <- powerEpi.default(n = n, theta = hr, p = k, psi = pE, rho2 = 0, alpha = input$surv_pow_alpha)
         new_scenario <- data.frame(
           Scenario = v$scenario_counter,
           Type = "Survival - Power",
@@ -3564,12 +3674,12 @@ app_server <- function(input, output, session) {
           Alpha = input$surv_pow_alpha,
           stringsAsFactors = FALSE
         )
-      } else if (input$sidebar_page == "ss_survival") {
+      } else if (identical(input$sidebar_page, "ss_survival")) {
         hr <- input$surv_ss_hr
         k <- input$surv_ss_k / 100
         pE <- input$surv_ss_pE / 100
         power <- input$surv_ss_power / 100
-        n_est <- ssizeEpi(power = power, theta = hr, k = k, pE = pE, RR = hr, alpha = input$surv_ss_alpha)
+        n_est <- ssizeEpi.default(power = power, theta = hr, p = k, psi = pE, rho2 = 0, alpha = input$surv_ss_alpha)
         new_scenario <- data.frame(
           Scenario = v$scenario_counter,
           Type = "Survival - SS",
@@ -3581,7 +3691,7 @@ app_server <- function(input, output, session) {
           Alpha = input$surv_ss_alpha,
           stringsAsFactors = FALSE
         )
-      } else if (input$sidebar_page == "match_casecontrol") {
+        } else if (identical(input$sidebar_page, "match_casecontrol")) {
         or <- input$match_or
         p0 <- input$match_p0 / 100
         m <- input$match_ratio

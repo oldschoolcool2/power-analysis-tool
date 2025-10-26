@@ -34,14 +34,16 @@ library(kableExtra)
 ```
 
 ## About this analysis
-In statistical analysis, the 'Rule of Three' states that if a certain event did not occur in a sample with n subjects, the interval from 0 to 3/n is a 95% confidence interval for the rate of occurrences in the population. When n is greater than 30, this is a good approximation of results from more sensitive tests. For example, a pain-relief drug is tested on 1,500 human subjects, and no adverse event is recorded. From the rule of three, it can be concluded with 95% confidence that fewer than 1 person in 500 (or 3/1,500) will experience an adverse event.
+This analysis performs power and sample size calculations for single proportion hypothesis testing using Cohen's arcsine transformation method. This statistical approach tests whether an observed event rate differs significantly from a null hypothesis (typically zero events or a specified reference rate).
 
-This is one of the recommended methods of estimating sample size or power for studies examining safety-event data, such as post-marketing surveillance (PMS) studies. It is also very useful in the interpretation of clinical trials generally, particularly in phase II or III trials where often there are limitations in duration or statistical power for safety assessment.
+The method uses the arcsine transformation of proportions, which provides accurate power calculations across a wide range of event rates. This is the standard approach recommended in Cohen (1988) "Statistical Power Analysis for the Behavioral Sciences" and is implemented using the pwr.p.test function in R.
 
-Reference: Hanley JA, and Lippman-Hand A. If nothing goes wrong, is everything all right? Interpreting zero numerators. JAMA, 1983.
+This approach is particularly useful for studies examining rare event data in post-marketing surveillance (PMS) studies, safety monitoring in clinical trials, and quality control applications where detecting deviations from expected event rates is critical.
+
+Reference: Cohen J. Statistical Power Analysis for the Behavioral Sciences. 2nd ed. Routledge; 1988.
 
 ## Results of this analysis
-Based on the Binominal distribution and a true event incidence rate of 1 in `r format(params$incidence_rate, digits=2, nsmall=2)` (or `r format(1/params$incidence_rate, digits=2, nsmall=2)`%), `r format(ceiling(params$sample_size), digits=0, nsmall=0)` participants would be needed to observe at least one event with `r format(params$power*100, digits=0, nsmall=0)`% probability. Accounting for a possible withdrawal or discontinuation rate of `r format(params$discon*100, digits=0)`%, the target number of participants is set as `r format(ceiling((params$sample_size * (1+params$discon))), digits=0)`.
+Based on the Binominal distribution and a true event incidence rate of 1 in `r format(params$incidence_rate, digits=2, nsmall=2)` (or `r format(1/params$incidence_rate, digits=2, nsmall=2)`%), `r format(ceiling(params$sample_size), digits=1, nsmall=0)` participants would be needed to observe at least one event with `r format(params$power*100, digits=2, nsmall=0)`% probability. Accounting for a possible withdrawal or discontinuation rate of `r format(params$discon*100, digits=1)`%, the target number of participants is set as `r format(ceiling((params$sample_size * (1+params$discon))), digits=1)`.
 
 \newpage
 ### Figure 1. Estimated power for the given conditions at different sample sizes.
@@ -60,7 +62,7 @@ plot(p.out)
 
 \newpage
 ### Table 1. Event rate accuracy with 95% confidence interval limits
-If `r format(ceiling(params$sample_size), digits=0, nsmall=0)` participants are included, the event rate would be estimated to an accuracy shown in the table below:
+If `r format(ceiling(params$sample_size), digits=1, nsmall=0)` participants are included, the event rate would be estimated to an accuracy shown in the table below:
 
 
 ```{r table1, echo=FALSE, results='asis'}
