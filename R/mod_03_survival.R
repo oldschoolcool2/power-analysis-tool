@@ -149,6 +149,9 @@ mod_03_survival_ui <- function(id) {
       h4("Clustering Adjustment"),
       clustering_ui(ns("clustering")),
       hr(),
+      h4("Multiple Testing Corrections"),
+      multiple_testing_ui(ns("multiple_testing")),
+      hr(),
       h4("E-value Sensitivity Analysis"),
       evalue_ui(ns("evalue_ss"), effect_type = "HR"),
       hr(),
@@ -173,6 +176,9 @@ mod_03_survival_server <- function(id){
     # Initialize missing data module for sample size tab
     missing_data_vals <- missing_data_server("missing_data")
     clustering_vals <- clustering_server("clustering")
+
+    # Initialize multiple testing module for sample size tab
+    multiple_testing_vals <- multiple_testing_server("multiple_testing")
 
     # Initialize E-value modules
     evalue_vals_pow <- evalue_server("evalue", effect_type = "HR")
@@ -222,23 +228,24 @@ mod_03_survival_server <- function(id){
       inputs = reactive({
         list(
           # Power analysis inputs
-          surv_pow_n = input$surv_pow_n,
-          surv_pow_hr = input$surv_pow_hr,
-          surv_pow_k = input$surv_pow_k,
-          surv_pow_pE = input$surv_pow_pE,
-          surv_pow_alpha = input$surv_pow_alpha,
+          surv_pow_n = as.numeric(input$surv_pow_n),
+          surv_pow_hr = as.numeric(input$surv_pow_hr),
+          surv_pow_k = as.numeric(input$surv_pow_k),
+          surv_pow_pE = as.numeric(input$surv_pow_pE),
+          surv_pow_alpha = as.numeric(input$surv_pow_alpha),
           # Sample size inputs
           surv_ss_calc_mode = input$surv_ss_calc_mode,
-          surv_ss_power = input$surv_ss_power,
-          surv_ss_hr = input$surv_ss_hr,
-          surv_ss_n_fixed = input$surv_ss_n_fixed,
-          surv_ss_k = input$surv_ss_k,
-          surv_ss_pE = input$surv_ss_pE,
-          surv_ss_alpha = input$surv_ss_alpha
+          surv_ss_power = as.numeric(input$surv_ss_power),
+          surv_ss_hr = as.numeric(input$surv_ss_hr),
+          surv_ss_n_fixed = as.numeric(input$surv_ss_n_fixed),
+          surv_ss_k = as.numeric(input$surv_ss_k),
+          surv_ss_pE = as.numeric(input$surv_ss_pE),
+          surv_ss_alpha = as.numeric(input$surv_ss_alpha)
         )
       }),
       missing_data_vals = missing_data_vals,
       clustering_vals = clustering_vals,
+      multiple_testing_vals = multiple_testing_vals,
       evalue_vals_pow = evalue_vals_pow,
       evalue_vals_ss = evalue_vals_ss
     )

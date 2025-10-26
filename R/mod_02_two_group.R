@@ -125,6 +125,9 @@ mod_02_two_group_ui <- function(id) {
       h4("Clustering Adjustment"),
       clustering_ui(ns("clustering")),
       hr(),
+      h4("Multiple Testing Corrections"),
+      multiple_testing_ui(ns("multiple_testing")),
+      hr(),
       h4("E-value Sensitivity Analysis"),
       evalue_ui(ns("evalue_ss"), effect_type = "RR"),
       hr(),
@@ -151,6 +154,9 @@ mod_02_two_group_server <- function(id){
 
     # Initialize clustering module for sample size tab
     clustering_vals <- clustering_server("clustering")
+
+    # Initialize multiple testing module for sample size tab
+    multiple_testing_vals <- multiple_testing_server("multiple_testing")
 
     # Initialize E-value modules
     evalue_vals_pow <- evalue_server("evalue", effect_type = "RR")
@@ -205,26 +211,27 @@ mod_02_two_group_server <- function(id){
       inputs = reactive({
         list(
           # Power analysis inputs
-          twogrp_pow_n1 = input$twogrp_pow_n1,
-          twogrp_pow_n2 = input$twogrp_pow_n2,
-          twogrp_pow_p1 = input$twogrp_pow_p1,
-          twogrp_pow_p2 = input$twogrp_pow_p2,
-          twogrp_pow_alpha = input$twogrp_pow_alpha,
+          twogrp_pow_n1 = as.numeric(input$twogrp_pow_n1),
+          twogrp_pow_n2 = as.numeric(input$twogrp_pow_n2),
+          twogrp_pow_p1 = as.numeric(input$twogrp_pow_p1),
+          twogrp_pow_p2 = as.numeric(input$twogrp_pow_p2),
+          twogrp_pow_alpha = as.numeric(input$twogrp_pow_alpha),
           twogrp_pow_sided = input$twogrp_pow_sided,
           # Sample size inputs
           twogrp_ss_calc_mode = input$twogrp_ss_calc_mode,
-          twogrp_ss_power = input$twogrp_ss_power,
-          twogrp_ss_p1 = input$twogrp_ss_p1,
-          twogrp_ss_p2 = input$twogrp_ss_p2,
-          twogrp_ss_n1_fixed = input$twogrp_ss_n1_fixed,
-          twogrp_ss_p2_baseline = input$twogrp_ss_p2_baseline,
-          twogrp_ss_ratio = input$twogrp_ss_ratio,
-          twogrp_ss_alpha = input$twogrp_ss_alpha,
+          twogrp_ss_power = as.numeric(input$twogrp_ss_power),
+          twogrp_ss_p1 = as.numeric(input$twogrp_ss_p1),
+          twogrp_ss_p2 = as.numeric(input$twogrp_ss_p2),
+          twogrp_ss_n1_fixed = as.numeric(input$twogrp_ss_n1_fixed),
+          twogrp_ss_p2_baseline = as.numeric(input$twogrp_ss_p2_baseline),
+          twogrp_ss_ratio = as.numeric(input$twogrp_ss_ratio),
+          twogrp_ss_alpha = as.numeric(input$twogrp_ss_alpha),
           twogrp_ss_sided = input$twogrp_ss_sided
         )
       }),
       missing_data_vals = missing_data_vals,
       clustering_vals = clustering_vals,
+      multiple_testing_vals = multiple_testing_vals,
       evalue_vals_pow = evalue_vals_pow,
       evalue_vals_ss = evalue_vals_ss
     )

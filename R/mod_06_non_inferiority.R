@@ -36,6 +36,9 @@ mod_06_non_inferiority_ui <- function(id) {
       h4("Clustering Adjustment"),
       clustering_ui(ns("clustering")),
       hr(),
+      h4("Multiple Testing Corrections"),
+      multiple_testing_ui(ns("multiple_testing")),
+      hr(),
       h4("E-value Sensitivity Analysis"),
       evalue_ui(ns("evalue"), effect_type = "RR"),
       hr(),
@@ -54,6 +57,9 @@ mod_06_non_inferiority_server <- function(id){
     ns <- session$ns
     missing_data_vals <- missing_data_server("missing_data")
     clustering_vals <- clustering_server("clustering")
+
+    # Initialize multiple testing module
+    multiple_testing_vals <- multiple_testing_server("multiple_testing")
 
     # Initialize E-value module
     evalue_vals <- evalue_server("evalue", effect_type = "RR")
@@ -81,12 +87,13 @@ mod_06_non_inferiority_server <- function(id){
 
     list(
       inputs = reactive({
-        list(noninf_calc_mode = input$noninf_calc_mode, noninf_power = input$noninf_power,
-             noninf_p1 = input$noninf_p1, noninf_p2 = input$noninf_p2, noninf_margin = input$noninf_margin,
-             noninf_n1_fixed = input$noninf_n1_fixed, noninf_ratio = input$noninf_ratio, noninf_alpha = input$noninf_alpha)
+        list(noninf_calc_mode = input$noninf_calc_mode, noninf_power = as.numeric(input$noninf_power),
+             noninf_p1 = as.numeric(input$noninf_p1), noninf_p2 = as.numeric(input$noninf_p2), noninf_margin = as.numeric(input$noninf_margin),
+             noninf_n1_fixed = as.numeric(input$noninf_n1_fixed), noninf_ratio = as.numeric(input$noninf_ratio), noninf_alpha = as.numeric(input$noninf_alpha))
       }),
       missing_data_vals = missing_data_vals,
       clustering_vals = clustering_vals,
+      multiple_testing_vals = multiple_testing_vals,
       evalue_vals = evalue_vals
     )
   })

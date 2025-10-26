@@ -109,6 +109,9 @@ mod_04_matched_case_control_ui <- function(id) {
       h4("Clustering Adjustment"),
       clustering_ui(ns("clustering")),
       hr(),
+      h4("Multiple Testing Corrections"),
+      multiple_testing_ui(ns("multiple_testing")),
+      hr(),
       h4("E-value Sensitivity Analysis"),
       evalue_ui(ns("evalue"), effect_type = "OR"),
       hr(),
@@ -130,6 +133,9 @@ mod_04_matched_case_control_server <- function(id){
     # Initialize missing data module
     missing_data_vals <- missing_data_server("missing_data")
     clustering_vals <- clustering_server("clustering")
+
+    # Initialize multiple testing module
+    multiple_testing_vals <- multiple_testing_server("multiple_testing")
 
     # Initialize E-value module
     evalue_vals <- evalue_server("evalue", effect_type = "OR")
@@ -162,17 +168,18 @@ mod_04_matched_case_control_server <- function(id){
       inputs = reactive({
         list(
           match_calc_mode = input$match_calc_mode,
-          match_power = input$match_power,
-          match_or = input$match_or,
-          match_n_pairs_fixed = input$match_n_pairs_fixed,
-          match_p0 = input$match_p0,
-          match_ratio = input$match_ratio,
-          match_alpha = input$match_alpha,
+          match_power = as.numeric(input$match_power),
+          match_or = as.numeric(input$match_or),
+          match_n_pairs_fixed = as.numeric(input$match_n_pairs_fixed),
+          match_p0 = as.numeric(input$match_p0),
+          match_ratio = as.numeric(input$match_ratio),
+          match_alpha = as.numeric(input$match_alpha),
           match_sided = input$match_sided
         )
       }),
       missing_data_vals = missing_data_vals,
       clustering_vals = clustering_vals,
+      multiple_testing_vals = multiple_testing_vals,
       evalue_vals = evalue_vals
     )
   })

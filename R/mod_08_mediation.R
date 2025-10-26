@@ -214,14 +214,14 @@ mod_08_mediation_server <- function(id) {
       inputs = reactive({
         list(
           calc_mode = input$calc_mode,
-          med_n = input$med_n,
-          med_power = input$med_power,
-          path_a = input$path_a,
-          path_b = input$path_b,
-          path_c_prime = input$path_c_prime,
-          se_a = input$se_a,
-          se_b = input$se_b,
-          med_alpha = input$med_alpha,
+          med_n = as.numeric(input$med_n),
+          med_power = as.numeric(input$med_power),
+          path_a = as.numeric(input$path_a),
+          path_b = as.numeric(input$path_b),
+          path_c_prime = as.numeric(input$path_c_prime),
+          se_a = as.numeric(input$se_a),
+          se_b = as.numeric(input$se_b),
+          med_alpha = as.numeric(input$med_alpha),
           med_sided = input$med_sided
         )
       })

@@ -131,7 +131,10 @@ mod_01_single_proportion_ui <- function(id) {
           missing_data_ui(ns("missing_data")),
           hr(),
           h4("Clustering Adjustment"),
-          clustering_ui(ns("clustering"))
+          clustering_ui(ns("clustering")),
+          hr(),
+          h4("Multiple Testing Corrections"),
+          multiple_testing_ui(ns("multiple_testing"))
         ),
         icon_name = "cog",
         initially_open = FALSE
@@ -151,12 +154,12 @@ mod_01_single_proportion_ui <- function(id) {
 #'
 #' @importFrom shiny observeEvent updateNumericInput updateSliderInput updateRadioButtons
 #' @importFrom shiny reactive renderUI renderPlot req validate need isolate
-mod_01_single_proportion_server <- function(id, parent_session){
+mod_01_single_proportion_server <- function(id, parent_session = NULL){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 
     # Use parent session for rendering to shared outputs
-    if (missing(parent_session)) {
+    if (is.null(parent_session)) {
       parent_session <- session$parent
     }
 
@@ -165,6 +168,9 @@ mod_01_single_proportion_server <- function(id, parent_session){
 
     # Initialize clustering module for sample size tab
     clustering_vals <- clustering_server("clustering")
+
+    # Initialize multiple testing module for sample size tab
+    multiple_testing_vals <- multiple_testing_server("multiple_testing")
 
     # Example button - Power Analysis
     observeEvent(input$example_power_single, {
@@ -206,20 +212,21 @@ mod_01_single_proportion_server <- function(id, parent_session){
     list(
       inputs = reactive({
         list(
-          power_n = input$power_n,
-          power_p = input$power_p,
-          power_alpha = input$power_alpha,
-          power_discon = input$power_discon,
+          power_n = as.numeric(input$power_n),
+          power_p = as.numeric(input$power_p),
+          power_alpha = as.numeric(input$power_alpha),
+          power_discon = as.numeric(input$power_discon),
           ss_single_calc_mode = input$ss_single_calc_mode,
-          ss_power = input$ss_power,
-          ss_p = input$ss_p,
-          ss_n_fixed = input$ss_n_fixed,
-          ss_discon = input$ss_discon,
-          ss_alpha = input$ss_alpha
+          ss_power = as.numeric(input$ss_power),
+          ss_p = as.numeric(input$ss_p),
+          ss_n_fixed = as.numeric(input$ss_n_fixed),
+          ss_discon = as.numeric(input$ss_discon),
+          ss_alpha = as.numeric(input$ss_alpha)
         )
       }),
       missing_data_vals = missing_data_vals,
-      clustering_vals = clustering_vals
+      clustering_vals = clustering_vals,
+      multiple_testing_vals = multiple_testing_vals
     )
   })
 }

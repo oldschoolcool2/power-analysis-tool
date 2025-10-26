@@ -142,6 +142,9 @@ mod_05_continuous_ui <- function(id) {
       h4("Clustering Adjustment"),
       clustering_ui(ns("clustering")),
       hr(),
+      h4("Multiple Testing Corrections"),
+      multiple_testing_ui(ns("multiple_testing")),
+      hr(),
       h4("E-value Sensitivity Analysis"),
       evalue_ui(ns("evalue_ss"), effect_type = "MD"),
       hr(),
@@ -163,6 +166,9 @@ mod_05_continuous_server <- function(id){
     # Initialize missing data module for sample size tab
     missing_data_vals <- missing_data_server("missing_data")
     clustering_vals <- clustering_server("clustering")
+
+    # Initialize multiple testing module for sample size tab
+    multiple_testing_vals <- multiple_testing_server("multiple_testing")
 
     # Initialize E-value modules
     evalue_vals_pow <- evalue_server("evalue", effect_type = "MD")
@@ -212,23 +218,24 @@ mod_05_continuous_server <- function(id){
       inputs = reactive({
         list(
           # Power analysis inputs
-          cont_pow_n1 = input$cont_pow_n1,
-          cont_pow_n2 = input$cont_pow_n2,
-          cont_pow_d = input$cont_pow_d,
-          cont_pow_alpha = input$cont_pow_alpha,
+          cont_pow_n1 = as.numeric(input$cont_pow_n1),
+          cont_pow_n2 = as.numeric(input$cont_pow_n2),
+          cont_pow_d = as.numeric(input$cont_pow_d),
+          cont_pow_alpha = as.numeric(input$cont_pow_alpha),
           cont_pow_sided = input$cont_pow_sided,
           # Sample size inputs
           cont_ss_calc_mode = input$cont_ss_calc_mode,
-          cont_ss_power = input$cont_ss_power,
-          cont_ss_d = input$cont_ss_d,
-          cont_ss_n1_fixed = input$cont_ss_n1_fixed,
-          cont_ss_ratio = input$cont_ss_ratio,
-          cont_ss_alpha = input$cont_ss_alpha,
+          cont_ss_power = as.numeric(input$cont_ss_power),
+          cont_ss_d = as.numeric(input$cont_ss_d),
+          cont_ss_n1_fixed = as.numeric(input$cont_ss_n1_fixed),
+          cont_ss_ratio = as.numeric(input$cont_ss_ratio),
+          cont_ss_alpha = as.numeric(input$cont_ss_alpha),
           cont_ss_sided = input$cont_ss_sided
         )
       }),
       missing_data_vals = missing_data_vals,
       clustering_vals = clustering_vals,
+      multiple_testing_vals = multiple_testing_vals,
       evalue_vals_pow = evalue_vals_pow,
       evalue_vals_ss = evalue_vals_ss
     )

@@ -110,11 +110,11 @@ missing_data_server <- function(id) {
       reactive({
         list(
           adjust_missing = input$adjust_missing,
-          missing_pct = input$missing_pct,
+          missing_pct = as.numeric(input$missing_pct),
           missing_mechanism = input$missing_mechanism,
           missing_analysis = input$missing_analysis,
-          mi_imputations = input$mi_imputations,
-          mi_r_squared = input$mi_r_squared
+          mi_imputations = as.numeric(input$mi_imputations),
+          mi_r_squared = as.numeric(input$mi_r_squared)
         )
       })
     )

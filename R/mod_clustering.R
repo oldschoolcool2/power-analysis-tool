@@ -237,12 +237,12 @@ clustering_server <- function(id) {
       reactive({
         list(
           adjust_clustering = input$adjust_clustering,
-          n_clusters = input$n_clusters,
-          cluster_size = input$cluster_size,
+          n_clusters = as.numeric(input$n_clusters),
+          cluster_size = as.numeric(input$cluster_size),
           icc_method = input$icc_method,
           icc_domain = input$icc_domain,
-          icc_custom = input$icc_custom,
-          icc_value = current_icc()
+          icc_custom = as.numeric(input$icc_custom),
+          icc_value = as.numeric(current_icc())
         )
       })
     )

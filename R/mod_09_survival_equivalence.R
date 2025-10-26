@@ -188,6 +188,10 @@ mod_09_survival_equivalence_ui <- function(id) {
       clustering_ui(ns("clustering")),
 
       hr(),
+      h4("Multiple Testing Corrections"),
+      multiple_testing_ui(ns("multiple_testing")),
+
+      hr(),
       h4("E-value Sensitivity Analysis"),
       evalue_ui(ns("evalue"), effect_type = "HR"),
 
@@ -213,6 +217,10 @@ mod_09_survival_equivalence_server <- function(id){
     # Initialize modules
     missing_data_vals <- missing_data_server("missing_data")
     clustering_vals <- clustering_server("clustering")
+
+    # Initialize multiple testing module
+    multiple_testing_vals <- multiple_testing_server("multiple_testing")
+
     evalue_vals <- evalue_server("evalue", effect_type = "HR")
 
     # Example button
@@ -249,19 +257,20 @@ mod_09_survival_equivalence_server <- function(id){
         list(
           test_type = input$test_type,
           calc_mode = input$calc_mode,
-          power = input$power,
-          hr_expected = input$hr_expected,
-          hr_margin_ni = input$hr_margin_ni,
-          hr_margin_equiv = input$hr_margin_equiv,
-          n_fixed = input$n_fixed,
-          prop_exposed = input$prop_exposed,
-          event_rate = input$event_rate,
-          allocation_ratio = input$allocation_ratio,
-          alpha = input$alpha
+          power = as.numeric(input$power),
+          hr_expected = as.numeric(input$hr_expected),
+          hr_margin_ni = as.numeric(input$hr_margin_ni),
+          hr_margin_equiv = as.numeric(input$hr_margin_equiv),
+          n_fixed = as.numeric(input$n_fixed),
+          prop_exposed = as.numeric(input$prop_exposed),
+          event_rate = as.numeric(input$event_rate),
+          allocation_ratio = as.numeric(input$allocation_ratio),
+          alpha = as.numeric(input$alpha)
         )
       }),
       missing_data_vals = missing_data_vals,
       clustering_vals = clustering_vals,
+      multiple_testing_vals = multiple_testing_vals,
       evalue_vals = evalue_vals
     )
   })

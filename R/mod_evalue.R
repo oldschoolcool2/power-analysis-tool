@@ -303,12 +303,12 @@ evalue_server <- function(id, effect_type = "RR") {
       reactive({
         list(
           calculate_evalue = input$calculate_evalue,
-          effect_estimate = input$effect_estimate,
+          effect_estimate = as.numeric(input$effect_estimate),
           include_ci = input$include_ci,
-          ci_lower = if (input$include_ci) input$ci_lower else NA,
-          ci_upper = if (input$include_ci) input$ci_upper else NA,
+          ci_lower = if (input$include_ci) as.numeric(input$ci_lower) else NA,
+          ci_upper = if (input$include_ci) as.numeric(input$ci_upper) else NA,
           outcome_rare = if (effect_type %in% c("OR", "HR")) input$outcome_rare else NA,
-          md_se = if (effect_type == "MD" && input$include_ci) input$md_se else NA,
+          md_se = if (effect_type == "MD" && input$include_ci) as.numeric(input$md_se) else NA,
           results = if (input$calculate_evalue) evalue_calc() else NULL
         )
       })
