@@ -2,8 +2,9 @@
 # To deploy, run: rsconnect::deployApp()
 # Or use the blue Publish button on top of this file in RStudio
 
-# Load the package
-pkgload::load_all(export_all = FALSE, helpers = FALSE, attach_testthat = FALSE)
+# Production approach: Load the installed package
+# (For development, pkgload::load_all() can be used instead)
+library(PowerAnalysisTool)
 
 # Set production mode
 options("golem.app.prod" = TRUE)

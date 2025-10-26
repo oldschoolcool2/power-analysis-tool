@@ -60,6 +60,13 @@ COPY .Rprofile .Rprofile
 COPY renv/activate.R renv/activate.R
 COPY renv/settings.json renv/settings.json
 
+# Copy package metadata files (required for golem package installation)
+COPY DESCRIPTION DESCRIPTION
+COPY NAMESPACE NAMESPACE
+
+# Copy R source code (required for package installation)
+COPY R/ R/
+
 # Create cache directory and restore packages
 # This is the heavy operation that gets cached
 # Explicitly load renv from system library before activating project
@@ -72,6 +79,13 @@ RUN --mount=type=cache,target=/opt/renv/cache \
 ENV RENV_CONFIG_SANDBOX_ENABLED=FALSE
 ENV RENV_PATHS_LIBRARY=/usr/local/lib/R/site-library
 ENV RENV_PATHS_CACHE=/opt/renv/cache
+
+# Install remotes package (needed for package installation)
+RUN R --quiet -e "install.packages('remotes', repos = 'https://cloud.r-project.org')"
+
+# Install the package itself (golem production best practice)
+# This installs PowerAnalysisTool as a proper R package
+RUN R -e "remotes::install_local('.', upgrade = 'never', dependencies = FALSE, force = TRUE)"
 
 # Install TinyTeX for PDF generation (after renv restore)
 RUN R --quiet -e "tinytex::install_tinytex()"
