@@ -335,27 +335,25 @@ app_server <- function(input, output, session) {
 
   # Validation function
   validate_inputs <- function() {
-    # Guard against NULL or uninitialized sidebar_page
-    if (is.null(input$sidebar_page) || length(input$sidebar_page) == 0) {
-      return(NULL)
-    }
+    # Get current page with default fallback
+    page <- get_current_page()
 
     # Tab 1: Single Proportion (using sidebar_page)
-    if (input$sidebar_page == "power_single") {
+    if (page == "power_single") {
       tab1_inputs <- tab1_vals$inputs()
       validate(
         need(tab1_inputs$power_n > 0, "Sample size must be positive"),
         need(tab1_inputs$power_p > 0, "Event frequency must be positive"),
         need(tab1_inputs$power_discon >= 0 && tab1_inputs$power_discon <= 100, "Discontinuation rate must be between 0 and 100%")
       )
-    } else if (input$sidebar_page == "ss_single") {
+    } else if (page == "ss_single") {
       tab1_inputs <- tab1_vals$inputs()
       validate(
         need(tab1_inputs$ss_p > 0, "Event frequency must be positive"),
         need(tab1_inputs$ss_discon >= 0 && tab1_inputs$ss_discon <= 100, "Discontinuation rate must be between 0 and 100%")
       )
     # Tab 2: Two-Group Comparison (using sidebar_page)
-    } else if (input$sidebar_page == "power_twogrp") {
+    } else if (page == "power_twogrp") {
       tab2_inputs <- tab2_vals$inputs()
       validate(
         need(tab2_inputs$twogrp_pow_n1 > 0, "Sample size Group 1 must be positive"),
@@ -364,7 +362,7 @@ app_server <- function(input, output, session) {
         need(tab2_inputs$twogrp_pow_p2 >= 0 && tab2_inputs$twogrp_pow_p2 <= 100, "Event rate Group 2 must be between 0 and 100%"),
         need(tab2_inputs$twogrp_pow_p1 != tab2_inputs$twogrp_pow_p2, "Event rates must be different to calculate power")
       )
-    } else if (input$sidebar_page == "ss_twogrp") {
+    } else if (page == "ss_twogrp") {
       tab2_inputs <- tab2_vals$inputs()
       validate(
         need(tab2_inputs$twogrp_ss_p1 >= 0 && tab2_inputs$twogrp_ss_p1 <= 100, "Event rate Group 1 must be between 0 and 100%"),
@@ -373,7 +371,7 @@ app_server <- function(input, output, session) {
         need(tab2_inputs$twogrp_ss_ratio > 0, "Allocation ratio must be positive")
       )
     # Tab 3: Survival Analysis
-    } else if (input$sidebar_page == "power_survival") {
+    } else if (page == "power_survival") {
       tab3_inputs <- tab3_vals$inputs()
       validate(
         need(tab3_inputs$surv_pow_n > 0, "Sample size must be positive"),
@@ -382,7 +380,7 @@ app_server <- function(input, output, session) {
         need(tab3_inputs$surv_pow_pE >= 0 && tab3_inputs$surv_pow_pE <= 100, "Event rate must be between 0 and 100%"),
         need(tab3_inputs$surv_pow_hr != 1, "Hazard ratio must be different from 1 to calculate power")
       )
-    } else if (input$sidebar_page == "ss_survival") {
+    } else if (page == "ss_survival") {
       tab3_inputs <- tab3_vals$inputs()
       validate(
         need(tab3_inputs$surv_ss_hr > 0, "Hazard ratio must be positive"),
@@ -391,7 +389,7 @@ app_server <- function(input, output, session) {
         need(tab3_inputs$surv_ss_hr != 1, "Hazard ratio must be different from 1 to calculate sample size")
       )
     # Tab 4: Matched Case-Control
-    } else if (input$sidebar_page == "match_casecontrol") {
+    } else if (page == "match_casecontrol") {
       tab4_inputs <- tab4_vals$inputs()
       validate(
         need(tab4_inputs$match_or > 0, "Odds ratio must be positive"),
@@ -400,7 +398,7 @@ app_server <- function(input, output, session) {
         need(tab4_inputs$match_or != 1, "Odds ratio must be different from 1 to calculate sample size")
       )
     # Tab 5: Continuous Outcomes
-    } else if (input$sidebar_page == "power_continuous") {
+    } else if (page == "power_continuous") {
       tab5_inputs <- tab5_vals$inputs()
       validate(
         need(tab5_inputs$cont_pow_n1 > 1, "Sample size Group 1 must be at least 2"),
@@ -408,7 +406,7 @@ app_server <- function(input, output, session) {
         need(tab5_inputs$cont_pow_d > 0, "Effect size (Cohen's d) must be positive"),
         need(tab5_inputs$cont_pow_d != 0, "Effect size cannot be zero")
       )
-    } else if (input$sidebar_page == "ss_continuous") {
+    } else if (page == "ss_continuous") {
       tab5_inputs <- tab5_vals$inputs()
       validate(
         need(tab5_inputs$cont_ss_d > 0, "Effect size (Cohen's d) must be positive"),
@@ -416,7 +414,7 @@ app_server <- function(input, output, session) {
         need(tab5_inputs$cont_ss_ratio > 0, "Allocation ratio must be positive")
       )
     # Tab 6: Non-Inferiority
-    } else if (input$sidebar_page == "noninf") {
+    } else if (page == "noninf") {
       tab6_inputs <- tab6_vals$inputs()
       validate(
         need(tab6_inputs$noninf_p1 >= 0 && tab6_inputs$noninf_p1 <= 100, "Event rate Test Group must be between 0 and 100%"),
@@ -427,7 +425,7 @@ app_server <- function(input, output, session) {
       )
 
     # Tab 9: Time-to-Event Equivalence/Non-Inferiority
-    } else if (input$sidebar_page == "survival_ni_equiv") {
+    } else if (page == "survival_ni_equiv") {
       tab9_inputs <- tab9_vals$inputs()
       validate(
         need(tab9_inputs$hr_expected > 0, "Expected HR must be positive"),
@@ -465,12 +463,12 @@ app_server <- function(input, output, session) {
   # Create debounced preview reactive for quick feedback
   preview_inputs <- reactive({
     # Guard against NULL or uninitialized sidebar_page
-    if (is.null(input$sidebar_page) || length(input$sidebar_page) == 0) {
+    if (is.null(page) || length(page) == 0) {
       return(NULL)
     }
 
     # Tab 1: Single Proportion (using sidebar_page and module values)
-    if (input$sidebar_page == "power_single") {
+    if (page == "power_single") {
       tab1_inputs <- tab1_vals$inputs()
       list(
         tab = "Power (Single)",
@@ -479,7 +477,7 @@ app_server <- function(input, output, session) {
         alpha = tab1_inputs$power_alpha,
         rate = 1 / tab1_inputs$power_p
       )
-    } else if (input$sidebar_page == "ss_single") {
+    } else if (page == "ss_single") {
       tab1_inputs <- tab1_vals$inputs()
       list(
         tab = "Sample Size (Single)",
