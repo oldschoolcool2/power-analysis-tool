@@ -63,7 +63,7 @@
 }
 
 .evalue-result-card.evalue-weak h4 {
-  color: var(--color-error-700);
+  color: var(--text-error);
 }
 
 /* Moderate E-value (1.5-2.0) - Warning/Orange */
@@ -73,7 +73,7 @@
 }
 
 .evalue-result-card.evalue-moderate h4 {
-  color: var(--color-warning-700);
+  color: var(--text-warning);
 }
 
 /* Strong E-value (2.0-3.0) - Success/Green */
@@ -83,7 +83,7 @@
 }
 
 .evalue-result-card.evalue-strong h4 {
-  color: var(--color-success-700);
+  color: var(--text-success);
 }
 
 /* Very Strong E-value (>= 3.0) - Info/Blue */
@@ -93,7 +93,7 @@
 }
 
 .evalue-result-card.evalue-very-strong h4 {
-  color: var(--color-info-700);
+  color: var(--text-info);
 }
 
 /* ========================================================================

@@ -2,6 +2,18 @@
 #'
 #' @description Functions for calculating power and sample size for mediation analysis
 
+# Effect Size Interpretation Thresholds for Mediation Analysis ----
+# Path coefficient thresholds (standardized)
+PATH_COEF_NEGLIGIBLE <- 0.1
+PATH_COEF_SMALL <- 0.3
+PATH_COEF_MEDIUM <- 0.5
+
+# Indirect effect thresholds (based on Kenny, 2008)
+INDIRECT_EFFECT_NEGLIGIBLE <- 0.01
+INDIRECT_EFFECT_SMALL <- 0.09
+INDIRECT_EFFECT_MEDIUM <- 0.25
+
+
 #' Calculate Sobel Test Standard Error for Indirect Effect
 #'
 #' @param a Path coefficient X → M (treatment to mediator)
@@ -147,11 +159,11 @@ calc_mediation_mde <- function(n, a, power = 0.80, alpha = 0.05,
 interpret_path_coefficient <- function(coef) {
   abs_coef <- abs(coef)
 
-  if (abs_coef < 0.1) {
+  if (abs_coef < PATH_COEF_NEGLIGIBLE) {
     return("Negligible")
-  } else if (abs_coef < 0.3) {
+  } else if (abs_coef < PATH_COEF_SMALL) {
     return("Small")
-  } else if (abs_coef < 0.5) {
+  } else if (abs_coef < PATH_COEF_MEDIUM) {
     return("Medium")
   } else {
     return("Large")
@@ -167,11 +179,11 @@ interpret_path_coefficient <- function(coef) {
 interpret_indirect_effect <- function(ab) {
   abs_ab <- abs(ab)
 
-  if (abs_ab < 0.01) {
+  if (abs_ab < INDIRECT_EFFECT_NEGLIGIBLE) {
     return("Negligible")
-  } else if (abs_ab < 0.09) {
+  } else if (abs_ab < INDIRECT_EFFECT_SMALL) {
     return("Small")
-  } else if (abs_ab < 0.25) {
+  } else if (abs_ab < INDIRECT_EFFECT_MEDIUM) {
     return("Medium")
   } else {
     return("Large")

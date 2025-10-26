@@ -108,12 +108,17 @@
    * Initialize spinner handlers
    */
   function initSpinner() {
-    // Show spinner when Calculate button is clicked
+    // Track if Calculate button was recently clicked
+    let calculateButtonClicked = false;
+    
+    // Show spinner when Calculate button is clicked (but don't block the event)
     const calculateBtn = document.getElementById('go');
     if (calculateBtn) {
       calculateBtn.addEventListener('click', function() {
-        showSpinner('Calculating...', 'Running power analysis');
-      });
+        calculateButtonClicked = true;
+        // Clear flag after 2 seconds
+        setTimeout(() => { calculateButtonClicked = false; }, 2000);
+      }, { capture: false, passive: true });
     }
 
     // Hide spinner when Shiny is idle (calculation complete)
@@ -122,14 +127,14 @@
         // Delay to ensure results are rendered
         setTimeout(() => {
           hideSpinner(true);
+          calculateButtonClicked = false;
         }, 100);
       });
 
       // Show spinner on busy
       $(document).on('shiny:busy', function(event) {
-        // Only show if Calculate button was clicked recently
-        const calculateBtn = document.getElementById('go');
-        if (calculateBtn && calculateBtn.matches(':focus, :active')) {
+        // Show spinner if Calculate button was clicked recently
+        if (calculateButtonClicked) {
           showSpinner('Calculating...', 'Processing your analysis');
         }
       });
@@ -137,6 +142,7 @@
       // Handle errors
       $(document).on('shiny:error', function(event) {
         hideSpinner(false);
+        calculateButtonClicked = false;
       });
 
       // Listen for custom spinner events from Shiny
@@ -157,6 +163,7 @@
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape' && spinnerOverlay && spinnerOverlay.classList.contains('active')) {
         hideSpinner(false);
+        calculateButtonClicked = false;
       }
     });
   }

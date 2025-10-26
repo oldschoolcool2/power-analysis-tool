@@ -847,25 +847,25 @@ tr:hover {
 .alert-success {
   background-color: var(--color-success-100);
   border-color: var(--color-success-600);
-  color: var(--color-success-700);
+  color: var(--text-success);
 }
 
 .alert-info {
   background-color: var(--color-info-100);
   border-color: var(--color-info-600);
-  color: var(--color-info-700);
+  color: var(--text-info);
 }
 
 .alert-warning {
   background-color: var(--color-warning-100);
   border-color: var(--color-warning-600);
-  color: var(--color-warning-700);
+  color: var(--text-warning);
 }
 
 .alert-danger {
   background-color: var(--color-error-100);
   border-color: var(--color-error-600);
-  color: var(--color-error-700);
+  color: var(--text-error);
 }
 
 /* Shiny Notifications (Toast Messages) */

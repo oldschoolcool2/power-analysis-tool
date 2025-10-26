@@ -38,6 +38,16 @@
 #' Benjamini, Y., & Yekutieli, D. (2001). The control of the false discovery
 #' rate in multiple testing under dependency. Annals of Statistics, 29(4), 1165-1188.
 
+# Multiple Testing Interpretation Thresholds ----
+# Alpha ratio thresholds for severity classification
+ALPHA_RATIO_THRESHOLD_MODERATE <- 3
+ALPHA_RATIO_THRESHOLD_SUBSTANTIAL <- 10
+
+# Number of tests thresholds for warnings and recommendations
+N_TESTS_THRESHOLD_HIGH <- 100
+N_TESTS_THRESHOLD_MODERATE <- 20
+N_TESTS_BONFERRONI_WARNING <- 10
+
 
 #' Calculate Adjusted Alpha Level for Multiple Testing
 #'
@@ -217,11 +227,11 @@ interpret_multiple_testing <- function(alpha_original, alpha_adjusted, n_tests,
     severity <- "minimal"
     color <- "#28a745"  # green
     icon <- "ℹ️"
-  } else if (alpha_ratio < 3) {
+  } else if (alpha_ratio < ALPHA_RATIO_THRESHOLD_MODERATE) {
     severity <- "moderate"
     color <- "#ffc107"  # yellow
     icon <- "⚠️"
-  } else if (alpha_ratio < 10) {
+  } else if (alpha_ratio < ALPHA_RATIO_THRESHOLD_SUBSTANTIAL) {
     severity <- "substantial"
     color <- "#fd7e14"  # orange
     icon <- "⚠️⚠️"
@@ -360,12 +370,12 @@ validate_multiple_testing_inputs <- function(n_tests, alpha, method) {
   if (is.na(n_tests) || !is.numeric(n_tests) || n_tests < 1) {
     valid <- FALSE
     messages <- c(messages, "ERROR: Number of tests must be at least 1.")
-  } else if (n_tests > 100) {
+  } else if (n_tests > N_TESTS_THRESHOLD_HIGH) {
     messages <- c(messages,
       paste0("WARNING: Planning ", n_tests, " tests is unusual. ",
              "Consider whether all tests are truly needed. ",
              "With this many tests, Benjamini-Hochberg (FDR) correction is recommended."))
-  } else if (n_tests > 20) {
+  } else if (n_tests > N_TESTS_THRESHOLD_MODERATE) {
     messages <- c(messages,
       paste0("NOTE: With ", n_tests, " tests, consider FDR-controlling methods ",
              "(Benjamini-Hochberg) instead of FWER methods for better power."))
@@ -387,7 +397,7 @@ validate_multiple_testing_inputs <- function(n_tests, alpha, method) {
   }
 
   # Method-specific warnings
-  if (n_tests > 10 && tolower(method) == "bonferroni") {
+  if (n_tests > N_TESTS_BONFERRONI_WARNING && tolower(method) == "bonferroni") {
     messages <- c(messages,
       paste0("TIP: Bonferroni correction with ", n_tests,
              " tests is very conservative. Consider Holm or Benjamini-Hochberg for more power."))

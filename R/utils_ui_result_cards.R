@@ -3,6 +3,13 @@
 #' Visual components for displaying analysis results with color-coded interpretations,
 #' key findings callouts, and clear visual hierarchy.
 
+# Power Interpretation Thresholds ----
+# Standard power thresholds based on Cohen (1988)
+POWER_ADEQUATE <- 0.80      # Standard threshold for adequate power
+POWER_MARGINAL <- 0.70      # Lower bound for marginal power
+POWER_EXCELLENT <- 0.90     # Threshold for excellent power
+
+
 #' Create a visual result summary card
 #'
 #' @param title Card title (e.g., "Required Sample Size", "Achieved Power")
@@ -145,20 +152,20 @@ get_power_status <- function(power, as_percentage = FALSE) {
   }
 
   # Determine status
-  status <- if (power >= 0.80) {
+  status <- if (power >= POWER_ADEQUATE) {
     "success"
-  } else if (power >= 0.70) {
+  } else if (power >= POWER_MARGINAL) {
     "warning"
   } else {
     "danger"
   }
 
   # Interpretation text
-  interpretation <- if (power >= 0.90) {
+  interpretation <- if (power >= POWER_EXCELLENT) {
     "Excellent power (≥90%)"
-  } else if (power >= 0.80) {
+  } else if (power >= POWER_ADEQUATE) {
     "Adequate power (≥80%)"
-  } else if (power >= 0.70) {
+  } else if (power >= POWER_MARGINAL) {
     "Marginal power (70-79%)"
   } else if (power >= 0.50) {
     "Low power (50-69%)"
@@ -169,7 +176,7 @@ get_power_status <- function(power, as_percentage = FALSE) {
   list(
     status = status,
     interpretation = interpretation,
-    icon = if (power >= 0.80) "check-circle" else if (power >= 0.70) "exclamation-triangle" else "times-circle"
+    icon = if (power >= POWER_ADEQUATE) "check-circle" else if (power >= POWER_MARGINAL) "exclamation-triangle" else "times-circle"
   )
 }
 

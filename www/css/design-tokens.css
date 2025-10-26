@@ -124,6 +124,27 @@
   --text-sidebar-primary: rgba(255, 255, 255, 0.9);
 
   /* ========================================================================
+     BOOTSTRAP 5 SEMANTIC VARIABLE MAPPINGS
+     ======================================================================== */
+  
+  /* Map Bootstrap's alert/badge semantic colors to our design tokens */
+  --bs-success-text-emphasis: var(--text-success);
+  --bs-success-bg-subtle: var(--color-success-100);
+  --bs-success-border-subtle: var(--color-success-600);
+  
+  --bs-info-text-emphasis: var(--text-info);
+  --bs-info-bg-subtle: var(--color-info-100);
+  --bs-info-border-subtle: var(--color-info-600);
+  
+  --bs-warning-text-emphasis: var(--text-warning);
+  --bs-warning-bg-subtle: var(--color-warning-100);
+  --bs-warning-border-subtle: var(--color-warning-600);
+  
+  --bs-danger-text-emphasis: var(--text-error);
+  --bs-danger-bg-subtle: var(--color-error-100);
+  --bs-danger-border-subtle: var(--color-error-600);
+
+  /* ========================================================================
      BORDERS
      ======================================================================== */
 
@@ -370,6 +391,23 @@
   --text-warning: #FBBF24;
   --text-error: #F87171;
   --text-info: #60A5FA;
+
+  /* Bootstrap 5 Semantic Variable Mappings - Dark Mode */
+  --bs-success-text-emphasis: var(--text-success);
+  --bs-success-bg-subtle: var(--color-success-100);
+  --bs-success-border-subtle: var(--color-success-600);
+  
+  --bs-info-text-emphasis: var(--text-info);
+  --bs-info-bg-subtle: var(--color-info-100);
+  --bs-info-border-subtle: var(--color-info-600);
+  
+  --bs-warning-text-emphasis: var(--text-warning);
+  --bs-warning-bg-subtle: var(--color-warning-100);
+  --bs-warning-border-subtle: var(--color-warning-600);
+  
+  --bs-danger-text-emphasis: var(--text-error);
+  --bs-danger-bg-subtle: var(--color-error-100);
+  --bs-danger-border-subtle: var(--color-error-600);
 
   /* Borders - Dark Mode */
   --border-color-subtle: #2D3748;

@@ -212,16 +212,16 @@ mod_01_single_proportion_server <- function(id, parent_session = NULL){
     list(
       inputs = reactive({
         list(
-          power_n = as.numeric(input$power_n),
-          power_p = as.numeric(input$power_p),
-          power_alpha = as.numeric(input$power_alpha),
-          power_discon = as.numeric(input$power_discon),
-          ss_single_calc_mode = input$ss_single_calc_mode,
-          ss_power = as.numeric(input$ss_power),
-          ss_p = as.numeric(input$ss_p),
-          ss_n_fixed = as.numeric(input$ss_n_fixed),
-          ss_discon = as.numeric(input$ss_discon),
-          ss_alpha = as.numeric(input$ss_alpha)
+          power_n = if (is.null(input$power_n) || is.na(as.numeric(input$power_n))) 230 else as.numeric(input$power_n),
+          power_p = if (is.null(input$power_p) || is.na(as.numeric(input$power_p))) 100 else as.numeric(input$power_p),
+          power_alpha = if (is.null(input$power_alpha) || is.na(as.numeric(input$power_alpha))) 0.05 else as.numeric(input$power_alpha),
+          power_discon = if (is.null(input$power_discon) || is.na(as.numeric(input$power_discon))) 10 else as.numeric(input$power_discon),
+          ss_single_calc_mode = if (is.null(input$ss_single_calc_mode)) "calc_n" else input$ss_single_calc_mode,
+          ss_power = if (is.null(input$ss_power) || is.na(as.numeric(input$ss_power))) 80 else as.numeric(input$ss_power),
+          ss_p = if (is.null(input$ss_p) || is.na(as.numeric(input$ss_p))) 100 else as.numeric(input$ss_p),
+          ss_n_fixed = if (is.null(input$ss_n_fixed) || is.na(as.numeric(input$ss_n_fixed))) 500 else as.numeric(input$ss_n_fixed),
+          ss_discon = if (is.null(input$ss_discon) || is.na(as.numeric(input$ss_discon))) 10 else as.numeric(input$ss_discon),
+          ss_alpha = if (is.null(input$ss_alpha) || is.na(as.numeric(input$ss_alpha))) 0.05 else as.numeric(input$ss_alpha)
         )
       }),
       missing_data_vals = missing_data_vals,

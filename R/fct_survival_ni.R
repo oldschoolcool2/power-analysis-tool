@@ -6,6 +6,16 @@
 #' @name survival_ni
 NULL
 
+# Hazard Ratio Margin Interpretation Thresholds ----
+# Thresholds for clinical interpretation of HR margins in non-inferiority/equivalence testing
+HR_MARGIN_VERY_STRINGENT <- 1.15
+HR_MARGIN_STRINGENT <- 1.25
+HR_MARGIN_MODERATE <- 1.50
+
+# Numerical tolerance for log-scale comparisons
+LOG_EFFECT_TOLERANCE <- 1e-10
+
+
 #' Calculate Sample Size for Time-to-Event Non-Inferiority Test
 #'
 #' Calculates required sample size for a non-inferiority test using hazard ratios
@@ -41,7 +51,7 @@ ssize_survival_ni <- function(power, hr_expected, hr_margin, k, pE, alpha = 0.02
   log_effect <- log(hr_expected) - log(hr_margin)
 
   # If expected HR is worse than margin, we cannot demonstrate NI
-  if (abs(log_effect) < 1e-10) {
+  if (abs(log_effect) < LOG_EFFECT_TOLERANCE) {
     warning("Expected HR equals the margin - cannot demonstrate non-inferiority")
     return(Inf)
   }
@@ -144,7 +154,7 @@ power_survival_ni <- function(n, hr_expected, hr_margin, k, pE, alpha = 0.025, r
   log_effect <- log(hr_expected) - log(hr_margin)
 
   # If expected HR equals or exceeds margin, power is undefined
-  if (abs(log_effect) < 1e-10 || hr_expected >= hr_margin) {
+  if (abs(log_effect) < LOG_EFFECT_TOLERANCE || hr_expected >= hr_margin) {
     return(0)
   }
 
@@ -227,13 +237,13 @@ mde_survival_ni <- function(n, hr_expected, power, k, pE, alpha = 0.025, ratio =
 interpret_hr_margin <- function(hr_margin, test_type = "non-inferiority") {
 
   if (test_type == "non-inferiority") {
-    if (hr_margin < 1.15) {
+    if (hr_margin < HR_MARGIN_VERY_STRINGENT) {
       severity <- "very stringent"
       color <- "#2e7d32"
-    } else if (hr_margin < 1.25) {
+    } else if (hr_margin < HR_MARGIN_STRINGENT) {
       severity <- "stringent"
       color <- "#66bb6a"
-    } else if (hr_margin < 1.50) {
+    } else if (hr_margin < HR_MARGIN_MODERATE) {
       severity <- "moderate"
       color <- "#ff9800"
     } else {
@@ -250,13 +260,13 @@ interpret_hr_margin <- function(hr_margin, test_type = "non-inferiority") {
     )
 
   } else {  # equivalence
-    if (hr_margin < 1.15) {
+    if (hr_margin < HR_MARGIN_VERY_STRINGENT) {
       severity <- "very narrow"
       color <- "#2e7d32"
-    } else if (hr_margin < 1.25) {
+    } else if (hr_margin < HR_MARGIN_STRINGENT) {
       severity <- "narrow"
       color <- "#66bb6a"
-    } else if (hr_margin < 1.50) {
+    } else if (hr_margin < HR_MARGIN_MODERATE) {
       severity <- "moderate"
       color <- "#ff9800"
     } else {
@@ -293,7 +303,7 @@ events_survival_ni <- function(power, hr_expected, hr_margin, alpha = 0.025) {
   z_beta <- qnorm(power)
   log_effect <- log(hr_expected) - log(hr_margin)
 
-  if (abs(log_effect) < 1e-10) {
+  if (abs(log_effect) < LOG_EFFECT_TOLERANCE) {
     return(Inf)
   }
 

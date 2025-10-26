@@ -78,6 +78,15 @@ app_server <- function(input, output, session) {
   # Helper Functions
   # ============================================================
 
+  # Get current sidebar page with default fallback
+  get_current_page <- function() {
+    if (is.null(input$sidebar_page) || length(input$sidebar_page) == 0 || input$sidebar_page == "") {
+      "power_single"
+    } else {
+      input$sidebar_page
+    }
+  }
+  
   # Convert sidebar_page value to display name (for filenames, titles, etc.)
   get_page_display_name <- function(page) {
     switch(page,
@@ -535,15 +544,13 @@ app_server <- function(input, output, session) {
     }
 
     isolate({
-      # Guard against NULL or uninitialized sidebar_page
-      if (is.null(input$sidebar_page) || length(input$sidebar_page) == 0) {
-        return(NULL)
-      }
+      # Get current page with default fallback
+      page <- get_current_page()
 
       validate_inputs()
 
       # Tab 1: Single Proportion - Power Analysis (using sidebar_page)
-      if (input$sidebar_page == "power_single") {
+      if (page == "power_single") {
         tab1_inputs <- tab1_vals$inputs()
         incidence_rate <- tab1_inputs$power_p
         sample_size <- tab1_inputs$power_n
@@ -561,7 +568,7 @@ app_server <- function(input, output, session) {
           discon = discon
         )
       # Tab 1: Single Proportion - Sample Size (using sidebar_page)
-      } else if (input$sidebar_page == "ss_single") {
+      } else if (page == "ss_single") {
         tab1_inputs <- tab1_vals$inputs()
         calc_mode <- tab1_inputs$ss_single_calc_mode
         power <- tab1_inputs$ss_power / 100
@@ -665,7 +672,7 @@ app_server <- function(input, output, session) {
         }
 
       # Tab 2: Two-Group Comparison - Power Analysis (using sidebar_page)
-      } else if (input$sidebar_page == "power_twogrp") {
+      } else if (page == "power_twogrp") {
         tab2_inputs <- tab2_vals$inputs()
         n1 <- tab2_inputs$twogrp_pow_n1
         n2 <- tab2_inputs$twogrp_pow_n2
@@ -692,7 +699,7 @@ app_server <- function(input, output, session) {
         HTML(paste0(text0, text1, text2, text3))
 
       # Tab 2: Two-Group Comparison - Sample Size (using sidebar_page)
-      } else if (input$sidebar_page == "ss_twogrp") {
+      } else if (page == "ss_twogrp") {
         tab2_inputs <- tab2_vals$inputs()
         calc_mode <- tab2_inputs$twogrp_ss_calc_mode
         power <- tab2_inputs$twogrp_ss_power / 100
@@ -823,7 +830,7 @@ app_server <- function(input, output, session) {
         }
 
       # Tab 3: Survival Analysis - Power Analysis (using sidebar_page)
-      } else if (input$sidebar_page == "power_survival") {
+      } else if (page == "power_survival") {
         tab3_inputs <- tab3_vals$inputs()
         n <- tab3_inputs$surv_pow_n
         hr <- tab3_inputs$surv_pow_hr
@@ -840,7 +847,7 @@ app_server <- function(input, output, session) {
         HTML(as.character(create_survival_power_result_text(n, hr, k, pE, power, tab3_inputs$surv_pow_alpha)))
 
       # Tab 3: Survival Analysis - Sample Size (using sidebar_page)
-      } else if (input$sidebar_page == "ss_survival") {
+      } else if (page == "ss_survival") {
         tab3_inputs <- tab3_vals$inputs()
         calc_mode <- tab3_inputs$surv_ss_calc_mode
         power <- tab3_inputs$surv_ss_power / 100
@@ -978,7 +985,7 @@ app_server <- function(input, output, session) {
         }
 
       # Tab 4: Matched Case-Control (using sidebar_page)
-      } else if (input$sidebar_page == "match_casecontrol") {
+      } else if (page == "match_casecontrol") {
         tab4_inputs <- tab4_vals$inputs()
         calc_mode <- tab4_inputs$match_calc_mode
         p0 <- tab4_inputs$match_p0 / 100
@@ -1138,7 +1145,7 @@ app_server <- function(input, output, session) {
         }
 
       # Tab 5: Continuous Outcomes - Power Analysis (using sidebar_page)
-      } else if (input$sidebar_page == "power_continuous") {
+      } else if (page == "power_continuous") {
         tab5_inputs <- tab5_vals$inputs()
         n1 <- tab5_inputs$cont_pow_n1
         n2 <- tab5_inputs$cont_pow_n2
@@ -1161,7 +1168,7 @@ app_server <- function(input, output, session) {
         )
 
       # Tab 5: Continuous Outcomes - Sample Size (using sidebar_page)
-      } else if (input$sidebar_page == "ss_continuous") {
+      } else if (page == "ss_continuous") {
         tab5_inputs <- tab5_vals$inputs()
         calc_mode <- tab5_inputs$cont_ss_calc_mode
         power <- tab5_inputs$cont_ss_power / 100
@@ -1308,7 +1315,7 @@ app_server <- function(input, output, session) {
         }
 
       # Tab 6: Non-Inferiority (using sidebar_page)
-      } else if (input$sidebar_page == "noninf") {
+      } else if (page == "noninf") {
         tab6_inputs <- tab6_vals$inputs()
         calc_mode <- tab6_inputs$noninf_calc_mode
         p1 <- tab6_inputs$noninf_p1 / 100
@@ -1485,7 +1492,7 @@ app_server <- function(input, output, session) {
           HTML(paste0(text0, text1, text2, text3, effect_size_box))
         }
 
-      } else if (input$sidebar_page == "vif_calculator") {
+      } else if (page == "vif_calculator") {
         # PAGE 11: Propensity Score Calculator (Austin 2021 + Li et al. 2025)
 
         # Get common inputs
@@ -1723,7 +1730,7 @@ app_server <- function(input, output, session) {
 
         HTML(paste0(text0, text1, text2, text3))
 
-      } else if (input$sidebar_page == "mediation_analysis") {
+      } else if (page == "mediation_analysis") {
         # ============================================================
         # MEDIATION ANALYSIS
         # ============================================================
@@ -1846,7 +1853,7 @@ app_server <- function(input, output, session) {
 
         HTML(result_html)
 
-      } else if (input$sidebar_page == "survival_ni_equiv") {
+      } else if (page == "survival_ni_equiv") {
         # ============================================================
         # TIME-TO-EVENT EQUIVALENCE/NON-INFERIORITY
         # ============================================================

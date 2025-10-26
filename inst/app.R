@@ -3838,7 +3838,6 @@ server <- function(input, output, session) {
       on.exit(progress$close())
       progress$set(message = "Creating Analysis Report File", value = 0)
 
-      # Set up parameters to pass to Rmd document
       params <- list(
         tabset = input$tabset,
         incidence_rate = incidence_rate,

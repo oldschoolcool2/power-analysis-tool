@@ -25,3 +25,9 @@ vignettes/.build.timestamp
 inst/doc/
 /doc/
 /Meta/
+
+# R CMD check and build artifacts
+/*.tar.gz
+/*.Rcheck/
+.R/
+inst/resources/

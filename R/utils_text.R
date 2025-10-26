@@ -109,17 +109,25 @@ format_numeric <- function(value,
                           as_percent = FALSE,
                           as_integer = FALSE) {
 
-  if (is.na(value) || is.null(value)) {
+  # Handle NA, NULL, NaN, and Inf values
+  if (is.null(value) || length(value) == 0) {
     return("NA")
+  }
+  if (is.na(value) || is.nan(value)) {
+    return("NA")
+  }
+  if (is.infinite(value)) {
+    return(if (value > 0) "Inf" else "-Inf")
   }
 
   # Ensure digits is at least 1 (R's format() requires this)
   if (digits < 1) {
     digits <- 1
-    # When digits is 0 for percentages, we want 0 decimal places
-    if (as_percent && nsmall == 2) {
-      nsmall <- 0
-    }
+  }
+  
+  # For percentages with digits=0, we want 0 decimal places
+  if (as_percent && nsmall >= 2 && digits == 1) {
+    nsmall <- 0
   }
 
   if (as_integer) {
@@ -127,7 +135,9 @@ format_numeric <- function(value,
   }
 
   if (as_percent) {
-    return(paste0(format(value * 100, digits = digits, nsmall = nsmall), "%"))
+    # Safely multiply by 100 and format
+    percent_value <- value * 100
+    return(paste0(format(percent_value, digits = digits, nsmall = nsmall), "%"))
   }
 
   format(value, digits = digits, nsmall = nsmall)
