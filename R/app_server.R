@@ -10,7 +10,7 @@
 #' @importFrom shinyjs useShinyjs
 #' @importFrom stats uniroot qnorm
 #' @importFrom pwr pwr.p.test ES.h pwr.t2n.test pwr.t.test
-#' @importFrom powerSurvEpi powerEpi ssizeEpi
+#' @importFrom powerSurvEpi powerEpi.default ssizeEpi
 #' @importFrom epiR epi.sscc
 #' @importFrom plotly plot_ly add_trace layout config renderPlotly
 #' @importFrom binom binom.confint
@@ -779,11 +779,61 @@ app_server <- function(input, output, session) {
         p1 <- tab2_inputs$twogrp_pow_p1 / 100
         p2 <- tab2_inputs$twogrp_pow_p2 / 100
 
+        # Get multiple testing adjustment
+        mt_vals <- tab2_vals$multiple_testing_vals()
+        alpha_to_use <- if (mt_vals$adjust_alpha) {
+          mt_adj <- calc_adjusted_alpha(
+            tab2_inputs$twogrp_pow_alpha,
+            mt_vals$n_tests,
+            mt_vals$correction_method
+          )
+          mt_adj$alpha_adjusted
+        } else {
+          tab2_inputs$twogrp_pow_alpha
+        }
+
+        # Get clustering adjustment - use effective sample sizes
+        clust_vals <- tab2_vals$clustering_vals()
+        if (clust_vals$adjust_clustering) {
+          de <- calc_design_effect(clust_vals$cluster_size, clust_vals$icc)
+          n1_to_use <- calc_effective_n(n1, de)
+          n2_to_use <- calc_effective_n(n2, de)
+        } else {
+          n1_to_use <- n1
+          n2_to_use <- n2
+        }
+
+        # Calculate power with adjustments
         power <- pwr.2p2n.test(
-          h = ES.h(p1, p2), n1 = n1, n2 = n2,
-          sig.level = tab2_inputs$twogrp_pow_alpha,
+          h = ES.h(p1, p2), n1 = n1_to_use, n2 = n2_to_use,
+          sig.level = alpha_to_use,
           alternative = tab2_inputs$twogrp_pow_sided
         )$power
+
+        # Build adjustment notes
+        adjustment_notes <- ""
+        if (mt_vals$adjust_alpha || clust_vals$adjust_clustering) {
+          adjustment_notes <- "<div style='background-color: #e7f3ff; border-left: 4px solid #0066cc; padding: 15px; margin: 15px 0;'><h5 style='margin-top: 0;'>Adjustments Applied</h5>"
+
+          if (mt_vals$adjust_alpha) {
+            adjustment_notes <- paste0(adjustment_notes,
+              "<p><strong>Multiple Testing:</strong> Using ", mt_vals$correction_method,
+              " correction for ", mt_vals$n_tests, " tests. Adjusted α = ",
+              format(alpha_to_use, digits = 4), " (original α = ", tab2_inputs$twogrp_pow_alpha, ").</p>")
+          }
+
+          if (clust_vals$adjust_clustering) {
+            adjustment_notes <- paste0(adjustment_notes,
+              "<p><strong>Clustering:</strong> With n1 = ", n1, " and n2 = ", n2,
+              " total participants, ICC = ", clust_vals$icc,
+              ", cluster size = ", clust_vals$cluster_size,
+              ", design effect = ", format(de, digits = 2),
+              ", the effective sample sizes are n1 = ", n1_to_use,
+              " and n2 = ", n2_to_use, ".</p>")
+          }
+
+          adjustment_notes <- paste0(adjustment_notes, "</div>")
+        }
 
         text0 <- hr()
         text1 <- h1("Results of this analysis")
@@ -796,7 +846,7 @@ app_server <- function(input, output, session) {
           format(power * 100, digits = 1, nsmall = 1), "% power to detect this difference at α = ",
           tab2_inputs$twogrp_pow_alpha, " (", tab2_inputs$twogrp_pow_sided, " test)."
         ))
-        HTML(paste0(text0, text1, text2, text3))
+        HTML(paste0(text0, text1, text2, text3, adjustment_notes))
 
       # Tab 2: Two-Group Comparison - Sample Size (using sidebar_page)
       } else if (page == "ss_twogrp") {
@@ -809,10 +859,23 @@ app_server <- function(input, output, session) {
           p1 <- tab2_inputs$twogrp_ss_p1 / 100
           p2 <- tab2_inputs$twogrp_ss_p2 / 100
 
+          # Get multiple testing adjustment
+          mt_vals <- tab2_vals$multiple_testing_vals()
+          alpha_to_use <- if (mt_vals$adjust_alpha) {
+            mt_adj <- calc_adjusted_alpha(
+              tab2_inputs$twogrp_ss_alpha,
+              mt_vals$n_tests,
+              mt_vals$correction_method
+            )
+            mt_adj$alpha_adjusted
+          } else {
+            tab2_inputs$twogrp_ss_alpha
+          }
+
           # Calculate base sample size for group 1 (ratio-aware for unequal allocation)
           n1_base <- solve_n1_for_ratio(
             ES.h(p1, p2), tab2_inputs$twogrp_ss_ratio,
-            tab2_inputs$twogrp_ss_alpha, power, tab2_inputs$twogrp_ss_sided
+            alpha_to_use, power, tab2_inputs$twogrp_ss_sided
           )
           n2_base <- n1_base * tab2_inputs$twogrp_ss_ratio
           n_total_base <- ceiling(n1_base + n2_base)
@@ -841,6 +904,28 @@ app_server <- function(input, output, session) {
             missing_data_text <- HTML("")
           }
 
+          # Apply clustering adjustment if enabled
+          clust_vals <- tab2_vals$clustering_vals()
+          if (clust_vals$adjust_clustering) {
+            de <- calc_design_effect(clust_vals$cluster_size, clust_vals$icc)
+            n_total_before_clustering <- n_total_final
+            n1_before_clustering <- n1_final
+            n2_before_clustering <- n2_final
+            n_total_final <- ceiling(n_total_final * de)
+            # Maintain allocation ratio after clustering adjustment
+            n1_final <- ceiling(n_total_final / (1 + tab2_inputs$twogrp_ss_ratio))
+            n2_final <- n_total_final - n1_final
+          }
+
+          # Build multiple testing text
+          mt_text <- if (mt_vals$adjust_alpha) {
+            paste0(" <strong>Multiple testing correction:</strong> Using ",
+                   mt_vals$correction_method, " correction for ", mt_vals$n_tests,
+                   " tests, adjusted α = ", format(alpha_to_use, digits = 4), ".")
+          } else {
+            ""
+          }
+
           text0 <- hr()
           text1 <- h1("Results of this analysis")
           text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
@@ -853,16 +938,34 @@ app_server <- function(input, output, session) {
             format(p2 * 100, digits = 2, nsmall = 1), "% in Group 2 (control) to ",
             format(p1 * 100, digits = 2, nsmall = 1), "% in Group 1 (exposed/treatment) with ",
             format(power * 100, digits = 1, nsmall = 0), "% power at α = ",
-            tab2_inputs$twogrp_ss_alpha, " (", tab2_inputs$twogrp_ss_sided, " test), the required sample sizes are: Group 1: n1 = ",
-            format(n1_final, digits = 1, nsmall = 0), ", Group 2: n2 = ",
-            format(n2_final, digits = 1, nsmall = 0), " (total N = ",
-            format(n_total_final, digits = 1, nsmall = 0), ").",
+            tab2_inputs$twogrp_ss_alpha, " (", tab2_inputs$twogrp_ss_sided, " test).",
+            mt_text,
+            " Base required sample sizes: Group 1: n1 = ",
+            format(ceiling(n1_base), digits = 1, nsmall = 0), ", Group 2: n2 = ",
+            format(ceiling(n2_base), digits = 1, nsmall = 0), " (total N = ",
+            format(n_total_base, digits = 1, nsmall = 0), ").",
             if (md_vals$adjust_missing) {
+              before_clust_n <- if (clust_vals$adjust_clustering) n_total_before_clustering else n_total_final
+              before_clust_n1 <- if (clust_vals$adjust_clustering) n1_before_clustering else n1_final
+              before_clust_n2 <- if (clust_vals$adjust_clustering) n2_before_clustering else n2_final
               paste0(" <strong>After adjusting for ", md_vals$missing_pct,
-                     "% missing data, the final total sample size is ",
-                     format(n_total_final, digits = 1), " participants (n1=", n1_final, ", n2=", n2_final, ").</strong>")
+                     "% missing data, the sample size is ",
+                     format(before_clust_n, digits = 1), " participants (n1=", before_clust_n1, ", n2=", before_clust_n2, ").</strong>")
             } else {
               ""
+            },
+            if (clust_vals$adjust_clustering) {
+              paste0(" <strong>After adjusting for clustering</strong> (ICC = ", clust_vals$icc,
+                     ", cluster size = ", clust_vals$cluster_size, ", design effect = ",
+                     format(de, digits = 2), "), <strong>the final sample size is ",
+                     format(n_total_final, digits = 1), " participants (n1=", n1_final, ", n2=", n2_final, ").</strong>")
+            } else {
+              if (!md_vals$adjust_missing) {
+                paste0(" <strong>Final sample size: ", format(n_total_final, digits = 1),
+                       " participants (n1=", n1_final, ", n2=", n2_final, ").</strong>")
+              } else {
+                ""
+              }
             }
           ))
 
@@ -875,6 +978,19 @@ app_server <- function(input, output, session) {
           n1_nominal <- tab2_inputs$twogrp_ss_n1_fixed
           n2_nominal <- n1_nominal * tab2_inputs$twogrp_ss_ratio
           p2 <- tab2_inputs$twogrp_ss_p2_baseline / 100
+
+          # Get multiple testing adjustment
+          mt_vals <- tab2_vals$multiple_testing_vals()
+          alpha_to_use <- if (mt_vals$adjust_alpha) {
+            mt_adj <- calc_adjusted_alpha(
+              tab2_inputs$twogrp_ss_alpha,
+              mt_vals$n_tests,
+              mt_vals$correction_method
+            )
+            mt_adj$alpha_adjusted
+          } else {
+            tab2_inputs$twogrp_ss_alpha
+          }
 
           # Account for missing data to get effective sample sizes
           md_vals <- tab2_vals$missing_data_vals()
@@ -891,10 +1007,31 @@ app_server <- function(input, output, session) {
             missing_note <- ""
           }
 
+          # Account for clustering to get effective sample sizes
+          clust_vals <- tab2_vals$clustering_vals()
+          if (clust_vals$adjust_clustering) {
+            de <- calc_design_effect(clust_vals$cluster_size, clust_vals$icc)
+            n1_effective <- calc_effective_n(n1_effective, de)
+            n2_effective <- calc_effective_n(n2_effective, de)
+            clustering_note <- paste0(" After accounting for clustering (ICC=", clust_vals$icc,
+              ", cluster size=", clust_vals$cluster_size, ", DE=", format(de, digits=2),
+              "), effective sample sizes are n1=", n1_effective, ", n2=", n2_effective, ".")
+          } else {
+            clustering_note <- ""
+          }
+
+          # Multiple testing note
+          mt_note <- if (mt_vals$adjust_alpha) {
+            paste0(" Using ", mt_vals$correction_method, " correction for ", mt_vals$n_tests,
+                   " tests, adjusted α = ", format(alpha_to_use, digits = 4), ".")
+          } else {
+            ""
+          }
+
           # Solve for minimal detectable h
           h_min <- pwr.2p2n.test(
             h = NULL, n1 = n1_effective, n2 = n2_effective,
-            sig.level = tab2_inputs$twogrp_ss_alpha, power = power,
+            sig.level = alpha_to_use, power = power,
             alternative = tab2_inputs$twogrp_ss_sided
           )$h
 
@@ -912,14 +1049,16 @@ app_server <- function(input, output, session) {
           text3 <- p(paste0(
             "<strong>Minimal Detectable Effect Size Analysis</strong><br>",
             "With available sample sizes of n1=", n1_nominal, " (Group 1) and n2=",
-            round(n2_nominal), " (Group 2, ratio=", tab2_inputs$twogrp_ss_ratio, "),",
+            round(n2_nominal), " (Group 2, ratio=", tab2_inputs$twogrp_ss_ratio, ").",
+            mt_note,
             missing_note,
+            clustering_note,
             " With ", format(power * 100, digits = 1), "% power and α = ", tab2_inputs$twogrp_ss_alpha,
             " (", tab2_inputs$twogrp_ss_sided, " test), given a baseline event rate of ",
             format(p2 * 100, digits = 2), "% in Group 2, ",
             "the <strong>minimal detectable event rate in Group 1 is ",
             format(p1_detectable * 100, digits = 2), "%</strong> (risk difference: ",
-            format(abs(effect_measures$risk_diff), digits = 2), " percentage points)."
+            format(abs(effect_measures$RD), digits = 2), " percentage points)."
           ))
 
           effect_size_box <- format_minimal_detectable_effect(
@@ -937,14 +1076,61 @@ app_server <- function(input, output, session) {
         k <- tab3_inputs$surv_pow_k / 100
         pE <- tab3_inputs$surv_pow_pE / 100
 
-        # Calculate power using powerSurvEpi
+        # Get multiple testing adjustment
+        mt_vals <- tab3_vals$multiple_testing_vals()
+        alpha_to_use <- if (mt_vals$adjust_alpha) {
+          mt_adj <- calc_adjusted_alpha(
+            tab3_inputs$surv_pow_alpha,
+            mt_vals$n_tests,
+            mt_vals$correction_method
+          )
+          mt_adj$alpha_adjusted
+        } else {
+          tab3_inputs$surv_pow_alpha
+        }
+
+        # Get clustering adjustment - use effective sample size
+        clust_vals <- tab3_vals$clustering_vals()
+        n_to_use <- if (clust_vals$adjust_clustering) {
+          de <- calc_design_effect(clust_vals$cluster_size, clust_vals$icc)
+          calc_effective_n(n, de)
+        } else {
+          n
+        }
+
+        # Calculate power using powerSurvEpi with adjustments
         power <- powerEpi.default(
-          n = n, theta = hr, p = k, psi = pE,
-          rho2 = 0, alpha = tab3_inputs$surv_pow_alpha
+          n = n_to_use, theta = hr, p = k, psi = pE,
+          rho2 = 0, alpha = alpha_to_use
         )
 
+        # Build adjustment notes
+        adjustment_notes <- ""
+        if (mt_vals$adjust_alpha || clust_vals$adjust_clustering) {
+          adjustment_notes <- "<div style='background-color: #e7f3ff; border-left: 4px solid #0066cc; padding: 15px; margin: 15px 0;'><h5 style='margin-top: 0;'>Adjustments Applied</h5>"
+
+          if (mt_vals$adjust_alpha) {
+            adjustment_notes <- paste0(adjustment_notes,
+              "<p><strong>Multiple Testing:</strong> Using ", mt_vals$correction_method,
+              " correction for ", mt_vals$n_tests, " tests. Adjusted α = ",
+              format(alpha_to_use, digits = 4), " (original α = ", tab3_inputs$surv_pow_alpha, ").</p>")
+          }
+
+          if (clust_vals$adjust_clustering) {
+            adjustment_notes <- paste0(adjustment_notes,
+              "<p><strong>Clustering:</strong> With n = ", n,
+              " total participants, ICC = ", clust_vals$icc,
+              ", cluster size = ", clust_vals$cluster_size,
+              ", design effect = ", format(de, digits = 2),
+              ", the effective sample size is ", n_to_use, " participants.</p>")
+          }
+
+          adjustment_notes <- paste0(adjustment_notes, "</div>")
+        }
+
         # Use helper function for result text
-        HTML(as.character(create_survival_power_result_text(n, hr, k, pE, power, tab3_inputs$surv_pow_alpha)))
+        base_result <- create_survival_power_result_text(n, hr, k, pE, power, tab3_inputs$surv_pow_alpha)
+        HTML(paste0(as.character(base_result), adjustment_notes))
 
       # Tab 3: Survival Analysis - Sample Size (using sidebar_page)
       } else if (page == "ss_survival") {
@@ -959,10 +1145,23 @@ app_server <- function(input, output, session) {
           # Calculate Sample Size
           hr <- tab3_inputs$surv_ss_hr
 
-          # Calculate base sample size using powerSurvEpi
+          # Get multiple testing adjustment
+          mt_vals <- tab3_vals$multiple_testing_vals()
+          alpha_to_use <- if (mt_vals$adjust_alpha) {
+            mt_adj <- calc_adjusted_alpha(
+              tab3_inputs$surv_ss_alpha,
+              mt_vals$n_tests,
+              mt_vals$correction_method
+            )
+            mt_adj$alpha_adjusted
+          } else {
+            tab3_inputs$surv_ss_alpha
+          }
+
+          # Calculate base sample size using powerSurvEpi with adjusted alpha
           n_base <- ssizeEpi.default(
             power = power, theta = hr, p = k, psi = pE,
-            rho2 = 0, alpha = tab3_inputs$surv_ss_alpha
+            rho2 = 0, alpha = alpha_to_use
           )
 
           # Apply missing data adjustment if enabled
@@ -982,6 +1181,22 @@ app_server <- function(input, output, session) {
             missing_data_text <- HTML("")
           }
 
+          # Apply clustering adjustment if enabled
+          clust_vals <- tab3_vals$clustering_vals()
+          if (clust_vals$adjust_clustering) {
+            de <- calc_design_effect(clust_vals$cluster_size, clust_vals$icc)
+            n_before_clustering <- n_final
+            n_final <- ceiling(n_final * de)
+          }
+
+          # Build adjustment text
+          adjustment_text <- ""
+          if (mt_vals$adjust_alpha) {
+            adjustment_text <- paste0(" <strong>Multiple testing correction:</strong> Using ",
+                   mt_vals$correction_method, " correction for ", mt_vals$n_tests,
+                   " tests, adjusted α = ", format(alpha_to_use, digits = 4), ".")
+          }
+
           text0 <- hr()
           text1 <- h1("Results of this analysis")
           text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
@@ -989,14 +1204,27 @@ app_server <- function(input, output, session) {
             "To detect a hazard ratio of ", format_numeric(hr, 2),
             " with ", format_numeric(power * 100, 0), "% power in a survival analysis using Cox regression, ",
             "with ", format_numeric(k * 100, 1), "% of participants exposed/treated and an overall event rate of ",
-            format_numeric(pE * 100, 1), "%, the required total sample size is N = ",
-            format_numeric(ceiling(n_final), 0), " participants (α = ",
-            tab3_inputs$surv_ss_alpha, ", two-sided test).",
+            format_numeric(pE * 100, 1), "%, at α = ", tab3_inputs$surv_ss_alpha, " (two-sided test).",
+            adjustment_text,
+            " Base sample size: N = ", format_numeric(ceiling(n_base), 0), " participants.",
             if (md_vals$adjust_missing) {
-              paste0(" <strong>This includes adjustment for ", md_vals$missing_pct,
-                     "% missing data.</strong>")
+              before_clust <- if (clust_vals$adjust_clustering) n_before_clustering else n_final
+              paste0(" <strong>After adjusting for ", md_vals$missing_pct,
+                     "% missing data, sample size = ", format_numeric(ceiling(before_clust), 0), ".</strong>")
             } else {
               ""
+            },
+            if (clust_vals$adjust_clustering) {
+              paste0(" <strong>After adjusting for clustering</strong> (ICC = ", clust_vals$icc,
+                     ", cluster size = ", clust_vals$cluster_size, ", design effect = ",
+                     format(de, digits = 2), "), <strong>final sample size = ",
+                     format_numeric(ceiling(n_final), 0), " participants.</strong>")
+            } else {
+              if (!md_vals$adjust_missing) {
+                paste0(" <strong>Final sample size: N = ", format_numeric(ceiling(n_final), 0), " participants.</strong>")
+              } else {
+                ""
+              }
             },
             " This calculation uses the Schoenfeld (1983) method for Cox proportional hazards models."
           ))
