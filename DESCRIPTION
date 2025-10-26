@@ -2,10 +2,10 @@ Package: PowerAnalysisTool
 Type: Package
 Title: Statistical Power Analysis Tool for Study Design
 Version: 5.0.0
-Author: Development Team
-Maintainer: Development Team <dev@example.com>
+Author: Michael Batech
+Maintainer: Michael Batech <michael.batech@gmail.com>
 Authors@R: c(
-    person("Development", "Team", email = "dev@example.com", role = c("aut", "cre"))
+    person("Michael", "Batech", email = "michael.batech@gmail.com", role = c("aut", "cre"))
     )
 Description: A Shiny application for statistical power analysis, sample size
     calculation, and minimal detectable effect estimation for various study designs.
@@ -28,13 +28,15 @@ Imports:
     config (>= 0.3.1),
     golem (>= 0.4.1),
     magrittr (>= 2.0.0),
-    rmarkdown (>= 2.28)
+    rmarkdown (>= 2.28),
+    htmltools
 Suggests:
     testthat (>= 3.2.1),
     shinytest2 (>= 0.3.2),
     chromote (>= 0.3.1),
     lintr (>= 3.2.0),
     styler (>= 1.11.0),
-    knitr (>= 1.48)
+    knitr (>= 1.48),
+    R6
 VignetteBuilder: knitr
 RoxygenNote: 7.3.3
