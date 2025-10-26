@@ -169,7 +169,7 @@ mod_05_continuous_server <- function(id){
       updateNumericInput(session, "cont_pow_n1", value = 150)
       updateNumericInput(session, "cont_pow_n2", value = 150)
       updateNumericInput(session, "cont_pow_d", value = 0.4)
-      update_segmented_alpha(session, "cont_pow_alpha", value = 0.05)
+      updateRadioButtons(session, "cont_pow_alpha", selected = "0.05")
       updateRadioButtons(session, "cont_pow_sided", selected = "two.sided")
     })
 
@@ -178,28 +178,28 @@ mod_05_continuous_server <- function(id){
       updateNumericInput(session, "cont_pow_n1", value = 100)
       updateNumericInput(session, "cont_pow_n2", value = 100)
       updateNumericInput(session, "cont_pow_d", value = 0.5)
-      update_segmented_alpha(session, "cont_pow_alpha", value = 0.05)
+      updateRadioButtons(session, "cont_pow_alpha", selected = "0.05")
       updateRadioButtons(session, "cont_pow_sided", selected = "two.sided")
     })
 
     # Example button - Sample Size
     observeEvent(input$example_cont_ss, {
       updateRadioButtons(session, "cont_ss_calc_mode", selected = "calc_n")
-      update_segmented_power(session, "cont_ss_power", value = 90)
+      updateRadioButtons(session, "cont_ss_power", selected = "90")
       updateNumericInput(session, "cont_ss_d", value = 0.4)
       updateNumericInput(session, "cont_ss_ratio", value = 1)
-      update_segmented_alpha(session, "cont_ss_alpha", value = 0.05)
+      updateRadioButtons(session, "cont_ss_alpha", selected = "0.05")
       updateRadioButtons(session, "cont_ss_sided", selected = "two.sided")
     })
 
     # Reset button - Sample Size
     observeEvent(input$reset_cont_ss, {
       updateRadioButtons(session, "cont_ss_calc_mode", selected = "calc_n")
-      update_segmented_power(session, "cont_ss_power", value = 80)
+      updateRadioButtons(session, "cont_ss_power", selected = "80")
       updateNumericInput(session, "cont_ss_d", value = 0.5)
       updateNumericInput(session, "cont_ss_n1_fixed", value = 100)
       updateNumericInput(session, "cont_ss_ratio", value = 1)
-      update_segmented_alpha(session, "cont_ss_alpha", value = 0.05)
+      updateRadioButtons(session, "cont_ss_alpha", selected = "0.05")
       updateRadioButtons(session, "cont_ss_sided", selected = "two.sided")
     })
 
@@ -225,9 +225,7 @@ mod_05_continuous_server <- function(id){
       }),
       missing_data_vals = missing_data_vals,
       clustering_vals = clustering_vals,
-      multiple_testing_vals = multiple_testing_vals,
-      evalue_vals_pow = evalue_vals_pow,
-      evalue_vals_ss = evalue_vals_ss
+      multiple_testing_vals = multiple_testing_vals
     )
   })
 }

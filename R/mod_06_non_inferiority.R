@@ -60,23 +60,23 @@ mod_06_non_inferiority_server <- function(id){
 
     observeEvent(input$example_noninf, {
       updateRadioButtons(session, "noninf_calc_mode", selected = "calc_n")
-      update_segmented_power(session, "noninf_power", value = 80)
+      updateRadioButtons(session, "noninf_power", selected = "80")
       updateNumericInput(session, "noninf_p1", value = 10)
       updateNumericInput(session, "noninf_p2", value = 10)
       updateNumericInput(session, "noninf_margin", value = 3)
       updateNumericInput(session, "noninf_ratio", value = 1)
-      update_segmented_alpha(session, "noninf_alpha", value = 0.025)
+      updateRadioButtons(session, "noninf_alpha", selected = "0.025")
     })
     
     observeEvent(input$reset_noninf, {
       updateRadioButtons(session, "noninf_calc_mode", selected = "calc_n")
-      update_segmented_power(session, "noninf_power", value = 80)
+      updateRadioButtons(session, "noninf_power", selected = "80")
       updateNumericInput(session, "noninf_p1", value = 10)
       updateNumericInput(session, "noninf_p2", value = 10)
       updateNumericInput(session, "noninf_margin", value = 5)
       updateNumericInput(session, "noninf_n1_fixed", value = 500)
       updateNumericInput(session, "noninf_ratio", value = 1)
-      update_segmented_alpha(session, "noninf_alpha", value = 0.025)
+      updateRadioButtons(session, "noninf_alpha", selected = "0.025")
     })
 
     list(
@@ -87,8 +87,7 @@ mod_06_non_inferiority_server <- function(id){
       }),
       missing_data_vals = missing_data_vals,
       clustering_vals = clustering_vals,
-      multiple_testing_vals = multiple_testing_vals,
-      evalue_vals = evalue_vals
+      multiple_testing_vals = multiple_testing_vals
     )
   })
 }

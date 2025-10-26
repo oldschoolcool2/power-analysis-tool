@@ -177,7 +177,7 @@ mod_01_single_proportion_server <- function(id, parent_session = NULL){
       updateNumericInput(session, "power_n", value = 1500)
       updateNumericInput(session, "power_p", value = 500)
       updateSliderInput(session, "power_discon", value = 15)
-      update_segmented_alpha(session, "power_alpha", value = 0.05)
+      updateRadioButtons(session, "power_alpha", selected = "0.05")
     })
 
     # Reset button - Power Analysis
@@ -185,26 +185,26 @@ mod_01_single_proportion_server <- function(id, parent_session = NULL){
       updateNumericInput(session, "power_n", value = 230)
       updateNumericInput(session, "power_p", value = 100)
       updateSliderInput(session, "power_discon", value = 10)
-      update_segmented_alpha(session, "power_alpha", value = 0.05)
+      updateRadioButtons(session, "power_alpha", selected = "0.05")
     })
 
     # Example button - Sample Size
     observeEvent(input$example_ss_single, {
       updateRadioButtons(session, "ss_single_calc_mode", selected = "calc_n")
-      update_segmented_power(session, "ss_power", value = 80)
+      updateRadioButtons(session, "ss_power", selected = "80")
       updateNumericInput(session, "ss_p", value = 500)
       updateSliderInput(session, "ss_discon", value = 15)
-      update_segmented_alpha(session, "ss_alpha", value = 0.05)
+      updateRadioButtons(session, "ss_alpha", selected = "0.05")
     })
 
     # Reset button - Sample Size
     observeEvent(input$reset_ss_single, {
       updateRadioButtons(session, "ss_single_calc_mode", selected = "calc_n")
-      update_segmented_power(session, "ss_power", value = 80)
+      updateRadioButtons(session, "ss_power", selected = "80")
       updateNumericInput(session, "ss_p", value = 100)
       updateNumericInput(session, "ss_n_fixed", value = 500)
       updateSliderInput(session, "ss_discon", value = 10)
-      update_segmented_alpha(session, "ss_alpha", value = 0.05)
+      updateRadioButtons(session, "ss_alpha", selected = "0.05")
     })
 
     # Return reactive values that indicate this module should handle results

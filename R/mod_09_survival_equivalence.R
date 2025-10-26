@@ -221,20 +221,20 @@ mod_09_survival_equivalence_server <- function(id){
     observeEvent(input$example, {
       updateRadioButtons(session, "test_type", selected = "non-inferiority")
       updateRadioButtons(session, "calc_mode", selected = "calc_n")
-      update_segmented_power(session, "power", value = 80)
+      updateRadioButtons(session, "power", selected = "80")
       updateNumericInput(session, "hr_expected", value = 0.95)
       updateNumericInput(session, "hr_margin_ni", value = 1.25)
       updateSliderInput(session, "prop_exposed", value = 50)
       updateSliderInput(session, "event_rate", value = 40)
       updateNumericInput(session, "allocation_ratio", value = 1)
-      update_segmented_alpha(session, "alpha", value = 0.025)
+      updateRadioButtons(session, "alpha", selected = "0.025")
     })
 
     # Reset button
     observeEvent(input$reset, {
       updateRadioButtons(session, "test_type", selected = "non-inferiority")
       updateRadioButtons(session, "calc_mode", selected = "calc_n")
-      update_segmented_power(session, "power", value = 80)
+      updateRadioButtons(session, "power", selected = "80")
       updateNumericInput(session, "hr_expected", value = 0.95)
       updateNumericInput(session, "hr_margin_ni", value = 1.25)
       updateNumericInput(session, "hr_margin_equiv", value = 1.20)
@@ -242,7 +242,7 @@ mod_09_survival_equivalence_server <- function(id){
       updateSliderInput(session, "prop_exposed", value = 50)
       updateSliderInput(session, "event_rate", value = 30)
       updateNumericInput(session, "allocation_ratio", value = 1)
-      update_segmented_alpha(session, "alpha", value = 0.025)
+      updateRadioButtons(session, "alpha", selected = "0.025")
     })
 
     # Return reactive values
@@ -264,8 +264,7 @@ mod_09_survival_equivalence_server <- function(id){
       }),
       missing_data_vals = missing_data_vals,
       clustering_vals = clustering_vals,
-      multiple_testing_vals = multiple_testing_vals,
-      evalue_vals = evalue_vals
+      multiple_testing_vals = multiple_testing_vals
     )
   })
 }

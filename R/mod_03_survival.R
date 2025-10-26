@@ -180,7 +180,7 @@ mod_03_survival_server <- function(id){
       updateNumericInput(session, "surv_pow_hr", value = 0.65)
       updateSliderInput(session, "surv_pow_k", value = 50)
       updateSliderInput(session, "surv_pow_pE", value = 40)
-      update_segmented_alpha(session, "surv_pow_alpha", value = 0.05)
+      updateRadioButtons(session, "surv_pow_alpha", selected = "0.05")
     })
 
     # Reset button - Power Analysis
@@ -189,28 +189,28 @@ mod_03_survival_server <- function(id){
       updateNumericInput(session, "surv_pow_hr", value = 0.7)
       updateSliderInput(session, "surv_pow_k", value = 50)
       updateSliderInput(session, "surv_pow_pE", value = 30)
-      update_segmented_alpha(session, "surv_pow_alpha", value = 0.05)
+      updateRadioButtons(session, "surv_pow_alpha", selected = "0.05")
     })
 
     # Example button - Sample Size
     observeEvent(input$example_surv_ss, {
       updateRadioButtons(session, "surv_ss_calc_mode", selected = "calc_n")
-      update_segmented_power(session, "surv_ss_power", value = 90)
+      updateRadioButtons(session, "surv_ss_power", selected = "90")
       updateNumericInput(session, "surv_ss_hr", value = 0.65)
       updateSliderInput(session, "surv_ss_k", value = 50)
       updateSliderInput(session, "surv_ss_pE", value = 40)
-      update_segmented_alpha(session, "surv_ss_alpha", value = 0.05)
+      updateRadioButtons(session, "surv_ss_alpha", selected = "0.05")
     })
 
     # Reset button - Sample Size
     observeEvent(input$reset_surv_ss, {
       updateRadioButtons(session, "surv_ss_calc_mode", selected = "calc_n")
-      update_segmented_power(session, "surv_ss_power", value = 80)
+      updateRadioButtons(session, "surv_ss_power", selected = "80")
       updateNumericInput(session, "surv_ss_hr", value = 0.7)
       updateNumericInput(session, "surv_ss_n_fixed", value = 500)
       updateSliderInput(session, "surv_ss_k", value = 50)
       updateSliderInput(session, "surv_ss_pE", value = 30)
-      update_segmented_alpha(session, "surv_ss_alpha", value = 0.05)
+      updateRadioButtons(session, "surv_ss_alpha", selected = "0.05")
     })
 
     # Return reactive values
@@ -235,9 +235,7 @@ mod_03_survival_server <- function(id){
       }),
       missing_data_vals = missing_data_vals,
       clustering_vals = clustering_vals,
-      multiple_testing_vals = multiple_testing_vals,
-      evalue_vals_pow = evalue_vals_pow,
-      evalue_vals_ss = evalue_vals_ss
+      multiple_testing_vals = multiple_testing_vals
     )
   })
 }

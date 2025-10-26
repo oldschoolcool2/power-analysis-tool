@@ -41,12 +41,12 @@ create_sidebar_nav <- function() {
           role = "button",
           tabindex = "0",
           `aria-expanded` = "false",
+          tags$span(class = "nav-group-chevron", icon("caret-right")),
           tags$div(
             class = "nav-group-title",
             tags$span(class = "nav-group-icon", icon("bolt")),
             tags$span(class = "nav-group-label", "Power Analysis")
-          ),
-          tags$span(class = "nav-group-chevron", HTML("&#9656;"))
+          )
         ),
         tags$div(
           class = "nav-group-children nav-group-children-parent",
@@ -59,12 +59,12 @@ create_sidebar_nav <- function() {
               role = "button",
               tabindex = "0",
               `aria-expanded` = "false",
+              tags$span(class = "nav-group-chevron", icon("caret-right")),
               tags$div(
                 class = "nav-group-title",
                 tags$span(class = "nav-group-icon", icon("chart-pie")),
                 tags$span(class = "nav-group-label", "Single Proportion")
-              ),
-              tags$span(class = "nav-group-chevron", HTML("&#9656;"))
+              )
             ),
             tags$div(
               class = "nav-group-children",
@@ -97,12 +97,12 @@ create_sidebar_nav <- function() {
               role = "button",
               tabindex = "0",
               `aria-expanded` = "false",
+              tags$span(class = "nav-group-chevron", icon("caret-right")),
               tags$div(
                 class = "nav-group-title",
-                tags$span(class = "nav-group-icon", icon("users")),
+                tags$span(class = "nav-group-icon", icon("people-arrows")),
                 tags$span(class = "nav-group-label", "Two-Group Comparisons")
-              ),
-              tags$span(class = "nav-group-chevron", HTML("&#9656;"))
+              )
             ),
             tags$div(
               class = "nav-group-children",
@@ -135,12 +135,12 @@ create_sidebar_nav <- function() {
               role = "button",
               tabindex = "0",
               `aria-expanded` = "false",
+              tags$span(class = "nav-group-chevron", icon("caret-right")),
               tags$div(
                 class = "nav-group-title",
                 tags$span(class = "nav-group-icon", icon("chart-line")),
                 tags$span(class = "nav-group-label", "Survival Analysis (Cox)")
-              ),
-              tags$span(class = "nav-group-chevron", HTML("&#9656;"))
+              )
             ),
             tags$div(
               class = "nav-group-children",
@@ -187,12 +187,12 @@ create_sidebar_nav <- function() {
               role = "button",
               tabindex = "0",
               `aria-expanded` = "false",
+              tags$span(class = "nav-group-chevron", icon("caret-right")),
               tags$div(
                 class = "nav-group-title",
                 tags$span(class = "nav-group-icon", icon("chart-area")),
                 tags$span(class = "nav-group-label", "Continuous Outcomes")
-              ),
-              tags$span(class = "nav-group-chevron", HTML("&#9656;"))
+              )
             ),
             tags$div(
               class = "nav-group-children",
@@ -286,12 +286,12 @@ create_sidebar_nav <- function() {
           role = "button",
           tabindex = "0",
           `aria-expanded` = "false",
+          tags$span(class = "nav-group-chevron", icon("caret-right")),
           tags$div(
             class = "nav-group-title",
             tags$span(class = "nav-group-icon", icon("shield-alt")),
             tags$span(class = "nav-group-label", "Sensitivity Analysis")
-          ),
-          tags$span(class = "nav-group-chevron", HTML("&#9656;"))
+          )
         ),
         tags$div(
           class = "nav-group-children nav-group-children-parent",
@@ -323,12 +323,12 @@ create_sidebar_nav <- function() {
           role = "button",
           tabindex = "0",
           `aria-expanded` = "false",
+          tags$span(class = "nav-group-chevron", icon("caret-right")),
           tags$div(
             class = "nav-group-title",
             tags$span(class = "nav-group-icon", icon("book")),
             tags$span(class = "nav-group-label", "Resources")
-          ),
-          tags$span(class = "nav-group-chevron", HTML("&#9656;"))
+          )
         ),
         tags$div(
           class = "nav-group-children nav-group-children-parent",

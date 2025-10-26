@@ -290,7 +290,11 @@ app_server <- function(input, output, session) {
 
   # Trigger analysis
   observeEvent(input$go, {
+    cat("\n=== CALCULATE BUTTON CLICKED ===\n")
+    cat("Current page:", input$sidebar_page, "\n")
+    cat("Button click count:", input$go, "\n")
     v$doAnalysis <- input$go
+    cat("doAnalysis set to:", v$doAnalysis, "\n")
   })
 
   # Data-driven button handlers (DRY refactoring - replaces 183 lines of repetitive code)
@@ -537,13 +541,18 @@ app_server <- function(input, output, session) {
   ################################################################################################## RESULT TEXT
 
   output$result_text <- renderUI({
+    cat("\n=== result_text RENDER TRIGGERED ===\n")
+    cat("doAnalysis:", v$doAnalysis, "\n")
+
     if (!v$doAnalysis) {
+      cat("Exiting: doAnalysis is FALSE\n")
       return()
     }
 
     isolate({
       # Get current page with default fallback
       page <- get_current_page()
+      cat("Current page in result_text:", page, "\n")
 
       validate_inputs()
 
@@ -764,7 +773,7 @@ app_server <- function(input, output, session) {
             }
           ))
 
-          effect_text <- format_effect_measures(effect_measures, p1 * 100, p2 * 100)
+          effect_text <- format_effect_measures(effect_measures)
 
           HTML(paste0(text0, text1, text2, text3, effect_text, missing_data_text))
 

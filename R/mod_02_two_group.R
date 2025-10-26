@@ -158,7 +158,7 @@ mod_02_two_group_server <- function(id){
       updateNumericInput(session, "twogrp_pow_n2", value = 300)
       updateNumericInput(session, "twogrp_pow_p1", value = 15)
       updateNumericInput(session, "twogrp_pow_p2", value = 10)
-      update_segmented_alpha(session, "twogrp_pow_alpha", value = 0.05)
+      updateRadioButtons(session, "twogrp_pow_alpha", selected = "0.05")
       updateRadioButtons(session, "twogrp_pow_sided", selected = "two.sided")
     })
 
@@ -168,31 +168,31 @@ mod_02_two_group_server <- function(id){
       updateNumericInput(session, "twogrp_pow_n2", value = 200)
       updateNumericInput(session, "twogrp_pow_p1", value = 10)
       updateNumericInput(session, "twogrp_pow_p2", value = 5)
-      update_segmented_alpha(session, "twogrp_pow_alpha", value = 0.05)
+      updateRadioButtons(session, "twogrp_pow_alpha", selected = "0.05")
       updateRadioButtons(session, "twogrp_pow_sided", selected = "two.sided")
     })
 
     # Example button - Sample Size
     observeEvent(input$example_twogrp_ss, {
       updateRadioButtons(session, "twogrp_ss_calc_mode", selected = "calc_n")
-      update_segmented_power(session, "twogrp_ss_power", value = 80)
+      updateRadioButtons(session, "twogrp_ss_power", selected = "80")
       updateNumericInput(session, "twogrp_ss_p1", value = 15)
       updateNumericInput(session, "twogrp_ss_p2", value = 10)
       updateNumericInput(session, "twogrp_ss_ratio", value = 1)
-      update_segmented_alpha(session, "twogrp_ss_alpha", value = 0.05)
+      updateRadioButtons(session, "twogrp_ss_alpha", selected = "0.05")
       updateRadioButtons(session, "twogrp_ss_sided", selected = "two.sided")
     })
 
     # Reset button - Sample Size
     observeEvent(input$reset_twogrp_ss, {
       updateRadioButtons(session, "twogrp_ss_calc_mode", selected = "calc_n")
-      update_segmented_power(session, "twogrp_ss_power", value = 80)
+      updateRadioButtons(session, "twogrp_ss_power", selected = "80")
       updateNumericInput(session, "twogrp_ss_p1", value = 10)
       updateNumericInput(session, "twogrp_ss_p2", value = 5)
       updateNumericInput(session, "twogrp_ss_n1_fixed", value = 500)
       updateNumericInput(session, "twogrp_ss_p2_baseline", value = 10)
       updateNumericInput(session, "twogrp_ss_ratio", value = 1)
-      update_segmented_alpha(session, "twogrp_ss_alpha", value = 0.05)
+      updateRadioButtons(session, "twogrp_ss_alpha", selected = "0.05")
       updateRadioButtons(session, "twogrp_ss_sided", selected = "two.sided")
     })
 
@@ -221,9 +221,7 @@ mod_02_two_group_server <- function(id){
       }),
       missing_data_vals = missing_data_vals,
       clustering_vals = clustering_vals,
-      multiple_testing_vals = multiple_testing_vals,
-      evalue_vals_pow = evalue_vals_pow,
-      evalue_vals_ss = evalue_vals_ss
+      multiple_testing_vals = multiple_testing_vals
     )
   })
 }

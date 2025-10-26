@@ -137,23 +137,23 @@ mod_04_matched_case_control_server <- function(id){
     # Example button
     observeEvent(input$example_match, {
       updateRadioButtons(session, "match_calc_mode", selected = "calc_n")
-      update_segmented_power(session, "match_power", value = 80)
+      updateRadioButtons(session, "match_power", selected = "80")
       updateNumericInput(session, "match_or", value = 2.5)
       updateSliderInput(session, "match_p0", value = 30)
       updateNumericInput(session, "match_ratio", value = 1)
-      update_segmented_alpha(session, "match_alpha", value = 0.05)
+      updateRadioButtons(session, "match_alpha", selected = "0.05")
       updateRadioButtons(session, "match_sided", selected = "two.sided")
     })
 
     # Reset button
     observeEvent(input$reset_match, {
       updateRadioButtons(session, "match_calc_mode", selected = "calc_n")
-      update_segmented_power(session, "match_power", value = 80)
+      updateRadioButtons(session, "match_power", selected = "80")
       updateNumericInput(session, "match_or", value = 2.0)
       updateNumericInput(session, "match_n_pairs_fixed", value = 100)
       updateSliderInput(session, "match_p0", value = 20)
       updateNumericInput(session, "match_ratio", value = 1)
-      update_segmented_alpha(session, "match_alpha", value = 0.05)
+      updateRadioButtons(session, "match_alpha", selected = "0.05")
       updateRadioButtons(session, "match_sided", selected = "two.sided")
     })
 
@@ -173,8 +173,7 @@ mod_04_matched_case_control_server <- function(id){
       }),
       missing_data_vals = missing_data_vals,
       clustering_vals = clustering_vals,
-      multiple_testing_vals = multiple_testing_vals,
-      evalue_vals = evalue_vals
+      multiple_testing_vals = multiple_testing_vals
     )
   })
 }

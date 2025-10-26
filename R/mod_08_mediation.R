@@ -179,11 +179,11 @@ mod_08_mediation_server <- function(id) {
     observeEvent(input$example_med, {
       # Example: Drug → Adherence → Clinical Outcome
       updateRadioButtons(session, "calc_mode", selected = "calc_n")
-      update_segmented_power(session, "med_power", value = 80)
+      updateRadioButtons(session, "med_power", selected = "80")
       updateNumericInput(session, "path_a", value = 0.39)
       updateNumericInput(session, "path_b", value = 0.39)
       updateNumericInput(session, "path_c_prime", value = 0.07)
-      update_segmented_alpha(session, "med_alpha", value = 0.05)
+      updateRadioButtons(session, "med_alpha", selected = "0.05")
       updateRadioButtons(session, "med_sided", selected = "two.sided")
 
       # Show notification with context
@@ -199,13 +199,13 @@ mod_08_mediation_server <- function(id) {
     observeEvent(input$reset_med, {
       updateRadioButtons(session, "calc_mode", selected = "calc_power")
       updateNumericInput(session, "med_n", value = 200)
-      update_segmented_power(session, "med_power", value = 80)
+      updateRadioButtons(session, "med_power", selected = "80")
       updateNumericInput(session, "path_a", value = 0.3)
       updateNumericInput(session, "path_b", value = 0.3)
       updateNumericInput(session, "path_c_prime", value = 0.1)
       updateNumericInput(session, "se_a", value = NA)
       updateNumericInput(session, "se_b", value = NA)
-      update_segmented_alpha(session, "med_alpha", value = 0.05)
+      updateRadioButtons(session, "med_alpha", selected = "0.05")
       updateRadioButtons(session, "med_sided", selected = "two.sided")
     })
 

@@ -105,7 +105,7 @@
 .nav-group-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: var(--space-3);
   padding: var(--space-3) var(--space-6);
   cursor: pointer;
   transition: all 0.2s ease;
@@ -150,6 +150,9 @@
   font-size: var(--font-size-sm);
   color: var(--text-sidebar-medium);  /* Increased opacity for WCAG AA */
   transition: transform 0.3s ease;
+  flex-shrink: 0;  /* Prevent chevron from shrinking */
+  width: 16px;     /* Fixed width for consistent alignment */
+  text-align: center;
 }
 
 .nav-group-header.expanded .nav-group-chevron {
@@ -180,7 +183,7 @@
 }
 
 .nav-group-children-parent.expanded {
-  max-height: 2000px; /* Larger value to accommodate nested groups */
+  max-height: 5000px; /* Very large value to ensure all nested content is accessible */
 }
 
 /* ==========================================================================
@@ -209,7 +212,7 @@
 /* Single items within parent groups - align with child headers */
 .nav-group-children-parent > .nav-group-child > .nav-item-single {
   padding-left: calc(var(--space-6) + var(--space-3));
-  background: var(--bg-sidebar-overlay-subtle);
+  background: transparent;
 }
 
 /* Leaf items within child groups get extra indentation */
@@ -225,11 +228,11 @@
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.3s ease;
-  background: var(--bg-sidebar-overlay-dark);
+  background: transparent;
 }
 
 .nav-group-children.expanded {
-  max-height: 500px; /* Arbitrary large value */
+  max-height: 2000px; /* Large value to ensure all child items are accessible */
 }
 
 .nav-item {
@@ -246,12 +249,12 @@
 }
 
 .nav-item:hover {
-  background: var(--bg-sidebar-overlay-subtle);
+  background: var(--bg-sidebar-overlay-dark);
   color: var(--text-inverse);
 }
 
 .nav-item.active {
-  background: var(--bg-sidebar-overlay-strong);
+  background: var(--bg-sidebar-overlay-dark);
   border-left-color: var(--color-accent-600);
   color: var(--text-inverse);
   font-weight: var(--font-weight-semibold);
