@@ -3853,7 +3853,7 @@ app_server <- function(input, output, session) {
         p0 <- input$match_p0 / 100
         m <- input$match_ratio
         power <- input$match_power / 100
-        sided_val <- ifelse(input$match_sided == "two.sided", 2, 1)
+        sided_val <- ifelse(identical(input$match_sided, "two.sided"), 2, 1)
         result <- epi.sscc(
           OR = or, p0 = p0, n = NA, power = power,
           r = m, phi.coef = 0, design = 1, sided.test = sided_val,
@@ -4166,7 +4166,14 @@ app_server <- function(input, output, session) {
 
         # Copy the report file to a temporary directory
         tempReport <- file.path(tempdir(), "analysis-report.Rmd")
-        file.copy("analysis-report.Rmd", tempReport, overwrite = TRUE)
+        rmd_template <- system.file("reports", "analysis-report.Rmd", package = "PowerAnalysisTool")
+        
+        # Fall back to local file if package not installed (dev mode)
+        if (rmd_template == "" || !file.exists(rmd_template)) {
+          rmd_template <- "analysis-report.Rmd"
+        }
+        
+        file.copy(rmd_template, tempReport, overwrite = TRUE)
 
         # Create a Progress object
         progress <- shiny::Progress$new(style = "notification")
@@ -4330,7 +4337,7 @@ app_server <- function(input, output, session) {
         p0 <- input$match_p0 / 100
         m <- input$match_ratio
         power <- input$match_power / 100
-        sided_val <- ifelse(input$match_sided == "two.sided", 2, 1)
+        sided_val <- ifelse(identical(input$match_sided, "two.sided"), 2, 1)
         result <- epi.sscc(
           OR = or, p0 = p0, n = NA, power = power,
           r = m, phi.coef = 0, design = 1, sided.test = sided_val,
