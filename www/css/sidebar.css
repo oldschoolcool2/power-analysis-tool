@@ -157,6 +157,62 @@
 }
 
 /* ==========================================================================
+   Nested Navigation - Parent Groups
+   ========================================================================== */
+
+/* Parent group headers - bold and prominent */
+.nav-group-header-parent {
+  font-weight: var(--font-weight-semibold);
+}
+
+.nav-group-header-parent .nav-group-label {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-inverse);
+}
+
+/* Parent group children container - needs larger max-height for nested content */
+.nav-group-children-parent {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+  background: transparent;
+}
+
+.nav-group-children-parent.expanded {
+  max-height: 2000px; /* Larger value to accommodate nested groups */
+}
+
+/* ==========================================================================
+   Nested Navigation - Child Groups
+   ========================================================================== */
+
+/* Child groups within parent groups */
+.nav-group-child {
+  margin-left: var(--space-4);
+  margin-bottom: var(--space-1);
+}
+
+/* Child group headers - slightly smaller and indented */
+.nav-group-header-child {
+  padding-left: var(--space-4);
+  font-size: var(--font-size-sm);
+}
+
+.nav-group-header-child .nav-group-label {
+  font-weight: var(--font-weight-medium);
+}
+
+.nav-group-header-child .nav-group-icon {
+  font-size: var(--font-size-base);
+}
+
+/* Single items within child groups need extra indentation */
+.nav-group-child .nav-item-single {
+  padding-left: calc(var(--space-6) + 12px);
+}
+
+/* ==========================================================================
    Menu Items - Child Items
    ========================================================================== */
 

@@ -31,273 +31,325 @@ create_sidebar_nav <- function() {
     tags$nav(
       class = "sidebar-nav",
 
-      # Group 1: Single Proportion
+      # ========================================================================
+      # PARENT GROUP: Power Analysis
+      # ========================================================================
       tags$div(
-        class = "nav-group",
+        class = "nav-group nav-group-parent",
         tags$div(
-          class = "nav-group-header",
+          class = "nav-group-header nav-group-header-parent",
           role = "button",
           tabindex = "0",
           `aria-expanded` = "false",
           tags$div(
             class = "nav-group-title",
-            tags$span(class = "nav-group-icon", icon("chart-pie")),
-            tags$span(class = "nav-group-label", "Single Proportion")
-          ),
-          tags$span(class = "nav-group-chevron", HTML("&#9656;")) # ▸
-        ),
-        tags$div(
-          class = "nav-group-children",
-          tags$a(
-            href = "#",
-            class = "nav-item active",
-            `data-page` = "power_single",
-            role = "button",
-            tabindex = "0",
-            tags$span(class = "nav-item-icon", icon("bolt")),
-            "Power Analysis"
-          ),
-          tags$a(
-            href = "#",
-            class = "nav-item",
-            `data-page` = "ss_single",
-            role = "button",
-            tabindex = "0",
-            tags$span(class = "nav-item-icon", icon("calculator")),
-            "Sample Size"
-          )
-        )
-      ),
-
-      # Group 2: Two-Group Comparisons
-      tags$div(
-        class = "nav-group",
-        tags$div(
-          class = "nav-group-header",
-          role = "button",
-          tabindex = "0",
-          `aria-expanded` = "false",
-          tags$div(
-            class = "nav-group-title",
-            tags$span(class = "nav-group-icon", icon("users")),
-            tags$span(class = "nav-group-label", "Two-Group Comparisons")
+            tags$span(class = "nav-group-icon", icon("bolt")),
+            tags$span(class = "nav-group-label", "Power Analysis")
           ),
           tags$span(class = "nav-group-chevron", HTML("&#9656;"))
         ),
         tags$div(
-          class = "nav-group-children",
-          tags$a(
-            href = "#",
-            class = "nav-item",
-            `data-page` = "power_twogrp",
-            role = "button",
-            tabindex = "0",
-            tags$span(class = "nav-item-icon", HTML("&#9889;")),
-            "Power Analysis"
-          ),
-          tags$a(
-            href = "#",
-            class = "nav-item",
-            `data-page` = "ss_twogrp",
-            role = "button",
-            tabindex = "0",
-            tags$span(class = "nav-item-icon", HTML("&#128207;")),
-            "Sample Size"
-          )
-        )
-      ),
+          class = "nav-group-children nav-group-children-parent",
 
-      # Group 3: Survival Analysis
+          # Child Group 1: Single Proportion
+          tags$div(
+            class = "nav-group nav-group-child",
+            tags$div(
+              class = "nav-group-header nav-group-header-child",
+              role = "button",
+              tabindex = "0",
+              `aria-expanded` = "false",
+              tags$div(
+                class = "nav-group-title",
+                tags$span(class = "nav-group-icon", icon("chart-pie")),
+                tags$span(class = "nav-group-label", "Single Proportion")
+              ),
+              tags$span(class = "nav-group-chevron", HTML("&#9656;"))
+            ),
+            tags$div(
+              class = "nav-group-children",
+              tags$a(
+                href = "#",
+                class = "nav-item active",
+                `data-page` = "power_single",
+                role = "button",
+                tabindex = "0",
+                tags$span(class = "nav-item-icon", icon("bolt")),
+                "Power Analysis"
+              ),
+              tags$a(
+                href = "#",
+                class = "nav-item",
+                `data-page` = "ss_single",
+                role = "button",
+                tabindex = "0",
+                tags$span(class = "nav-item-icon", icon("calculator")),
+                "Sample Size"
+              )
+            )
+          ),
+
+          # Child Group 2: Two-Group Comparisons
+          tags$div(
+            class = "nav-group nav-group-child",
+            tags$div(
+              class = "nav-group-header nav-group-header-child",
+              role = "button",
+              tabindex = "0",
+              `aria-expanded` = "false",
+              tags$div(
+                class = "nav-group-title",
+                tags$span(class = "nav-group-icon", icon("users")),
+                tags$span(class = "nav-group-label", "Two-Group Comparisons")
+              ),
+              tags$span(class = "nav-group-chevron", HTML("&#9656;"))
+            ),
+            tags$div(
+              class = "nav-group-children",
+              tags$a(
+                href = "#",
+                class = "nav-item",
+                `data-page` = "power_twogrp",
+                role = "button",
+                tabindex = "0",
+                tags$span(class = "nav-item-icon", HTML("&#9889;")),
+                "Power Analysis"
+              ),
+              tags$a(
+                href = "#",
+                class = "nav-item",
+                `data-page` = "ss_twogrp",
+                role = "button",
+                tabindex = "0",
+                tags$span(class = "nav-item-icon", HTML("&#128207;")),
+                "Sample Size"
+              )
+            )
+          ),
+
+          # Child Group 3: Survival Analysis
+          tags$div(
+            class = "nav-group nav-group-child",
+            tags$div(
+              class = "nav-group-header nav-group-header-child",
+              role = "button",
+              tabindex = "0",
+              `aria-expanded` = "false",
+              tags$div(
+                class = "nav-group-title",
+                tags$span(class = "nav-group-icon", icon("chart-line")),
+                tags$span(class = "nav-group-label", "Survival Analysis (Cox)")
+              ),
+              tags$span(class = "nav-group-chevron", HTML("&#9656;"))
+            ),
+            tags$div(
+              class = "nav-group-children",
+              tags$a(
+                href = "#",
+                class = "nav-item",
+                `data-page` = "power_survival",
+                role = "button",
+                tabindex = "0",
+                tags$span(class = "nav-item-icon", HTML("&#9889;")),
+                "Power Analysis"
+              ),
+              tags$a(
+                href = "#",
+                class = "nav-item",
+                `data-page` = "ss_survival",
+                role = "button",
+                tabindex = "0",
+                tags$span(class = "nav-item-icon", HTML("&#128207;")),
+                "Sample Size"
+              )
+            )
+          ),
+
+          # Child Group 4: Matched Case-Control (single item)
+          tags$div(
+            class = "nav-group nav-group-child",
+            tags$a(
+              href = "#",
+              class = "nav-item-single",
+              `data-page` = "match_casecontrol",
+              role = "button",
+              tabindex = "0",
+              tags$span(class = "nav-group-icon", icon("link")),
+              tags$span(class = "nav-group-label", "Matched Case-Control")
+            )
+          ),
+
+          # Child Group 5: Continuous Outcomes
+          tags$div(
+            class = "nav-group nav-group-child",
+            tags$div(
+              class = "nav-group-header nav-group-header-child",
+              role = "button",
+              tabindex = "0",
+              `aria-expanded` = "false",
+              tags$div(
+                class = "nav-group-title",
+                tags$span(class = "nav-group-icon", icon("chart-area")),
+                tags$span(class = "nav-group-label", "Continuous Outcomes")
+              ),
+              tags$span(class = "nav-group-chevron", HTML("&#9656;"))
+            ),
+            tags$div(
+              class = "nav-group-children",
+              tags$a(
+                href = "#",
+                class = "nav-item",
+                `data-page` = "power_continuous",
+                role = "button",
+                tabindex = "0",
+                tags$span(class = "nav-item-icon", icon("bolt")),
+                "Power Analysis (t-tests)"
+              ),
+              tags$a(
+                href = "#",
+                class = "nav-item",
+                `data-page` = "ss_continuous",
+                role = "button",
+                tabindex = "0",
+                tags$span(class = "nav-item-icon", icon("calculator")),
+                "Sample Size"
+              )
+            )
+          ),
+
+          # Child Group 6: Non-Inferiority (single item)
+          tags$div(
+            class = "nav-group nav-group-child",
+            tags$a(
+              href = "#",
+              class = "nav-item-single",
+              `data-page` = "noninf",
+              role = "button",
+              tabindex = "0",
+              tags$span(class = "nav-group-icon", icon("balance-scale")),
+              tags$span(class = "nav-group-label", "Non-Inferiority Testing")
+            )
+          ),
+
+          # Child Group 7: Propensity Score Methods (single item)
+          tags$div(
+            class = "nav-group nav-group-child",
+            tags$a(
+              href = "#",
+              class = "nav-item-single",
+              `data-page` = "vif_calculator",
+              role = "button",
+              tabindex = "0",
+              tags$span(class = "nav-group-icon", icon("chart-bar")),
+              tags$span(class = "nav-group-label", "Propensity Score Calculator")
+            )
+          ),
+
+          # Child Group 8: Mediation Analysis (single item)
+          tags$div(
+            class = "nav-group nav-group-child",
+            tags$a(
+              href = "#",
+              class = "nav-item-single",
+              `data-page` = "mediation_analysis",
+              role = "button",
+              tabindex = "0",
+              tags$span(class = "nav-group-icon", icon("project-diagram")),
+              tags$span(class = "nav-group-label", "Mediation Analysis")
+            )
+          ),
+
+          # Child Group 9: Time-to-Event Equivalence/NI (single item)
+          tags$div(
+            class = "nav-group nav-group-child",
+            tags$a(
+              href = "#",
+              class = "nav-item-single",
+              `data-page` = "survival_ni_equiv",
+              role = "button",
+              tabindex = "0",
+              tags$span(class = "nav-group-icon", icon("heartbeat")),
+              tags$span(class = "nav-group-label", "Time-to-Event Equivalence/NI")
+            )
+          )
+
+        ) # End of Power Analysis parent children
+      ), # End of Power Analysis parent group
+
+      # ========================================================================
+      # PARENT GROUP: Sensitivity Analysis
+      # ========================================================================
       tags$div(
-        class = "nav-group",
+        class = "nav-group nav-group-parent",
         tags$div(
-          class = "nav-group-header",
+          class = "nav-group-header nav-group-header-parent",
           role = "button",
           tabindex = "0",
           `aria-expanded` = "false",
           tags$div(
             class = "nav-group-title",
-            tags$span(class = "nav-group-icon", icon("chart-line")),
-            tags$span(class = "nav-group-label", "Survival Analysis (Cox)")
+            tags$span(class = "nav-group-icon", icon("shield-alt")),
+            tags$span(class = "nav-group-label", "Sensitivity Analysis")
           ),
           tags$span(class = "nav-group-chevron", HTML("&#9656;"))
         ),
         tags$div(
-          class = "nav-group-children",
-          tags$a(
-            href = "#",
-            class = "nav-item",
-            `data-page` = "power_survival",
-            role = "button",
-            tabindex = "0",
-            tags$span(class = "nav-item-icon", HTML("&#9889;")),
-            "Power Analysis"
-          ),
-          tags$a(
-            href = "#",
-            class = "nav-item",
-            `data-page` = "ss_survival",
-            role = "button",
-            tabindex = "0",
-            tags$span(class = "nav-item-icon", HTML("&#128207;")),
-            "Sample Size"
+          class = "nav-group-children nav-group-children-parent",
+
+          # Child: E-value Calculator (single item)
+          tags$div(
+            class = "nav-group nav-group-child",
+            tags$a(
+              href = "#",
+              class = "nav-item-single",
+              `data-page` = "sensitivity_evalue",
+              role = "button",
+              tabindex = "0",
+              tags$span(class = "nav-group-icon", icon("shield-alt")),
+              tags$span(class = "nav-group-label", "E-value Calculator")
+            )
           )
-        )
-      ),
 
-      # Group 4: Matched Case-Control (single item)
-      tags$div(
-        class = "nav-group",
-        tags$a(
-          href = "#",
-          class = "nav-item-single",
-          `data-page` = "match_casecontrol",
-          role = "button",
-          tabindex = "0",
-          tags$span(class = "nav-group-icon", icon("link")),
-          tags$span(class = "nav-group-label", "Matched Case-Control")
-        )
-      ),
+        ) # End of Sensitivity Analysis parent children
+      ), # End of Sensitivity Analysis parent group
 
-      # Group 5: Continuous Outcomes
+      # ========================================================================
+      # PARENT GROUP: Resources
+      # ========================================================================
       tags$div(
-        class = "nav-group",
+        class = "nav-group nav-group-parent",
         tags$div(
-          class = "nav-group-header",
+          class = "nav-group-header nav-group-header-parent",
           role = "button",
           tabindex = "0",
           `aria-expanded` = "false",
           tags$div(
             class = "nav-group-title",
-            tags$span(class = "nav-group-icon", icon("chart-area")),
-            tags$span(class = "nav-group-label", "Continuous Outcomes")
+            tags$span(class = "nav-group-icon", icon("book")),
+            tags$span(class = "nav-group-label", "Resources")
           ),
           tags$span(class = "nav-group-chevron", HTML("&#9656;"))
         ),
         tags$div(
-          class = "nav-group-children",
-          tags$a(
-            href = "#",
-            class = "nav-item",
-            `data-page` = "power_continuous",
-            role = "button",
-            tabindex = "0",
-            tags$span(class = "nav-item-icon", icon("bolt")),
-            "Power Analysis (t-tests)"
-          ),
-          tags$a(
-            href = "#",
-            class = "nav-item",
-            `data-page` = "ss_continuous",
-            role = "button",
-            tabindex = "0",
-            tags$span(class = "nav-item-icon", icon("calculator")),
-            "Sample Size"
+          class = "nav-group-children nav-group-children-parent",
+
+          # Child: Documentation (single item)
+          tags$div(
+            class = "nav-group nav-group-child",
+            tags$a(
+              href = "#",
+              class = "nav-item-single",
+              `data-page` = "documentation",
+              role = "button",
+              tabindex = "0",
+              tags$span(class = "nav-group-icon", icon("book")),
+              tags$span(class = "nav-group-label", "Documentation")
+            )
           )
-        )
-      ),
 
-      # Group 6: Non-Inferiority (single item)
-      tags$div(
-        class = "nav-group",
-        tags$a(
-          href = "#",
-          class = "nav-item-single",
-          `data-page` = "noninf",
-          role = "button",
-          tabindex = "0",
-          tags$span(class = "nav-group-icon", icon("balance-scale")),
-          tags$span(class = "nav-group-label", "Non-Inferiority Testing")
-        )
-      ),
+        ) # End of Resources parent children
+      ) # End of Resources parent group
 
-      # Group 7: Propensity Score Methods (single item)
-      tags$div(
-        class = "nav-group",
-        tags$a(
-          href = "#",
-          class = "nav-item-single",
-          `data-page` = "vif_calculator",
-          role = "button",
-          tabindex = "0",
-          tags$span(class = "nav-group-icon", icon("chart-bar")),
-          tags$span(class = "nav-group-label", "Propensity Score Calculator")
-        )
-      ),
-
-      # Group 8: Mediation Analysis (single item)
-      tags$div(
-        class = "nav-group",
-        tags$a(
-          href = "#",
-          class = "nav-item-single",
-          `data-page` = "mediation_analysis",
-          role = "button",
-          tabindex = "0",
-          tags$span(class = "nav-group-icon", icon("project-diagram")),
-          tags$span(class = "nav-group-label", "Mediation Analysis")
-        )
-      ),
-
-      # Group 9: Time-to-Event Equivalence/NI (single item)
-      tags$div(
-        class = "nav-group",
-        tags$a(
-          href = "#",
-          class = "nav-item-single",
-          `data-page` = "survival_ni_equiv",
-          role = "button",
-          tabindex = "0",
-          tags$span(class = "nav-group-icon", icon("heartbeat")),
-          tags$span(class = "nav-group-label", "Time-to-Event Equivalence/NI")
-        )
-      ),
-
-      # Divider before Sensitivity Analyses section
-      tags$hr(class = "sidebar-divider"),
-
-      # Sensitivity Analyses Section Header
-      tags$div(
-        class = "sidebar-section-header",
-        "Sensitivity Analyses"
-      ),
-
-      # Group 10: E-value Sensitivity Analysis (single item)
-      tags$div(
-        class = "nav-group",
-        tags$a(
-          href = "#",
-          class = "nav-item-single",
-          `data-page` = "sensitivity_evalue",
-          role = "button",
-          tabindex = "0",
-          tags$span(class = "nav-group-icon", icon("shield-alt")),
-          tags$span(class = "nav-group-label", "E-value Calculator")
-        )
-      ),
-
-      # Divider before Resources section
-      tags$hr(class = "sidebar-divider"),
-
-      # Resources Section Header
-      tags$div(
-        class = "sidebar-section-header",
-        "Resources"
-      ),
-
-      # Group 8: Documentation (single item)
-      tags$div(
-        class = "nav-group",
-        tags$a(
-          href = "#",
-          class = "nav-item-single",
-          `data-page` = "documentation",
-          role = "button",
-          tabindex = "0",
-          tags$span(class = "nav-group-icon", icon("book")),
-          tags$span(class = "nav-group-label", "Documentation")
-        )
-      )
     ),
 
     # Sidebar Footer

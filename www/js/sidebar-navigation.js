@@ -57,10 +57,10 @@ $(document).ready(function() {
     // Add active class to clicked item
     $item.addClass('active');
 
-    // Add active class to parent group if child item
-    if ($item.hasClass('nav-item')) {
-      $item.closest('.nav-group').find('.nav-group-header').addClass('active');
-    }
+    // Add active class to all ancestor group headers (supports nested groups)
+    $item.parents('.nav-group').each(function() {
+      $(this).children('.nav-group-header').addClass('active');
+    });
 
     // Notify Shiny to switch content
     if (typeof Shiny !== 'undefined') {
@@ -123,23 +123,27 @@ $(document).ready(function() {
   }
 
   // ==========================================================================
-  // Auto-Expand Active Group on Page Load
+  // Auto-Expand Active Group on Page Load (with nested support)
   // ==========================================================================
 
   function expandActiveGroup() {
     const $activeItem = $('.nav-item.active, .nav-item-single.active');
 
     if ($activeItem.length > 0) {
-      const $parentGroup = $activeItem.closest('.nav-group');
+      // Find all ancestor nav-groups (handles nested structures)
+      const $ancestorGroups = $activeItem.parents('.nav-group');
 
-      if ($parentGroup.length > 0) {
-        const $header = $parentGroup.find('.nav-group-header');
-        const $children = $parentGroup.find('.nav-group-children');
+      $ancestorGroups.each(function() {
+        const $group = $(this);
+        const $header = $group.children('.nav-group-header');
+        const $children = $group.children('.nav-group-children');
 
-        $header.addClass('expanded active');
-        $children.addClass('expanded');
-        $header.attr('aria-expanded', 'true');
-      }
+        if ($header.length > 0 && $children.length > 0) {
+          $header.addClass('expanded active');
+          $children.addClass('expanded');
+          $header.attr('aria-expanded', 'true');
+        }
+      });
     }
   }
 
@@ -160,10 +164,10 @@ $(document).ready(function() {
         $('.nav-group-header').removeClass('active');
         $item.addClass('active');
 
-        // Activate parent group if child item
-        if ($item.hasClass('nav-item')) {
-          $item.closest('.nav-group').find('.nav-group-header').addClass('active');
-        }
+        // Activate all ancestor group headers (supports nested groups)
+        $item.parents('.nav-group').each(function() {
+          $(this).children('.nav-group-header').addClass('active');
+        });
 
         expandActiveGroup();
 
