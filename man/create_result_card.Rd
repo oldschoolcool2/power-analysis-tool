@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils_ui_result_cards.R
 \name{create_result_card}
 \alias{create_result_card}
-\title{Result Card UI Components}
+\title{Create a visual result summary card}
 \usage{
 create_result_card(
   title,
@@ -27,8 +27,6 @@ create_result_card(
 HTML div with styled card
 }
 \description{
-Visual components for displaying analysis results with color-coded interpretations,
-key findings callouts, and clear visual hierarchy.
 Create a visual result summary card
 }
 \examples{

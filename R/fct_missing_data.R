@@ -14,7 +14,12 @@
 #'
 #' @noRd
 calc_missing_data_inflation <- function(n_required, missing_pct, mechanism = "mar", analysis_type = "complete_case", mi_imputations = 5, mi_r_squared = 0.5) {
-  if (missing_pct == 0) {
+  # Validate inputs
+  if (is.null(missing_pct) || length(missing_pct) == 0 || is.na(missing_pct)) {
+    missing_pct <- 0
+  }
+  
+  if (isTRUE(all.equal(missing_pct, 0)) || missing_pct <= 0) {
     return(list(
       n_inflated = n_required,
       inflation_factor = 1.0,
