@@ -189,13 +189,12 @@
 
 /* Child groups within parent groups */
 .nav-group-child {
-  margin-left: var(--space-4);
   margin-bottom: var(--space-1);
 }
 
 /* Child group headers - slightly smaller and indented */
 .nav-group-header-child {
-  padding-left: var(--space-4);
+  padding-left: calc(var(--space-6) + var(--space-3));
   font-size: var(--font-size-sm);
 }
 
@@ -207,9 +206,15 @@
   font-size: var(--font-size-base);
 }
 
-/* Single items within child groups need extra indentation */
-.nav-group-child .nav-item-single {
-  padding-left: calc(var(--space-6) + 12px);
+/* Single items within parent groups - align with child headers */
+.nav-group-children-parent > .nav-group-child > .nav-item-single {
+  padding-left: calc(var(--space-6) + var(--space-3));
+  background: var(--bg-sidebar-overlay-subtle);
+}
+
+/* Leaf items within child groups get extra indentation */
+.nav-group-child .nav-group-children .nav-item {
+  padding-left: calc(var(--space-6) + var(--space-6) + 12px);
 }
 
 /* ==========================================================================
