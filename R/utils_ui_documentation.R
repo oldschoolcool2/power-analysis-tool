@@ -28,9 +28,8 @@ create_documentation_page <- function() {
         icon = icon("rocket"),
         title = "Getting Started",
         description = "Learn the basics of power analysis and sample size calculations with step-by-step tutorials.",
-        link = "#quick-start",
-        link_text = "View Guide",
-        new_window = FALSE
+        link = "www/doc/getting-started.html",
+        link_text = "Read Vignette"
       ),
 
       # Card 2: Propensity Score Methods
@@ -83,9 +82,8 @@ create_documentation_page <- function() {
         icon = icon("sitemap"),
         title = "Study Design Reference",
         description = "Technical specifications for single proportion, two-group comparisons, survival analysis, and matched designs.",
-        link = "#study-designs",
-        link_text = "View Reference",
-        new_window = FALSE
+        link = "www/doc/study-design-reference.html",
+        link_text = "Read Vignette"
       ),
 
       # Card 8: Statistical Methods
@@ -93,9 +91,8 @@ create_documentation_page <- function() {
         icon = icon("calculator"),
         title = "Statistical Methods",
         description = "Detailed methodology for effect measures, power calculations, and sample size formulas used in the tool.",
-        link = "#methods",
-        link_text = "View Methods",
-        new_window = FALSE
+        link = "www/doc/statistical-methods.html",
+        link_text = "Read Vignette"
       ),
 
       # Card 9: FAQ

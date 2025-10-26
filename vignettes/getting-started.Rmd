@@ -1,0 +1,467 @@
+---
+title: "Getting Started with Power Analysis"
+author: "Power Analysis Tool Development Team"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting Started with Power Analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
+)
+```
+
+## Welcome to the Power Analysis Tool
+
+This guide will help you understand the basics of power analysis and sample size calculations, and show you how to use this tool effectively for planning your research studies.
+
+### What You'll Learn
+
+By the end of this tutorial, you'll understand:
+
+1. **What is power analysis** and why it matters
+2. **The four key components** of any power calculation
+3. **How to choose** the right analysis type for your study
+4. **Step-by-step examples** for common study designs
+5. **How to interpret** and report your results
+
+## What is Power Analysis?
+
+### The Core Question
+
+Power analysis helps you answer one of three fundamental questions:
+
+**Question 1: Sample Size**
+> "How many participants do I need to detect a meaningful effect?"
+
+**Question 2: Statistical Power**
+> "Given my available sample size, what is my chance of detecting the effect?"
+
+**Question 3: Minimal Detectable Effect**
+> "Given my sample size and desired power, what is the smallest effect I can reliably detect?"
+
+### Why Power Analysis Matters
+
+**Underpowered studies** (too few participants):
+- Miss real effects (Type II error)
+- Waste resources and participant time
+- Contribute to publication bias
+- May be unethical if participants are exposed to risk
+
+**Overpowered studies** (too many participants):
+- Waste resources on unnecessary recruitment
+- Expose more participants to potential risks
+- Detect statistically significant but clinically trivial effects
+
+**Well-powered studies** (just right):
+- Balance efficiency with adequate detection capability
+- Maximize scientific and ethical value
+- Meet regulatory and funding requirements
+
+## The Four Key Components
+
+Every power calculation involves exactly **four components**. If you know any three, you can calculate the fourth.
+
+### 1. Sample Size (N)
+
+**Definition**: The number of participants (or events) in your study.
+
+**Typical questions**:
+- How many patients do I need to recruit?
+- How many matched pairs for a case-control study?
+- How many events for a survival analysis?
+
+**Typical values**: Varies widely by design and effect size (from 50 to 5,000+)
+
+### 2. Effect Size
+
+**Definition**: The magnitude of the difference or association you want to detect.
+
+**Effect size measures** (depends on outcome type):
+
+**Binary outcomes** (Yes/No, Event/No Event):
+- **Risk Difference (RD)**: Absolute difference in proportions (e.g., 10% vs 20% = 10 percentage points)
+- **Relative Risk (RR)**: Ratio of proportions (e.g., 0.20/0.10 = 2.0)
+- **Odds Ratio (OR)**: For case-control studies (e.g., OR = 2.5)
+- **Hazard Ratio (HR)**: For time-to-event outcomes (e.g., HR = 0.75)
+
+**Continuous outcomes** (e.g., blood pressure, BMI):
+- **Cohen's d**: Standardized mean difference
+  - Small: d = 0.2
+  - Medium: d = 0.5
+  - Large: d = 0.8
+- **Raw difference**: Actual units (e.g., 5 mmHg blood pressure reduction)
+
+**How to choose an effect size**:
+
+1. **Clinical importance**: What difference would change clinical practice?
+2. **Prior literature**: What effects have similar studies found?
+3. **Pilot data**: What preliminary estimates do you have?
+4. **Regulatory standards**: What margins are accepted by FDA/EMA?
+
+### 3. Statistical Power (1 - β)
+
+**Definition**: The probability of detecting an effect if it truly exists.
+
+**Common convention**: Power ≥ 0.80 (80%)
+
+**Interpretation**:
+- Power = 0.80 means you have an 80% chance of finding a significant result if the effect is real
+- Power = 0.50 means you're essentially flipping a coin (inadequate)
+- Power = 0.90 is higher confidence but requires more participants
+
+**When to use higher power**:
+- Costly interventions
+- Irreversible outcomes
+- Regulatory submissions (often require 90% power)
+- Confirmatory trials
+
+### 4. Significance Level (α)
+
+**Definition**: The probability of a false positive (Type I error rate).
+
+**Common convention**: α = 0.05 (5%)
+
+**One-sided vs. two-sided**:
+- **Two-sided** (default): Tests whether groups differ in either direction (e.g., "Is A different from B?")
+- **One-sided**: Tests whether one group is higher/lower (e.g., "Is A better than B?")
+  - Use for non-inferiority or superiority trials
+  - Requires strong prior justification
+  - α = 0.025 for one-sided test (equivalent to two-sided α = 0.05)
+
+## Choosing the Right Analysis Type
+
+The tool supports 9 different analysis types. Here's how to choose:
+
+### Decision Tree
+
+**Step 1: What type of outcome do you have?**
+
+**Binary outcome** (Yes/No, Event/No Event, Success/Failure):
+- → Go to Step 2
+
+**Continuous outcome** (measured on a scale: weight, blood pressure, QoL score):
+- → **Continuous Outcomes (t-test)**
+
+**Time-to-event outcome** (survival, time to hospitalization, time to cure):
+- → Go to Step 3
+
+---
+
+**Step 2: Binary Outcome - How many groups?**
+
+**One group** (comparing to a known rate):
+- → **Single Proportion (Rule of 3)**
+- Example: "What is the infection rate in our hospital compared to the national average?"
+
+**Two groups** (comparing two treatments/exposures):
+- Are cases and controls matched (paired)?
+  - **Yes** → **Matched Case-Control Study**
+  - **No** → **Two-Group Comparison (Proportions)**
+
+---
+
+**Step 3: Time-to-Event - What type of comparison?**
+
+**Testing for a difference**:
+- → **Survival Analysis (Cox Regression)**
+
+**Testing for equivalence or non-inferiority**:
+- → **Survival Equivalence/Non-Inferiority**
+
+---
+
+**Step 4: Special Study Designs**
+
+**Non-inferiority or equivalence trial** (binary outcome):
+- → **Non-Inferiority Testing**
+
+**Mediation analysis** (testing indirect effects):
+- → **Mediation Analysis Power**
+
+**Observational study with propensity score weighting**:
+- → **Propensity Score Sample Size**
+
+## Step-by-Step Examples
+
+### Example 1: Simple Two-Group Comparison
+
+**Research Question**: Does a new smoking cessation intervention improve quit rates compared to standard care?
+
+**Study Design**:
+- Two groups: Intervention vs. Standard Care
+- Outcome: Binary (Quit smoking: Yes/No)
+- Equal allocation (1:1 ratio)
+
+**Known information**:
+- Standard care quit rate: **20%** (from literature)
+- Intervention quit rate: **35%** (clinically meaningful improvement)
+- Desired power: **80%**
+- Significance level: **α = 0.05** (two-sided)
+
+**Step 1**: Navigate to **"Two-Group Comparison"** tab in the tool
+
+**Step 2**: Select **"Calculate Sample Size"**
+
+**Step 3**: Enter parameters:
+- Group 1 proportion: 35 (intervention)
+- Group 2 proportion: 20 (standard care)
+- Desired power: 0.80
+- Significance level: 0.05
+- Test type: Two-sided
+- Allocation ratio: 1.0 (equal groups)
+
+**Step 4**: Click **"Calculate"**
+
+**Expected Result**:
+```
+Sample size per group: 150 participants
+Total sample size: 300 participants
+
+Effect Measures:
+- Risk Difference (RD): 15 percentage points
+- Relative Risk (RR): 1.75
+- Odds Ratio (OR): 2.17
+```
+
+**Interpretation**: You need to recruit 150 participants per group (300 total) to have an 80% chance of detecting a 15 percentage point improvement in quit rates.
+
+---
+
+### Example 2: Feasibility-Constrained Study (Minimal Detectable Effect)
+
+**Research Question**: What effect size can we detect with our limited budget?
+
+**Study Design**:
+- Two groups comparing continuous outcome (systolic blood pressure)
+- Maximum affordable sample: **N = 100** (50 per group)
+
+**Known information**:
+- Available sample: **50 per group**
+- Desired power: **80%**
+- Significance level: **α = 0.05**
+
+**Step 1**: Navigate to **"Continuous Outcomes"** tab
+
+**Step 2**: Select **"Calculate Minimal Detectable Effect"**
+
+**Step 3**: Enter parameters:
+- Sample size per group: 50
+- Desired power: 0.80
+- Significance level: 0.05
+- Test type: Two-sided
+
+**Step 4**: Click **"Calculate"**
+
+**Expected Result**:
+```
+Minimal Detectable Effect Size (Cohen's d): 0.57 (medium effect)
+
+With n=50 per group, you can reliably detect:
+- Effects of medium size or larger (d ≥ 0.57)
+- You are underpowered for small effects (d < 0.5)
+```
+
+**Interpretation**: With 50 participants per group, you can detect medium-to-large effects but will miss small effects. Decide whether this is acceptable based on your research question.
+
+---
+
+### Example 3: Survival Analysis (Time-to-Event)
+
+**Research Question**: Does a new medication reduce time to hospital readmission?
+
+**Study Design**:
+- Cox proportional hazards analysis
+- Outcome: Time to readmission (days)
+- Comparing treated vs. untreated patients
+
+**Known information**:
+- Expected hazard ratio: **HR = 0.70** (30% reduction in hazard)
+- Proportion exposed (treated): **50%**
+- Overall event rate: **40%** (40% of patients readmitted during follow-up)
+- Desired power: **80%**
+- Significance level: **α = 0.05**
+
+**Step 1**: Navigate to **"Survival Analysis"** tab
+
+**Step 2**: Select **"Calculate Sample Size"**
+
+**Step 3**: Enter parameters:
+- Hazard ratio: 0.70
+- Proportion exposed: 0.50
+- Event rate: 40%
+- Desired power: 0.80
+- Significance level: 0.05
+
+**Step 4**: Click **"Calculate"**
+
+**Expected Result**:
+```
+Total sample size required: 426 participants
+Number of events required: 170 events
+
+With HR = 0.70:
+- Study needs to observe 170 readmission events
+- Requires enrolling 426 participants (given 40% event rate)
+```
+
+**Interpretation**: Unlike sample-size based analyses, survival studies are **event-driven**. You need 170 events (readmissions), which requires following 426 participants until 40% experience the event.
+
+## Understanding Adjustments and Special Features
+
+### Missing Data Adjustment
+
+**Why it matters**: Not all enrolled participants provide complete data.
+
+**Example scenario**:
+- Calculated sample size: 300 participants
+- Expected dropout rate: 20%
+- Missing data mechanism: MAR (Missing At Random)
+- Analysis plan: Complete-case analysis
+
+**Adjustment**:
+```
+Adjusted sample size: 375 participants
+- Base calculation: 300
+- Inflation factor: 1.25 (to account for 20% missing data)
+- Additional participants: 75
+```
+
+**Tool feature**: Check **"Adjust for missing data"** and specify your dropout rate and analysis plan (complete-case vs. multiple imputation).
+
+### Clustering Adjustment (Design Effect)
+
+**Why it matters**: When participants are clustered (e.g., patients within hospitals), observations are not independent.
+
+**Example scenario**:
+- Calculated sample size (assuming independence): 200 participants
+- Study design: Patients nested within 10 hospitals
+- Average cluster size: 20 patients per hospital
+- Intraclass Correlation (ICC): 0.05
+
+**Adjustment**:
+```
+Design Effect (DE) = 1 + (m-1) × ICC
+                   = 1 + (20-1) × 0.05
+                   = 1.95
+
+Adjusted sample size = 200 × 1.95 = 390 participants
+```
+
+**Tool feature**: Check **"Adjust for clustering"** and specify ICC and cluster size.
+
+### Multiple Testing Correction
+
+**Why it matters**: Testing multiple hypotheses increases false positive risk.
+
+**Example scenario**:
+- Primary outcome + 2 secondary outcomes = 3 tests
+- Nominal α = 0.05 per test
+- Correction method: Bonferroni
+
+**Adjustment**:
+```
+Adjusted α = 0.05 / 3 = 0.0167 per test
+
+Sample size increase: ~15-20% to maintain power
+```
+
+**Tool feature**: Check **"Adjust for multiple testing"** and specify number of comparisons and correction method.
+
+## Interpreting and Reporting Results
+
+### What to Report in Your Protocol
+
+When presenting power analysis results, include:
+
+1. **Study design**: (e.g., "Two-group parallel randomized trial")
+2. **Primary outcome**: (e.g., "Binary outcome: 30-day mortality")
+3. **Effect size assumption**: (e.g., "Reduction from 20% to 15% (RD=5%, RR=0.75)")
+4. **Justification**: (e.g., "Based on Smith et al. (2020) pilot study")
+5. **Sample size**: (e.g., "150 per group, 300 total")
+6. **Power**: (e.g., "80% power at α=0.05 (two-sided)")
+7. **Adjustments**: (e.g., "Inflated by 20% for expected dropout (final N=375)")
+
+**Example paragraph** (generated by the tool):
+
+> A sample size of 150 participants per group (300 total) provides 80% power to detect a risk difference of 5 percentage points (from 20% to 15%), corresponding to a relative risk of 0.75, using a two-sided test at the 0.05 significance level. This effect size is based on findings from Smith et al. (2020) and represents a clinically meaningful reduction in 30-day mortality. The sample size is inflated by 20% (final N=375) to account for expected dropout.
+
+### Common Pitfalls to Avoid
+
+**Pitfall 1: Post-hoc power analysis**
+- **DON'T**: Calculate power after seeing non-significant results
+- **WHY**: Power is for planning, not post-hoc rationalization
+- **DO INSTEAD**: Report confidence intervals and effect estimates
+
+**Pitfall 2: Overly optimistic effect sizes**
+- **DON'T**: Assume large effects without justification
+- **WHY**: Leads to underpowered studies that fail
+- **DO INSTEAD**: Use conservative estimates from literature or pilot data
+
+**Pitfall 3: Ignoring multiple comparisons**
+- **DON'T**: Plan 10 secondary analyses without correction
+- **WHY**: Inflates false positive rate
+- **DO INSTEAD**: Pre-specify primary outcome and adjust α or use correction
+
+**Pitfall 4: Forgetting about feasibility**
+- **DON'T**: Calculate N=5,000 when you can only recruit 500
+- **WHY**: Sets up study for failure
+- **DO INSTEAD**: Calculate minimal detectable effect for N=500 and assess feasibility
+
+## Next Steps
+
+Now that you understand the basics, explore these advanced topics:
+
+### 1. Advanced Adjustments
+- **Missing Data Adjustments**: [Read Vignette](www/doc/missing-data-adjustments.html)
+- **Design Effects in Clustered Studies**: [Read Vignette](www/doc/design-effects-clustering.html)
+
+### 2. Feasibility Planning
+- **Minimal Detectable Effect Sizes**: [Read Vignette](www/doc/minimal-detectable-effects.html)
+- **Interactive Power Curves**: [Read Vignette](www/doc/interactive-power-curves.html)
+
+### 3. Observational Studies
+- **Propensity Score Sample Size**: [Read Vignette](www/doc/propensity-score-calculations.html)
+
+### 4. Reference Materials
+- **Study Design Reference**: Complete technical specifications for all 9 analysis types
+- **Statistical Methods**: Detailed formulas and calculations used by the tool
+
+## Quick Reference Card
+
+| If you have... | Calculate... | Use this tab... |
+|---------------|-------------|-----------------|
+| Two proportions to compare | Sample size or power | Two-Group Comparison |
+| One proportion vs. a standard | Sample size or power | Single Proportion |
+| Two means to compare | Sample size or power | Continuous Outcomes |
+| Time-to-event outcome | Sample size or power | Survival Analysis |
+| Matched pairs | Sample size | Matched Case-Control |
+| Non-inferiority design | Sample size | Non-Inferiority Testing |
+| Fixed sample size | Minimal detectable effect | Any tab (select MDE option) |
+| Mediation hypothesis | Sample size or power | Mediation Analysis |
+| Propensity score study | Adjusted sample size | Propensity Score Sample Size |
+
+## Getting Help
+
+**Within the Tool**:
+- Look for **blue information icons** (ℹ️) next to each parameter for definitions
+- Expand **"Example Scenario"** sections for worked examples
+- Review **"Help & Interpretation"** accordions at the bottom of each tab
+
+**External Resources**:
+- Cohen, J. (1988). *Statistical Power Analysis for the Behavioral Sciences* (2nd ed.)
+- Noordzij et al. (2010). "Sample size calculations: basic principles and common pitfalls." *Nephrology Dialysis Transplantation*, 25(5), 1388-1393.
+- Chow, S.C., Shao, J., Wang, H., & Lokhnygina, Y. (2017). *Sample Size Calculations in Clinical Research* (3rd ed.)
+
+---
+
+**Feedback**: Found an issue or have a suggestion? Please report it at [GitHub Issues](https://github.com/anthropics/claude-code/issues)
+
+**Last Updated**: `r Sys.Date()`

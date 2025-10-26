@@ -1,0 +1,794 @@
+---
+title: "Study Design Reference"
+author: "Power Analysis Tool Development Team"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Study Design Reference}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
+)
+library(knitr)
+```
+
+## Overview
+
+This reference provides technical specifications for all nine analysis types supported by the Power Analysis Tool. Use this as a quick lookup when selecting the appropriate design for your study.
+
+## Analysis Type Index
+
+| # | Analysis Type | Outcome Type | Primary Use Case |
+|---|--------------|--------------|------------------|
+| 1 | Single Proportion (Rule of 3) | Binary | Quality improvement, rare event monitoring |
+| 2 | Two-Group Comparison | Binary | RCTs, cohort studies comparing proportions |
+| 3 | Survival Analysis | Time-to-event | Cox regression, time to event studies |
+| 4 | Matched Case-Control | Binary | Case-control studies with matching |
+| 5 | Continuous Outcomes | Continuous | t-tests comparing means between groups |
+| 6 | Non-Inferiority Testing | Binary | Regulatory trials testing equivalence |
+| 7 | Propensity Score Sample Size | Binary/Continuous | Observational studies with confounding |
+| 8 | Mediation Analysis | Any | Testing indirect effects (X→M→Y) |
+| 9 | Survival Equivalence/NI | Time-to-event | Equivalence for time-to-event outcomes |
+
+---
+
+## 1. Single Proportion (Rule of 3)
+
+### Description
+
+Tests whether a single proportion differs from a known standard or historical control. Based on exact binomial test framework. Commonly used in quality improvement and post-market surveillance.
+
+### When to Use
+
+- Comparing a single group to a known population rate
+- Monitoring rare adverse events
+- Quality improvement initiatives
+- Hospital-acquired infection surveillance
+- Post-market device/drug safety monitoring
+
+### Parameters
+
+| Parameter | Type | Description | Typical Range |
+|-----------|------|-------------|---------------|
+| **Sample size (N)** | Integer | Number of participants | 20 - 10,000+ |
+| **Event frequency** | Integer | "1 in X" format (e.g., 1 in 50) | 3 - 1,000 |
+| **Null proportion (p₀)** | Proportion | Historical/reference rate | 0.01 - 0.50 |
+| **Alternative proportion (p₁)** | Proportion | Expected rate in study | 0.01 - 0.50 |
+| **Power** | Probability | Desired power | 0.80, 0.90 |
+| **Significance level (α)** | Probability | Type I error rate | 0.05 |
+| **Test type** | One/Two-sided | Directional hypothesis | Two-sided (default) |
+
+### Effect Measures
+
+- **Event frequency**: Expressed as "1 in X" (e.g., 1 in 50 = 2%)
+- **Proportion**: Decimal format (0.02 = 2%)
+- **Cohen's h**: Effect size for proportions
+
+### Statistical Method
+
+- Exact binomial test
+- Effect size conversion via `ES.h()` from `pwr` package
+- Power calculation via `pwr.p.test()`
+
+### Adjustments Available
+
+- ✅ Missing data inflation
+- ✅ Clustering (design effect)
+- ✅ Multiple testing correction
+
+### Example Use Case
+
+**Scenario**: Hospital monitoring central-line associated bloodstream infections (CLABSI).
+
+**Parameters**:
+- National benchmark: 1 in 1,000 line-days (0.1%)
+- Hospital target: 1 in 2,000 line-days (0.05%)
+- Sample size: 5,000 line-days
+- Power: 80%
+
+**Output**: Determines whether 5,000 line-days provides adequate power to detect improvement from national benchmark.
+
+---
+
+## 2. Two-Group Comparison (Proportions)
+
+### Description
+
+Compares event rates between two independent groups. Standard design for RCTs and cohort studies with binary outcomes. Uses two-proportion z-test framework.
+
+### When to Use
+
+- Randomized controlled trials (RCT)
+- Cohort studies (exposed vs. unexposed)
+- Cross-sectional comparisons
+- Parallel group designs
+- A/B testing
+
+### Parameters
+
+| Parameter | Type | Description | Typical Range |
+|-----------|------|-------------|---------------|
+| **Sample size per group** | Integer | n₁ and n₂ | 20 - 5,000 per group |
+| **Allocation ratio** | Ratio | n₂/n₁ ratio | 1:1, 2:1, 3:1 |
+| **Group 1 proportion (p₁)** | Percentage | Event rate in group 1 | 5% - 95% |
+| **Group 2 proportion (p₂)** | Percentage | Event rate in group 2 | 5% - 95% |
+| **Power** | Probability | Desired power | 0.80, 0.90 |
+| **Significance level (α)** | Probability | Type I error rate | 0.05 |
+| **Test type** | One/Two-sided | Directional hypothesis | Two-sided (default) |
+
+### Effect Measures
+
+Automatically calculates three effect measures:
+
+- **Risk Difference (RD)**: p₁ - p₂ (absolute difference in percentage points)
+- **Relative Risk (RR)**: p₁ / p₂ (ratio of proportions)
+- **Odds Ratio (OR)**: (p₁/(1-p₁)) / (p₂/(1-p₂))
+
+### Statistical Method
+
+- Two-proportion z-test (Chi-square equivalent)
+- Cohen's h effect size
+- Equal allocation: `pwr.2p.test()`
+- Unequal allocation: `pwr.2p2n.test()`
+
+### Adjustments Available
+
+- ✅ Missing data inflation
+- ✅ Clustering (design effect)
+- ✅ Multiple testing correction
+
+### Calculation Options
+
+1. **Calculate Sample Size**: Given effect size and power → Calculate n per group
+2. **Calculate Power**: Given sample sizes and effect size → Calculate power
+3. **Calculate Minimal Detectable Effect**: Given n and power → Calculate smallest detectable RD
+
+### Example Use Case
+
+**Scenario**: RCT comparing new anticoagulant vs. standard care for stroke prevention.
+
+**Parameters**:
+- Standard care stroke rate: 15%
+- New treatment stroke rate: 10%
+- Allocation: 1:1
+- Power: 90%
+- α: 0.05 (two-sided)
+
+**Output**:
+- Required sample size: ~516 per group (1,032 total)
+- RD = 5 percentage points, RR = 0.67, OR = 0.63
+
+---
+
+## 3. Survival Analysis (Cox Regression)
+
+### Description
+
+Power and sample size calculations for time-to-event outcomes using Cox proportional hazards framework. Based on Schoenfeld formula. Event-driven (not sample-driven) design.
+
+### When to Use
+
+- Time-to-event outcomes (death, hospitalization, disease progression)
+- Survival analysis with censoring
+- Comparing hazard rates between groups
+- Cox regression studies
+- Requires proportional hazards assumption
+
+### Parameters
+
+| Parameter | Type | Description | Typical Range |
+|-----------|------|-------------|---------------|
+| **Total sample size (N)** | Integer | Total participants | 100 - 5,000 |
+| **Hazard Ratio (HR)** | Ratio | Treatment effect | 0.50 - 2.0 |
+| **Proportion exposed** | Proportion | % in treatment group | 0.30 - 0.70 |
+| **Event rate** | Percentage | Overall event rate | 10% - 80% |
+| **Power** | Probability | Desired power | 0.80, 0.90 |
+| **Significance level (α)** | Probability | Type I error rate | 0.05 |
+
+### Effect Measures
+
+- **Hazard Ratio (HR)**: Ratio of hazards (treatment vs. control)
+  - HR < 1: Treatment reduces hazard (beneficial)
+  - HR = 1: No effect
+  - HR > 1: Treatment increases hazard (harmful)
+
+**Interpretation**:
+- HR = 0.75 means 25% reduction in hazard
+- HR = 0.50 means 50% reduction in hazard
+- HR = 2.0 means doubling of hazard
+
+### Statistical Method
+
+- Log-rank test (equivalent to Cox proportional hazards)
+- Schoenfeld formula for events required
+- Power calculation via `powerSurvEpi::ssizeLR.default()`
+
+### Key Concept: Event-Driven Design
+
+**Critical**: Survival studies are powered by **number of events**, not total sample size.
+
+**Formula**:
+```
+Number of events required = f(HR, power, α)
+Total sample size = Events required / Overall event rate
+```
+
+**Example**:
+- Need 150 events for 80% power
+- Expected event rate: 30%
+- Total sample size: 150 / 0.30 = 500 participants
+
+### Adjustments Available
+
+- ✅ Missing data inflation (for enrollment)
+- ✅ Clustering (design effect)
+- ❌ Multiple testing (must adjust α manually)
+
+### Example Use Case
+
+**Scenario**: Clinical trial of new cancer therapy on overall survival.
+
+**Parameters**:
+- Hazard ratio: 0.70 (30% reduction)
+- Allocation: 50% treatment, 50% control
+- Expected event rate: 60% (deaths during follow-up)
+- Power: 80%
+- α: 0.05
+
+**Output**:
+- Events required: 183 deaths
+- Total sample size: 305 participants
+
+---
+
+## 4. Matched Case-Control Study
+
+### Description
+
+Sample size calculations for matched case-control studies using McNemar's test framework. Accounts for matching efficiency and discordant pairs.
+
+### When to Use
+
+- Case-control studies with individual matching
+- Matched pairs design
+- 1:1, 1:2, or 1:M matching ratios
+- Outcomes with strong confounding requiring matching
+- Rare disease studies
+
+### Parameters
+
+| Parameter | Type | Description | Typical Range |
+|-----------|------|-------------|---------------|
+| **Number of matched sets** | Integer | Pairs or sets | 50 - 2,000 |
+| **Odds Ratio (OR)** | Ratio | Exposure effect | 1.5 - 10.0 |
+| **Exposure in controls (p₀)** | Proportion | Baseline exposure | 0.05 - 0.50 |
+| **Matching ratio** | Integer | Controls per case | 1, 2, 3, 4, 5 |
+| **Power** | Probability | Desired power | 0.80, 0.90 |
+| **Significance level (α)** | Probability | Type I error rate | 0.05 |
+
+### Effect Measures
+
+- **Odds Ratio (OR)**: Measure of association in case-control studies
+  - OR = 1: No association
+  - OR > 1: Positive association (exposure increases odds)
+  - OR < 1: Negative association (exposure decreases odds)
+
+### Statistical Method
+
+- McNemar's test for matched proportions
+- Uses `epiR::epi.sscc()` for matched case-control designs
+- Accounts for discordant pairs
+
+### Adjustments Available
+
+- ✅ Missing data inflation
+- ❌ Clustering (matching already accounts for correlation)
+- ❌ Multiple testing (adjust α manually)
+
+### Example Use Case
+
+**Scenario**: Case-control study of lung cancer and occupational asbestos exposure.
+
+**Parameters**:
+- Target odds ratio: 3.0
+- Expected exposure in controls: 10%
+- Matching: 1:2 (2 controls per case)
+- Power: 80%
+- α: 0.05
+
+**Output**: Required number of matched sets (case triplets)
+
+---
+
+## 5. Continuous Outcomes (t-test)
+
+### Description
+
+Power and sample size for comparing means between two independent groups. Uses two-sample t-test framework with Cohen's d effect size.
+
+### When to Use
+
+- Comparing means between two groups
+- Continuous outcomes (weight, blood pressure, quality of life scores, lab values)
+- Independent samples
+- Approximately normally distributed outcomes
+- Equal or unequal group sizes
+
+### Parameters
+
+| Parameter | Type | Description | Typical Range |
+|-----------|------|-------------|---------------|
+| **Sample size per group** | Integer | n₁ and n₂ | 20 - 1,000 per group |
+| **Allocation ratio** | Ratio | n₂/n₁ ratio | 1:1, 2:1, 3:1 |
+| **Cohen's d** | Standardized | Standardized mean difference | 0.2 - 1.0 |
+| **Power** | Probability | Desired power | 0.80, 0.90 |
+| **Significance level (α)** | Probability | Type I error rate | 0.05 |
+| **Test type** | One/Two-sided | Directional hypothesis | Two-sided (default) |
+
+### Effect Measures
+
+**Cohen's d**: Standardized mean difference
+
+**Formula**:
+```
+d = (μ₁ - μ₂) / σ_pooled
+```
+
+**Interpretation guidelines**:
+- **Small effect**: d = 0.2
+- **Medium effect**: d = 0.5
+- **Large effect**: d = 0.8
+
+**Converting raw differences to Cohen's d**:
+```
+d = (Mean₁ - Mean₂) / SD_pooled
+```
+
+**Example**: Blood pressure reduction of 5 mmHg with SD = 10 mmHg → d = 5/10 = 0.5 (medium effect)
+
+### Statistical Method
+
+- Two-sample t-test (equal or unequal variance)
+- Uses `pwr::pwr.t.test()` for equal allocation
+- Custom implementation for unequal allocation
+
+### Adjustments Available
+
+- ✅ Missing data inflation
+- ✅ Clustering (design effect)
+- ✅ Multiple testing correction
+
+### Example Use Case
+
+**Scenario**: Clinical trial comparing weight loss between diet intervention vs. control.
+
+**Parameters**:
+- Expected mean difference: 3 kg
+- Pooled standard deviation: 6 kg
+- Cohen's d: 3/6 = 0.5
+- Allocation: 1:1
+- Power: 80%
+- α: 0.05 (two-sided)
+
+**Output**: Required sample size per group
+
+---
+
+## 6. Non-Inferiority Testing
+
+### Description
+
+Sample size calculations for non-inferiority and equivalence trials with binary outcomes. Uses one-sided testing framework with pre-specified margin.
+
+### When to Use
+
+- **Non-inferiority**: Proving new treatment is "not worse" than standard by more than a margin
+- **Equivalence**: Proving new treatment is "similar" to standard within margin bounds
+- Regulatory trials (FDA/EMA submissions)
+- Generic drug approval
+- Biosimilar studies
+
+### Parameters
+
+| Parameter | Type | Description | Typical Range |
+|-----------|------|-------------|---------------|
+| **Sample size per group** | Integer | n₁ and n₂ | 100 - 5,000 per group |
+| **Test group rate** | Percentage | Event rate in new treatment | 5% - 50% |
+| **Reference group rate** | Percentage | Event rate in standard | 5% - 50% |
+| **NI margin** | Percentage | Non-inferiority margin | 2% - 15% |
+| **Allocation ratio** | Ratio | n₂/n₁ ratio | 1:1, 2:1 |
+| **Power** | Probability | Desired power | 0.80, 0.90 |
+| **Significance level (α)** | Probability | One-sided Type I error | 0.025 |
+
+### Key Concepts
+
+**Non-Inferiority Margin (Δ)**:
+- Maximum acceptable difference
+- Set based on clinical importance and regulatory guidance
+- Typically 50% of active control effect (FDA guidance)
+
+**Hypothesis**:
+- **Null (H₀)**: Test treatment is inferior by ≥ Δ
+- **Alternative (H₁)**: Test treatment is non-inferior (within Δ)
+
+**One-sided test**: Uses α = 0.025 (equivalent to two-sided α = 0.05)
+
+### Effect Measures
+
+- **Risk Difference (RD)**: Absolute difference
+- **Relative Risk (RR)**: Ratio of proportions
+- **Non-inferiority margin**: Δ (percentage points or relative)
+
+### Statistical Method
+
+- One-sided z-test with non-inferiority margin
+- Custom implementation following FDA/ICH guidelines
+
+### Adjustments Available
+
+- ✅ Missing data inflation (MAR, MNAR, MCAR with Complete-Case or Multiple Imputation)
+- ✅ Clustering (design effect with ICC specification)
+- ✅ Multiple testing correction (Bonferroni, Holm, BH, Šidák)
+
+### Example Use Case
+
+**Scenario**: Generic drug approval for antibiotic efficacy.
+
+**Parameters**:
+- Reference drug cure rate: 85%
+- Generic drug expected cure rate: 83%
+- Non-inferiority margin: 10 percentage points
+- Allocation: 1:1
+- Power: 90%
+- α: 0.025 (one-sided)
+
+**Output**:
+- Sample size per group
+- Conclusion: "If lower bound of 95% CI for RD > -10%, declare non-inferiority"
+
+---
+
+## 7. Propensity Score Sample Size
+
+### Description
+
+Advanced sample size adjustment for observational studies using propensity score weighting methods. Accounts for covariate overlap and confounding. Based on Li et al. (2025) and Austin (2021) methods.
+
+### When to Use
+
+- Observational studies (no randomization)
+- Confounding control via propensity scores
+- Real-world evidence (RWE) studies
+- Comparing effectiveness of treatments in routine care
+- When covariate imbalance is expected
+
+### Parameters
+
+| Parameter | Type | Description | Typical Range |
+|-----------|------|-------------|---------------|
+| **Treatment prevalence** | Proportion | % receiving treatment | 0.10 - 0.90 |
+| **Overlap coefficient (φ)** | Proportion | Bhattacharyya coefficient | 0.30 - 0.95 |
+| **C-statistic** | AUC | PS model discrimination | 0.55 - 0.90 |
+| **Weighting method** | Category | ATE, ATT, ATC, Matching | ATE (default) |
+| **Effect size** | Varies | Depends on outcome type | 0.2 - 0.8 (Cohen's d) |
+| **Power** | Probability | Desired power | 0.80, 0.90 |
+
+### Key Concepts
+
+**Propensity Score (PS)**: Probability of treatment given covariates
+
+**Overlap (φ)**: Bhattacharyya coefficient measuring covariate balance
+- φ = 1: Perfect overlap (like RCT)
+- φ = 0.7: Moderate overlap
+- φ < 0.5: Poor overlap (questionable validity)
+
+**Weighting Methods**:
+- **ATE** (Average Treatment Effect): Weights both groups to represent full population
+- **ATT** (Average Treatment Effect on Treated): Weights control to match treated
+- **ATC** (Average Treatment Effect on Controls): Weights treated to match controls
+- **Matching**: 1:1 or 1:M matching with replacement
+
+**VIF (Variance Inflation Factor)**:
+- Quantifies efficiency loss vs. RCT
+- VIF = 2.0 means observational study needs 2× sample size of equivalent RCT
+
+### Statistical Method
+
+- Li et al. (2025): Confounding adjustment via R² parameters
+- Austin (2021): VIF estimation from c-statistic
+- Custom implementation: `calculate_bhattacharyya_coefficient()`, `estimate_vif_propensity_score()`
+
+### Effect Measures
+
+Same as underlying outcome type:
+- Binary: RD, RR, OR
+- Continuous: Cohen's d, mean difference
+- Time-to-event: HR
+
+### Example Use Case
+
+**Scenario**: EHR study comparing Drug A vs. Drug B for diabetes control (HbA1c reduction).
+
+**Parameters**:
+- Treatment prevalence: 30% receive Drug A
+- Expected overlap: φ = 0.75 (good overlap)
+- PS model c-statistic: 0.70 (moderate discrimination)
+- Weighting method: ATE
+- Effect size: d = 0.3 (small-medium)
+- Power: 80%
+
+**Output**:
+- RCT-equivalent sample size: 350 per group
+- VIF: 1.8
+- Adjusted observational sample size: 630 per group (1,260 total)
+
+---
+
+## 8. Mediation Analysis Power
+
+### Description
+
+Power calculations for testing indirect effects in mediation models (X → M → Y). Uses Sobel test framework for the product of path coefficients.
+
+### When to Use
+
+- Testing mechanisms of action (how does X affect Y?)
+- Causal pathway analysis
+- Behavioral intervention research
+- Identifying mediators of treatment effects
+- Theory-driven hypothesis testing
+
+### Parameters
+
+| Parameter | Type | Description | Typical Range |
+|-----------|------|-------------|---------------|
+| **Sample size (N)** | Integer | Total participants | 100 - 1,000 |
+| **Path a** | Correlation | X → M (exposure to mediator) | 0.1 - 0.7 |
+| **Path b** | Correlation | M → Y\|X (mediator to outcome) | 0.1 - 0.7 |
+| **Path c'** | Correlation | X → Y (direct effect, optional) | 0.0 - 0.5 |
+| **Power** | Probability | Desired power | 0.80, 0.90 |
+| **Significance level (α)** | Probability | Type I error rate | 0.05 |
+
+### Key Concepts
+
+**Mediation Model**:
+```
+      a        b
+X -------> M -------> Y
+ \                   /
+  \       c'        /
+   -----------------
+```
+
+**Effects**:
+- **Path a**: Effect of X on mediator M
+- **Path b**: Effect of M on outcome Y (controlling for X)
+- **Indirect effect (a×b)**: Effect of X on Y *through* M
+- **Direct effect (c')**: Effect of X on Y *not* through M
+- **Total effect (c)**: c = c' + a×b
+
+**Sobel Test**: Tests whether indirect effect (a×b) is significantly different from zero
+
+### Statistical Method
+
+- Sobel test for indirect effects
+- Standard error: SE(a×b) = √(b²×SE(a)² + a²×SE(b)²)
+- Power via normal approximation
+- Custom implementation: `calc_mediation_power()`, `calc_mediation_n()`, `calc_mediation_mde()`
+
+### Effect Size Guidelines
+
+**Path coefficients** (standardized):
+- Small: 0.10 - 0.30
+- Medium: 0.30 - 0.50
+- Large: 0.50+
+
+**Indirect effect (a×b)**:
+- Small: 0.01 - 0.09
+- Medium: 0.09 - 0.25
+- Large: 0.25+
+
+### Example Use Case
+
+**Scenario**: Testing whether physical activity (M) mediates the effect of a health coaching intervention (X) on weight loss (Y).
+
+**Parameters**:
+- Path a (coaching → activity): 0.40 (medium)
+- Path b (activity → weight loss): 0.35 (medium)
+- Indirect effect (a×b): 0.40 × 0.35 = 0.14 (medium)
+- Power: 80%
+- α: 0.05
+
+**Output**: Required sample size to detect mediation effect
+
+---
+
+## 9. Survival Equivalence/Non-Inferiority
+
+### Description
+
+Sample size calculations for equivalence and non-inferiority testing with time-to-event outcomes. Extends Cox regression framework with margin-based testing.
+
+### When to Use
+
+- Non-inferiority trials with survival outcomes
+- Equivalence trials for time-to-event endpoints
+- Comparing survival curves within acceptable margin
+- Regulatory submissions for time-to-event endpoints
+
+### Parameters
+
+| Parameter | Type | Description | Typical Range |
+|-----------|------|-------------|---------------|
+| **Expected hazard ratio** | Ratio | HR (typically near 1.0) | 0.80 - 1.25 |
+| **NI margin (HR scale)** | Ratio | Equivalence margin | 1.15 - 1.50 |
+| **Proportion exposed** | Proportion | % in treatment group | 0.30 - 0.70 |
+| **Event rate** | Percentage | Overall event rate | 20% - 80% |
+| **Power** | Probability | Desired power | 0.80, 0.90 |
+| **Significance level (α)** | Probability | One-sided α | 0.025 |
+| **Test type** | NI or Equivalence | One-sided or two-sided | Non-inferiority |
+
+### Key Concepts
+
+**Non-Inferiority Hypothesis**:
+- **Null (H₀)**: HR_upper ≥ Δ (treatment is inferior)
+- **Alternative (H₁)**: HR_upper < Δ (treatment is non-inferior)
+
+**Equivalence Hypothesis** (two one-sided tests):
+- **Test 1**: HR_lower > Δ_lower
+- **Test 2**: HR_upper < Δ_upper
+
+**Margin Selection**:
+- Typically 15-20% increase in hazard is considered acceptable
+- Margin = 1.20 means "up to 20% increase in hazard is acceptable"
+
+### Statistical Method
+
+- Schoenfeld formula adapted for margins
+- One-sided test for non-inferiority
+- Two one-sided tests (TOST) for equivalence
+- Custom implementation: `ssize_survival_ni()`, `ssize_survival_equiv()`
+
+### Example Use Case
+
+**Scenario**: Non-inferiority trial comparing new vs. standard chemotherapy for overall survival.
+
+**Parameters**:
+- Expected HR: 1.05 (5% increase, but within acceptable range)
+- Non-inferiority margin: 1.20 (20% increase is maximum acceptable)
+- Allocation: 1:1 (50% in each group)
+- Event rate: 60%
+- Power: 90%
+- α: 0.025 (one-sided)
+
+**Output**:
+- Events required: ~250 deaths
+- Total sample size: 417 participants
+
+**Conclusion criterion**: "If upper bound of 95% CI for HR < 1.20, declare non-inferiority"
+
+---
+
+## Adjustment Features (Cross-Cutting)
+
+### Missing Data Adjustment
+
+**Applies to**: Single proportion, two-group, continuous, non-inferiority, survival
+
+**Mechanisms**:
+- **MCAR** (Missing Completely At Random): Least impact
+- **MAR** (Missing At Random): Moderate impact
+- **MNAR** (Missing Not At Random): Largest impact
+
+**Analysis Plans**:
+- **Complete-case analysis**: Most conservative, discards incomplete cases
+  - Inflation factor: 1 / (1 - dropout_rate)
+- **Multiple Imputation (MI)**: More efficient, imputes missing values
+  - Inflation factor depends on R² of imputation model and number of imputations (m)
+
+### Clustering Adjustment (Design Effect)
+
+**Applies to**: Single proportion, two-group, non-inferiority
+
+**Formula**:
+```
+Design Effect (DE) = 1 + (m - 1) × ICC
+
+Where:
+- m = cluster size (participants per cluster)
+- ICC = Intraclass Correlation Coefficient (0 - 1)
+
+Adjusted sample size = n_unadjusted × DE
+```
+
+**ICC Guidelines**:
+- Behavioral outcomes: 0.01 - 0.05
+- Clinical outcomes: 0.001 - 0.02
+- Educational outcomes: 0.10 - 0.20
+
+### Multiple Testing Correction
+
+**Applies to**: Single proportion, two-group, continuous, non-inferiority
+
+**Methods**:
+- **Bonferroni**: α_adj = α / k (most conservative)
+- **Holm-Bonferroni**: Sequential correction (less conservative)
+- **Benjamini-Hochberg**: Controls False Discovery Rate
+- **Šidák**: α_adj = 1 - (1 - α)^(1/k)
+
+**Impact**: Requires 10-30% larger sample size to maintain power
+
+---
+
+## Selecting the Right Design: Decision Guide
+
+### Step 1: Identify Outcome Type
+
+| Outcome Type | Examples | Go To |
+|--------------|----------|-------|
+| Binary | Yes/No, Event/No Event, Success/Failure | Step 2 |
+| Continuous | Weight, blood pressure, QoL score, lab values | Design #5 |
+| Time-to-Event | Time to death, time to readmission, time to cure | Step 3 |
+
+### Step 2: Binary Outcome - Number of Groups?
+
+| Groups | Study Type | Design # |
+|--------|-----------|----------|
+| One group | Single proportion vs. standard | #1 |
+| Two groups (independent) | RCT, cohort study | #2 |
+| Two groups (matched) | Matched case-control | #4 |
+| Two groups (equivalence) | Non-inferiority trial | #6 |
+| Observational (confounded) | Propensity score adjustment | #7 |
+
+### Step 3: Time-to-Event - Testing Difference or Equivalence?
+
+| Hypothesis Type | Design # |
+|-----------------|----------|
+| Testing for a difference | #3 (Survival Analysis) |
+| Testing for equivalence/non-inferiority | #9 (Survival Equivalence) |
+
+### Step 4: Special Analyses
+
+| Research Question | Design # |
+|-------------------|----------|
+| Testing indirect effects (mediation) | #8 |
+| Sensitivity to unmeasured confounding | E-value (post-hoc) |
+
+---
+
+## References
+
+### Primary Sources
+
+1. **Cohen, J.** (1988). *Statistical Power Analysis for the Behavioral Sciences* (2nd ed.). Routledge.
+
+2. **Chow, S.C., Shao, J., Wang, H., & Lokhnygina, Y.** (2017). *Sample Size Calculations in Clinical Research* (3rd ed.). Chapman & Hall/CRC.
+
+3. **Li, F., Morgan, K.L., Zaslavsky, A.M.** (2025). Sample size and power calculations for causal inference of observational studies. *arXiv preprint* arXiv:2501.11181.
+
+4. **Schoenfeld, D.** (1983). Sample-size formula for the proportional-hazards regression model. *Biometrics*, 39(2), 499-503.
+
+5. **Austin, P.C.** (2021). Informing power and sample size calculations when using inverse probability of treatment weighting. *Statistics in Medicine*, 40(27), 6150-6163.
+
+6. **VanderWeele, T.J., & Ding, P.** (2017). Sensitivity analysis in observational research: Introducing the E-value. *Annals of Internal Medicine*, 167(4), 268-274.
+
+### R Packages
+
+- **pwr** (1.3-0+): Basic power calculations
+- **powerSurvEpi** (0.1.3): Survival analysis power
+- **epiR** (2.0.76+): Epidemiological study designs
+
+---
+
+**Last Updated**: `r Sys.Date()`
+
+**See Also**:
+- [Getting Started Guide](www/doc/getting-started.html) - Tutorial for beginners
+- [Statistical Methods Reference](www/doc/statistical-methods.html) - Detailed formulas and calculations
