@@ -40,8 +40,8 @@
 .sidebar-header {
   padding: var(--space-6);
   border-bottom: 1px solid var(--border-color-sidebar-subtle);
-  /* Light mode: dark blue gradient */
-  background: linear-gradient(135deg, #1A3A52 0%, #0F2A3F 100%);
+  /* Use semantic background variable */
+  background: var(--bg-sidebar);
 }
 
 .sidebar-logo {
@@ -49,7 +49,7 @@
   align-items: center;
   gap: var(--space-3);
   text-decoration: none;
-  color: #FFFFFF;
+  color: var(--text-inverse);
 }
 
 .sidebar-logo-icon {
@@ -62,12 +62,12 @@
   font-weight: var(--font-weight-bold);
   margin: 0;
   line-height: var(--line-height-tight);
-  color: #FFFFFF;
+  color: var(--text-inverse);
 }
 
 .sidebar-logo-text p {
   font-size: var(--font-size-xs);
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-sidebar-bright);
   margin: var(--space-1) 0 0 0;
   line-height: var(--line-height-normal);
 }
@@ -471,18 +471,18 @@
    ========================================================================== */
 
 [data-theme="dark"] .sidebar-header {
-  /* Dark, subtle background - blend with sidebar, not stand out */
-  background: #1E293B;
-  border-bottom-color: rgba(255, 255, 255, 0.1);
+  /* Use semantic variables - they're already defined for dark mode */
+  background: var(--bg-sidebar);
+  border-bottom-color: var(--border-color-sidebar-subtle);
 }
 
 [data-theme="dark"] .sidebar {
-  /* Ensure dark sidebar background */
-  background: #0F172A;
+  /* Use semantic variable for dark mode background */
+  background: var(--bg-sidebar);
 }
 
 [data-theme="dark"] .sidebar-logo-text h1,
 [data-theme="dark"] .sidebar-logo-text p {
-  /* Ensure white text for maximum contrast */
-  color: #FFFFFF;
+  /* Use semantic variable for text color */
+  color: var(--text-inverse);
 }

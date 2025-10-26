@@ -97,8 +97,8 @@
 
 /* Success banner */
 .success-banner {
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--color-success-600) 0%, var(--color-success-500) 100%);
+  color: var(--text-inverse);
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-lg);
   display: flex;

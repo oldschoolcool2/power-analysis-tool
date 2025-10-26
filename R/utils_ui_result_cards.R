@@ -2,8 +2,6 @@
 #'
 #' Visual components for displaying analysis results with color-coded interpretations,
 #' key findings callouts, and clear visual hierarchy.
-#'
-#' @noRd
 
 #' Create a visual result summary card
 #'

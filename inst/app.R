@@ -55,6 +55,13 @@ ui <- fluidPage(
     tags$link(rel = "stylesheet", type = "text/css", href = "css/input-components.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "css/responsive.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "css/sidebar.css"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "css/result-cards.css"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "css/evalue-cards.css"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "css/validation.css"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "css/progressive-disclosure.css"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "css/loading-spinner.css"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "css/success-animations.css"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "css/documentation.css"),
     # JavaScript - Bootstrap 5 fix must load before other scripts
     tags$script(src = "js/bootstrap5-shinyBS-fix.js"),
     tags$script(src = "js/theme-switcher.js"),

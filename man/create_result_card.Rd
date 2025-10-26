@@ -29,6 +29,7 @@ HTML div with styled card
 \description{
 Visual components for displaying analysis results with color-coded interpretations,
 key findings callouts, and clear visual hierarchy.
+Create a visual result summary card
 }
 \examples{
 create_result_card("Required Sample Size", "N = 450", "Power = 80\%", "success")

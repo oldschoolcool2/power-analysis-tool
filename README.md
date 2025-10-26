@@ -182,7 +182,7 @@ shiny::runApp("app.R")
 ### FDA/EMA Guidance (2024)
 - [FDA Real-World Evidence Framework](https://www.fda.gov/science-research/science-and-research-special-topics/real-world-evidence)
 - [FDA Guidance on RWD from EHRs and Claims](https://www.fda.gov/regulatory-information/search-fda-guidance-documents/real-world-data-assessing-electronic-health-records-and-medical-claims-data-support-regulatory)
-- [EMA Real World Evidence Framework](https://www.ema.europa.eu/en/about-us/how-we-work/big-data/real-world-evidence)
+- [EMA Real World Evidence Framework](https://www.ema.europa.eu/en/about-us/how-we-work/data-regulation-big-data-other-sources/real-world-evidence)
 
 ### Power Targets
 - **80% power:** Minimum acceptable for most studies

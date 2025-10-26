@@ -1,7 +1,6 @@
 #' Mediation Analysis Power Calculation Helper Functions
 #'
 #' @description Functions for calculating power and sample size for mediation analysis
-#' @noRd
 
 #' Calculate Sobel Test Standard Error for Indirect Effect
 #'

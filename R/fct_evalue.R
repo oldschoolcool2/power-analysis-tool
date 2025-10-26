@@ -272,22 +272,22 @@ interpret_evalue <- function(evalue_point, evalue_ci = NA) {
   # Categorize E-value magnitude
   if (evalue_point < 1.5) {
     magnitude <- "weak"
-    color <- "#dc3545"  # red
+    css_class <- "evalue-weak"
     robustness <- "Weak robustness: Minor unmeasured confounding could explain away the effect."
     icon <- "⚠️"
   } else if (evalue_point < 2.0) {
     magnitude <- "moderate"
-    color <- "#ffc107"  # yellow/orange
+    css_class <- "evalue-moderate"
     robustness <- "Moderate robustness: Requires moderate unmeasured confounding to explain away the effect."
     icon <- "⚡"
   } else if (evalue_point < 3.0) {
     magnitude <- "strong"
-    color <- "#28a745"  # green
+    css_class <- "evalue-strong"
     robustness <- "Strong robustness: Requires strong unmeasured confounding to explain away the effect."
     icon <- "✓"
   } else {
     magnitude <- "very strong"
-    color <- "#0056b3"  # dark blue
+    css_class <- "evalue-very-strong"
     robustness <- "Very strong robustness: Effect is highly robust to unmeasured confounding."
     icon <- "✓✓"
   }
@@ -317,7 +317,7 @@ interpret_evalue <- function(evalue_point, evalue_ci = NA) {
 
   list(
     magnitude = magnitude,
-    color = color,
+    css_class = css_class,
     icon = icon,
     robustness = robustness,
     main_text = main_text,
@@ -340,11 +340,10 @@ format_evalue_result <- function(evalue_result, effect_type = "RR") {
 
   interp <- evalue_result$interpretation
 
-  # Build HTML output
+  # Build HTML output using CSS classes for proper dark mode support
   html_output <- paste0(
-    "<div style='background-color: ", interp$color, "15; border-left: 4px solid ",
-    interp$color, "; padding: 15px; margin: 15px 0;'>",
-    "<h4 style='margin-top: 0; color: ", interp$color, ";'>",
+    "<div class='evalue-result-card ", interp$css_class, "'>",
+    "<h4>",
     interp$icon, " E-value Sensitivity Analysis</h4>",
     "<p>", interp$main_text, interp$ci_text, "</p>",
     "<p><strong>E-value (point estimate):</strong> ",
@@ -367,7 +366,7 @@ format_evalue_result <- function(evalue_result, effect_type = "RR") {
   if (nchar(interp$notes) > 0) {
     html_output <- paste0(
       html_output,
-      "<p style='margin-top: 10px; font-size: 0.9em; color: #666;'>",
+      "<p class='evalue-notes'>",
       interp$notes,
       "</p>"
     )

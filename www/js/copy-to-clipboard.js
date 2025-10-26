@@ -209,9 +209,19 @@
   if (window.Shiny) {
     Shiny.addCustomMessageHandler('reinit-copy-buttons', autoInit);
 
+    // Initialize after Shiny outputs are bound
+    $(document).on('shiny:bound', function(event) {
+      setTimeout(autoInit, 100);
+    });
+
     // Also initialize after any Shiny output update
     $(document).on('shiny:value', function(event) {
       setTimeout(autoInit, 100);
+    });
+    
+    // Reinitialize after recalculation
+    $(document).on('shiny:recalculated shiny:recalculating', function(event) {
+      setTimeout(autoInit, 150);
     });
   }
 
