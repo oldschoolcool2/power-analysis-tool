@@ -33,6 +33,7 @@ create_contextual_help <- function(analysis_type) {
         )
       ),
       create_clustering_help_panel(),
+      create_multiple_testing_help_panel(),
       accordion_panel(
         title = "References",
         icon = icon("book"),
@@ -77,6 +78,7 @@ create_contextual_help <- function(analysis_type) {
         )
       ),
       create_clustering_help_panel(),
+      create_multiple_testing_help_panel(),
       accordion_panel(
         title = "References",
         icon = icon("book"),
@@ -122,6 +124,7 @@ create_contextual_help <- function(analysis_type) {
         )
       ),
       create_clustering_help_panel(),
+      create_multiple_testing_help_panel(),
       accordion_panel(
         title = "References",
         icon = icon("book"),
@@ -167,6 +170,7 @@ create_contextual_help <- function(analysis_type) {
         p("Higher matching ratios increase power but require more controls.")
       ),
       create_clustering_help_panel(),
+      create_multiple_testing_help_panel(),
       accordion_panel(
         title = "References",
         icon = icon("book"),
@@ -214,6 +218,7 @@ create_contextual_help <- function(analysis_type) {
         p("However, clinical significance should guide interpretation, not just statistical benchmarks.")
       ),
       create_clustering_help_panel(),
+      create_multiple_testing_help_panel(),
       accordion_panel(
         title = "References",
         icon = icon("book"),
@@ -258,6 +263,7 @@ create_contextual_help <- function(analysis_type) {
         )
       ),
       create_clustering_help_panel(),
+      create_multiple_testing_help_panel(),
       accordion_panel(
         title = "References",
         icon = icon("book"),
@@ -683,6 +689,111 @@ create_clustering_help_panel <- function() {
       tags$li("Donner A, Klar N. Design and Analysis of Cluster Randomization Trials in Health Research. Arnold, 2000."),
       tags$li("Campbell MK, et al. Sample size calculator for cluster randomized trials. Computers in Biology and Medicine. 2004;34(2):113-125."),
       tags$li("Adams G, et al. Patterns of intra-cluster correlation from primary care research. Statistics in Medicine. 2004;23(12):1655-1665.")
+    )
+  )
+}
+
+#' Create Multiple Testing Corrections Help Panel
+#' @return accordion_panel for multiple testing corrections
+#' @noRd
+create_multiple_testing_help_panel <- function() {
+  accordion_panel(
+    title = "Multiple Testing Corrections",
+    icon = icon("tasks"),
+    p(strong("Why adjust for multiple testing?"),
+      "When conducting multiple statistical tests (e.g., multiple outcomes, endpoints, or subgroups), the probability of finding at least one statistically significant result by chance alone (Type I error) increases dramatically. Multiple testing corrections adjust for this inflation."),
+
+    h5("The Multiple Comparisons Problem"),
+    tags$div(
+      style = "background-color: #fff3cd; padding: 10px; border-left: 3px solid #ffc107; margin: 10px 0;",
+      tags$strong("Example without correction:"),
+      tags$br(),
+      "At α = 0.05, conducting 5 independent tests:",
+      tags$br(),
+      "P(≥1 false positive) = 1 - (1 - 0.05)⁵ = ", tags$strong("23%"),
+      tags$br(),
+      "Not 5% as intended!"
+    ),
+
+    h5("Common Correction Methods"),
+    tags$dl(
+      tags$dt(strong("Bonferroni Correction")),
+      tags$dd(tags$ul(
+        tags$li(strong("Formula:"), "α_adjusted = α / k (k = number of tests)"),
+        tags$li(strong("Controls:"), "Family-Wise Error Rate (FWER)"),
+        tags$li(strong("Pros:"), "Simple, guarantees strong Type I error control"),
+        tags$li(strong("Cons:"), "Very conservative, substantial power loss with many tests"),
+        tags$li(strong("When to use:"), "Few tests (k ≤ 5), confirmatory analyses")
+      )),
+
+      tags$dt(strong("Holm-Bonferroni (Recommended)")),
+      tags$dd(tags$ul(
+        tags$li(strong("Type:"), "Sequential step-down procedure"),
+        tags$li(strong("Controls:"), "FWER"),
+        tags$li(strong("Pros:"), "Uniformly more powerful than Bonferroni"),
+        tags$li(strong("Cons:"), "Still conservative with many tests"),
+        tags$li(strong("When to use:"), "Preferred over Bonferroni in most cases")
+      )),
+
+      tags$dt(strong("Benjamini-Hochberg (FDR)")),
+      tags$dd(tags$ul(
+        tags$li(strong("Controls:"), "False Discovery Rate (FDR) instead of FWER"),
+        tags$li(strong("Pros:"), "Much better power, allows some false positives"),
+        tags$li(strong("Cons:"), "Less stringent control than FWER methods"),
+        tags$li(strong("When to use:"), "Exploratory analyses, many tests (k > 10), hypothesis generation")
+      ))
+    ),
+
+    h5("FWER vs. FDR: Which to Choose?"),
+    tags$div(
+      style = "background-color: #f8f9fa; padding: 10px; border-left: 3px solid #007bff; margin: 10px 0;",
+      tags$strong("Family-Wise Error Rate (FWER):"),
+      tags$br(),
+      "Probability of making ≥1 Type I error across ALL tests",
+      tags$br(),
+      tags$em("Choose for: Confirmatory studies, regulatory submissions"),
+      tags$br(),
+      tags$br(),
+      tags$strong("False Discovery Rate (FDR):"),
+      tags$br(),
+      "Expected proportion of false positives among rejected hypotheses",
+      tags$br(),
+      tags$em("Choose for: Exploratory studies, large-scale screening, hypothesis generation")
+    ),
+
+    h5("Impact on Sample Size"),
+    p("Adjusting alpha typically requires increasing sample size to maintain power:"),
+    tags$ul(
+      tags$li("With Bonferroni (k=5): α_adjusted = 0.01 → requires ~1.6× more participants"),
+      tags$li("With Holm (k=5): Similar to Bonferroni for sample size planning"),
+      tags$li("With Benjamini-Hochberg: Minimal sample size increase (controls FDR, not FWER)")
+    ),
+
+    h5("When to Use Multiple Testing Corrections"),
+    tags$ul(
+      tags$li(strong("Multiple primary outcomes:"), "Testing efficacy on 3+ different endpoints"),
+      tags$li(strong("Subgroup analyses:"), "Testing treatment effects in multiple subgroups"),
+      tags$li(strong("Interim analyses:"), "Multiple looks at data during trial (use group sequential methods)"),
+      tags$li(strong("Secondary endpoints:"), "Testing multiple secondary outcomes"),
+      tags$li(strong("NOT needed for:"), "Single pre-specified primary endpoint")
+    ),
+
+    h5("Recommendations"),
+    tags$ul(
+      tags$li(strong("Pre-specify:"), "Declare all planned tests and correction method in protocol"),
+      tags$li(strong("Hierarchy:"), "Use hierarchical testing to avoid corrections (test sequentially, stop if non-significant)"),
+      tags$li(strong("Choice of method:"), "Holm for confirmatory (k ≤ 10), Benjamini-Hochberg for exploratory (k > 10)"),
+      tags$li(strong("Reporting:"), "Always report both unadjusted and adjusted p-values"),
+      tags$li(strong("Pilot studies:"), "No correction needed for exploratory pilot analyses")
+    ),
+
+    h5("References"),
+    tags$ul(
+      tags$li("Bonferroni CE. Teoria statistica delle classi e calcolo delle probabilita. Pubblicazioni del R Istituto Superiore di Scienze Economiche e Commerciali di Firenze. 1936;8:3-62."),
+      tags$li("Holm S. A simple sequentially rejective multiple test procedure. Scandinavian Journal of Statistics. 1979;6(2):65-70."),
+      tags$li("Benjamini Y, Hochberg Y. Controlling the false discovery rate: a practical and powerful approach to multiple testing. Journal of the Royal Statistical Society: Series B. 1995;57(1):289-300."),
+      tags$li("Dmitrienko A, D'Agostino RB Sr. Multiplicity considerations in clinical trials. New England Journal of Medicine. 2018;378(22):2115-2122."),
+      tags$li("Noble WS. How does multiple testing correction work? Nature Biotechnology. 2009;27(12):1135-1137.")
     )
   )
 }

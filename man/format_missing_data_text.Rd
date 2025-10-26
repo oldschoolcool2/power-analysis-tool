@@ -17,7 +17,7 @@ HTML paragraph with styled missing data information
 \description{
 Creates a styled callout box showing missing data adjustment details.
 This replaces duplicated HTML formatting across 6 sample size calculations.
-Enhanced for Tier 1 Feature NEW 2: MI Sample Size with comparison output.
+Supports both complete-case analysis and multiple imputation methods.
 }
 \examples{
 missing_adj <- calc_missing_data_inflation(100, 20, "mar", "complete_case", 5, 0.5)

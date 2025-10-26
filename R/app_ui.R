@@ -295,7 +295,7 @@ app_ui <- function(request) {
     ) # End of main-content-wrapper
   ), # End of app-container
 
-  # Quick Preview Footer (Phase 3: Layout Simplification)
+  # Quick Preview Footer
   tags$div(
     class = "quick-preview-footer",
     id = "quick-preview-footer",
@@ -340,7 +340,7 @@ golem_add_external_resources <- function() {
   )
 
   # Create shinyBS HTML dependency
-  shinyBS_dep <- htmlDependency(
+  shinyBS_dep <- htmltools::htmlDependency(
     name = "shinyBS",
     version = as.character(packageVersion("shinyBS")),
     src = system.file("www", package = "shinyBS"),
@@ -349,7 +349,7 @@ golem_add_external_resources <- function() {
   )
 
   # Attach dependencies
-  attachDependencies(
+  htmltools::attachDependencies(
     tags$head(
       # Placeholder for additional head content if needed
     ),

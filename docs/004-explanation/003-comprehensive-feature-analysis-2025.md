@@ -319,10 +319,10 @@ This document synthesizes current implementation status, existing feature propos
 |---|---------|------------|----------|--------|
 | 5 | **E-value Sensitivity Analysis** ✅ | FDA/EMA increasingly require | ⭐⭐⭐⭐⭐ | **COMPLETED (2025-10-26)** |
 | 9 | **Design Effect for Clustered Data** ✅ | Critical for EHR/claims data | ⭐⭐⭐⭐⭐ | **COMPLETED (2025-10-25)** |
-| 11 | **Multiple Testing Corrections** | Standard regulatory requirement | ⭐⭐⭐⭐ | Pending |
+| 11 | **Multiple Testing Corrections** ✅ | Standard regulatory requirement | ⭐⭐⭐⭐ | **COMPLETED (2025-10-26)** |
 | 15 | **Enhanced Protocol Text Generator** | High user value, time savings | ⭐⭐⭐⭐ | Pending |
 
-**Features #5 and #9 COMPLETED. Remaining features validated - proceed as planned**
+**Features #5, #9, and #11 COMPLETED (2025-10-26). Remaining features validated - proceed as planned**
 
 ---
 
@@ -1055,6 +1055,107 @@ Based on:
 
 ---
 
+#### **TIER 2 Feature #11: Multiple Testing Corrections** ✅ **COMPLETED**
+
+**Priority:** ⭐⭐⭐⭐ **SHOULD HAVE**
+
+**Status:** ✅ **IMPLEMENTED (2025-10-26)**
+
+**What:** Adjustments for alpha level and sample size when conducting multiple statistical tests
+
+**Rationale:** When researchers conduct multiple hypothesis tests (e.g., multiple outcomes, subgroups, or endpoints), the probability of at least one false positive (Type I error) increases dramatically. Without correction, 5 tests at α=0.05 have a 23% chance of ≥1 false positive. Regulatory agencies (FDA/EMA) increasingly require documentation of multiple testing strategies in protocols.
+
+**Correction Methods Implemented:**
+- Bonferroni: Most conservative, α_adj = α/k
+- Holm-Bonferroni: Sequential step-down, uniformly more powerful than Bonferroni
+- Hochberg: Step-up procedure, slightly less conservative
+- Benjamini-Hochberg (BH): Controls False Discovery Rate (FDR), better power
+- Benjamini-Yekutieli (BY): FDR control under dependency
+- None: For single pre-specified tests
+
+**Inputs:**
+- Number of statistical tests ✅
+- Correction method selection ✅
+- Original alpha level (from parent analysis) ✅
+
+**Outputs:**
+- Adjusted alpha level ✅
+- Sample size inflation factor ✅
+- Adjusted sample size (when applicable) ✅
+- Method-specific guidance and warnings ✅
+- Color-coded severity indicators ✅
+- Educational content on FWER vs FDR ✅
+
+**Implementation Details:**
+- Created `R/fct_multiple_testing.R` - Statistical calculation functions (480+ lines)
+  - `calc_adjusted_alpha()` - Calculate adjusted alpha for each method
+  - `get_correction_method_info()` - Method details and recommendations
+  - `interpret_multiple_testing()` - Color-coded interpretations
+  - `calc_n_multiple_testing()` - Sample size inflation calculations
+  - `validate_multiple_testing_inputs()` - Input validation with warnings
+  - `format_multiple_testing_summary()` - HTML-formatted results
+- Created `R/mod_multiple_testing.R` - Shiny module (290+ lines)
+  - Complete UI with method selection dropdown
+  - Number of tests input with validation
+  - Method-specific descriptions and guidance
+  - Real-time summary of adjusted alpha and impact
+  - Helper function `apply_multiple_testing_to_n()` for sample size adjustment
+- Integrated into 7 analysis tabs (all sample size calculation tabs):
+  - mod_01_single_proportion.R
+  - mod_02_two_group.R
+  - mod_03_survival.R
+  - mod_04_matched_case_control.R
+  - mod_05_continuous.R
+  - mod_06_non_inferiority.R
+  - mod_09_survival_equivalence.R
+- Added comprehensive help panel to `R/utils_ui_help.R` (110+ lines)
+  - Explanation of multiple comparisons problem
+  - Detailed method comparisons
+  - FWER vs FDR guidance
+  - When to use each method
+  - Sample size impact examples
+  - References to key papers
+
+**Key Features:**
+- **Method-aware recommendations:** Suggests Holm for confirmatory studies (k≤10), BH for exploratory (k>10)
+- **Real-time warnings:** Alerts when Bonferroni is too conservative or when many tests are planned
+- **Educational tooltips:** Explains FWER vs FDR tradeoffs
+- **Severity indicators:** Color-coded based on alpha reduction magnitude
+- **Seamless integration:** Works alongside missing data and clustering adjustments
+
+**Statistical Validation:**
+Based on:
+- Bonferroni (1936) - Original Bonferroni inequality
+- Holm (1979) - Sequentially rejective procedure
+- Hochberg (1988) - Sharper Bonferroni procedure
+- Benjamini & Hochberg (1995) - FDR control
+- Benjamini & Yekutieli (2001) - FDR under dependency
+
+**Impact:** ⭐⭐⭐⭐⭐
+- Essential for regulatory submissions (FDA/EMA require multiple testing plans)
+- Prevents inflated Type I error rates in studies with multiple endpoints
+- Educational value: Teaches researchers about FWER vs FDR tradeoffs
+- Competitive advantage: Many free tools lack comprehensive multiple testing support
+- Better UX than commercial tools: Interactive method comparison and guidance
+
+**Actual Effort:** 6 hours (functions + module + integration + help content + testing)
+
+**Use Cases in RWE:**
+- Multiple primary outcomes (e.g., mortality + hospitalization + quality of life)
+- Subgroup analyses (e.g., testing treatment effects in age groups, disease severity categories)
+- Multiple endpoints (primary + secondary outcomes)
+- Post-hoc exploratory analyses
+- Meta-analyses with multiple comparisons
+
+**Future Enhancements:**
+- Graphical comparison of methods (power curves across k tests)
+- Sample size tables for different combinations of k and methods
+- Integration with hierarchical testing strategies
+- Group sequential methods for interim analyses
+- Simulation-based family-wise error rate validation
+
+---
+
 #### **NEW 4: Equivalence Testing for Continuous Outcomes**
 
 **Priority:** ⭐⭐⭐⭐ **SHOULD HAVE**
@@ -1342,8 +1443,8 @@ Each feature scored on:
 | **Design Effect (Clustering)** ✅ | 9 | 8 | 8 | 7 | 9 | **8.2** | 1 |
 | **E-value Sensitivity** ✅ | 8 | 7 | 9 | 9 | 9 | **8.4** | 2 |
 | **Mediation Analysis** ✅ | 7 | 8 | 7 | 7 | 8 | **7.4** | 3 |
-| **Time-to-Event Equiv/NI** (NEW) | 8 | 7 | 8 | 6 | 8 | **7.4** | 4 |
-| **Multiple Testing** (existing) | 7 | 7 | 6 | 8 | 8 | **7.2** | 5 |
+| **Time-to-Event Equiv/NI** ✅ | 8 | 7 | 8 | 6 | 8 | **7.4** | 4 |
+| **Multiple Testing** ✅ | 7 | 7 | 6 | 8 | 8 | **7.2** | 5 |
 | **Continuous Equivalence (TOST)** (NEW) | 7 | 6 | 6 | 8 | 8 | **7.0** | 6 |
 | **Protocol Text Generator** (existing) | 6 | 9 | 5 | 7 | 6 | **6.6** | 7 |
 
@@ -1500,9 +1601,10 @@ Each feature scored on:
 **Timeline:**
 - ~~Month 5-6: Features 1-2~~ → Features 1-2 DONE ✅
 - ~~Month 7-8: Features 3-4~~ → Features 3-4 DONE ✅
-- Month 9-10: Features 5-7
+- ~~Month 9-10: Feature 5~~ → Feature 5 DONE ✅
+- Month 11-12: Features 6-7
 
-**Progress:** 4/7 complete (57%)
+**Progress:** 5/7 complete (71%)
 
 ---
 

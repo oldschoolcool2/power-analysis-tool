@@ -799,7 +799,7 @@ ui <- fluidPage(
     ) # End of main-content-wrapper
   ), # End of app-container
 
-  # Quick Preview Footer (Phase 3: Layout Simplification)
+  # Quick Preview Footer
   tags$div(
     class = "quick-preview-footer",
     id = "quick-preview-footer",
@@ -937,7 +937,7 @@ server <- function(input, output, session) {
     )
   }
 
-  # Helper function: inflate sample size for missing data (Tier 1 Enhancement)
+  # Helper function: inflate sample size for missing data
   calc_missing_data_inflation <- function(n_required, missing_pct, mechanism = "mar", analysis_type = "complete_case", mi_imputations = 5, mi_r_squared = 0.5) {
     if (missing_pct == 0) {
       return(list(
@@ -1483,7 +1483,7 @@ server <- function(input, output, session) {
           discon = discon
         )
       } else if (input$tabset == "Sample Size (Single)") {
-        # Feature 2: Minimal Detectable Effect Size Calculator
+        # Minimal Detectable Effect Size Calculator
         calc_mode <- input$ss_single_calc_mode
         power <- input$ss_power / 100
         discon <- input$ss_discon / 100
@@ -1499,7 +1499,7 @@ server <- function(input, output, session) {
           # Apply discontinuation adjustment
           sample_size_after_discon <- ceiling(sample_size_base * (1 + discon))
 
-          # Apply missing data adjustment if enabled (Tier 1 Enhancement)
+          # Apply missing data adjustment if enabled
           md_vals <- missing_data_ss_single()
           if (md_vals$adjust_missing) {
             missing_adj <- calc_missing_data_inflation(
@@ -1541,7 +1541,7 @@ server <- function(input, output, session) {
           HTML(paste0(text0, text1, text2, text3, missing_data_text))
 
         } else {
-          # Calculate Effect Size (Feature 2: Tier 1 Enhancement)
+          # Calculate minimal detectable effect size
           # Account for discontinuation and missing data to get effective sample size
           n_nominal <- input$ss_n_fixed
           n_after_discon <- ceiling(n_nominal * (1 - discon))
@@ -1574,7 +1574,7 @@ server <- function(input, output, session) {
           text1 <- h1("Results of this analysis")
           text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
           text3 <- p(paste0(
-            "<strong>Minimal Detectable Effect Size Analysis (Tier 1 Enhancement)</strong><br>",
+            "<strong>Minimal Detectable Effect Size Analysis</strong><br>",
             "With an available sample size of ", n_nominal, " participants, ",
             "accounting for a ", format(discon * 100, digits = 0), "% discontinuation rate, ",
             "the effective sample size is ", n_after_discon, " participants.",
@@ -1588,7 +1588,7 @@ server <- function(input, output, session) {
 
           effect_size_box <- HTML(paste0(
             "<p style='background-color: #d4edda; border-left: 4px solid #28a745; padding: 10px; margin-top: 15px;'>",
-            "<strong>Minimal Detectable Effect (Tier 1 Enhancement):</strong><br>",
+            "<strong>Minimal Detectable Effect:</strong><br>",
             "<strong>Event Incidence Rate:</strong> 1 in ", format(round(incidence_rate_detectable), digits = 0),
             " (", format(p_detectable * 100, digits = 2, nsmall = 2), "%)<br>",
             "<strong>Cohen's h:</strong> ", format(h_min, digits = 3),
@@ -1622,7 +1622,7 @@ server <- function(input, output, session) {
         ))
         HTML(paste0(text0, text1, text2, text3))
       } else if (input$tabset == "Sample Size (Two-Group)") {
-        # Feature 2: Minimal Detectable Effect Size Calculator
+        # Minimal Detectable Effect Size Calculator
         calc_mode <- input$twogrp_ss_calc_mode
         power <- input$twogrp_ss_power / 100
 
@@ -1639,7 +1639,7 @@ server <- function(input, output, session) {
           n2_base <- n1_base * input$twogrp_ss_ratio
           n_total_base <- ceiling(n1_base + n2_base)
 
-          # Apply missing data adjustment if enabled (Tier 1 Enhancement)
+          # Apply missing data adjustment if enabled
           md_vals <- missing_data_twogrp_ss()
           if (md_vals$adjust_missing) {
             missing_adj <- calc_missing_data_inflation(
@@ -1693,7 +1693,7 @@ server <- function(input, output, session) {
           HTML(paste0(text0, text1, text2, text3, effect_text, missing_data_text))
 
         } else {
-          # Calculate Effect Size (Feature 2: Tier 1 Enhancement)
+          # Calculate minimal detectable effect size
           n1_nominal <- input$twogrp_ss_n1_fixed
           n2_nominal <- n1_nominal * input$twogrp_ss_ratio
           p2 <- input$twogrp_ss_p2_baseline / 100
@@ -1733,7 +1733,7 @@ server <- function(input, output, session) {
           text1 <- h1("Results of this analysis")
           text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
           text3 <- p(paste0(
-            "<strong>Minimal Detectable Effect Size Analysis (Tier 1 Enhancement)</strong><br>",
+            "<strong>Minimal Detectable Effect Size Analysis</strong><br>",
             "With available sample sizes of n1=", n1_nominal, " (Group 1) and n2=",
             round(n2_nominal), " (Group 2, ratio=", input$twogrp_ss_ratio, "),",
             missing_note,
@@ -1766,7 +1766,7 @@ server <- function(input, output, session) {
         # Use helper function for result text
         HTML(as.character(create_survival_power_result_text(n, hr, k, pE, power, input$surv_pow_alpha)))
       } else if (input$tabset == "Sample Size (Survival)") {
-        # Feature 2: Minimal Detectable Effect Size Calculator
+        # Minimal Detectable Effect Size Calculator
         calc_mode <- input$surv_ss_calc_mode
         power <- input$surv_ss_power / 100
         k <- input$surv_ss_k / 100
@@ -1821,7 +1821,7 @@ server <- function(input, output, session) {
           HTML(paste0(text0, text1, text2, text3, missing_data_text))
 
         } else {
-          # Calculate Hazard Ratio (Feature 2: Tier 1 Enhancement)
+          # Calculate minimal detectable hazard ratio
           n_nominal <- input$surv_ss_n_fixed
 
           # Account for missing data to get effective sample size
@@ -1876,7 +1876,7 @@ server <- function(input, output, session) {
           text1 <- h1("Results of this analysis")
           text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
           text3 <- p(paste0(
-            "<strong>Minimal Detectable Effect Size Analysis (Tier 1 Enhancement)</strong><br>",
+            "<strong>Minimal Detectable Effect Size Analysis</strong><br>",
             "With an available sample size of N=", n_nominal, " participants,",
             missing_note,
             " With ", format_numeric(power * 100, 0), "% power, α = ", input$surv_ss_alpha,
@@ -1890,7 +1890,7 @@ server <- function(input, output, session) {
 
           effect_size_box <- HTML(paste0(
             "<p style='background-color: #d4edda; border-left: 4px solid #28a745; padding: 10px; margin-top: 15px;'>",
-            "<strong>Minimal Detectable Effect (Tier 1 Enhancement):</strong><br>",
+            "<strong>Minimal Detectable Effect:</strong><br>",
             "<strong>Hazard Ratio (HR):</strong> ", format_numeric(hr_detectable, 3),
             " (", hr_interpretation, ")<br>",
             "<strong>Interpretation:</strong> ",
@@ -1903,7 +1903,7 @@ server <- function(input, output, session) {
           HTML(paste0(text0, text1, text2, text3, effect_size_box))
         }
       } else if (input$tabset == "Matched Case-Control") {
-        # Feature 2: Minimal Detectable Effect Size Calculator
+        # Minimal Detectable Effect Size Calculator
         calc_mode <- input$match_calc_mode
         p0 <- input$match_p0 / 100
         m <- input$match_ratio
@@ -1924,7 +1924,7 @@ server <- function(input, output, session) {
           n_controls_base <- n_cases_base * m
           n_total_base <- n_cases_base * (1 + m)
 
-          # Apply missing data adjustment if enabled (Tier 1 Enhancement)
+          # Apply missing data adjustment if enabled
           md_vals <- missing_data_match()
           if (md_vals$adjust_missing) {
             missing_adj <- calc_missing_data_inflation(
@@ -1971,7 +1971,7 @@ server <- function(input, output, session) {
           HTML(paste0(text0, text1, text2, text3, missing_data_text))
 
         } else {
-          # Calculate Odds Ratio (Feature 2: Tier 1 Enhancement)
+          # Calculate minimal detectable odds ratio
           n_cases_nominal <- input$match_n_pairs_fixed
           n_controls_nominal <- n_cases_nominal * m
           n_total_nominal <- n_cases_nominal * (1 + m)
@@ -2034,7 +2034,7 @@ server <- function(input, output, session) {
           text1 <- h1("Results of this analysis")
           text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
           text3 <- p(paste0(
-            "<strong>Minimal Detectable Effect Size Analysis (Tier 1 Enhancement)</strong><br>",
+            "<strong>Minimal Detectable Effect Size Analysis</strong><br>",
             "With ", n_cases_nominal, " available cases and a ", m, ":1 matching ratio (",
             format_numeric(n_controls_nominal, 0), " controls),",
             missing_note,
@@ -2049,7 +2049,7 @@ server <- function(input, output, session) {
 
           effect_size_box <- HTML(paste0(
             "<p style='background-color: #d4edda; border-left: 4px solid #28a745; padding: 10px; margin-top: 15px;'>",
-            "<strong>Minimal Detectable Effect (Tier 1 Enhancement):</strong><br>",
+            "<strong>Minimal Detectable Effect:</strong><br>",
             "<strong>Odds Ratio (OR):</strong> ", format_numeric(or_detectable, 3), "<br>",
             "<strong>Interpretation:</strong> ",
             ifelse(or_detectable < 1,
@@ -2081,7 +2081,7 @@ server <- function(input, output, session) {
           sided = input$cont_pow_sided
         )
       } else if (input$tabset == "Sample Size (Continuous)") {
-        # Feature 2: Minimal Detectable Effect Size Calculator
+        # Minimal Detectable Effect Size Calculator
         calc_mode <- input$cont_ss_calc_mode
         power <- input$cont_ss_power / 100
         ratio <- input$cont_ss_ratio
@@ -2126,7 +2126,7 @@ server <- function(input, output, session) {
           }
           n_total_base <- ceiling(n1_base + n2_base)
 
-          # Apply missing data adjustment if enabled (Tier 1 Enhancement)
+          # Apply missing data adjustment if enabled
           md_vals <- missing_data_cont_ss()
           if (md_vals$adjust_missing) {
             missing_adj <- calc_missing_data_inflation(
@@ -2171,7 +2171,7 @@ server <- function(input, output, session) {
           HTML(paste0(text0, text1, text2, text3, missing_data_text))
 
         } else {
-          # Calculate Effect Size (Feature 2: Tier 1 Enhancement)
+          # Calculate minimal detectable effect size
           n1_nominal <- input$cont_ss_n1_fixed
           n2_nominal <- n1_nominal * ratio
 
@@ -2202,7 +2202,7 @@ server <- function(input, output, session) {
           text1 <- h1("Results of this analysis")
           text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
           text3 <- p(paste0(
-            "<strong>Minimal Detectable Effect Size Analysis (Tier 1 Enhancement)</strong><br>",
+            "<strong>Minimal Detectable Effect Size Analysis</strong><br>",
             "With available sample sizes of n1=", format_numeric(n1_nominal, 0), " (Group 1) and n2=",
             format_numeric(n2_nominal, 0), " (Group 2, ratio=", ratio, "),",
             missing_note,
@@ -2215,7 +2215,7 @@ server <- function(input, output, session) {
 
           effect_size_box <- HTML(paste0(
             "<p style='background-color: #d4edda; border-left: 4px solid #28a745; padding: 10px; margin-top: 15px;'>",
-            "<strong>Minimal Detectable Effect (Tier 1 Enhancement):</strong><br>",
+            "<strong>Minimal Detectable Effect:</strong><br>",
             "<strong>Cohen's d:</strong> ", format_numeric(d_detectable, 3), "<br>",
             "<strong>Interpretation:</strong> ",
             ifelse(d_detectable < 0.2, "Very small effect",
@@ -2228,7 +2228,7 @@ server <- function(input, output, session) {
           HTML(paste0(text0, text1, text2, text3, effect_size_box))
         }
       } else if (input$tabset == "Non-Inferiority") {
-        # Feature 2: Minimal Detectable Effect Size Calculator
+        # Minimal Detectable Effect Size Calculator
         calc_mode <- input$noninf_calc_mode
         p1 <- input$noninf_p1 / 100
         p2 <- input$noninf_p2 / 100
@@ -2325,7 +2325,7 @@ server <- function(input, output, session) {
           HTML(paste0(text0, text1, text2, text3, missing_data_text))
 
         } else {
-          # Calculate Margin (Feature 2: Tier 1 Enhancement)
+          # Calculate minimal detectable margin
           n1_nominal <- input$noninf_n1_fixed
           n2_nominal <- n1_nominal * ratio
 
@@ -2732,7 +2732,7 @@ server <- function(input, output, session) {
     })
   })
 
-  ################################################################################################## POWER VS. SAMPLE SIZE PLOT (Feature 3: Interactive Power Curves)
+  ################################################################################################## POWER VS. SAMPLE SIZE PLOT
 
   output$power_plot <- renderPlotly(
     {
@@ -2760,7 +2760,7 @@ server <- function(input, output, session) {
             power_vals = pow,
             n_current = n_current,
             target_power = 0.8,
-            plot_title = "Interactive Power Curve (Tier 1 Enhancement)",
+            plot_title = "Interactive Power Curve",
             n_reference_label = "Current N"
           )
 
@@ -2786,7 +2786,7 @@ server <- function(input, output, session) {
             power_vals = pow,
             n_current = n_required,
             target_power = target_power,
-            plot_title = "Interactive Power Curve (Tier 1 Enhancement)",
+            plot_title = "Interactive Power Curve",
             n_reference_label = "Required N"
           )
         } else if (input$tabset == "Power (Two-Group)") {
@@ -2930,7 +2930,7 @@ server <- function(input, output, session) {
               hovertemplate = paste0("<b>", if(input$tabset == "Power (Survival)") "Current N" else "Required N", ":</b> ", round(current_n), "<extra></extra>")
             ) %>%
             layout(
-              title = list(text = "Interactive Power Curve - Survival Analysis (Tier 1 Enhancement)", font = list(size = 16)),
+              title = list(text = "Interactive Power Curve - Survival Analysis", font = list(size = 16)),
               xaxis = list(title = "Total Sample Size (N)", gridcolor = "#e0e0e0"),
               yaxis = list(title = "Power", range = c(0, 1), gridcolor = "#e0e0e0"),
               hovermode = "closest",
@@ -3008,7 +3008,7 @@ server <- function(input, output, session) {
               hovertemplate = paste0("<b>", if(input$tabset == "Power (Continuous)") "Current n1" else "Required n1", ":</b> ", round(current_n1), "<extra></extra>")
             ) %>%
             layout(
-              title = list(text = "Interactive Power Curve - Continuous Outcomes (Tier 1 Enhancement)", font = list(size = 16)),
+              title = list(text = "Interactive Power Curve - Continuous Outcomes", font = list(size = 16)),
               xaxis = list(title = "Sample Size Group 1 (n1)", gridcolor = "#e0e0e0"),
               yaxis = list(title = "Power", range = c(0, 1), gridcolor = "#e0e0e0"),
               hovermode = "closest",

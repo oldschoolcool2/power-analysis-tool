@@ -166,6 +166,9 @@ $(document).ready(function() {
         }
 
         expandActiveGroup();
+
+        // Set Shiny input value to initialize sidebar_page
+        Shiny.setInputValue('sidebar_page', pageId, {priority: 'event'});
       }
     });
   }

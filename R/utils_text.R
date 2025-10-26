@@ -22,7 +22,7 @@ create_result_header <- function() {
 #'
 #' Creates a styled callout box showing missing data adjustment details.
 #' This replaces duplicated HTML formatting across 6 sample size calculations.
-#' Enhanced for Tier 1 Feature NEW 2: MI Sample Size with comparison output.
+#' Supports both complete-case analysis and multiple imputation methods.
 #'
 #' @param missing_adj List returned from calc_missing_data_inflation()
 #' @param n_before Sample size before missing data adjustment
@@ -35,7 +35,7 @@ create_result_header <- function() {
 format_missing_data_text <- function(missing_adj, n_before) {
   base_text <- paste0(
     "<p style='background-color: #fff3cd; border-left: 4px solid #f39c12; padding: 10px; margin-top: 15px;'>",
-    "<strong>Missing Data Adjustment (Tier 1 Enhancement):</strong> ",
+    "<strong>Missing Data Adjustment:</strong> ",
     missing_adj$interpretation,
     "<br><strong>Sample size before missing data adjustment:</strong> ", n_before,
     "<br><strong>Inflation factor:</strong> ", missing_adj$inflation_factor,
@@ -113,8 +113,13 @@ format_numeric <- function(value,
     return("NA")
   }
 
+  # Ensure digits is at least 1 (R's format() requires this)
+  if (digits < 1) {
+    digits <- 1
+  }
+
   if (as_integer) {
-    return(format(ceiling(value), digits = 0, nsmall = 0))
+    return(format(ceiling(value), digits = 1, nsmall = 0))
   }
 
   if (as_percent) {
@@ -408,7 +413,7 @@ format_minimal_detectable_effect <- function(p1, p2, effect_measures, h) {
 
   HTML(paste0(
     "<p style='background-color: #d4edda; border-left: 4px solid #28a745; padding: 10px; margin-top: 15px;'>",
-    "<strong>Minimal Detectable Effect (Tier 1 Enhancement):</strong><br>",
+    "<strong>Minimal Detectable Effect:</strong><br>",
     "<strong>Group 1 Event Rate:</strong> ", format(p1 * 100, digits = 2), "%<br>",
     "<strong>Group 2 Event Rate:</strong> ", format(p2 * 100, digits = 2), "%<br>",
     "<strong>Risk Difference:</strong> ", format(abs(risk_diff), digits = 2), " percentage points<br>",
