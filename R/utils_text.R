@@ -4,6 +4,11 @@
 # analysis results. These functions follow DRY principles by extracting
 # common formatting and text generation logic.
 
+# Statistical Thresholds ----
+# Standard thresholds for interpreting analysis results
+POWER_ADEQUATE <- 0.80  # Conventional threshold for adequate statistical power
+INCIDENCE_RATE_HIGH_THRESHOLD <- 200  # Per 100,000 person-years - rare event threshold
+
 #' Create Standard Result Header
 #'
 #' Generates the standard header shown at the top of all result outputs.
@@ -187,12 +192,12 @@ create_power_single_result_text <- function(incidence_rate,
   )
 
   # Add warning if power is low
-  if (power < 0.80) {
+  if (power < POWER_ADEQUATE) {
     key_findings <- c(key_findings, list(
       list(
         text = paste0(
           "Power is below the conventional 80% threshold. Consider increasing sample size to ",
-          ceiling(sample_size / power * 0.80),
+          ceiling(sample_size / power * POWER_ADEQUATE),
           " participants for adequate power"
         ),
         type = "warning",
@@ -212,7 +217,7 @@ create_power_single_result_text <- function(incidence_rate,
   )
 
   # Add recommendation about rare event
-  if (incidence_rate > 200) {
+  if (incidence_rate > INCIDENCE_RATE_HIGH_THRESHOLD) {
     recommendations <- c(recommendations,
       paste0(
         "For very rare events (1 in ", format_numeric(incidence_rate, as_integer = TRUE),
@@ -372,6 +377,11 @@ format_effect_measures <- function(effect_measures) {
 #'
 #' @return HTML formatted text
 format_hazard_ratio <- function(hr) {
+  # Add defensive NULL/length checks
+  if (is.null(hr) || length(hr) == 0 || !is.numeric(hr)) {
+    return(HTML(""))
+  }
+  
   interpretation <- if (hr < 1) {
     paste0(
       "A hazard ratio of ", format_numeric(hr, digits = 2),
@@ -634,14 +644,14 @@ create_survival_ni_margin_text <- function(margin_detectable, n_total, hr_expect
   # Calculate percent increase
   pct_increase <- round((margin_detectable - 1) * 100, 1)
 
-  # Determine interpretation
-  if (margin_detectable < 1.15) {
+  # Determine interpretation using standard thresholds from fct_survival_ni.R
+  if (margin_detectable < HR_MARGIN_VERY_STRINGENT) {  # 1.15
     interpretation <- "very stringent"
     color <- "#2e7d32"
-  } else if (margin_detectable < 1.25) {
+  } else if (margin_detectable < HR_MARGIN_STRINGENT) {  # 1.25
     interpretation <- "stringent"
     color <- "#66bb6a"
-  } else if (margin_detectable < 1.50) {
+  } else if (margin_detectable < HR_MARGIN_MODERATE) {  # 1.50
     interpretation <- "moderate"
     color <- "#ff9800"
   } else {
