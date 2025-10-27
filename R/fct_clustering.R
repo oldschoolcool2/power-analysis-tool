@@ -1,3 +1,103 @@
+#' Validate Clustering Inputs
+#'
+#' Validates inputs for clustered data analysis using design effect methodology.
+#' Returns a structured validation result with errors, warnings, and notes.
+#'
+#' @param cluster_size Average cluster size (m)
+#' @param icc Intraclass correlation coefficient (0 to 1)
+#' @param n_clusters Number of independent clusters (optional)
+#'
+#' @return List with components:
+#'   \describe{
+#'     \item{valid}{Logical - TRUE if all validations passed}
+#'     \item{messages}{Character vector of all messages}
+#'     \item{errors}{Character vector of error messages only}
+#'     \item{warnings}{Character vector of warning messages only}
+#'     \item{notes}{Character vector of informational messages only}
+#'   }
+#'
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Valid inputs
+#' validate_clustering_inputs(cluster_size = 25, icc = 0.05, n_clusters = 20)
+#'
+#' # Invalid: ICC out of range
+#' validate_clustering_inputs(cluster_size = 25, icc = 1.5, n_clusters = 20)
+#' }
+validate_clustering_inputs <- function(cluster_size, icc, n_clusters = NULL) {
+  messages <- character(0)
+  valid <- TRUE
+
+  # Validate cluster size
+  if (is.null(cluster_size) || is.na(cluster_size) || cluster_size < 1) {
+    messages <- c(messages, "ERROR: Cluster size must be at least 1")
+    valid <- FALSE
+  } else if (cluster_size < 5) {
+    messages <- c(messages, "WARNING: Very small cluster size (< 5) may have limited statistical efficiency")
+  } else if (cluster_size > 200) {
+    messages <- c(messages, "WARNING: Very large cluster size (> 200) - verify this is correct")
+  }
+
+  # Validate ICC
+  if (is.null(icc) || is.na(icc) || icc < 0 || icc > 1) {
+    messages <- c(messages, "ERROR: ICC must be between 0 and 1")
+    valid <- FALSE
+  } else if (icc < 0.001) {
+    messages <- c(messages, "NOTE: Very low ICC (< 0.001) suggests minimal clustering effect")
+  } else if (icc > 0.30) {
+    messages <- c(messages, "WARNING: Very high ICC (> 0.30) - typical values are 0.01-0.30")
+  } else if (icc >= 0.01 && icc <= 0.10) {
+    messages <- c(messages, "NOTE: ICC in typical range for clinical/behavioral outcomes (0.01-0.10)")
+  }
+
+  # Validate number of clusters (if provided)
+  if (!is.null(n_clusters)) {
+    if (is.na(n_clusters) || n_clusters < 2) {
+      messages <- c(messages, "ERROR: Number of clusters must be at least 2")
+      valid <- FALSE
+    } else if (n_clusters < 10) {
+      messages <- c(messages, "WARNING: Fewer than 10 clusters may have unstable estimates")
+    } else if (n_clusters < 20) {
+      messages <- c(messages, "NOTE: Consider using at least 20 clusters for adequate power")
+    }
+  }
+
+  # Calculate and warn about design effect if inputs are valid
+  if (valid && !is.na(cluster_size) && !is.na(icc)) {
+    de <- 1 + (cluster_size - 1) * icc
+    if (de > 5) {
+      messages <- c(messages, sprintf(
+        "WARNING: Large design effect (%.2f) - sample size will need to be inflated substantially",
+        de
+      ))
+    } else if (de > 3) {
+      messages <- c(messages, sprintf(
+        "NOTE: Moderate design effect (%.2f) - sample size inflation needed",
+        de
+      ))
+    }
+  }
+
+  # Log validation failures
+  if (!valid) {
+    error_msgs <- messages[grepl("^ERROR:", messages)]
+    if (length(error_msgs) > 0) {
+      logger::log_warn(
+        "Clustering validation failed",
+        cluster_size = cluster_size,
+        icc = icc,
+        errors = paste(error_msgs, collapse = "; ")
+      )
+    }
+  }
+
+  # Return validation result using standard structure
+  validation_result(valid, messages)
+}
+
+
 #' Calculate Design Effect for Clustered Data
 #'
 #' Business logic for calculating the design effect and sample size inflation

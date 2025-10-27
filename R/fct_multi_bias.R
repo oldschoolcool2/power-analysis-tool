@@ -506,33 +506,48 @@ validate_multi_bias_inputs <- function(rr, lo = NA, hi = NA,
   # Check that at least one bias is selected
   if (!include_confounding && !include_selection && !include_misclass) {
     valid <- FALSE
-    messages <- c(messages, "ERROR: At least one bias type must be selected.")
+    messages <- c(messages, "ERROR: At least one bias type must be selected")
   }
 
   # Check RR
   if (is.na(rr) || !is.numeric(rr) || rr <= 0) {
     valid <- FALSE
-    messages <- c(messages, "ERROR: Risk ratio must be a positive number.")
+    messages <- c(messages, "ERROR: Risk ratio must be a positive number")
+  } else if (rr > 20) {
+    messages <- c(messages, "WARNING: Risk ratio > 20 is extremely large - verify this is correct")
   }
 
   # Warn if RR is close to null
   if (!is.na(rr) && abs(rr - 1) < 0.01) {
-    messages <- c(messages, "WARNING: Risk ratio is very close to null (1.0). E-value will be minimal.")
+    messages <- c(messages, "WARNING: Risk ratio is very close to null (1.0). E-value will be minimal")
+  } else if (!is.na(rr) && abs(rr - 1) < 0.1) {
+    messages <- c(messages, "NOTE: Small effect size. E-value will be low")
   }
 
   # Check CI consistency
   if (!is.na(lo) && !is.na(hi)) {
-    if (lo > rr || hi < rr) {
-      messages <- c(messages, "WARNING: Confidence interval does not contain the point estimate.")
-    }
-    if (lo >= hi) {
+    if (lo <= 0 || hi <= 0) {
       valid <- FALSE
-      messages <- c(messages, "ERROR: Lower confidence limit must be less than upper limit.")
+      messages <- c(messages, "ERROR: Confidence limits must be positive")
+    } else if (lo > rr || hi < rr) {
+      messages <- c(messages, "WARNING: Confidence interval does not contain the point estimate")
+    } else if (lo >= hi) {
+      valid <- FALSE
+      messages <- c(messages, "ERROR: Lower confidence limit must be less than upper limit")
     }
   }
 
-  list(
-    valid = valid,
-    messages = messages
-  )
+  # Log validation failures
+  if (!valid) {
+    error_msgs <- messages[grepl("^ERROR:", messages)]
+    if (length(error_msgs) > 0) {
+      logger::log_warn(
+        "Multi-bias validation failed",
+        errors = paste(error_msgs, collapse = "; ")
+      )
+    }
+  }
+
+  # Return validation result using standard structure
+  validation_result(valid, messages)
 }

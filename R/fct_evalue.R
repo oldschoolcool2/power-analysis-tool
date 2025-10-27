@@ -431,55 +431,83 @@ validate_evalue_inputs <- function(effect_estimate, lo = NA, hi = NA, effect_typ
   valid <- TRUE
   messages <- character(0)
 
+  # Validate effect_type against allowlist
+  VALID_EFFECT_TYPES <- c("RR", "OR", "HR", "MD")
+  if (!effect_type %in% VALID_EFFECT_TYPES) {
+    valid <- FALSE
+    messages <- c(messages, sprintf("ERROR: Invalid effect type '%s'. Must be one of: %s",
+                                   effect_type, paste(VALID_EFFECT_TYPES, collapse = ", ")))
+  }
+
   # Check effect estimate
   if (effect_type %in% c("RR", "OR", "HR")) {
     # Ratio measures must be positive
     if (is.na(effect_estimate) || effect_estimate <= 0) {
       valid <- FALSE
-      messages <- c(messages, paste0("ERROR: ", effect_type, " must be a positive number."))
+      messages <- c(messages, paste0("ERROR: ", effect_type, " must be a positive number"))
+    } else if (effect_estimate > 20) {
+      messages <- c(messages, paste0("WARNING: ", effect_type, " > 20 is extremely large - verify this is correct"))
     }
 
-    # Warn if effect is null
+    # Warn if effect is null or very small
     if (!is.na(effect_estimate) && abs(effect_estimate - 1) < 0.01) {
-      messages <- c(messages, "WARNING: Effect estimate is very close to null (1.0). E-value will be minimal.")
+      messages <- c(messages, "WARNING: Effect estimate is very close to null (1.0). E-value will be minimal")
+    } else if (!is.na(effect_estimate) && abs(effect_estimate - 1) < 0.1) {
+      messages <- c(messages, "NOTE: Small effect size. E-value will be low")
     }
   } else if (effect_type == "MD") {
     # Mean difference can be any numeric value
     if (is.na(effect_estimate) || !is.numeric(effect_estimate)) {
       valid <- FALSE
-      messages <- c(messages, "ERROR: Mean difference must be numeric.")
+      messages <- c(messages, "ERROR: Mean difference must be numeric")
     }
 
     # Warn if effect is null
     if (!is.na(effect_estimate) && abs(effect_estimate) < 0.001) {
-      messages <- c(messages, "WARNING: Mean difference is very close to zero. E-value will be minimal.")
+      messages <- c(messages, "WARNING: Mean difference is very close to zero. E-value will be minimal")
+    } else if (!is.na(effect_estimate) && abs(effect_estimate) < 0.1) {
+      messages <- c(messages, "NOTE: Small effect size. E-value will be low")
     }
   }
 
   # Check confidence interval consistency
   if (!is.na(lo) && !is.na(hi)) {
     if (effect_type %in% c("RR", "OR", "HR")) {
-      # For ratios, CI should straddle the estimate
-      if (lo > effect_estimate || hi < effect_estimate) {
-        messages <- c(messages, "WARNING: Confidence interval does not contain the point estimate.")
-      }
-      if (lo >= hi) {
+      # For ratios, CI limits must be positive
+      if (lo <= 0 || hi <= 0) {
         valid <- FALSE
-        messages <- c(messages, "ERROR: Lower confidence limit must be less than upper limit.")
+        messages <- c(messages, "ERROR: Confidence limits must be positive")
+      } else if (lo >= hi) {
+        valid <- FALSE
+        messages <- c(messages, "ERROR: Lower confidence limit must be less than upper limit")
+      } else if (lo > effect_estimate || hi < effect_estimate) {
+        messages <- c(messages, "WARNING: Confidence interval does not contain the point estimate")
       }
     } else if (effect_type == "MD") {
-      # For differences, similar check
+      # For differences, check ordering
       if (lo >= hi) {
         valid <- FALSE
-        messages <- c(messages, "ERROR: Lower confidence limit must be less than upper limit.")
+        messages <- c(messages, "ERROR: Lower confidence limit must be less than upper limit")
+      } else if (lo > effect_estimate || hi < effect_estimate) {
+        messages <- c(messages, "WARNING: Confidence interval does not contain the point estimate")
       }
     }
   }
 
-  list(
-    valid = valid,
-    messages = messages
-  )
+  # Log validation failures
+  if (!valid) {
+    error_msgs <- messages[grepl("^ERROR:", messages)]
+    if (length(error_msgs) > 0) {
+      logger::log_warn(
+        "E-value validation failed",
+        effect_type = effect_type,
+        errors = paste(error_msgs, collapse = "; ")
+      )
+    }
+  }
+
+  # Return validation result using standard structure
+  validation_result(valid, messages)
 }
 
 
