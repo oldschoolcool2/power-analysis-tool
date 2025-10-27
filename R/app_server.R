@@ -20,6 +20,14 @@
 #' @importFrom rmarkdown render
 app_server <- function(input, output, session) {
 
+  # Log server initialization
+  logger::log_info(
+    "App server initializing",
+    session_id = session$token,
+    client_ip = session$request$REMOTE_ADDR %||% "unknown",
+    user_agent = session$request$HTTP_USER_AGENT %||% "unknown"
+  )
+
   # Your application server logic
 
   # Propensity Score Model Quality Thresholds ----
@@ -33,39 +41,55 @@ app_server <- function(input, output, session) {
   PREVALENCE_IMBALANCED_LOWER <- 20  # Below 20% considered imbalanced
   PREVALENCE_IMBALANCED_UPPER <- 80  # Above 80% considered imbalanced
 
+  logger::log_debug("App configuration constants set")
+
   # ============================================================
   # Module Initialization
   # ============================================================
 
+  logger::log_info("Initializing all analysis modules")
+
   # Tab 1: Single Proportion (includes missing data module)
   tab1_vals <- mod_01_single_proportion_server("tab1")
+  logger::log_debug("Module initialized: single_proportion")
 
   # Tab 2: Two-Group Comparisons (includes missing data module)
   tab2_vals <- mod_02_two_group_server("tab2")
+  logger::log_debug("Module initialized: two_group")
 
   # Tab 3: Survival Analysis (includes missing data module)
   tab3_vals <- mod_03_survival_server("tab3")
+  logger::log_debug("Module initialized: survival")
 
   # Tab 4: Matched Case-Control (includes missing data module)
   tab4_vals <- mod_04_matched_case_control_server("tab4")
+  logger::log_debug("Module initialized: matched_case_control")
 
   # Tab 5: Continuous Outcomes (includes missing data module)
   tab5_vals <- mod_05_continuous_server("tab5")
+  logger::log_debug("Module initialized: continuous")
 
   # Tab 6: Non-Inferiority (includes missing data module)
   tab6_vals <- mod_06_non_inferiority_server("tab6")
+  logger::log_debug("Module initialized: non_inferiority")
 
   # Tab 7: VIF/Propensity Score
   tab7_vals <- mod_07_vif_ps_server("tab7")
+  logger::log_debug("Module initialized: vif_ps")
 
   # Tab 8: Mediation Analysis
   tab8_vals <- mod_08_mediation_server("tab8")
+  logger::log_debug("Module initialized: mediation")
 
   # Tab 9: Time-to-Event Equivalence/NI
   tab9_vals <- mod_09_survival_equivalence_server("tab9")
+  logger::log_debug("Module initialized: survival_equivalence")
 
   # Tab 10: Sensitivity Analyses
   tab10_vals <- mod_10_sensitivity_analyses_server("tab10")
+  logger::log_debug("Module initialized: sensitivity_analyses")
+
+  logger::log_info("All analysis modules initialized successfully")
 
   # Missing data modules for tabs not yet fully migrated
   # missing_data_surv_ss <- missing_data_server("surv_ss-missing_data")  # Now in tab3 module
@@ -87,6 +111,11 @@ app_server <- function(input, output, session) {
   # Clear results when switching pages (prevent content bleeding)
   # Each page should only show its own results, not previous page results
   observeEvent(input$sidebar_page, {
+    cat("DEBUG: Page changed to", input$sidebar_page, "- clearing results and resetting doAnalysis\n")
+
+    # CRITICAL: Reset doAnalysis flag to prevent old results from re-rendering
+    v$doAnalysis <- 0
+
     # Clear all result outputs to prevent "apples and oranges" mixing
     output$result_text <- renderUI({ NULL })
     output$effect_measures <- renderUI({ NULL })
@@ -500,6 +529,20 @@ app_server <- function(input, output, session) {
     # Tab 9: Time-to-Event Equivalence/Non-Inferiority
     } else if (page == "survival_ni_equiv") {
       tab9_inputs <- tab9_vals$inputs()
+
+      # Guard against NULL calc_mode and test_type
+      calc_mode <- if (is.null(tab9_inputs$calc_mode) || length(tab9_inputs$calc_mode) == 0) {
+        "calc_n"
+      } else {
+        tab9_inputs$calc_mode
+      }
+
+      test_type <- if (is.null(tab9_inputs$test_type) || length(tab9_inputs$test_type) == 0) {
+        "non-inferiority"
+      } else {
+        tab9_inputs$test_type
+      }
+
       validate(
         need(tab9_inputs$hr_expected > 0, "Expected HR must be positive"),
         need(tab9_inputs$prop_exposed > 0 && tab9_inputs$prop_exposed <= 100, "Proportion exposed must be 0-100%"),
@@ -507,8 +550,8 @@ app_server <- function(input, output, session) {
         need(tab9_inputs$allocation_ratio > 0, "Allocation ratio must be positive")
       )
 
-      if (tab9_inputs$calc_mode == "calc_n") {
-        if (tab9_inputs$test_type == "non-inferiority") {
+      if (identical(calc_mode, "calc_n")) {
+        if (identical(test_type, "non-inferiority")) {
           validate(
             need(!is.null(tab9_inputs$hr_margin_ni) && tab9_inputs$hr_margin_ni > 1.0,
                  "NI margin must be > 1.0 (e.g., 1.25 for 25% increase)"),
@@ -618,8 +661,16 @@ app_server <- function(input, output, session) {
       # Get current page with default fallback
       page <- get_current_page()
       cat("DEBUG result_text: page =", page, ", sidebar_page =", input$sidebar_page, "\n")
-      validate_inputs()
-      cat("DEBUG result_text: validation passed for page =", page, "\n")
+
+      # Wrap validation in tryCatch to see if it's failing silently
+      tryCatch({
+        validate_inputs()
+        cat("DEBUG result_text: validation passed for page =", page, "\n")
+      }, error = function(e) {
+        cat("DEBUG result_text: VALIDATION FAILED for page =", page, "- Error:", conditionMessage(e), "\n")
+        # Re-throw the error so Shiny handles it properly
+        stop(e)
+      })
 
       # Tab 1: Single Proportion - Power Analysis (using sidebar_page)
       if (page == "power_single") {
@@ -694,11 +745,15 @@ app_server <- function(input, output, session) {
       # Tab 1: Single Proportion - Sample Size (using sidebar_page)
       } else if (page == "ss_single") {
         tab1_inputs <- tab1_vals$inputs()
-        calc_mode <- tab1_inputs$ss_single_calc_mode
+        calc_mode <- if (is.null(tab1_inputs$ss_single_calc_mode) || length(tab1_inputs$ss_single_calc_mode) == 0) {
+          "calc_n"
+        } else {
+          tab1_inputs$ss_single_calc_mode
+        }
         power <- tab1_inputs$ss_power / 100
         discon <- tab1_inputs$ss_discon / 100
 
-        if (calc_mode == "calc_n") {
+        if (identical(calc_mode, "calc_n")) {
           # Calculate Sample Size
           incidence_rate <- tab1_inputs$ss_p
 
@@ -924,10 +979,14 @@ app_server <- function(input, output, session) {
       # Tab 2: Two-Group Comparison - Sample Size (using sidebar_page)
       } else if (page == "ss_twogrp") {
         tab2_inputs <- tab2_vals$inputs()
-        calc_mode <- tab2_inputs$twogrp_ss_calc_mode
+        calc_mode <- if (is.null(tab2_inputs$twogrp_ss_calc_mode) || length(tab2_inputs$twogrp_ss_calc_mode) == 0) {
+          "calc_n"
+        } else {
+          tab2_inputs$twogrp_ss_calc_mode
+        }
         power <- tab2_inputs$twogrp_ss_power / 100
 
-        if (calc_mode == "calc_n") {
+        if (identical(calc_mode, "calc_n")) {
           # Calculate Sample Size (original functionality)
           p1 <- tab2_inputs$twogrp_ss_p1 / 100
           p2 <- tab2_inputs$twogrp_ss_p2 / 100
@@ -1209,13 +1268,17 @@ app_server <- function(input, output, session) {
       # Tab 3: Survival Analysis - Sample Size (using sidebar_page)
       } else if (page == "ss_survival") {
         tab3_inputs <- tab3_vals$inputs()
-        calc_mode <- tab3_inputs$surv_ss_calc_mode
+        calc_mode <- if (is.null(tab3_inputs$surv_ss_calc_mode) || length(tab3_inputs$surv_ss_calc_mode) == 0) {
+          "calc_n"
+        } else {
+          tab3_inputs$surv_ss_calc_mode
+        }
         power <- tab3_inputs$surv_ss_power / 100
         k <- tab3_inputs$surv_ss_k / 100
         pE <- tab3_inputs$surv_ss_pE / 100
         md_vals <- tab3_vals$missing_data_vals()
 
-        if (calc_mode == "calc_n") {
+        if (identical(calc_mode, "calc_n")) {
           # Calculate Sample Size
           hr <- tab3_inputs$surv_ss_hr
 
@@ -1402,7 +1465,7 @@ app_server <- function(input, output, session) {
         m <- tab4_inputs$match_ratio
         sided_val <- ifelse(identical(tab4_inputs$match_sided, "two.sided"), 2, 1)
 
-        if (calc_mode == "calc_n") {
+        if (identical(calc_mode, "calc_n")) {
           # Sample Size Calculation
           power <- tab4_inputs$match_power / 100
           # Calculate Sample Size
@@ -1519,7 +1582,7 @@ app_server <- function(input, output, session) {
           ))
           HTML(paste0(text0, text1, text2, text3, missing_data_text))
 
-        } else if (calc_mode == "calc_power") {
+        } else if (identical(calc_mode, "calc_power")) {
           # Calculate Power Analysis (NEW!)
           n_cases_nominal <- tab4_inputs$match_n_pairs
           or <- tab4_inputs$match_or
@@ -1795,11 +1858,15 @@ app_server <- function(input, output, session) {
       # Tab 5: Continuous Outcomes - Sample Size (using sidebar_page)
       } else if (page == "ss_continuous") {
         tab5_inputs <- tab5_vals$inputs()
-        calc_mode <- tab5_inputs$cont_ss_calc_mode
+        calc_mode <- if (is.null(tab5_inputs$cont_ss_calc_mode) || length(tab5_inputs$cont_ss_calc_mode) == 0) {
+          "calc_n"
+        } else {
+          tab5_inputs$cont_ss_calc_mode
+        }
         power <- tab5_inputs$cont_ss_power / 100
         ratio <- tab5_inputs$cont_ss_ratio
 
-        if (calc_mode == "calc_n") {
+        if (identical(calc_mode, "calc_n")) {
           # Calculate Sample Size
           d <- tab5_inputs$cont_ss_d
 
@@ -2075,13 +2142,17 @@ app_server <- function(input, output, session) {
       # Tab 6: Non-Inferiority (using sidebar_page)
       } else if (page == "noninf") {
         tab6_inputs <- tab6_vals$inputs()
-        calc_mode <- tab6_inputs$noninf_calc_mode
+        calc_mode <- if (is.null(tab6_inputs$noninf_calc_mode) || length(tab6_inputs$noninf_calc_mode) == 0) {
+          "calc_n"
+        } else {
+          tab6_inputs$noninf_calc_mode
+        }
         p1 <- tab6_inputs$noninf_p1 / 100
         p2 <- tab6_inputs$noninf_p2 / 100
         power <- tab6_inputs$noninf_power / 100
         ratio <- tab6_inputs$noninf_ratio
 
-        if (calc_mode == "calc_n") {
+        if (identical(calc_mode, "calc_n")) {
           # Calculate Sample Size
           margin <- tab6_inputs$noninf_margin / 100
 
@@ -2615,7 +2686,11 @@ app_server <- function(input, output, session) {
         med_inputs <- tab8_vals$inputs()
 
         # Extract values
-        calc_mode <- med_inputs$calc_mode
+        calc_mode <- if (is.null(med_inputs$calc_mode) || length(med_inputs$calc_mode) == 0) {
+          "calc_power"
+        } else {
+          med_inputs$calc_mode
+        }
         a <- med_inputs$path_a
         b <- med_inputs$path_b
         c_prime <- med_inputs$path_c_prime
@@ -2627,7 +2702,7 @@ app_server <- function(input, output, session) {
         se_b <- if (!is.na(med_inputs$se_b)) med_inputs$se_b else NULL
 
         # Calculate based on mode
-        if (calc_mode == "calc_power") {
+        if (identical(calc_mode, "calc_power")) {
           # Calculate power given N
           n <- med_inputs$med_n
           power <- calc_mediation_power(n, a, b, se_a, se_b, alpha, alternative)
@@ -2661,7 +2736,7 @@ app_server <- function(input, output, session) {
             "changed had X increased by one unit.</p>"
           ))
 
-        } else if (calc_mode == "calc_n") {
+        } else if (identical(calc_mode, "calc_n")) {
           # Calculate sample size given power
           power <- med_inputs$med_power / 100
           n_required <- calc_mediation_n(a, b, power, alpha, alternative)
@@ -2692,7 +2767,7 @@ app_server <- function(input, output, session) {
             ))
           }
 
-        } else if (calc_mode == "calc_mde") {
+        } else if (identical(calc_mode, "calc_mde")) {
           # Calculate minimal detectable effect
           n <- med_inputs$med_n
           power <- med_inputs$med_power / 100
@@ -2761,7 +2836,7 @@ app_server <- function(input, output, session) {
           tab9_inputs$alpha
         }
 
-        if (calc_mode == "calc_n") {
+        if (identical(calc_mode, "calc_n")) {
           # Calculate sample size
           if (test_type == "non-inferiority") {
             hr_margin <- tab9_inputs$hr_margin_ni
@@ -2970,6 +3045,10 @@ app_server <- function(input, output, session) {
 
           HTML(as.character(result_text))
         }
+      } else {
+        # No matching page found
+        cat("DEBUG: No matching page condition for page =", page, "\n")
+        return(NULL)
       }
     })
   })
@@ -3362,7 +3441,7 @@ app_server <- function(input, output, session) {
           alpha <- med_inputs$med_alpha
           alternative <- med_inputs$med_sided
 
-          if (calc_mode == "calc_power") {
+          if (identical(calc_mode, "calc_power")) {
             # Power curve varying N
             n_current <- med_inputs$med_n
             n_seq <- generate_mediation_n_sequence(n_current, n_points = 50)
@@ -3416,7 +3495,7 @@ app_server <- function(input, output, session) {
               ) %>%
               config(displayModeBar = TRUE, displaylogo = FALSE)
 
-          } else if (calc_mode == "calc_n") {
+          } else if (identical(calc_mode, "calc_n")) {
             # Power curve showing achieved power at different sample sizes
             power_target <- med_inputs$med_power / 100
             n_required <- calc_mediation_n(a, b, power_target, alpha, alternative)
@@ -3473,7 +3552,7 @@ app_server <- function(input, output, session) {
                 config(displayModeBar = TRUE, displaylogo = FALSE)
             }
 
-          } else if (calc_mode == "calc_mde") {
+          } else if (identical(calc_mode, "calc_mde")) {
             # Power curve showing power for different effect sizes
             n <- med_inputs$med_n
             power_target <- med_inputs$med_power / 100
@@ -3538,7 +3617,7 @@ app_server <- function(input, output, session) {
           test_type <- tab9_inputs$test_type
           calc_mode <- tab9_inputs$calc_mode
 
-          if (calc_mode == "calc_n") {
+          if (identical(calc_mode, "calc_n")) {
             # Power curve: power vs. sample size
             power_target <- tab9_inputs$power / 100
             hr_expected <- tab9_inputs$hr_expected

@@ -6,12 +6,35 @@
 #' @importFrom shiny shinyApp
 #' @importFrom golem with_golem_options
 run_app <- function(...) {
+  # Log application startup
+  logger::log_info(
+    "Application starting",
+    version = as.character(packageVersion("PowerAnalysisTool")),
+    r_version = R.version.string,
+    golem_version = as.character(packageVersion("golem"))
+  )
+
   # Source helper files needed by the app
   # These are loaded when the package is loaded
-  source_helpers()
+  tryCatch(
+    {
+      source_helpers()
+      logger::log_info("Helper files sourced successfully")
+    },
+    error = function(e) {
+      logger::log_error(
+        "Failed to source helper files",
+        error_class = class(e)[1],
+        error_msg = conditionMessage(e)
+      )
+      stop(e)
+    }
+  )
 
   # Create and return the Shiny app
-  with_golem_options(
+  logger::log_info("Creating Shiny app object")
+
+  app <- with_golem_options(
     app = shinyApp(
       ui = app_ui,
       server = app_server,
@@ -19,6 +42,10 @@ run_app <- function(...) {
     ),
     golem_opts = list(...)
   )
+
+  logger::log_info("Shiny app created successfully")
+
+  app
 }
 
 #' Source helper files
@@ -32,6 +59,9 @@ source_helpers <- function() {
   # If in development mode (package not installed), use current directory
   if (pkg_dir == "") {
     pkg_dir <- getwd()
+    logger::log_debug("Running in development mode", pkg_dir = pkg_dir)
+  } else {
+    logger::log_debug("Running in installed mode", pkg_dir = pkg_dir)
   }
 
   # Define helper files to source
@@ -48,11 +78,45 @@ source_helpers <- function() {
     "R/helpers/003-propensity-score-helpers.R"
   )
 
+  logger::log_debug(
+    "Sourcing helper files",
+    pkg_dir = pkg_dir,
+    file_count = length(helper_files)
+  )
+
+  # Track sourcing statistics
+  sourced_count <- 0
+  skipped_count <- 0
+
   # Source each helper file
   for (file in helper_files) {
     file_path <- file.path(pkg_dir, file)
     if (file.exists(file_path)) {
-      source(file_path, local = parent.frame())
+      logger::log_trace("Sourcing file", file = file)
+      tryCatch(
+        {
+          source(file_path, local = parent.frame())
+          sourced_count <- sourced_count + 1
+        },
+        error = function(e) {
+          logger::log_error(
+            "Failed to source file",
+            file = file,
+            error_msg = conditionMessage(e)
+          )
+          stop(e)
+        }
+      )
+    } else {
+      logger::log_warn("Helper file not found", file = file_path)
+      skipped_count <- skipped_count + 1
     }
   }
+
+  logger::log_debug(
+    "Helper files sourcing complete",
+    sourced = sourced_count,
+    skipped = skipped_count,
+    total = length(helper_files)
+  )
 }

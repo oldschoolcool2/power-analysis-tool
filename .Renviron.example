@@ -1,0 +1,59 @@
+# Power Analysis Tool - Environment Configuration Example
+# Copy this file to .Renviron and adjust values as needed
+# .Renviron is git-ignored to protect sensitive configuration
+
+# =============================================================================
+# Logging Configuration
+# =============================================================================
+
+# Log Level: Controls verbosity of logging output
+# Valid values: TRACE, DEBUG, INFO, SUCCESS, WARN, ERROR, FATAL
+# - TRACE: Very detailed debugging (includes reactive dependency tracking)
+# - DEBUG: Detailed diagnostic information (function entry/exit, parameters)
+# - INFO: General informational messages (recommended for production)
+# - WARN: Warning messages (fallback methods, potential issues)
+# - ERROR: Error messages (failures that don't crash the app)
+# - FATAL: Critical errors (app cannot continue)
+#
+# Development: Use DEBUG or TRACE
+# Production: Use INFO or WARN
+PAT_LOG_LEVEL=INFO
+
+# Log Directory: Where log files are written
+# Relative or absolute path. Directory will be created if it doesn't exist.
+# Development: ./logs (project directory)
+# Production: /var/log/power-analysis-tool (system log directory)
+PAT_LOG_DIR=./logs
+
+# Log Format: Output format for logs
+# Valid values: auto, console, json
+# - auto: JSON in production (!interactive()), console in development
+# - console: Human-readable, colored output (best for development)
+# - json: Machine-readable structured logs (best for production/parsing)
+PAT_LOG_FORMAT=auto
+
+# =============================================================================
+# Application Configuration (Future Use)
+# =============================================================================
+
+# Uncomment and configure as needed for future features:
+
+# Maximum upload file size (in MB)
+# MAX_UPLOAD_SIZE_MB=10
+
+# Session timeout (in minutes)
+# SESSION_TIMEOUT_MIN=30
+
+# Enable/disable features
+# ENABLE_PDF_EXPORT=TRUE
+# ENABLE_CSV_EXPORT=TRUE
+
+# =============================================================================
+# Deployment Configuration
+# =============================================================================
+
+# Application port (Shiny default: 3838)
+# PORT=3838
+
+# Host address
+# HOST=0.0.0.0

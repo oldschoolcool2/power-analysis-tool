@@ -146,6 +146,9 @@ mod_02_two_group_server <- function(id){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 
+    # Log module initialization
+    log_module_event("two_group", "init", session)
+
     # Initialize missing data module for sample size tab
     missing_data_vals <- missing_data_server("missing_data")
 
@@ -155,8 +158,21 @@ mod_02_two_group_server <- function(id){
     # Initialize multiple testing module for sample size tab
     multiple_testing_vals <- multiple_testing_server("multiple_testing")
 
+    logger::log_debug(
+      "Two-group module sub-modules initialized",
+      module = "two_group",
+      session_id = session$token
+    )
+
     # Example button - Power Analysis
     observeEvent(input$example_twogrp_pow, {
+      logger::log_info(
+        "Loading example data for two-group power analysis",
+        module = "two_group",
+        action = "load_example",
+        page = "power",
+        session_id = session$token
+      )
       updateNumericInput(session, "twogrp_pow_n1", value = 300)
       updateNumericInput(session, "twogrp_pow_n2", value = 300)
       updateNumericInput(session, "twogrp_pow_p1", value = 15)
@@ -167,6 +183,13 @@ mod_02_two_group_server <- function(id){
 
     # Reset button - Power Analysis
     observeEvent(input$reset_twogrp_pow, {
+      logger::log_info(
+        "Resetting two-group power analysis inputs",
+        module = "two_group",
+        action = "reset",
+        page = "power",
+        session_id = session$token
+      )
       updateNumericInput(session, "twogrp_pow_n1", value = 200)
       updateNumericInput(session, "twogrp_pow_n2", value = 200)
       updateNumericInput(session, "twogrp_pow_p1", value = 10)
@@ -177,6 +200,13 @@ mod_02_two_group_server <- function(id){
 
     # Example button - Sample Size
     observeEvent(input$example_twogrp_ss, {
+      logger::log_info(
+        "Loading example data for two-group sample size",
+        module = "two_group",
+        action = "load_example",
+        page = "sample_size",
+        session_id = session$token
+      )
       updateRadioButtons(session, "twogrp_ss_calc_mode", selected = "calc_n")
       updateRadioButtons(session, "twogrp_ss_power", selected = "80")
       updateNumericInput(session, "twogrp_ss_p1", value = 15)
@@ -188,6 +218,13 @@ mod_02_two_group_server <- function(id){
 
     # Reset button - Sample Size
     observeEvent(input$reset_twogrp_ss, {
+      logger::log_info(
+        "Resetting two-group sample size inputs",
+        module = "two_group",
+        action = "reset",
+        page = "sample_size",
+        session_id = session$token
+      )
       updateRadioButtons(session, "twogrp_ss_calc_mode", selected = "calc_n")
       updateRadioButtons(session, "twogrp_ss_power", selected = "80")
       updateNumericInput(session, "twogrp_ss_p1", value = 10)
@@ -199,9 +236,17 @@ mod_02_two_group_server <- function(id){
       updateRadioButtons(session, "twogrp_ss_sided", selected = "two.sided")
     })
 
+    # Register cleanup handler
+    onStop(function() {
+      log_module_event("two_group", "cleanup", session)
+    })
+
     # Return reactive values
     list(
       inputs = reactive({
+        # Log reactive execution at TRACE level (only when debugging)
+        log_reactive_execution("two_group_inputs", session)
+
         list(
           # Power analysis inputs
           twogrp_pow_n1 = as.numeric(input$twogrp_pow_n1),

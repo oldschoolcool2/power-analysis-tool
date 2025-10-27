@@ -17,6 +17,13 @@ Dockerfile~
 *.bak
 archive/
 
+# Logging
+logs/
+*.log
+
+# Environment configuration (keep .Renviron.example, ignore .Renviron)
+.Renviron
+
 # Claude Code configuration (user-specific)
 .claude/
 CLAUDE.md
