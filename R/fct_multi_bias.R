@@ -440,6 +440,47 @@ get_multi_bias_parameters <- function(multi_bias_obj) {
 }
 
 
+#' Get Tooltip for Multi-Bias Parameter
+#'
+#' Returns a descriptive tooltip explaining what each bias parameter represents
+#'
+#' @param param_name Character, the parameter name (e.g., "RRAUc", "RRUsYA1")
+#'
+#' @return Character string with parameter description
+#'
+#' @noRd
+get_parameter_tooltip <- function(param_name) {
+  tooltips <- list(
+    # Confounding parameters
+    "RRAUc" = "Risk ratio relating exposure (A) to unmeasured confounder (Uc). Example: If RRAUc = 2, exposed individuals are twice as likely to have the unmeasured confounder.",
+    "RRUcY" = "Risk ratio relating unmeasured confounder (Uc) to outcome (Y). Example: If RRUcY = 2, individuals with the confounder have twice the risk of the outcome.",
+
+    # Selection bias parameters (general population)
+    "RRUsYA1" = "Risk ratio relating unmeasured selection variable (Us) to outcome (Y), among exposed individuals (A=1). Represents how the unmeasured cause of selection is associated with the outcome in the exposed group.",
+    "RRSUsA1" = "Risk ratio relating selection into study (S) to unmeasured selection variable (Us), among exposed individuals (A=1). Represents how the unmeasured cause of selection affects who gets selected in the exposed group.",
+    "RRUsYA0" = "Risk ratio relating unmeasured selection variable (Us) to outcome (Y), among unexposed individuals (A=0). Represents how the unmeasured cause of selection is associated with the outcome in the unexposed group.",
+    "RRSUsA0" = "Risk ratio relating selection into study (S) to unmeasured selection variable (Us), among unexposed individuals (A=0). Represents how the unmeasured cause of selection affects who gets selected in the unexposed group.",
+
+    # Selection bias parameters (selected population)
+    "RRAUscS" = "Risk ratio relating exposure (A) to unmeasured confounder-selection variable (Usc), conditional on being selected (S=1). Represents exposure-confounder association within the selected population.",
+    "RRUscYS" = "Risk ratio relating unmeasured confounder-selection variable (Usc) to outcome (Y), conditional on being selected (S=1). Represents confounder-outcome association within the selected population.",
+
+    # Outcome misclassification
+    "RRAYy" = "Risk ratio relating exposure (A) to misclassified outcome (Y*), conditional on true outcome (y). Represents differential outcome misclassification: how exposure affects the probability of outcome misclassification.",
+
+    # Exposure misclassification
+    "RRYAa" = "Risk ratio relating outcome (Y) to misclassified exposure (A*), conditional on true exposure (a). Represents differential exposure misclassification: how outcome affects the probability of exposure misclassification."
+  )
+
+  # Return the tooltip if available, otherwise a generic one
+  if (param_name %in% names(tooltips)) {
+    tooltips[[param_name]]
+  } else {
+    paste("Bias parameter", param_name, "expressed as a risk ratio. See EValue package documentation for details.")
+  }
+}
+
+
 #' Validate Multi-Bias Inputs
 #'
 #' @param rr Risk ratio

@@ -21,6 +21,13 @@ archive/
 .claude/
 CLAUDE.md
 
+# Development script artifacts
+.dev.log
+.dev.pid
+
+# Research and temporary documentation
+docs/research/
+
 # Vignette build artifacts
 vignettes/*.html
 vignettes/.build.timestamp

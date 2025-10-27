@@ -272,7 +272,7 @@ multi_bias_server <- function(id) {
 
       parms <- get_multi_bias_parameters(multi_bias_obj())
 
-      # Create numeric inputs for each parameter
+      # Create numeric inputs for each parameter with descriptive tooltips
       lapply(parms, function(parm) {
         create_numeric_input_with_tooltip(
           ns(parm),
@@ -281,7 +281,7 @@ multi_bias_server <- function(id) {
           min = 0.1,
           max = 10,
           step = 0.1,
-          tooltip = paste("Bias parameter", parm, "expressed as a risk ratio")
+          tooltip = get_parameter_tooltip(parm)
         )
       })
     })
