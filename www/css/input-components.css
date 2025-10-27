@@ -240,9 +240,10 @@
    ======================================================================== */
 
 .help-block,
-.shiny-input-container .help-block {
+.shiny-input-container .help-block,
+.shiny-text-output.shiny-html-output {
   font-size: var(--font-size-sm);
-  color: var(--text-tertiary);
+  color: var(--text-tertiary) !important;
   margin-top: var(--space-2);
   margin-bottom: var(--space-4);
   line-height: var(--line-height-relaxed);

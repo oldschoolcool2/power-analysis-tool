@@ -39,8 +39,9 @@
 
 .sidebar-header {
   padding: var(--space-6);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  background: linear-gradient(135deg, var(--color-primary-800) 0%, var(--color-primary-900) 100%);
+  border-bottom: 1px solid var(--border-color-sidebar-subtle);
+  /* Use semantic background variable */
+  background: var(--bg-sidebar);
 }
 
 .sidebar-logo {
@@ -61,11 +62,12 @@
   font-weight: var(--font-weight-bold);
   margin: 0;
   line-height: var(--line-height-tight);
+  color: var(--text-inverse);
 }
 
 .sidebar-logo-text p {
   font-size: var(--font-size-xs);
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-sidebar-bright);
   margin: var(--space-1) 0 0 0;
   line-height: var(--line-height-normal);
 }
@@ -89,7 +91,7 @@
   font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
   letter-spacing: var(--letter-spacing-wide);
-  color: rgba(255, 255, 255, 0.7);  /* Increased opacity for WCAG AA */
+  color: var(--text-sidebar-dimmed);  /* Increased opacity for WCAG AA */
 }
 
 /* ==========================================================================
@@ -103,7 +105,7 @@
 .nav-group-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: var(--space-3);
   padding: var(--space-3) var(--space-6);
   cursor: pointer;
   transition: all 0.2s ease;
@@ -112,11 +114,11 @@
 }
 
 .nav-group-header:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-sidebar-overlay-subtle);
 }
 
 .nav-group-header.active {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-sidebar-overlay-medium);
   border-left-color: var(--color-accent-600);
 }
 
@@ -141,17 +143,81 @@
 .nav-group-label {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--text-sidebar-primary);
 }
 
 .nav-group-chevron {
   font-size: var(--font-size-sm);
-  color: rgba(255, 255, 255, 0.75);  /* Increased opacity for WCAG AA */
+  color: var(--text-sidebar-medium);  /* Increased opacity for WCAG AA */
   transition: transform 0.3s ease;
+  flex-shrink: 0;  /* Prevent chevron from shrinking */
+  width: 16px;     /* Fixed width for consistent alignment */
+  text-align: center;
 }
 
 .nav-group-header.expanded .nav-group-chevron {
   transform: rotate(90deg);
+}
+
+/* ==========================================================================
+   Nested Navigation - Parent Groups
+   ========================================================================== */
+
+/* Parent group headers - bold and prominent */
+.nav-group-header-parent {
+  font-weight: var(--font-weight-semibold);
+}
+
+.nav-group-header-parent .nav-group-label {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-inverse);
+}
+
+/* Parent group children container - needs larger max-height for nested content */
+.nav-group-children-parent {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+  background: transparent;
+}
+
+.nav-group-children-parent.expanded {
+  max-height: 5000px; /* Very large value to ensure all nested content is accessible */
+}
+
+/* ==========================================================================
+   Nested Navigation - Child Groups
+   ========================================================================== */
+
+/* Child groups within parent groups */
+.nav-group-child {
+  margin-bottom: var(--space-1);
+}
+
+/* Child group headers - slightly smaller and indented */
+.nav-group-header-child {
+  padding-left: calc(var(--space-6) + var(--space-3));
+  font-size: var(--font-size-sm);
+}
+
+.nav-group-header-child .nav-group-label {
+  font-weight: var(--font-weight-medium);
+}
+
+.nav-group-header-child .nav-group-icon {
+  font-size: var(--font-size-base);
+}
+
+/* Single items within parent groups - align with child headers */
+.nav-group-children-parent > .nav-group-child > .nav-item-single {
+  padding-left: calc(var(--space-6) + var(--space-3));
+  background: transparent;
+}
+
+/* Leaf items within child groups get extra indentation */
+.nav-group-child .nav-group-children .nav-item {
+  padding-left: calc(var(--space-6) + var(--space-6) + 12px);
 }
 
 /* ==========================================================================
@@ -162,11 +228,11 @@
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.3s ease;
-  background: rgba(0, 0, 0, 0.1);
+  background: transparent;
 }
 
 .nav-group-children.expanded {
-  max-height: 500px; /* Arbitrary large value */
+  max-height: 2000px; /* Large value to ensure all child items are accessible */
 }
 
 .nav-item {
@@ -178,17 +244,17 @@
   transition: all 0.2s ease;
   border-left: 3px solid transparent;
   text-decoration: none;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-sidebar-bright);
   font-size: var(--font-size-sm);
 }
 
 .nav-item:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-sidebar-overlay-dark);
   color: var(--text-inverse);
 }
 
 .nav-item.active {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--bg-sidebar-overlay-dark);
   border-left-color: var(--color-accent-600);
   color: var(--text-inverse);
   font-weight: var(--font-weight-semibold);
@@ -215,17 +281,17 @@
   transition: all 0.2s ease;
   border-left: 3px solid transparent;
   text-decoration: none;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--text-sidebar-primary);
   font-size: var(--font-size-sm);
 }
 
 .nav-item-single:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-sidebar-overlay-subtle);
   color: var(--text-inverse);
 }
 
 .nav-item-single.active {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--bg-sidebar-overlay-strong);
   border-left-color: var(--color-accent-600);
   font-weight: var(--font-weight-semibold);
 }
@@ -240,18 +306,41 @@
 }
 
 /* ==========================================================================
+   Sidebar Divider & Section Headers
+   ========================================================================== */
+
+/* Divider for separating sections */
+.sidebar-divider {
+  margin: var(--space-4) 0;
+  border: 0;
+  border-top: 1px solid var(--border-color-sidebar-subtle);
+  opacity: 0.3;
+}
+
+/* Section headers in sidebar (e.g., "Resources") */
+.sidebar-section-header {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-sidebar-dimmed);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: var(--space-2) var(--space-6);
+  margin-top: var(--space-2);
+}
+
+/* ==========================================================================
    Sidebar Footer
    ========================================================================== */
 
 .sidebar-footer {
   padding: var(--space-4) var(--space-6);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.1);
+  border-top: 1px solid var(--border-color-sidebar-subtle);
+  background: var(--bg-sidebar-overlay-dark);
 }
 
 .sidebar-footer-text {
   font-size: var(--font-size-xs);
-  color: rgba(255, 255, 255, 0.75);  /* Increased opacity for WCAG AA */
+  color: var(--text-sidebar-medium);  /* Increased opacity for WCAG AA */
   text-align: center;
 }
 
@@ -314,7 +403,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--bg-overlay);
   z-index: 999;
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -429,14 +518,35 @@
 }
 
 .sidebar::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.1);
+  background: var(--bg-sidebar-overlay-dark);
 }
 
 .sidebar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--border-color-sidebar-medium);
   border-radius: 4px;
 }
 
 .sidebar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--text-sidebar-bright);
+}
+
+/* ==========================================================================
+   Dark Mode Specific Styles
+   ========================================================================== */
+
+[data-theme="dark"] .sidebar-header {
+  /* Use semantic variables - they're already defined for dark mode */
+  background: var(--bg-sidebar);
+  border-bottom-color: var(--border-color-sidebar-subtle);
+}
+
+[data-theme="dark"] .sidebar {
+  /* Use semantic variable for dark mode background */
+  background: var(--bg-sidebar);
+}
+
+[data-theme="dark"] .sidebar-logo-text h1,
+[data-theme="dark"] .sidebar-logo-text p {
+  /* Use semantic variable for text color */
+  color: var(--text-inverse);
 }

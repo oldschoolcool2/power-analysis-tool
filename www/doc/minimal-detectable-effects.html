@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Power Analysis Tool Development Team" />
+
+<meta name="date" content="2025-10-26" />
+
+<title>Minimal Detectable Effect Sizes: Understanding Feasibility Constraints</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Minimal Detectable Effect Sizes:
+Understanding Feasibility Constraints</h1>
+<h4 class="author">Power Analysis Tool Development Team</h4>
+<h4 class="date">2025-10-26</h4>
+
+
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>Traditional sample size calculations answer the question: <em>“How
+many participants do I need to detect an effect of size X?”</em></p>
+<p>But in real-world research, sample size is often
+<strong>constrained</strong> by:</p>
+<ul>
+<li><strong>Budget limitations</strong>: Limited funding for recruitment
+and follow-up</li>
+<li><strong>Feasibility</strong>: Small eligible patient population</li>
+<li><strong>Time constraints</strong>: Short study duration limits
+enrollment</li>
+<li><strong>Logistical barriers</strong>: Limited sites, staff, or
+resources</li>
+</ul>
+<p>In these scenarios, a more practical question is: <em>“Given my
+constrained sample size, what is the smallest effect I can reliably
+detect?”</em></p>
+<p>This is the <strong>Minimal Detectable Effect Size (MDE)</strong> —
+also called the <strong>Minimum Detectable Effect</strong>.</p>
+<p>This vignette explains:</p>
+<ol style="list-style-type: decimal">
+<li><strong>What is a minimal detectable effect</strong> and why it
+matters</li>
+<li><strong>How to calculate MDE</strong> for different study
+designs</li>
+<li><strong>How to interpret MDE</strong> in the context of clinical or
+practical significance</li>
+<li><strong>When to use MDE</strong> vs traditional sample size
+calculations</li>
+<li><strong>Practical workflows</strong> and decision-making
+examples</li>
+</ol>
+</div>
+<div id="what-is-a-minimal-detectable-effect" class="section level2">
+<h2>What is a Minimal Detectable Effect?</h2>
+<div id="definition" class="section level3">
+<h3>Definition</h3>
+<p>The <strong>Minimal Detectable Effect Size (MDE)</strong> is the
+smallest true effect that a study can reliably detect (with specified
+power and significance level) given a fixed sample size.</p>
+<p><strong>Key components</strong>:</p>
+<ul>
+<li><strong>Fixed N</strong>: Sample size is predetermined (constrained
+by feasibility)</li>
+<li><strong>Fixed α</strong>: Significance level (typically 0.05)</li>
+<li><strong>Fixed power</strong>: Desired statistical power (typically
+0.80 or 0.90)</li>
+<li><strong>Unknown effect size</strong>: What we’re solving for</li>
+</ul>
+</div>
+<div id="why-mde-matters" class="section level3">
+<h3>Why MDE Matters</h3>
+<p>Traditional power analysis assumes: 1. You specify the effect size of
+interest (from literature, pilot data, or clinical importance) 2.
+Calculate required sample size 3. Recruit that many participants</p>
+<p><strong>Problem</strong>: What if the calculated N is 5,000 but you
+can only afford to recruit 500?</p>
+<p><strong>Solution</strong>: Calculate the MDE for N = 500 to
+understand: - What effect sizes are you powered to detect? - Is the MDE
+clinically meaningful? - Should you proceed with the study or seek
+additional resources/collaborations?</p>
+</div>
+<div id="mde-as-a-reality-check" class="section level3">
+<h3>MDE as a Reality Check</h3>
+<p>The MDE provides a <strong>feasibility reality check</strong>:</p>
+<p><strong>Scenario A: Feasible Study</strong> - Can recruit N = 400 -
+MDE = 10 percentage points difference (e.g., 30% vs 40%) - Clinically
+meaningful threshold = 8 percentage points - <strong>Decision</strong>:
+Proceed — study is powered to detect meaningful effects</p>
+<p><strong>Scenario B: Underpowered Study</strong> - Can recruit N = 100
+- MDE = 25 percentage points (e.g., 30% vs 55%) - Clinically meaningful
+threshold = 8 percentage points - <strong>Decision</strong>: Do NOT
+proceed — study can only detect unrealistically large effects</p>
+</div>
+</div>
+<div id="calculating-mde-for-different-designs" class="section level2">
+<h2>Calculating MDE for Different Designs</h2>
+<div id="single-proportion" class="section level3">
+<h3>Single Proportion</h3>
+<p><strong>Question</strong>: Given fixed N, what is the smallest
+difference from a null proportion we can detect?</p>
+<p><strong>Example</strong>: - Historical proportion: <strong>p₀ =
+0.30</strong> (30% event rate) - Available sample: <strong>N =
+150</strong> - Power: <strong>80%</strong>, α = 0.05</p>
+<p><strong>Calculation (using Power Analysis Tool)</strong>:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="co"># This calculation is performed via binary search in the tool</span></span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="co"># For a single proportion test:</span></span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">library</span>(pwr)</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="co"># Solve for effect size h given fixed n</span></span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">pwr.p.test</span>(</span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">150</span>,</span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>  <span class="at">sig.level =</span> <span class="fl">0.05</span>,</span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>  <span class="at">power =</span> <span class="fl">0.80</span>,</span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a>  <span class="at">alternative =</span> <span class="st">&quot;two.sided&quot;</span></span>
+<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a>)</span>
+<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a>h_mde <span class="ot">&lt;-</span> result<span class="sc">$</span>h  <span class="co"># Cohen&#39;s h</span></span>
+<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" tabindex="-1"></a><span class="co"># Convert h back to proportion</span></span>
+<span id="cb1-17"><a href="#cb1-17" tabindex="-1"></a><span class="co"># h = 2 * (arcsin(sqrt(p1)) - arcsin(sqrt(p0)))</span></span>
+<span id="cb1-18"><a href="#cb1-18" tabindex="-1"></a><span class="co"># For p0 = 0.30, solve for p1 using h_mde</span></span>
+<span id="cb1-19"><a href="#cb1-19" tabindex="-1"></a>p0 <span class="ot">&lt;-</span> <span class="fl">0.30</span></span>
+<span id="cb1-20"><a href="#cb1-20" tabindex="-1"></a>p1_mde <span class="ot">&lt;-</span> (<span class="fu">sin</span>(<span class="fu">asin</span>(<span class="fu">sqrt</span>(p0)) <span class="sc">+</span> h_mde <span class="sc">/</span> <span class="dv">2</span>))<span class="sc">^</span><span class="dv">2</span></span>
+<span id="cb1-21"><a href="#cb1-21" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;With N =&quot;</span>, <span class="dv">150</span>, <span class="st">&quot;, minimal detectable proportion is p1 =&quot;</span>, <span class="fu">round</span>(p1_mde, <span class="dv">3</span>), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb1-23"><a href="#cb1-23" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Minimal detectable difference:&quot;</span>, <span class="fu">round</span>(p1_mde <span class="sc">-</span> p0, <span class="dv">3</span>), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<p><strong>Typical output</strong>:</p>
+<pre><code>With N = 150, minimal detectable proportion is p1 = 0.436
+Minimal detectable difference: 0.136 (13.6 percentage points)</code></pre>
+<p><strong>Interpretation</strong>: With 150 participants, the study can
+detect an increase from 30% to at least 44% (13.6 percentage point
+difference). Smaller effects will not be reliably detected.</p>
+</div>
+<div id="two-group-comparison-proportions" class="section level3">
+<h3>Two-Group Comparison (Proportions)</h3>
+<p><strong>Question</strong>: Given fixed N per group, what is the
+smallest difference between two proportions we can detect?</p>
+<p><strong>Example</strong>: - Control group proportion: <strong>p₂ =
+0.20</strong> (20% event rate) - Available sample: <strong>N =
+200</strong> (100 per group) - Power: <strong>80%</strong>, α = 0.05</p>
+<p><strong>Calculation</strong>:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">pwr.2p.test</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">100</span>,  <span class="co"># Per group</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="at">sig.level =</span> <span class="fl">0.05</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  <span class="at">power =</span> <span class="fl">0.80</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>  <span class="at">alternative =</span> <span class="st">&quot;two.sided&quot;</span></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>)</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>h_mde <span class="ot">&lt;-</span> result<span class="sc">$</span>h</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co"># Convert h to proportions (p2 = 0.20 is fixed)</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>p2 <span class="ot">&lt;-</span> <span class="fl">0.20</span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co"># h = 2 * (arcsin(sqrt(p1)) - arcsin(sqrt(p2)))</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co"># Solve for p1</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>p1_mde <span class="ot">&lt;-</span> (<span class="fu">sin</span>(<span class="fu">asin</span>(<span class="fu">sqrt</span>(p2)) <span class="sc">+</span> h_mde <span class="sc">/</span> <span class="dv">2</span>))<span class="sc">^</span><span class="dv">2</span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;With N = 100 per group, minimal detectable p1 =&quot;</span>, <span class="fu">round</span>(p1_mde, <span class="dv">3</span>), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Minimal detectable difference:&quot;</span>, <span class="fu">round</span>(p1_mde <span class="sc">-</span> p2, <span class="dv">3</span>), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a></span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co"># Calculate effect measures</span></span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a>rr_mde <span class="ot">&lt;-</span> p1_mde <span class="sc">/</span> p2</span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a>or_mde <span class="ot">&lt;-</span> (p1_mde <span class="sc">/</span> (<span class="dv">1</span> <span class="sc">-</span> p1_mde)) <span class="sc">/</span> (p2 <span class="sc">/</span> (<span class="dv">1</span> <span class="sc">-</span> p2))</span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a>rd_mde <span class="ot">&lt;-</span> p1_mde <span class="sc">-</span> p2</span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a></span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;MDE in terms of:</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;  Risk Difference (RD):&quot;</span>, <span class="fu">round</span>(rd_mde, <span class="dv">3</span>), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;  Relative Risk (RR):&quot;</span>, <span class="fu">round</span>(rr_mde, <span class="dv">2</span>), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;  Odds Ratio (OR):&quot;</span>, <span class="fu">round</span>(or_mde, <span class="dv">2</span>), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<p><strong>Typical output</strong>:</p>
+<pre><code>With N = 100 per group, minimal detectable p1 = 0.361
+Minimal detectable difference: 0.161 (16.1 percentage points)
+
+MDE in terms of:
+  Risk Difference (RD): 0.161
+  Relative Risk (RR): 1.81
+  Odds Ratio (OR): 2.27</code></pre>
+<p><strong>Interpretation</strong>: With 100 per group, the study can
+detect an increase from 20% to at least 36% (RR ≥ 1.81, OR ≥ 2.27).
+Smaller effects will not be reliably detected.</p>
+</div>
+<div id="continuous-outcomes-t-test" class="section level3">
+<h3>Continuous Outcomes (t-test)</h3>
+<p><strong>Question</strong>: Given fixed N per group, what is the
+smallest mean difference (in standardized units) we can detect?</p>
+<p><strong>Example</strong>: - Available sample: <strong>N =
+120</strong> (60 per group) - Power: <strong>80%</strong>, α = 0.05</p>
+<p><strong>Calculation</strong>:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">pwr.t.test</span>(</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">60</span>,  <span class="co"># Per group</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="at">sig.level =</span> <span class="fl">0.05</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>  <span class="at">power =</span> <span class="fl">0.80</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>  <span class="at">type =</span> <span class="st">&quot;two.sample&quot;</span>,</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>  <span class="at">alternative =</span> <span class="st">&quot;two.sided&quot;</span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>)</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>d_mde <span class="ot">&lt;-</span> result<span class="sc">$</span>d</span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;With N = 60 per group, minimal detectable Cohen&#39;s d =&quot;</span>, <span class="fu">round</span>(d_mde, <span class="dv">3</span>), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="co"># Interpretation in terms of raw differences (if SD is known)</span></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="co"># Example: If outcome is blood pressure with SD = 15 mmHg</span></span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a>sd <span class="ot">&lt;-</span> <span class="dv">15</span></span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a>mean_diff_mde <span class="ot">&lt;-</span> d_mde <span class="sc">*</span> sd</span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a></span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;If SD = 15 mmHg, minimal detectable mean difference:&quot;</span>, <span class="fu">round</span>(mean_diff_mde, <span class="dv">1</span>), <span class="st">&quot;mmHg</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<p><strong>Typical output</strong>:</p>
+<pre><code>With N = 60 per group, minimal detectable Cohen&#39;s d = 0.519
+
+If SD = 15 mmHg, minimal detectable mean difference: 7.8 mmHg</code></pre>
+<p><strong>Interpretation</strong>: With 60 per group, the study can
+detect a standardized mean difference of at least 0.52 (a “medium”
+effect by Cohen’s conventions). In practical terms, this corresponds to
+a 7.8 mmHg blood pressure difference if SD = 15 mmHg.</p>
+</div>
+<div id="survival-analysis-cox-regression" class="section level3">
+<h3>Survival Analysis (Cox Regression)</h3>
+<p><strong>Question</strong>: Given fixed sample size and event rate,
+what is the smallest hazard ratio we can detect?</p>
+<p><strong>Example</strong>: - Available sample: <strong>N =
+300</strong> - Expected event rate: <strong>60%</strong> (180 events) -
+Power: <strong>80%</strong>, α = 0.05</p>
+<p><strong>Calculation (conceptual)</strong>:</p>
+<p>For Cox regression, power depends on the <strong>number of
+events</strong>, not total sample size.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co"># Approximate calculation using event-driven power</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="co"># For a two-group comparison with equal allocation:</span></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>n_events <span class="ot">&lt;-</span> <span class="dv">180</span></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>z_alpha <span class="ot">&lt;-</span> <span class="fu">qnorm</span>(<span class="dv">1</span> <span class="sc">-</span> <span class="fl">0.05</span> <span class="sc">/</span> <span class="dv">2</span>)  <span class="co"># 1.96</span></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>z_beta <span class="ot">&lt;-</span> <span class="fu">qnorm</span>(<span class="fl">0.80</span>)           <span class="co"># 0.84</span></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co"># Formula: log(HR) ≈ (z_alpha + z_beta) / sqrt(n_events / 4)</span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>log_hr_mde <span class="ot">&lt;-</span> (z_alpha <span class="sc">+</span> z_beta) <span class="sc">/</span> <span class="fu">sqrt</span>(n_events <span class="sc">/</span> <span class="dv">4</span>)</span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>hr_mde <span class="ot">&lt;-</span> <span class="fu">exp</span>(log_hr_mde)</span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;With&quot;</span>, n_events, <span class="st">&quot;events, minimal detectable HR =&quot;</span>, <span class="fu">round</span>(hr_mde, <span class="dv">2</span>), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<p><strong>Typical output</strong>:</p>
+<pre><code>With 180 events, minimal detectable HR = 1.53</code></pre>
+<p><strong>Interpretation</strong>: With 300 participants and 180
+events, the study can detect a hazard ratio of at least 1.53 (53%
+increased hazard). Smaller hazard ratios will not be reliably
+detected.</p>
+</div>
+<div id="matched-case-control-studies" class="section level3">
+<h3>Matched Case-Control Studies</h3>
+<p><strong>Question</strong>: Given fixed number of matched pairs, what
+is the smallest odds ratio we can detect?</p>
+<p><strong>Example</strong>: - Available sample: <strong>100 matched
+pairs</strong> - Exposure proportion in controls: <strong>30%</strong> -
+Matching ratio: <strong>1:1</strong> - Power: <strong>80%</strong>, α =
+0.05</p>
+<p><strong>Calculation (using Power Analysis Tool)</strong>:</p>
+<p>The tool uses binary search to find the minimal OR that achieves 80%
+power given fixed N. This involves iteratively testing OR values until
+the power curve crosses 0.80.</p>
+<p><strong>Typical MDE</strong>: OR ≥ 2.0 to 3.0 for 100 matched pairs
+(depends on baseline exposure).</p>
+</div>
+<div id="non-inferiority-trials" class="section level3">
+<h3>Non-Inferiority Trials</h3>
+<p><strong>Question</strong>: Given fixed sample size, what is the
+widest non-inferiority margin we can demonstrate?</p>
+<p><strong>Example</strong>: - Expected event rates: <strong>p₁ =
+0.15</strong> (test), <strong>p₂ = 0.15</strong> (reference) - Available
+sample: <strong>N = 400</strong> (200 per group) - Power:
+<strong>80%</strong>, α = 0.025 (one-sided)</p>
+<p><strong>Calculation</strong>:</p>
+<p>The tool uses binary search to find the maximum non-inferiority
+margin (Δ) such that the upper bound of the confidence interval for (p₁
+- p₂) excludes Δ with 80% power.</p>
+<p><strong>Typical MDE</strong>: Margin ≤ 5-10 percentage points for N =
+400.</p>
+</div>
+</div>
+<div id="interpreting-mde-in-context" class="section level2">
+<h2>Interpreting MDE in Context</h2>
+<div id="clinical-vs-statistical-significance" class="section level3">
+<h3>Clinical vs Statistical Significance</h3>
+<p>The MDE must be interpreted relative to <strong>clinical or practical
+significance thresholds</strong>:</p>
+<p><strong>Example 1: Blood Pressure Reduction</strong></p>
+<ul>
+<li>MDE: 7.8 mmHg reduction</li>
+<li>Clinically meaningful: 5 mmHg reduction (established guideline
+threshold)</li>
+<li><strong>Interpretation</strong>: Study is adequately powered; MDE is
+smaller than clinical threshold ✅</li>
+</ul>
+<p><strong>Example 2: Diabetes HbA1c Reduction</strong></p>
+<ul>
+<li>MDE: 1.2% reduction</li>
+<li>Clinically meaningful: 0.5% reduction (established threshold)</li>
+<li><strong>Interpretation</strong>: Study is underpowered; MDE exceeds
+clinical threshold ❌</li>
+</ul>
+</div>
+<div id="effect-size-benchmarks" class="section level3">
+<h3>Effect Size Benchmarks</h3>
+<p><strong>Cohen’s d (Continuous Outcomes)</strong>:</p>
+<table>
+<caption>Cohen’s d Benchmarks for Continuous Outcomes</caption>
+<colgroup>
+<col width="16%" />
+<col width="12%" />
+<col width="70%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Effect_Size</th>
+<th align="left">Cohens_d</th>
+<th align="left">Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Small</td>
+<td align="left">0.20</td>
+<td align="left">Small but noticeable (e.g., 3 mmHg BP)</td>
+</tr>
+<tr class="even">
+<td align="left">Medium</td>
+<td align="left">0.50</td>
+<td align="left">Moderate, clinically relevant (e.g., 7.5 mmHg BP)</td>
+</tr>
+<tr class="odd">
+<td align="left">Large</td>
+<td align="left">0.80</td>
+<td align="left">Large, clinically important (e.g., 12 mmHg BP)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Relative Risk / Odds Ratio (Binary Outcomes)</strong>:</p>
+<table>
+<caption>Relative Effect Size Benchmarks for Binary Outcomes</caption>
+<colgroup>
+<col width="13%" />
+<col width="15%" />
+<col width="12%" />
+<col width="59%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Effect_Size</th>
+<th align="left">Relative_Risk</th>
+<th align="left">Odds_Ratio</th>
+<th align="left">Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Small</td>
+<td align="left">1.1 - 1.3</td>
+<td align="left">1.2 - 1.5</td>
+<td align="left">Weak association (e.g., minor risk factor)</td>
+</tr>
+<tr class="even">
+<td align="left">Moderate</td>
+<td align="left">1.3 - 2.0</td>
+<td align="left">1.5 - 2.5</td>
+<td align="left">Moderate association (e.g., typical treatment
+effect)</td>
+</tr>
+<tr class="odd">
+<td align="left">Large</td>
+<td align="left">2.0 - 3.0</td>
+<td align="left">2.5 - 4.0</td>
+<td align="left">Strong association (e.g., effective prevention)</td>
+</tr>
+<tr class="even">
+<td align="left">Very Large</td>
+<td align="left">&gt; 3.0</td>
+<td align="left">&gt; 4.0</td>
+<td align="left">Very strong (e.g., smoking → lung cancer)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Hazard Ratio (Survival Analysis)</strong>:</p>
+<p>Similar interpretation to RR/OR:</p>
+<ul>
+<li><strong>HR = 1.0</strong>: No effect</li>
+<li><strong>HR = 1.3</strong>: 30% increased hazard (moderate)</li>
+<li><strong>HR = 2.0</strong>: 100% increased hazard (large)</li>
+</ul>
+</div>
+<div id="domain-specific-thresholds" class="section level3">
+<h3>Domain-Specific Thresholds</h3>
+<p>Different fields have established thresholds for meaningful
+effects:</p>
+<p><strong>Cardiovascular Medicine</strong>: - Blood pressure: ≥ 5 mmHg
+reduction - LDL cholesterol: ≥ 10% reduction - Cardiovascular events: RR
+≤ 0.90 (10% reduction)</p>
+<p><strong>Diabetes</strong>: - HbA1c: ≥ 0.5% reduction - Fasting
+glucose: ≥ 10 mg/dL reduction</p>
+<p><strong>Mental Health</strong>: - Depression scales (e.g., PHQ-9): ≥
+3-point change - Anxiety scales (e.g., GAD-7): ≥ 4-point change</p>
+<p><strong>Education</strong>: - Standardized test scores: ≥ 0.20 SD
+improvement</p>
+<p><strong>Recommendation</strong>: Always specify <strong>a
+priori</strong> what effect size is clinically/practically meaningful,
+then compare MDE to this threshold.</p>
+</div>
+</div>
+<div id="decision-making-framework" class="section level2">
+<h2>Decision-Making Framework</h2>
+<div id="step-1-calculate-mde-for-your-constrained-n" class="section level3">
+<h3>Step 1: Calculate MDE for Your Constrained N</h3>
+<p>Use the Power Analysis Tool or statistical software to determine the
+MDE given:</p>
+<ul>
+<li>Fixed sample size (N)</li>
+<li>Desired power (typically 0.80)</li>
+<li>Significance level (α = 0.05)</li>
+</ul>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="co"># Example: Two-group comparison with constrained N = 200 (100 per group)</span></span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="fu">library</span>(pwr)</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">pwr.2p.test</span>(</span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">100</span>,</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>  <span class="at">sig.level =</span> <span class="fl">0.05</span>,</span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>  <span class="at">power =</span> <span class="fl">0.80</span>,</span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>  <span class="at">alternative =</span> <span class="st">&quot;two.sided&quot;</span></span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>)</span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a>h_mde <span class="ot">&lt;-</span> result<span class="sc">$</span>h</span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a><span class="co"># Convert to practical metrics (RD, RR, OR) based on your baseline p2</span></span></code></pre></div>
+</div>
+<div id="step-2-compare-mde-to-clinical-threshold" class="section level3">
+<h3>Step 2: Compare MDE to Clinical Threshold</h3>
+<p><strong>If MDE ≤ Clinical Threshold</strong>: Study is feasible
+✅</p>
+<ul>
+<li>The smallest effect you can detect is smaller than (or equal to)
+what’s clinically meaningful</li>
+<li>Proceed with the study</li>
+</ul>
+<p><strong>If MDE &gt; Clinical Threshold</strong>: Study is
+underpowered ❌</p>
+<ul>
+<li>You can only detect effects larger than what’s clinically
+meaningful</li>
+<li>Risk of <strong>false negatives</strong>: Missing true but smaller
+effects</li>
+<li>Consider alternatives (Step 3)</li>
+</ul>
+</div>
+<div id="step-3-explore-alternatives-if-underpowered" class="section level3">
+<h3>Step 3: Explore Alternatives if Underpowered</h3>
+<p><strong>Option A: Increase Sample Size</strong></p>
+<ul>
+<li>Seek additional funding</li>
+<li>Extend recruitment period</li>
+<li>Add recruitment sites</li>
+<li>Use multi-site collaborations</li>
+</ul>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="co"># Calculate required N to detect clinical threshold effect</span></span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a><span class="co"># Example: Need to detect RD = 0.10 (10 percentage points)</span></span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a><span class="co"># Convert RD to Cohen&#39;s h</span></span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>p1 <span class="ot">&lt;-</span> <span class="fl">0.30</span>  <span class="co"># Clinical threshold</span></span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>p2 <span class="ot">&lt;-</span> <span class="fl">0.20</span></span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a>h_target <span class="ot">&lt;-</span> <span class="dv">2</span> <span class="sc">*</span> (<span class="fu">asin</span>(<span class="fu">sqrt</span>(p1)) <span class="sc">-</span> <span class="fu">asin</span>(<span class="fu">sqrt</span>(p2)))</span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a><span class="co"># Calculate required N</span></span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a>result_needed <span class="ot">&lt;-</span> <span class="fu">pwr.2p.test</span>(</span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a>  <span class="at">h =</span> h_target,</span>
+<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a>  <span class="at">sig.level =</span> <span class="fl">0.05</span>,</span>
+<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a>  <span class="at">power =</span> <span class="fl">0.80</span>,</span>
+<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a>  <span class="at">alternative =</span> <span class="st">&quot;two.sided&quot;</span></span>
+<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a>)</span>
+<span id="cb10-16"><a href="#cb10-16" tabindex="-1"></a></span>
+<span id="cb10-17"><a href="#cb10-17" tabindex="-1"></a>n_per_group_needed <span class="ot">&lt;-</span> <span class="fu">ceiling</span>(result_needed<span class="sc">$</span>n)</span>
+<span id="cb10-18"><a href="#cb10-18" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;To detect RD = 0.10, need&quot;</span>, n_per_group_needed, <span class="st">&quot;per group</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<p><strong>Option B: Increase Power for Larger (but Still Meaningful)
+Effects</strong></p>
+<p>If you can’t detect the smallest meaningful effect, determine what
+larger effect you CAN detect and assess if it’s still meaningful.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="co"># Calculate MDE with current N but for higher power (e.g., 90%)</span></span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>result_high_power <span class="ot">&lt;-</span> <span class="fu">pwr.2p.test</span>(</span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">100</span>,</span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>  <span class="at">sig.level =</span> <span class="fl">0.05</span>,</span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>  <span class="at">power =</span> <span class="fl">0.90</span>,  <span class="co"># Higher power</span></span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a>  <span class="at">alternative =</span> <span class="st">&quot;two.sided&quot;</span></span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a>)</span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a></span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a>h_mde_90 <span class="ot">&lt;-</span> result_high_power<span class="sc">$</span>h</span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a><span class="co"># Compare: with 90% power, MDE is slightly larger</span></span></code></pre></div>
+<p><strong>Option C: Accept Lower Power</strong></p>
+<p>If the MDE is close to the clinical threshold, you might accept lower
+power (e.g., 70%) to make the study feasible.</p>
+<p><strong>Caution</strong>: Lower power increases the risk of false
+negatives (Type II errors).</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="co"># Calculate MDE with lower power (70%)</span></span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>result_low_power <span class="ot">&lt;-</span> <span class="fu">pwr.2p.test</span>(</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">100</span>,</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>  <span class="at">sig.level =</span> <span class="fl">0.05</span>,</span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>  <span class="at">power =</span> <span class="fl">0.70</span>,</span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>  <span class="at">alternative =</span> <span class="st">&quot;two.sided&quot;</span></span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>)</span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a></span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a>h_mde_70 <span class="ot">&lt;-</span> result_low_power<span class="sc">$</span>h</span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a><span class="co"># With lower power, MDE is smaller (but risk of missing true effects increases)</span></span></code></pre></div>
+<p><strong>Option D: Combine with Meta-Analysis</strong></p>
+<p>If your study alone is underpowered, plan to contribute to a future
+meta-analysis with other similar studies.</p>
+<p><strong>Option E: Revise Research Question</strong></p>
+<p>If the primary outcome is not feasible, consider:</p>
+<ul>
+<li><strong>Composite outcomes</strong>: Combine multiple related
+outcomes to increase event rate</li>
+<li><strong>Alternative outcomes</strong>: Use a more sensitive outcome
+(e.g., continuous biomarker instead of binary clinical event)</li>
+<li><strong>Subgroup analysis</strong>: Focus on higher-risk subgroup
+with higher event rate</li>
+</ul>
+<p><strong>Option F: Do Not Proceed</strong></p>
+<p>If none of the above are feasible and the MDE is much larger than
+meaningful, it may be more ethical and efficient to <strong>not conduct
+the study</strong>.</p>
+<p><strong>Why?</strong> - Wastes resources (money, time, participant
+burden) - Contributes to research waste (underpowered studies clutter
+literature) - Ethical concerns (exposing participants to interventions
+without adequate chance of detecting benefit)</p>
+</div>
+</div>
+<div id="practical-case-studies" class="section level2">
+<h2>Practical Case Studies</h2>
+<div id="case-study-1-community-health-intervention" class="section level3">
+<h3>Case Study 1: Community Health Intervention</h3>
+<p><strong>Scenario</strong>:</p>
+<p>A community health center wants to test a smoking cessation
+intervention.</p>
+<p><strong>Parameters</strong>: - Outcome: Smoking cessation at 6 months
+(binary) - Historical quit rate: <strong>15%</strong> - Available
+budget: <strong>200 participants</strong> (100 per group) - Clinically
+meaningful: <strong>10 percentage point increase</strong> (to 25%)</p>
+<p><strong>Analysis</strong>:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="co"># Calculate MDE with N = 100 per group</span></span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">pwr.2p.test</span>(</span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">100</span>,</span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a>  <span class="at">sig.level =</span> <span class="fl">0.05</span>,</span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a>  <span class="at">power =</span> <span class="fl">0.80</span>,</span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a>  <span class="at">alternative =</span> <span class="st">&quot;two.sided&quot;</span></span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a>)</span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a></span>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a>h_mde <span class="ot">&lt;-</span> result<span class="sc">$</span>h</span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a>p2 <span class="ot">&lt;-</span> <span class="fl">0.15</span></span>
+<span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a></span>
+<span id="cb13-12"><a href="#cb13-12" tabindex="-1"></a><span class="co"># Solve for p1 given h_mde and p2</span></span>
+<span id="cb13-13"><a href="#cb13-13" tabindex="-1"></a>p1_mde <span class="ot">&lt;-</span> (<span class="fu">sin</span>(<span class="fu">asin</span>(<span class="fu">sqrt</span>(p2)) <span class="sc">+</span> h_mde <span class="sc">/</span> <span class="dv">2</span>))<span class="sc">^</span><span class="dv">2</span></span>
+<span id="cb13-14"><a href="#cb13-14" tabindex="-1"></a>rd_mde <span class="ot">&lt;-</span> p1_mde <span class="sc">-</span> p2</span>
+<span id="cb13-15"><a href="#cb13-15" tabindex="-1"></a></span>
+<span id="cb13-16"><a href="#cb13-16" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;MDE (Risk Difference):&quot;</span>, <span class="fu">round</span>(rd_mde, <span class="dv">3</span>), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb13-17"><a href="#cb13-17" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;MDE (Cessation rate):&quot;</span>, <span class="fu">round</span>(p1_mde, <span class="dv">3</span>), <span class="st">&quot;(&quot;</span>, <span class="fu">round</span>(p1_mde <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">1</span>), <span class="st">&quot;%)</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb13-18"><a href="#cb13-18" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Clinical threshold: 0.10 (10 percentage points)</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb13-19"><a href="#cb13-19" tabindex="-1"></a></span>
+<span id="cb13-20"><a href="#cb13-20" tabindex="-1"></a><span class="cf">if</span> (rd_mde <span class="sc">&lt;=</span> <span class="fl">0.10</span>) {</span>
+<span id="cb13-21"><a href="#cb13-21" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">&quot;✅ Study is feasible: MDE ≤ clinical threshold</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb13-22"><a href="#cb13-22" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb13-23"><a href="#cb13-23" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">&quot;❌ Study is underpowered: MDE &gt; clinical threshold</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb13-24"><a href="#cb13-24" tabindex="-1"></a>}</span></code></pre></div>
+<p><strong>Output</strong>:</p>
+<pre><code>MDE (Risk Difference): 0.159
+MDE (Cessation rate): 0.309 (30.9%)
+Clinical threshold: 0.10 (10 percentage points)
+
+❌ Study is underpowered: MDE &gt; clinical threshold</code></pre>
+<p><strong>Interpretation</strong>:</p>
+<ul>
+<li>With 100 per group, can only detect an increase from 15% to 31% (16
+percentage points)</li>
+<li>Clinical threshold is 10 percentage points (15% → 25%)</li>
+<li><strong>Conclusion</strong>: Study cannot detect the clinically
+meaningful 10-point increase</li>
+</ul>
+<p><strong>Decision Options</strong>:</p>
+<ol style="list-style-type: decimal">
+<li><p><strong>Increase N</strong>: Calculate required sample size for
+10-point increase</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a>h_target <span class="ot">&lt;-</span> <span class="dv">2</span> <span class="sc">*</span> (<span class="fu">asin</span>(<span class="fu">sqrt</span>(<span class="fl">0.25</span>)) <span class="sc">-</span> <span class="fu">asin</span>(<span class="fu">sqrt</span>(<span class="fl">0.15</span>)))</span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>result_target <span class="ot">&lt;-</span> <span class="fu">pwr.2p.test</span>(<span class="at">h =</span> h_target, <span class="at">sig.level =</span> <span class="fl">0.05</span>, <span class="at">power =</span> <span class="fl">0.80</span>, <span class="at">alternative =</span> <span class="st">&quot;two.sided&quot;</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a>n_needed <span class="ot">&lt;-</span> <span class="fu">ceiling</span>(result_target<span class="sc">$</span>n)</span>
+<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Need&quot;</span>, n_needed, <span class="st">&quot;per group (&quot;</span>, n_needed <span class="sc">*</span> <span class="dv">2</span>, <span class="st">&quot;total)</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a><span class="co"># Output: Need 293 per group (586 total)</span></span></code></pre></div></li>
+<li><p><strong>Accept larger MDE</strong>: Reframe research question as
+detecting 15% → 31% increase (still meaningful?)</p></li>
+<li><p><strong>Do not proceed</strong>: If 586 participants infeasible
+and 16-point increase not meaningful, cancel study</p></li>
+</ol>
+<p><strong>Final Decision</strong>: Seek additional funding to recruit
+600 participants, or do not proceed.</p>
+</div>
+<div id="case-study-2-clinical-trial-with-fixed-budget" class="section level3">
+<h3>Case Study 2: Clinical Trial with Fixed Budget</h3>
+<p><strong>Scenario</strong>:</p>
+<p>A pharmaceutical company has a fixed budget for a Phase 2 trial of a
+new antihypertensive drug.</p>
+<p><strong>Parameters</strong>: - Outcome: Change in systolic blood
+pressure (continuous) - Baseline SD: <strong>15 mmHg</strong> (from
+literature) - Available budget: <strong>N = 120</strong> (60 per group)
+- Clinically meaningful: <strong>5 mmHg reduction</strong> (guideline
+threshold)</p>
+<p><strong>Analysis</strong>:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a><span class="co"># Calculate MDE (Cohen&#39;s d) with N = 60 per group</span></span>
+<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">pwr.t.test</span>(</span>
+<span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">60</span>,</span>
+<span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a>  <span class="at">sig.level =</span> <span class="fl">0.05</span>,</span>
+<span id="cb16-5"><a href="#cb16-5" tabindex="-1"></a>  <span class="at">power =</span> <span class="fl">0.80</span>,</span>
+<span id="cb16-6"><a href="#cb16-6" tabindex="-1"></a>  <span class="at">type =</span> <span class="st">&quot;two.sample&quot;</span>,</span>
+<span id="cb16-7"><a href="#cb16-7" tabindex="-1"></a>  <span class="at">alternative =</span> <span class="st">&quot;two.sided&quot;</span></span>
+<span id="cb16-8"><a href="#cb16-8" tabindex="-1"></a>)</span>
+<span id="cb16-9"><a href="#cb16-9" tabindex="-1"></a></span>
+<span id="cb16-10"><a href="#cb16-10" tabindex="-1"></a>d_mde <span class="ot">&lt;-</span> result<span class="sc">$</span>d</span>
+<span id="cb16-11"><a href="#cb16-11" tabindex="-1"></a></span>
+<span id="cb16-12"><a href="#cb16-12" tabindex="-1"></a><span class="co"># Convert to mmHg</span></span>
+<span id="cb16-13"><a href="#cb16-13" tabindex="-1"></a>sd <span class="ot">&lt;-</span> <span class="dv">15</span></span>
+<span id="cb16-14"><a href="#cb16-14" tabindex="-1"></a>mean_diff_mde <span class="ot">&lt;-</span> d_mde <span class="sc">*</span> sd</span>
+<span id="cb16-15"><a href="#cb16-15" tabindex="-1"></a></span>
+<span id="cb16-16"><a href="#cb16-16" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;MDE (Cohen&#39;s d):&quot;</span>, <span class="fu">round</span>(d_mde, <span class="dv">3</span>), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb16-17"><a href="#cb16-17" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;MDE (mmHg):&quot;</span>, <span class="fu">round</span>(mean_diff_mde, <span class="dv">2</span>), <span class="st">&quot;mmHg</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb16-18"><a href="#cb16-18" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Clinical threshold: 5 mmHg</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb16-19"><a href="#cb16-19" tabindex="-1"></a></span>
+<span id="cb16-20"><a href="#cb16-20" tabindex="-1"></a><span class="cf">if</span> (mean_diff_mde <span class="sc">&lt;=</span> <span class="dv">5</span>) {</span>
+<span id="cb16-21"><a href="#cb16-21" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">&quot;✅ Study is feasible: MDE ≤ clinical threshold</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb16-22"><a href="#cb16-22" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb16-23"><a href="#cb16-23" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">&quot;❌ Study is underpowered: MDE &gt; clinical threshold</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb16-24"><a href="#cb16-24" tabindex="-1"></a>}</span></code></pre></div>
+<p><strong>Output</strong>:</p>
+<pre><code>MDE (Cohen&#39;s d): 0.519
+MDE (mmHg): 7.79 mmHg
+Clinical threshold: 5 mmHg
+
+❌ Study is underpowered: MDE &gt; clinical threshold</code></pre>
+<p><strong>Interpretation</strong>:</p>
+<ul>
+<li>With 60 per group, can only detect a 7.8 mmHg reduction</li>
+<li>Clinical threshold is 5 mmHg</li>
+<li><strong>Conclusion</strong>: Study cannot detect the clinically
+meaningful 5 mmHg reduction</li>
+</ul>
+<p><strong>Decision Options</strong>:</p>
+<ol style="list-style-type: decimal">
+<li><p><strong>Increase N</strong>:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a>d_target <span class="ot">&lt;-</span> <span class="dv">5</span> <span class="sc">/</span> <span class="dv">15</span>  <span class="co"># 0.333</span></span>
+<span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a>result_target <span class="ot">&lt;-</span> <span class="fu">pwr.t.test</span>(<span class="at">d =</span> d_target, <span class="at">sig.level =</span> <span class="fl">0.05</span>, <span class="at">power =</span> <span class="fl">0.80</span>, <span class="at">type =</span> <span class="st">&quot;two.sample&quot;</span>, <span class="at">alternative =</span> <span class="st">&quot;two.sided&quot;</span>)</span>
+<span id="cb18-3"><a href="#cb18-3" tabindex="-1"></a>n_needed <span class="ot">&lt;-</span> <span class="fu">ceiling</span>(result_target<span class="sc">$</span>n)</span>
+<span id="cb18-4"><a href="#cb18-4" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Need&quot;</span>, n_needed, <span class="st">&quot;per group (&quot;</span>, n_needed <span class="sc">*</span> <span class="dv">2</span>, <span class="st">&quot;total)</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb18-5"><a href="#cb18-5" tabindex="-1"></a><span class="co"># Output: Need 143 per group (286 total)</span></span></code></pre></div></li>
+<li><p><strong>Use a more sensitive outcome</strong>: Switch from office
+BP to 24-hour ambulatory BP monitoring (lower variance)</p></li>
+<li><p><strong>Proceed with N = 120 as exploratory study</strong>:
+Accept that study is powered for 7.8 mmHg, but report results regardless
+(exploratory Phase 2)</p></li>
+</ol>
+<p><strong>Final Decision</strong>: Proceed with N = 120 as
+<strong>exploratory Phase 2</strong> trial. If results show ≥ 7.8 mmHg
+reduction, conduct larger Phase 3 trial (N = 286) powered for 5
+mmHg.</p>
+</div>
+<div id="case-study-3-rare-disease-study" class="section level3">
+<h3>Case Study 3: Rare Disease Study</h3>
+<p><strong>Scenario</strong>:</p>
+<p>A rare disease registry can only enroll <strong>50 participants
+total</strong> (25 per group) for a treatment comparison.</p>
+<p><strong>Parameters</strong>: - Outcome: Disease severity score
+(continuous, SD = 10) - Available sample: <strong>N = 50</strong> (25
+per group) - Clinically meaningful: <strong>5-point reduction</strong>
+(0.5 SD)</p>
+<p><strong>Analysis</strong>:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">pwr.t.test</span>(</span>
+<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">25</span>,</span>
+<span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a>  <span class="at">sig.level =</span> <span class="fl">0.05</span>,</span>
+<span id="cb19-4"><a href="#cb19-4" tabindex="-1"></a>  <span class="at">power =</span> <span class="fl">0.80</span>,</span>
+<span id="cb19-5"><a href="#cb19-5" tabindex="-1"></a>  <span class="at">type =</span> <span class="st">&quot;two.sample&quot;</span>,</span>
+<span id="cb19-6"><a href="#cb19-6" tabindex="-1"></a>  <span class="at">alternative =</span> <span class="st">&quot;two.sided&quot;</span></span>
+<span id="cb19-7"><a href="#cb19-7" tabindex="-1"></a>)</span>
+<span id="cb19-8"><a href="#cb19-8" tabindex="-1"></a></span>
+<span id="cb19-9"><a href="#cb19-9" tabindex="-1"></a>d_mde <span class="ot">&lt;-</span> result<span class="sc">$</span>d</span>
+<span id="cb19-10"><a href="#cb19-10" tabindex="-1"></a>sd <span class="ot">&lt;-</span> <span class="dv">10</span></span>
+<span id="cb19-11"><a href="#cb19-11" tabindex="-1"></a>mean_diff_mde <span class="ot">&lt;-</span> d_mde <span class="sc">*</span> sd</span>
+<span id="cb19-12"><a href="#cb19-12" tabindex="-1"></a></span>
+<span id="cb19-13"><a href="#cb19-13" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;MDE (Cohen&#39;s d):&quot;</span>, <span class="fu">round</span>(d_mde, <span class="dv">3</span>), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb19-14"><a href="#cb19-14" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;MDE (score points):&quot;</span>, <span class="fu">round</span>(mean_diff_mde, <span class="dv">2</span>), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb19-15"><a href="#cb19-15" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Clinical threshold: 5 points</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<p><strong>Output</strong>:</p>
+<pre><code>MDE (Cohen&#39;s d): 0.814
+MDE (score points): 8.14
+Clinical threshold: 5 points
+
+❌ Study is underpowered: MDE &gt; clinical threshold</code></pre>
+<p><strong>Interpretation</strong>:</p>
+<ul>
+<li>With 25 per group, can only detect an 8.1-point reduction</li>
+<li>Clinical threshold is 5 points</li>
+<li><strong>Conclusion</strong>: Study cannot detect the clinically
+meaningful 5-point reduction</li>
+</ul>
+<p><strong>Decision Options</strong>:</p>
+<ol style="list-style-type: decimal">
+<li><p><strong>Multi-site collaboration</strong>: Partner with other
+registries to increase N to 143 per group (from Case 2
+calculation)</p></li>
+<li><p><strong>Accept high MDE and proceed</strong>: Rare disease trials
+are inherently underpowered; proceed as pilot/proof-of-concept</p></li>
+<li><p><strong>Use Bayesian approach</strong>: Use Bayesian methods to
+incorporate prior information and gain efficiency</p></li>
+</ol>
+<p><strong>Final Decision</strong>: Proceed with N = 50 as <strong>pilot
+study</strong>. Use Bayesian analysis incorporating literature priors.
+Report findings to contribute to future meta-analysis.</p>
+</div>
+</div>
+<div id="advanced-topics" class="section level2">
+<h2>Advanced Topics</h2>
+<div id="mde-vs-post-hoc-power" class="section level3">
+<h3>MDE vs Post-Hoc Power</h3>
+<p><strong>Important distinction</strong>:</p>
+<ul>
+<li><strong>MDE (a priori)</strong>: Calculated <strong>before</strong>
+data collection, using fixed N to determine smallest detectable
+effect</li>
+<li><strong>Post-hoc power</strong>: Calculated <strong>after</strong>
+data collection, using observed effect size to determine power</li>
+</ul>
+<p><strong>Never calculate post-hoc power</strong> for your study’s
+observed effect:</p>
+<ul>
+<li>Circular reasoning: Post-hoc power is a 1:1 function of the
+p-value</li>
+<li>If p &lt; 0.05, post-hoc power will be high (misleading)</li>
+<li>If p &gt; 0.05, post-hoc power will be low (obvious from
+non-significance)</li>
+</ul>
+<p><strong>Instead</strong>: Report <strong>MDE</strong> in your study
+protocol and publications to show what effects the study was designed to
+detect.</p>
+</div>
+<div id="mde-with-adjustments-clustering-missing-data" class="section level3">
+<h3>MDE with Adjustments (Clustering, Missing Data)</h3>
+<p>When sample size is constrained and you have clustering or missing
+data, the <strong>effective sample size</strong> is reduced, increasing
+the MDE.</p>
+<p><strong>Example</strong>: - Available sample: N = 400 - Clustering:
+Design effect = 2.0 (ICC = 0.05, m = 20) - Effective N: 400 / 2.0 =
+<strong>200</strong></p>
+<p><strong>MDE calculation</strong>:</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" tabindex="-1"></a><span class="co"># Calculate MDE using effective N</span></span>
+<span id="cb21-2"><a href="#cb21-2" tabindex="-1"></a>n_effective <span class="ot">&lt;-</span> <span class="dv">200</span> <span class="sc">/</span> <span class="dv">2</span>  <span class="co"># 100 per group</span></span>
+<span id="cb21-3"><a href="#cb21-3" tabindex="-1"></a></span>
+<span id="cb21-4"><a href="#cb21-4" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">pwr.2p.test</span>(</span>
+<span id="cb21-5"><a href="#cb21-5" tabindex="-1"></a>  <span class="at">n =</span> n_effective,</span>
+<span id="cb21-6"><a href="#cb21-6" tabindex="-1"></a>  <span class="at">sig.level =</span> <span class="fl">0.05</span>,</span>
+<span id="cb21-7"><a href="#cb21-7" tabindex="-1"></a>  <span class="at">power =</span> <span class="fl">0.80</span>,</span>
+<span id="cb21-8"><a href="#cb21-8" tabindex="-1"></a>  <span class="at">alternative =</span> <span class="st">&quot;two.sided&quot;</span></span>
+<span id="cb21-9"><a href="#cb21-9" tabindex="-1"></a>)</span>
+<span id="cb21-10"><a href="#cb21-10" tabindex="-1"></a></span>
+<span id="cb21-11"><a href="#cb21-11" tabindex="-1"></a><span class="co"># MDE will be larger due to reduced effective N</span></span></code></pre></div>
+<p><strong>Recommendation</strong>: Always account for clustering and
+missing data when calculating MDE for constrained samples.</p>
+</div>
+<div id="mde-for-non-inferiority-trials" class="section level3">
+<h3>MDE for Non-Inferiority Trials</h3>
+<p>Non-inferiority trials aim to show that a new treatment is “not
+worse” than standard by more than a margin Δ.</p>
+<p><strong>MDE question</strong>: Given constrained N, what is the
+widest margin we can demonstrate?</p>
+<p><strong>Interpretation</strong>: - <strong>Narrow margin</strong>
+(e.g., 2%): Stringent non-inferiority (requires large N) - <strong>Wide
+margin</strong> (e.g., 10%): Lenient non-inferiority (feasible with
+smaller N)</p>
+<p><strong>Decision</strong>: Compare MDE margin to clinically
+acceptable margin (often half of the superiority threshold).</p>
+</div>
+</div>
+<div id="summary" class="section level2">
+<h2>Summary</h2>
+<p><strong>Key takeaways</strong>:</p>
+<ol style="list-style-type: decimal">
+<li><p><strong>MDE answers</strong>: “What’s the smallest effect I can
+detect with my constrained sample size?”</p></li>
+<li><p><strong>Calculate MDE when</strong>:</p>
+<ul>
+<li>Sample size is fixed by budget, feasibility, or logistics</li>
+<li>You need a reality check on what effects are detectable</li>
+</ul></li>
+<li><p><strong>Compare MDE to clinical thresholds</strong>:</p>
+<ul>
+<li>If MDE ≤ threshold: Study is feasible ✅</li>
+<li>If MDE &gt; threshold: Study is underpowered ❌</li>
+</ul></li>
+<li><p><strong>Decision options for underpowered studies</strong>:</p>
+<ul>
+<li>Increase N (seek funding, extend timeline, add sites)</li>
+<li>Revise research question (larger effects, alternative outcomes)</li>
+<li>Accept underpowering (pilot/exploratory study)</li>
+<li>Do not proceed (avoid research waste)</li>
+</ul></li>
+<li><p><strong>Always report MDE in study protocols</strong> to show
+transparency about what effects the study can detect</p></li>
+<li><p><strong>Never calculate post-hoc power</strong> — use MDE
+instead</p></li>
+</ol>
+<p><strong>Practical workflow</strong>:</p>
+<ol style="list-style-type: decimal">
+<li>Determine constrained sample size (N)</li>
+<li>Calculate MDE for N (using Power Analysis Tool or pwr package)</li>
+<li>Compare MDE to clinically meaningful threshold</li>
+<li>Decide: proceed, modify, or cancel study</li>
+<li>Report MDE in protocol and publications</li>
+</ol>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<ol style="list-style-type: decimal">
+<li><p>Lenth RV (2001). Some practical guidelines for effective sample
+size determination. <em>The American Statistician</em>
+55(3):187-193.</p></li>
+<li><p>Gelman A, Carlin J (2014). Beyond power calculations: Assessing
+Type S (sign) and Type M (magnitude) errors. <em>Perspectives on
+Psychological Science</em> 9(6):641-651.</p></li>
+<li><p>Cohen J (1988). <em>Statistical Power Analysis for the Behavioral
+Sciences</em> (2nd ed.). Routledge.</p></li>
+<li><p>Freedman LS, Lowe D, Macaskill P (1984). Stopping rules for
+clinical trials incorporating clinical opinion. <em>Biometrics</em>
+40(3):575-586.</p></li>
+<li><p>Hoenig JM, Heisey DM (2001). The abuse of power: The pervasive
+fallacy of power calculations for data analysis. <em>The American
+Statistician</em> 55(1):19-24.</p></li>
+</ol>
+</div>
+<div id="further-reading" class="section level2">
+<h2>Further Reading</h2>
+<ul>
+<li>See <code>vignette(&quot;interactive-power-curves&quot;)</code> for
+visualizing power across a range of effect sizes</li>
+<li>See <code>vignette(&quot;design-effects-clustering&quot;)</code> for adjusting
+MDE for clustered data</li>
+<li>See <code>vignette(&quot;missing-data-adjustments&quot;)</code> for adjusting
+MDE for missing data</li>
+<li>See all tabs in the Power Analysis Tool for interactive MDE
+calculations</li>
+</ul>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

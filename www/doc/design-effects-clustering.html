@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Power Analysis Tool Development Team" />
+
+<meta name="date" content="2025-10-26" />
+
+<title>Design Effects in Clustered Studies: ICC Selection and Sample Size Inflation</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Design Effects in Clustered Studies: ICC
+Selection and Sample Size Inflation</h1>
+<h4 class="author">Power Analysis Tool Development Team</h4>
+<h4 class="date">2025-10-26</h4>
+
+
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>Many real-world studies involve <strong>clustered</strong> or
+<strong>hierarchical</strong> data where observations are not
+independent:</p>
+<ul>
+<li><strong>Patients within hospitals</strong> or clinics</li>
+<li><strong>Students within schools</strong> or classrooms</li>
+<li><strong>Individuals within households</strong> or geographic
+regions</li>
+<li><strong>Repeated measures within participants</strong></li>
+</ul>
+<p>Clustering reduces effective sample size because observations within
+the same cluster tend to be more similar than observations from
+different clusters. This similarity is quantified by the
+<strong>Intraclass Correlation Coefficient (ICC)</strong>.</p>
+<p>This vignette explains:</p>
+<ol style="list-style-type: decimal">
+<li><strong>What is the ICC</strong> and how it measures clustering</li>
+<li><strong>Design effect (DE)</strong> and its relationship to ICC and
+cluster size</li>
+<li><strong>How to select appropriate ICC values</strong> from
+literature or pilot data</li>
+<li><strong>Sample size inflation</strong> calculations for clustered
+designs</li>
+<li><strong>Practical examples</strong> across different study
+types</li>
+</ol>
+</div>
+<div id="understanding-the-icc" class="section level2">
+<h2>Understanding the ICC</h2>
+<div id="definition" class="section level3">
+<h3>Definition</h3>
+<p>The <strong>Intraclass Correlation Coefficient (ICC)</strong>
+measures the proportion of total variance in an outcome that is
+attributable to <strong>between-cluster</strong> variation:</p>
+<p><span class="math display">\[
+ICC = \frac{\sigma^2_{between}}{\sigma^2_{between} + \sigma^2_{within}}
+\]</span></p>
+<p>where: - <span class="math inline">\(\sigma^2_{between}\)</span> =
+variance between clusters - <span class="math inline">\(\sigma^2_{within}\)</span> = variance within
+clusters</p>
+</div>
+<div id="interpretation" class="section level3">
+<h3>Interpretation</h3>
+<p><strong>ICC = 0</strong>: No clustering effect - Observations within
+a cluster are no more similar than observations from different clusters
+- Cluster membership is irrelevant - Standard sample size formulas apply
+(no inflation needed)</p>
+<p><strong>ICC = 0.05</strong>: Moderate clustering - 5% of variance is
+due to cluster-level differences - 95% of variance is within-cluster
+(individual-level) - <strong>Most common in health research</strong></p>
+<p><strong>ICC = 0.30</strong>: Strong clustering - 30% of variance is
+at cluster level - Observations within a cluster are highly similar -
+Large sample size inflation required</p>
+<p><strong>ICC = 1.0</strong>: Perfect clustering - All variance is
+between clusters - Observations within a cluster are identical - Cluster
+is the unit of analysis (not individuals)</p>
+</div>
+<div id="analogy" class="section level3">
+<h3>Analogy</h3>
+<p>Imagine measuring blood pressure in hospitals:</p>
+<ul>
+<li><strong>ICC = 0</strong>: Hospital doesn’t matter; patients’ BPs
+vary regardless of hospital</li>
+<li><strong>ICC = 0.05</strong>: Hospitals have slightly different
+patient populations or protocols; 5% of BP variation is due to which
+hospital you’re at</li>
+<li><strong>ICC = 0.30</strong>: Hospitals serve very different
+populations (e.g., cardiac specialty vs general); hospital explains 30%
+of BP variation</li>
+<li><strong>ICC = 1.0</strong>: All patients in a hospital have
+identical BP (impossible in practice)</li>
+</ul>
+</div>
+</div>
+<div id="design-effect" class="section level2">
+<h2>Design Effect</h2>
+<div id="definition-1" class="section level3">
+<h3>Definition</h3>
+<p>The <strong>Design Effect (DE)</strong> quantifies the <strong>loss
+of statistical efficiency</strong> due to clustering. It is the factor
+by which sample size must be inflated to maintain the same power as an
+independent-sample design.</p>
+<p><span class="math display">\[
+DE = 1 + (m - 1) \times ICC
+\]</span></p>
+<p>where: - <strong>m</strong> = average cluster size (number of
+participants per cluster) - <strong>ICC</strong> = intraclass
+correlation coefficient</p>
+</div>
+<div id="properties" class="section level3">
+<h3>Properties</h3>
+<p><strong>When ICC = 0</strong>: DE = 1 (no inflation needed)</p>
+<p><strong>When ICC &gt; 0 and m &gt; 1</strong>: DE &gt; 1 (sample size
+inflation required)</p>
+<p><strong>Larger clusters amplify the design effect</strong>: Doubling
+cluster size doubles the design effect when ICC is substantial</p>
+<p><strong>Larger ICC amplifies the design effect</strong>: Doubling ICC
+doubles the contribution to design effect</p>
+</div>
+<div id="examples" class="section level3">
+<h3>Examples</h3>
+<table>
+<caption>Design Effect by Cluster Size and ICC</caption>
+<thead>
+<tr class="header">
+<th align="right">Cluster_Size</th>
+<th align="right">ICC</th>
+<th align="right">Design_Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">10</td>
+<td align="right">0.01</td>
+<td align="right">1.09</td>
+</tr>
+<tr class="even">
+<td align="right">25</td>
+<td align="right">0.01</td>
+<td align="right">1.24</td>
+</tr>
+<tr class="odd">
+<td align="right">50</td>
+<td align="right">0.01</td>
+<td align="right">1.49</td>
+</tr>
+<tr class="even">
+<td align="right">100</td>
+<td align="right">0.01</td>
+<td align="right">1.99</td>
+</tr>
+<tr class="odd">
+<td align="right">10</td>
+<td align="right">0.05</td>
+<td align="right">1.45</td>
+</tr>
+<tr class="even">
+<td align="right">25</td>
+<td align="right">0.05</td>
+<td align="right">2.20</td>
+</tr>
+<tr class="odd">
+<td align="right">50</td>
+<td align="right">0.05</td>
+<td align="right">3.45</td>
+</tr>
+<tr class="even">
+<td align="right">100</td>
+<td align="right">0.05</td>
+<td align="right">5.95</td>
+</tr>
+<tr class="odd">
+<td align="right">10</td>
+<td align="right">0.10</td>
+<td align="right">1.90</td>
+</tr>
+<tr class="even">
+<td align="right">25</td>
+<td align="right">0.10</td>
+<td align="right">3.40</td>
+</tr>
+<tr class="odd">
+<td align="right">50</td>
+<td align="right">0.10</td>
+<td align="right">5.90</td>
+</tr>
+<tr class="even">
+<td align="right">100</td>
+<td align="right">0.10</td>
+<td align="right">10.90</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Observations</strong>:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Small ICC (0.01)</strong>: Even with 100 per cluster, DE =
+2.0 (modest inflation)</li>
+<li><strong>Moderate ICC (0.05)</strong>: With 50 per cluster, DE = 3.45
+(substantial inflation)</li>
+<li><strong>Large ICC (0.10)</strong>: With 100 per cluster, DE = 10.9
+(severe inflation)</li>
+</ol>
+<p><strong>Key insight</strong>: Large clusters with moderate-to-high
+ICC can dramatically inflate sample size requirements.</p>
+</div>
+</div>
+<div id="sample-size-inflation-for-clustered-designs" class="section level2">
+<h2>Sample Size Inflation for Clustered Designs</h2>
+<div id="basic-formula" class="section level3">
+<h3>Basic Formula</h3>
+<p>If an unclustered study requires N participants for adequate
+power:</p>
+<p><span class="math display">\[
+N_{clustered} = N_{unclustered} \times DE
+\]</span></p>
+</div>
+<div id="effective-sample-size" class="section level3">
+<h3>Effective Sample Size</h3>
+<p>Conversely, if you have N participants in a clustered design, the
+effective sample size (equivalent independent observations) is:</p>
+<p><span class="math display">\[
+N_{effective} = \frac{N_{total}}{DE}
+\]</span></p>
+</div>
+<div id="number-of-clusters" class="section level3">
+<h3>Number of Clusters</h3>
+<p>Given total sample size and average cluster size:</p>
+<p><span class="math display">\[
+K = \frac{N_{total}}{m}
+\]</span></p>
+<p>where K is the number of clusters needed.</p>
+</div>
+<div id="practical-example" class="section level3">
+<h3>Practical Example</h3>
+<p><strong>Scenario</strong>: Cluster-randomized trial of a quality
+improvement intervention across hospitals</p>
+<ul>
+<li>Outcome: 30-day readmission rate</li>
+<li>Unclustered sample size needed: <strong>N = 400</strong> (from
+standard power calculation)</li>
+<li>Average hospital size: <strong>m = 50 patients</strong> per
+hospital</li>
+<li>ICC for readmission: <strong>0.05</strong> (typical for clinical
+outcomes)</li>
+</ul>
+<p><strong>Calculations</strong>:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(PowerAnalysisTool)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="co"># Step 1: Calculate design effect</span></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>de <span class="ot">&lt;-</span> <span class="fu">calc_design_effect</span>(<span class="at">cluster_size =</span> <span class="dv">50</span>, <span class="at">icc =</span> <span class="fl">0.05</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="co"># Result: DE = 1 + (50 - 1) × 0.05 = 3.45</span></span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a><span class="co"># Step 2: Inflate sample size</span></span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>n_clustered <span class="ot">&lt;-</span> <span class="fu">calc_clustered_n</span>(<span class="at">n_unclustered =</span> <span class="dv">400</span>, <span class="at">design_effect =</span> de)</span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a><span class="co"># Result: N = 400 × 3.45 = 1,380 participants</span></span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a><span class="co"># Step 3: Calculate number of clusters needed</span></span>
+<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a>k <span class="ot">&lt;-</span> <span class="fu">calc_n_clusters</span>(<span class="at">n_total =</span> <span class="dv">1380</span>, <span class="at">cluster_size =</span> <span class="dv">50</span>)</span>
+<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a><span class="co"># Result: K = 1,380 / 50 = 28 hospitals</span></span>
+<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a><span class="co"># Interpretation</span></span>
+<span id="cb1-16"><a href="#cb1-16" tabindex="-1"></a>interp <span class="ot">&lt;-</span> <span class="fu">format_design_effect_interpretation</span>(</span>
+<span id="cb1-17"><a href="#cb1-17" tabindex="-1"></a>  <span class="at">design_effect =</span> de,</span>
+<span id="cb1-18"><a href="#cb1-18" tabindex="-1"></a>  <span class="at">n_unclustered =</span> <span class="dv">400</span>,</span>
+<span id="cb1-19"><a href="#cb1-19" tabindex="-1"></a>  <span class="at">cluster_size =</span> <span class="dv">50</span>,</span>
+<span id="cb1-20"><a href="#cb1-20" tabindex="-1"></a>  <span class="at">icc =</span> <span class="fl">0.05</span></span>
+<span id="cb1-21"><a href="#cb1-21" tabindex="-1"></a>)</span>
+<span id="cb1-22"><a href="#cb1-22" tabindex="-1"></a><span class="fu">print</span>(interp)</span></code></pre></div>
+<p><strong>Output</strong>:</p>
+<pre><code>The design effect of 3.45 indicates a strong clustering impact. Clustering
+inflates the required sample size by 245% (from 400 to 1,380 participants,
+an increase of 980). With an average cluster size of 50 and ICC of 0.050,
+you will need approximately 28 clusters.</code></pre>
+<p><strong>Result</strong>: Instead of 400 independent patients, need
+<strong>1,380 patients across 28 hospitals</strong> to maintain 80%
+power.</p>
+</div>
+</div>
+<div id="selecting-appropriate-icc-values" class="section level2">
+<h2>Selecting Appropriate ICC Values</h2>
+<p>Choosing the right ICC is critical for accurate sample size
+estimation. Three approaches:</p>
+<div id="pilot-study-or-preliminary-data" class="section level3">
+<h3>1. Pilot Study or Preliminary Data</h3>
+<p><strong>Best approach</strong> if you have access to similar
+data.</p>
+<p><strong>Method</strong>: Fit a mixed-effects model (random intercept
+for cluster) and extract the ICC:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co"># Example in R using lme4</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="fu">library</span>(lme4)</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co"># Fit random intercept model: outcome ~ fixed effects + (1 | cluster)</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">lmer</span>(blood_pressure <span class="sc">~</span> age <span class="sc">+</span> sex <span class="sc">+</span> treatment <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> hospital_id), <span class="at">data =</span> pilot_data)</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co"># Extract variance components</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>vc <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">VarCorr</span>(model))</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>var_between <span class="ot">&lt;-</span> vc<span class="sc">$</span>vcov[vc<span class="sc">$</span>grp <span class="sc">==</span> <span class="st">&quot;hospital_id&quot;</span>]</span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>var_within <span class="ot">&lt;-</span> vc<span class="sc">$</span>vcov[vc<span class="sc">$</span>grp <span class="sc">==</span> <span class="st">&quot;Residual&quot;</span>]</span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co"># Calculate ICC</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>icc_estimate <span class="ot">&lt;-</span> var_between <span class="sc">/</span> (var_between <span class="sc">+</span> var_within)</span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Estimated ICC:&quot;</span>, <span class="fu">round</span>(icc_estimate, <span class="dv">3</span>))</span></code></pre></div>
+</div>
+<div id="literature-based-typical-values" class="section level3">
+<h3>2. Literature-Based Typical Values</h3>
+<p>When pilot data are unavailable, use published ICC estimates from
+meta-analyses.</p>
+<p><strong>Typical ICC ranges by domain</strong> (Donner &amp; Klar
+2000; Campbell et al. 2005):</p>
+<table>
+<caption>Typical ICC Values by Domain and Outcome Type</caption>
+<colgroup>
+<col width="31%" />
+<col width="14%" />
+<col width="11%" />
+<col width="41%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Domain</th>
+<th align="left">Typical_ICC</th>
+<th align="left">Recommended</th>
+<th align="left">Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Behavioral outcomes</td>
+<td align="left">0.01 - 0.05</td>
+<td align="left">0.025</td>
+<td align="left">Smoking cessation, exercise adherence</td>
+</tr>
+<tr class="even">
+<td align="left">Clinical/physiological outcomes</td>
+<td align="left">0.01 - 0.10</td>
+<td align="left">0.05</td>
+<td align="left">Blood pressure, HbA1c, weight</td>
+</tr>
+<tr class="odd">
+<td align="left">Process measures</td>
+<td align="left">0.10 - 0.30</td>
+<td align="left">0.20</td>
+<td align="left">Guideline adherence, prescribing patterns</td>
+</tr>
+<tr class="even">
+<td align="left">General practice level</td>
+<td align="left">0.017 (median)</td>
+<td align="left">0.017</td>
+<td align="left">UK GP practices (various outcomes)</td>
+</tr>
+<tr class="odd">
+<td align="left">Mortality outcomes</td>
+<td align="left">0.005 - 0.015</td>
+<td align="left">0.01</td>
+<td align="left">30-day mortality, in-hospital death</td>
+</tr>
+<tr class="even">
+<td align="left">Hospital characteristics</td>
+<td align="left">0.05 - 0.20</td>
+<td align="left">0.10</td>
+<td align="left">Length of stay, complications</td>
+</tr>
+<tr class="odd">
+<td align="left">Classroom-level education</td>
+<td align="left">0.10 - 0.25</td>
+<td align="left">0.15</td>
+<td align="left">Test scores, attendance</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Using the tool’s built-in values</strong>:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># Get typical ICC for clinical outcomes</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>icc_clinical <span class="ot">&lt;-</span> <span class="fu">get_typical_icc</span>(<span class="st">&quot;clinical&quot;</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="co"># Returns: 0.05</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co"># Get typical ICC for behavioral outcomes</span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>icc_behavioral <span class="ot">&lt;-</span> <span class="fu">get_typical_icc</span>(<span class="st">&quot;behavioral&quot;</span>)</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co"># Returns: 0.025</span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co"># Get typical ICC for process measures</span></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>icc_process <span class="ot">&lt;-</span> <span class="fu">get_typical_icc</span>(<span class="st">&quot;process&quot;</span>)</span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co"># Returns: 0.20</span></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co"># Get typical ICC for GP practices</span></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a>icc_gp <span class="ot">&lt;-</span> <span class="fu">get_typical_icc</span>(<span class="st">&quot;gp&quot;</span>)</span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co"># Returns: 0.017</span></span></code></pre></div>
+</div>
+<div id="sensitivity-analysis" class="section level3">
+<h3>3. Sensitivity Analysis</h3>
+<p><strong>Always conduct sensitivity analysis</strong> to assess
+robustness to ICC assumptions.</p>
+<p>Test best-case, expected, and worst-case scenarios:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># Expected ICC: 0.05</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>de_expected <span class="ot">&lt;-</span> <span class="fu">calc_design_effect</span>(<span class="at">cluster_size =</span> <span class="dv">40</span>, <span class="at">icc =</span> <span class="fl">0.05</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>n_expected <span class="ot">&lt;-</span> <span class="fu">calc_clustered_n</span>(<span class="at">n_unclustered =</span> <span class="dv">300</span>, <span class="at">design_effect =</span> de_expected)</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co"># Best case (lower ICC): 0.02</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>de_best <span class="ot">&lt;-</span> <span class="fu">calc_design_effect</span>(<span class="at">cluster_size =</span> <span class="dv">40</span>, <span class="at">icc =</span> <span class="fl">0.02</span>)</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>n_best <span class="ot">&lt;-</span> <span class="fu">calc_clustered_n</span>(<span class="at">n_unclustered =</span> <span class="dv">300</span>, <span class="at">design_effect =</span> de_best)</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co"># Worst case (higher ICC): 0.10</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>de_worst <span class="ot">&lt;-</span> <span class="fu">calc_design_effect</span>(<span class="at">cluster_size =</span> <span class="dv">40</span>, <span class="at">icc =</span> <span class="fl">0.10</span>)</span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>n_worst <span class="ot">&lt;-</span> <span class="fu">calc_clustered_n</span>(<span class="at">n_unclustered =</span> <span class="dv">300</span>, <span class="at">design_effect =</span> de_worst)</span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Best case (ICC=0.02):&quot;</span>, n_best, <span class="st">&quot;participants</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Expected (ICC=0.05):&quot;</span>, n_expected, <span class="st">&quot;participants</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Worst case (ICC=0.10):&quot;</span>, n_worst, <span class="st">&quot;participants</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<p><strong>Output</strong>:</p>
+<pre><code>Best case (ICC=0.02): 624 participants
+Expected (ICC=0.05): 888 participants
+Worst case (ICC=0.10): 1,488 participants</code></pre>
+<p><strong>Decision</strong>: Plan for worst-case (1,488) or expected
+(888) based on risk tolerance and feasibility.</p>
+</div>
+</div>
+<div id="study-design-considerations" class="section level2">
+<h2>Study Design Considerations</h2>
+<div id="trade-off-cluster-size-vs-number-of-clusters" class="section level3">
+<h3>Trade-off: Cluster Size vs Number of Clusters</h3>
+<p>For a fixed ICC and total sample size, you can trade off:</p>
+<ul>
+<li><strong>Many small clusters</strong> (lower DE, better
+efficiency)</li>
+<li><strong>Fewer large clusters</strong> (higher DE, worse
+efficiency)</li>
+</ul>
+<p><strong>Example</strong>: N = 1,000 participants, ICC = 0.05</p>
+<table style="width:100%;">
+<caption>Trade-off Between Cluster Size and Number of Clusters</caption>
+<colgroup>
+<col width="31%" />
+<col width="15%" />
+<col width="17%" />
+<col width="19%" />
+<col width="16%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Scenario</th>
+<th align="right">N_Clusters</th>
+<th align="right">Cluster_Size</th>
+<th align="right">Design_Effect</th>
+<th align="right">Effective_N</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">A: Many small clusters</td>
+<td align="right">100</td>
+<td align="right">10</td>
+<td align="right">1.4</td>
+<td align="right">689.7</td>
+</tr>
+<tr class="even">
+<td align="left">B: Moderate</td>
+<td align="right">50</td>
+<td align="right">20</td>
+<td align="right">2.0</td>
+<td align="right">512.8</td>
+</tr>
+<tr class="odd">
+<td align="left">C: Moderate</td>
+<td align="right">25</td>
+<td align="right">40</td>
+<td align="right">3.0</td>
+<td align="right">339.0</td>
+</tr>
+<tr class="even">
+<td align="left">D: Few large clusters</td>
+<td align="right">10</td>
+<td align="right">100</td>
+<td align="right">6.0</td>
+<td align="right">168.1</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Observations</strong>:</p>
+<ul>
+<li><strong>Scenario A</strong> (100 clusters of 10): Effective N = 690
+(best efficiency)</li>
+<li><strong>Scenario D</strong> (10 clusters of 100): Effective N = 172
+(worst efficiency)</li>
+</ul>
+<p><strong>Recommendation</strong>: <strong>Recruit more clusters with
+fewer participants per cluster</strong> when feasible. This is more
+efficient than fewer large clusters.</p>
+<p><strong>Practical constraint</strong>: Recruiting clusters (e.g.,
+hospitals) is often difficult and expensive, so there’s a practical
+limit.</p>
+</div>
+<div id="minimum-number-of-clusters" class="section level3">
+<h3>Minimum Number of Clusters</h3>
+<p><strong>Rule of thumb</strong>: <strong>At least 10-15 clusters per
+treatment arm</strong> (20-30 total for two-arm trial)</p>
+<p><strong>Why?</strong> - Variance estimation for cluster-level effects
+requires adequate degrees of freedom - Fewer clusters → unreliable
+variance estimates → inflated Type I error - Random effects models
+struggle with &lt; 10 clusters</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co"># Validate clustering parameters</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>validation <span class="ot">&lt;-</span> <span class="fu">validate_clustering_params</span>(</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  <span class="at">n_clusters =</span> <span class="dv">8</span>,</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  <span class="at">cluster_size =</span> <span class="dv">50</span>,</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>  <span class="at">icc =</span> <span class="fl">0.05</span></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>)</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span>validation<span class="sc">$</span>valid) {</span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">&quot;ERRORS detected:</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>  <span class="fu">print</span>(validation<span class="sc">$</span>messages[<span class="fu">grepl</span>(<span class="st">&quot;ERROR&quot;</span>, validation<span class="sc">$</span>messages)])</span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a>}</span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a></span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">any</span>(<span class="fu">grepl</span>(<span class="st">&quot;WARNING&quot;</span>, validation<span class="sc">$</span>messages))) {</span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">&quot;</span><span class="sc">\n</span><span class="st">WARNINGS:</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a>  <span class="fu">print</span>(validation<span class="sc">$</span>messages[<span class="fu">grepl</span>(<span class="st">&quot;WARNING&quot;</span>, validation<span class="sc">$</span>messages)])</span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a>}</span></code></pre></div>
+<p><strong>Output</strong>:</p>
+<pre><code>WARNINGS:
+[1] &quot;WARNING: Only 8 clusters may provide unreliable variance estimates.
+     Consider 10-15+ clusters.&quot;</code></pre>
+<p><strong>Interpretation</strong>: 8 clusters is technically feasible
+but statistically risky. Aim for 12-15+ clusters if possible.</p>
+</div>
+</div>
+<div id="case-study-1-cluster-randomized-trial-in-primary-care" class="section level2">
+<h2>Case Study 1: Cluster-Randomized Trial in Primary Care</h2>
+<div id="scenario" class="section level3">
+<h3>Scenario</h3>
+<p>A primary care practice network wants to test a diabetes management
+intervention. Practices will be randomized to receive the intervention
+or usual care.</p>
+<p><strong>Design parameters</strong>: - <strong>Outcome</strong>: HbA1c
+reduction (continuous) - <strong>Unclustered N</strong>: 220 (from
+independent-sample t-test for 80% power, d = 0.40) - <strong>Cluster
+type</strong>: GP practices - <strong>Average practice size</strong>: 30
+diabetes patients per practice - <strong>ICC</strong>: 0.017 (median ICC
+for GP practice-level outcomes)</p>
+</div>
+<div id="calculations" class="section level3">
+<h3>Calculations</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="co"># Step 1: Design effect</span></span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>de <span class="ot">&lt;-</span> <span class="fu">calc_design_effect</span>(<span class="at">cluster_size =</span> <span class="dv">30</span>, <span class="at">icc =</span> <span class="fl">0.017</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="co"># Result: DE = 1 + (30 - 1) × 0.017 = 1.493</span></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="co"># Step 2: Inflated sample size</span></span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>n_clustered <span class="ot">&lt;-</span> <span class="fu">calc_clustered_n</span>(<span class="at">n_unclustered =</span> <span class="dv">220</span>, <span class="at">design_effect =</span> de)</span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a><span class="co"># Result: N = 220 × 1.493 = 329 patients</span></span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a><span class="co"># Step 3: Number of practices</span></span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a>k <span class="ot">&lt;-</span> <span class="fu">calc_n_clusters</span>(<span class="at">n_total =</span> <span class="dv">329</span>, <span class="at">cluster_size =</span> <span class="dv">30</span>)</span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a><span class="co"># Result: K = 329 / 30 = 11 practices</span></span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a></span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a><span class="co"># Interpretation</span></span>
+<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Need:&quot;</span>, n_clustered, <span class="st">&quot;patients across&quot;</span>, k, <span class="st">&quot;practices</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Per arm:&quot;</span>, <span class="fu">ceiling</span>(k <span class="sc">/</span> <span class="dv">2</span>), <span class="st">&quot;practices (assuming equal allocation)</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<p><strong>Output</strong>:</p>
+<pre><code>Need: 329 patients across 11 practices
+Per arm: 6 practices (assuming equal allocation)</code></pre>
+</div>
+<div id="sensitivity-analysis-1" class="section level3">
+<h3>Sensitivity Analysis</h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="co"># Worst case: ICC = 0.05 (clinical outcome, upper range)</span></span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>de_worst <span class="ot">&lt;-</span> <span class="fu">calc_design_effect</span>(<span class="at">cluster_size =</span> <span class="dv">30</span>, <span class="at">icc =</span> <span class="fl">0.05</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>n_worst <span class="ot">&lt;-</span> <span class="fu">calc_clustered_n</span>(<span class="at">n_unclustered =</span> <span class="dv">220</span>, <span class="at">design_effect =</span> de_worst)</span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>k_worst <span class="ot">&lt;-</span> <span class="fu">calc_n_clusters</span>(<span class="at">n_total =</span> n_worst, <span class="at">cluster_size =</span> <span class="dv">30</span>)</span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a></span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Worst case (ICC=0.05):&quot;</span>, n_worst, <span class="st">&quot;patients across&quot;</span>, k_worst, <span class="st">&quot;practices</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<p><strong>Output</strong>:</p>
+<pre><code>Worst case (ICC=0.05): 550 patients across 19 practices</code></pre>
+</div>
+<div id="decision" class="section level3">
+<h3>Decision</h3>
+<ul>
+<li><strong>Expected scenario (ICC = 0.017)</strong>: 11 practices (6
+per arm)</li>
+<li><strong>Worst case (ICC = 0.05)</strong>: 19 practices (10 per
+arm)</li>
+</ul>
+<p><strong>Recommendation</strong>: Recruit <strong>20
+practices</strong> (10 per arm) to be conservative and ensure adequate
+cluster count even under higher ICC.</p>
+</div>
+</div>
+<div id="case-study-2-hospital-level-quality-improvement" class="section level2">
+<h2>Case Study 2: Hospital-Level Quality Improvement</h2>
+<div id="scenario-1" class="section level3">
+<h3>Scenario</h3>
+<p>A hospital network wants to reduce 30-day readmission rates through a
+quality improvement intervention. Hospitals will be randomized.</p>
+<p><strong>Design parameters</strong>: - <strong>Outcome</strong>:
+30-day readmission (binary, proportion) - <strong>Unclustered
+N</strong>: 500 (from two-proportion test for 80% power, p1 = 0.20, p2 =
+0.15) - <strong>Cluster type</strong>: Hospitals - <strong>Average
+hospital size</strong>: 100 patients per hospital -
+<strong>ICC</strong>: 0.05 (clinical outcome, typical value)</p>
+</div>
+<div id="problem-very-large-design-effect" class="section level3">
+<h3>Problem: Very Large Design Effect</h3>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a>de <span class="ot">&lt;-</span> <span class="fu">calc_design_effect</span>(<span class="at">cluster_size =</span> <span class="dv">100</span>, <span class="at">icc =</span> <span class="fl">0.05</span>)</span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a><span class="co"># Result: DE = 1 + (100 - 1) × 0.05 = 5.95</span></span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a>n_clustered <span class="ot">&lt;-</span> <span class="fu">calc_clustered_n</span>(<span class="at">n_unclustered =</span> <span class="dv">500</span>, <span class="at">design_effect =</span> de)</span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a><span class="co"># Result: N = 500 × 5.95 = 2,975 patients</span></span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a>k <span class="ot">&lt;-</span> <span class="fu">calc_n_clusters</span>(<span class="at">n_total =</span> <span class="dv">2975</span>, <span class="at">cluster_size =</span> <span class="dv">100</span>)</span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a><span class="co"># Result: K = 2,975 / 100 = 30 hospitals</span></span></code></pre></div>
+<p><strong>Issue</strong>: Need 30 hospitals with 100 patients each
+(2,975 total) — likely infeasible.</p>
+</div>
+<div id="solution-reduce-cluster-size" class="section level3">
+<h3>Solution: Reduce Cluster Size</h3>
+<p>Instead of 100 patients per hospital, sample <strong>50 patients per
+hospital</strong>:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a>de_reduced <span class="ot">&lt;-</span> <span class="fu">calc_design_effect</span>(<span class="at">cluster_size =</span> <span class="dv">50</span>, <span class="at">icc =</span> <span class="fl">0.05</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a><span class="co"># Result: DE = 1 + (50 - 1) × 0.05 = 3.45</span></span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a>n_clustered_reduced <span class="ot">&lt;-</span> <span class="fu">calc_clustered_n</span>(<span class="at">n_unclustered =</span> <span class="dv">500</span>, <span class="at">design_effect =</span> de_reduced)</span>
+<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a><span class="co"># Result: N = 500 × 3.45 = 1,725 patients</span></span>
+<span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="#cb14-7" tabindex="-1"></a>k_reduced <span class="ot">&lt;-</span> <span class="fu">calc_n_clusters</span>(<span class="at">n_total =</span> <span class="dv">1725</span>, <span class="at">cluster_size =</span> <span class="dv">50</span>)</span>
+<span id="cb14-8"><a href="#cb14-8" tabindex="-1"></a><span class="co"># Result: K = 1,725 / 50 = 35 hospitals</span></span></code></pre></div>
+<p><strong>Trade-off</strong>: - <strong>Smaller cluster size
+(50)</strong>: Need 35 hospitals but only 1,725 patients -
+<strong>Larger cluster size (100)</strong>: Need 30 hospitals but 2,975
+patients</p>
+<p><strong>Recommendation</strong>: Use <strong>50 patients per
+hospital</strong> to reduce total sample size and make recruitment more
+feasible. The additional 5 hospitals (35 vs 30) may be easier to recruit
+than an extra 1,250 patients.</p>
+</div>
+<div id="alternative-recruit-more-hospitals-smaller-clusters" class="section level3">
+<h3>Alternative: Recruit More Hospitals, Smaller Clusters</h3>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="co"># Even smaller: 25 patients per hospital</span></span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>de_small <span class="ot">&lt;-</span> <span class="fu">calc_design_effect</span>(<span class="at">cluster_size =</span> <span class="dv">25</span>, <span class="at">icc =</span> <span class="fl">0.05</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a>n_small <span class="ot">&lt;-</span> <span class="fu">calc_clustered_n</span>(<span class="at">n_unclustered =</span> <span class="dv">500</span>, <span class="at">design_effect =</span> de_small)</span>
+<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a>k_small <span class="ot">&lt;-</span> <span class="fu">calc_n_clusters</span>(<span class="at">n_total =</span> n_small, <span class="at">cluster_size =</span> <span class="dv">25</span>)</span>
+<span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a></span>
+<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Option C (25 per hospital):&quot;</span>, n_small, <span class="st">&quot;patients across&quot;</span>, k_small, <span class="st">&quot;hospitals</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<p><strong>Output</strong>:</p>
+<pre><code>Option C (25 per hospital): 1,100 patients across 44 hospitals</code></pre>
+<p><strong>Final comparison</strong>:</p>
+<table>
+<colgroup>
+<col width="11%" />
+<col width="20%" />
+<col width="21%" />
+<col width="12%" />
+<col width="15%" />
+<col width="18%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Option</th>
+<th>Cluster Size</th>
+<th>Design Effect</th>
+<th>Total N</th>
+<th>Hospitals</th>
+<th>Feasibility</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>A</td>
+<td>100</td>
+<td>5.95</td>
+<td>2,975</td>
+<td>30</td>
+<td>Low (too many patients)</td>
+</tr>
+<tr class="even">
+<td>B</td>
+<td>50</td>
+<td>3.45</td>
+<td>1,725</td>
+<td>35</td>
+<td>Moderate</td>
+</tr>
+<tr class="odd">
+<td>C</td>
+<td>25</td>
+<td>2.20</td>
+<td>1,100</td>
+<td>44</td>
+<td>High (most efficient)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Decision</strong>: If 44 hospitals are recruitable,
+<strong>Option C is optimal</strong> (smallest total sample size and
+highest efficiency).</p>
+</div>
+</div>
+<div id="advanced-topics" class="section level2">
+<h2>Advanced Topics</h2>
+<div id="unequal-cluster-sizes" class="section level3">
+<h3>Unequal Cluster Sizes</h3>
+<p>When cluster sizes vary, use the <strong>average cluster
+size</strong> (m_bar) or, more conservatively, the <strong>maximum
+anticipated cluster size</strong> for design effect calculations.</p>
+<p><strong>Example</strong>: - Hospital A: 30 patients - Hospital B: 50
+patients - Hospital C: 70 patients</p>
+<p>Average: m_bar = (30 + 50 + 70) / 3 = 50</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a><span class="co"># Use average cluster size</span></span>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a>de_avg <span class="ot">&lt;-</span> <span class="fu">calc_design_effect</span>(<span class="at">cluster_size =</span> <span class="dv">50</span>, <span class="at">icc =</span> <span class="fl">0.05</span>)</span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a><span class="co"># Or use maximum for conservative estimate</span></span>
+<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a>de_max <span class="ot">&lt;-</span> <span class="fu">calc_design_effect</span>(<span class="at">cluster_size =</span> <span class="dv">70</span>, <span class="at">icc =</span> <span class="fl">0.05</span>)</span></code></pre></div>
+</div>
+<div id="varying-icc-across-outcomes" class="section level3">
+<h3>Varying ICC Across Outcomes</h3>
+<p>Different outcomes within the same study may have different ICCs:</p>
+<ul>
+<li><strong>Primary outcome</strong>: Use published ICC or pilot
+estimate</li>
+<li><strong>Secondary outcomes</strong>: Consider sensitivity analysis
+with different ICCs</li>
+</ul>
+</div>
+<div id="cluster-randomized-vs-individually-randomized-designs" class="section level3">
+<h3>Cluster-Randomized vs Individually-Randomized Designs</h3>
+<p><strong>When to use cluster randomization:</strong> - Intervention is
+delivered at cluster level (e.g., training all staff in a hospital) -
+Risk of contamination if individuals within a cluster receive different
+treatments - Logistical reasons (easier to randomize clusters than
+individuals)</p>
+<p><strong>Cost</strong>: - Cluster randomization requires larger sample
+sizes due to design effect - Only beneficial when ICC is unavoidable or
+intervention logistics demand it</p>
+<p><strong>Alternative</strong>: If individual randomization is
+feasible, it’s <strong>statistically more efficient</strong> (DE = 1, no
+inflation).</p>
+</div>
+<div id="adjusting-for-clustering-in-analysis" class="section level3">
+<h3>Adjusting for Clustering in Analysis</h3>
+<p><strong>Important</strong>: Planning for clustered data requires:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Design stage</strong>: Inflate sample size using design
+effect</li>
+<li><strong>Analysis stage</strong>: Use appropriate statistical
+methods:
+<ul>
+<li><strong>Mixed-effects models</strong> (random intercept for
+cluster)</li>
+<li><strong>Generalized Estimating Equations (GEE)</strong></li>
+<li><strong>Cluster-robust standard errors</strong></li>
+</ul></li>
+</ol>
+<p>Failing to account for clustering in analysis invalidates p-values
+and confidence intervals (typically anti-conservative, inflated Type I
+error).</p>
+</div>
+</div>
+<div id="practical-workflow-summary" class="section level2">
+<h2>Practical Workflow Summary</h2>
+<div id="step-1-calculate-unclustered-sample-size" class="section level3">
+<h3>Step 1: Calculate Unclustered Sample Size</h3>
+<p>Use standard sample size formulas (t-test, two-proportion test, etc.)
+assuming independent observations.</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a><span class="co"># Example: Two-sample t-test</span></span>
+<span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a><span class="fu">library</span>(pwr)</span>
+<span id="cb18-3"><a href="#cb18-3" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">pwr.t.test</span>(<span class="at">d =</span> <span class="fl">0.40</span>, <span class="at">sig.level =</span> <span class="fl">0.05</span>, <span class="at">power =</span> <span class="fl">0.80</span>, <span class="at">type =</span> <span class="st">&quot;two.sample&quot;</span>)</span>
+<span id="cb18-4"><a href="#cb18-4" tabindex="-1"></a>n_unclustered <span class="ot">&lt;-</span> <span class="fu">ceiling</span>(result<span class="sc">$</span>n <span class="sc">*</span> <span class="dv">2</span>)  <span class="co"># Total for both groups</span></span></code></pre></div>
+</div>
+<div id="step-2-determine-icc" class="section level3">
+<h3>Step 2: Determine ICC</h3>
+<p>From pilot data, literature, or tool’s typical values:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a><span class="co"># Option A: Pilot data (fit mixed model, extract ICC)</span></span>
+<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a><span class="co"># Option B: Literature values</span></span>
+<span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a>icc <span class="ot">&lt;-</span> <span class="fu">get_typical_icc</span>(<span class="st">&quot;clinical&quot;</span>)  <span class="co"># Returns 0.05</span></span>
+<span id="cb19-4"><a href="#cb19-4" tabindex="-1"></a><span class="co"># Option C: Conservative assumption (e.g., upper bound from lit)</span></span></code></pre></div>
+</div>
+<div id="step-3-estimate-average-cluster-size" class="section level3">
+<h3>Step 3: Estimate Average Cluster Size</h3>
+<p>Based on feasibility and cluster characteristics:</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" tabindex="-1"></a>cluster_size <span class="ot">&lt;-</span> <span class="dv">40</span>  <span class="co"># Example: 40 patients per practice</span></span></code></pre></div>
+</div>
+<div id="step-4-calculate-design-effect" class="section level3">
+<h3>Step 4: Calculate Design Effect</h3>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" tabindex="-1"></a>de <span class="ot">&lt;-</span> <span class="fu">calc_design_effect</span>(<span class="at">cluster_size =</span> cluster_size, <span class="at">icc =</span> icc)</span></code></pre></div>
+</div>
+<div id="step-5-inflate-sample-size" class="section level3">
+<h3>Step 5: Inflate Sample Size</h3>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" tabindex="-1"></a>n_clustered <span class="ot">&lt;-</span> <span class="fu">calc_clustered_n</span>(<span class="at">n_unclustered =</span> n_unclustered, <span class="at">design_effect =</span> de)</span></code></pre></div>
+</div>
+<div id="step-6-determine-number-of-clusters" class="section level3">
+<h3>Step 6: Determine Number of Clusters</h3>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" tabindex="-1"></a>k <span class="ot">&lt;-</span> <span class="fu">calc_n_clusters</span>(<span class="at">n_total =</span> n_clustered, <span class="at">cluster_size =</span> cluster_size)</span>
+<span id="cb23-2"><a href="#cb23-2" tabindex="-1"></a></span>
+<span id="cb23-3"><a href="#cb23-3" tabindex="-1"></a><span class="co"># Check if adequate (&gt;=10 per arm for 2-arm trial)</span></span>
+<span id="cb23-4"><a href="#cb23-4" tabindex="-1"></a>k_per_arm <span class="ot">&lt;-</span> <span class="fu">ceiling</span>(k <span class="sc">/</span> <span class="dv">2</span>)</span>
+<span id="cb23-5"><a href="#cb23-5" tabindex="-1"></a><span class="cf">if</span> (k_per_arm <span class="sc">&lt;</span> <span class="dv">10</span>) {</span>
+<span id="cb23-6"><a href="#cb23-6" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">&quot;WARNING: Only&quot;</span>, k_per_arm, <span class="st">&quot;clusters per arm. Aim for 10-15+ per arm.</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb23-7"><a href="#cb23-7" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<div id="step-7-validate-parameters" class="section level3">
+<h3>Step 7: Validate Parameters</h3>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" tabindex="-1"></a>validation <span class="ot">&lt;-</span> <span class="fu">validate_clustering_params</span>(</span>
+<span id="cb24-2"><a href="#cb24-2" tabindex="-1"></a>  <span class="at">n_clusters =</span> k,</span>
+<span id="cb24-3"><a href="#cb24-3" tabindex="-1"></a>  <span class="at">cluster_size =</span> cluster_size,</span>
+<span id="cb24-4"><a href="#cb24-4" tabindex="-1"></a>  <span class="at">icc =</span> icc</span>
+<span id="cb24-5"><a href="#cb24-5" tabindex="-1"></a>)</span>
+<span id="cb24-6"><a href="#cb24-6" tabindex="-1"></a></span>
+<span id="cb24-7"><a href="#cb24-7" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span>validation<span class="sc">$</span>valid) {</span>
+<span id="cb24-8"><a href="#cb24-8" tabindex="-1"></a>  <span class="fu">stop</span>(<span class="st">&quot;Clustering parameters are invalid. Review errors.&quot;</span>)</span>
+<span id="cb24-9"><a href="#cb24-9" tabindex="-1"></a>}</span>
+<span id="cb24-10"><a href="#cb24-10" tabindex="-1"></a></span>
+<span id="cb24-11"><a href="#cb24-11" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">length</span>(validation<span class="sc">$</span>messages) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb24-12"><a href="#cb24-12" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">&quot;Validation messages:</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb24-13"><a href="#cb24-13" tabindex="-1"></a>  <span class="fu">print</span>(validation<span class="sc">$</span>messages)</span>
+<span id="cb24-14"><a href="#cb24-14" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<div id="step-8-sensitivity-analysis" class="section level3">
+<h3>Step 8: Sensitivity Analysis</h3>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" tabindex="-1"></a><span class="co"># Test worst-case scenario</span></span>
+<span id="cb25-2"><a href="#cb25-2" tabindex="-1"></a>icc_worst <span class="ot">&lt;-</span> icc <span class="sc">*</span> <span class="dv">2</span>  <span class="co"># Double the ICC</span></span>
+<span id="cb25-3"><a href="#cb25-3" tabindex="-1"></a>de_worst <span class="ot">&lt;-</span> <span class="fu">calc_design_effect</span>(<span class="at">cluster_size =</span> cluster_size, <span class="at">icc =</span> icc_worst)</span>
+<span id="cb25-4"><a href="#cb25-4" tabindex="-1"></a>n_worst <span class="ot">&lt;-</span> <span class="fu">calc_clustered_n</span>(<span class="at">n_unclustered =</span> n_unclustered, <span class="at">design_effect =</span> de_worst)</span>
+<span id="cb25-5"><a href="#cb25-5" tabindex="-1"></a>k_worst <span class="ot">&lt;-</span> <span class="fu">calc_n_clusters</span>(<span class="at">n_total =</span> n_worst, <span class="at">cluster_size =</span> cluster_size)</span>
+<span id="cb25-6"><a href="#cb25-6" tabindex="-1"></a></span>
+<span id="cb25-7"><a href="#cb25-7" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Expected scenario:&quot;</span>, k, <span class="st">&quot;clusters,&quot;</span>, n_clustered, <span class="st">&quot;participants</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb25-8"><a href="#cb25-8" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Worst case:&quot;</span>, k_worst, <span class="st">&quot;clusters,&quot;</span>, n_worst, <span class="st">&quot;participants</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+</div>
+<div id="step-9-make-final-decision" class="section level3">
+<h3>Step 9: Make Final Decision</h3>
+<p>Balance statistical requirements with feasibility:</p>
+<ul>
+<li>Use expected scenario if confident in ICC estimate</li>
+<li>Use worst-case if ICC is uncertain or recruitment is feasible</li>
+<li>Consider reducing cluster size if design effect is prohibitively
+large</li>
+</ul>
+</div>
+</div>
+<div id="summary" class="section level2">
+<h2>Summary</h2>
+<p><strong>Key takeaways</strong>:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Clustering reduces effective sample size</strong> via the
+design effect: DE = 1 + (m - 1) × ICC</li>
+<li><strong>Inflate sample size by the design effect</strong> to
+maintain power: N_clustered = N_unclustered × DE</li>
+<li><strong>Use literature-based typical ICC values</strong> when pilot
+data are unavailable:
+<ul>
+<li>Behavioral outcomes: 0.025</li>
+<li>Clinical outcomes: 0.05</li>
+<li>Process measures: 0.20</li>
+<li>GP practice level: 0.017</li>
+</ul></li>
+<li><strong>Many small clusters are more efficient</strong> than few
+large clusters</li>
+<li><strong>Aim for 10-15+ clusters per arm</strong> for reliable
+inference</li>
+<li><strong>Conduct sensitivity analysis</strong> to assess robustness
+to ICC assumptions</li>
+<li><strong>Account for clustering in analysis</strong> using mixed
+models or GEE</li>
+</ol>
+<p><strong>Recommended resources</strong>:</p>
+<ul>
+<li>Donner A, Klar N (2000). <em>Design and Analysis of Cluster
+Randomization Trials in Health Research</em>. Arnold Publishers.</li>
+<li>Campbell MK, Thomson S, Ramsay CR, et al. (2004). Sample size
+calculator for cluster randomized trials. <em>Computers in Biology and
+Medicine</em> 34(2):113-125.</li>
+<li>Eldridge SM, Ashby D, Kerry S (2006). Sample size for cluster
+randomized trials: effect of coefficient of variation of cluster size
+and analysis method. <em>International Journal of Epidemiology</em>
+35(5):1292-1300.</li>
+</ul>
+</div>
+<div id="further-reading" class="section level2">
+<h2>Further Reading</h2>
+<ul>
+<li>See <code>vignette(&quot;propensity-score-calculations&quot;)</code> for
+handling clustering in observational studies</li>
+<li>See <code>vignette(&quot;missing-data-adjustments&quot;)</code> for combining
+clustering and missing data adjustments</li>
+<li>See the Clustering module in all tabs of the Power Analysis Tool for
+interactive calculations</li>
+</ul>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

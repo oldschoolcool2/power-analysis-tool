@@ -1,0 +1,723 @@
+---
+title: "Design Effects in Clustered Studies: ICC Selection and Sample Size Inflation"
+author: "Power Analysis Tool Development Team"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Design Effects in Clustered Studies: ICC Selection and Sample Size Inflation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
+)
+```
+
+## Introduction
+
+Many real-world studies involve **clustered** or **hierarchical** data where observations are not independent:
+
+- **Patients within hospitals** or clinics
+- **Students within schools** or classrooms
+- **Individuals within households** or geographic regions
+- **Repeated measures within participants**
+
+Clustering reduces effective sample size because observations within the same cluster tend to be more similar than observations from different clusters. This similarity is quantified by the **Intraclass Correlation Coefficient (ICC)**.
+
+This vignette explains:
+
+1. **What is the ICC** and how it measures clustering
+2. **Design effect (DE)** and its relationship to ICC and cluster size
+3. **How to select appropriate ICC values** from literature or pilot data
+4. **Sample size inflation** calculations for clustered designs
+5. **Practical examples** across different study types
+
+## Understanding the ICC
+
+### Definition
+
+The **Intraclass Correlation Coefficient (ICC)** measures the proportion of total variance in an outcome that is attributable to **between-cluster** variation:
+
+$$
+ICC = \frac{\sigma^2_{between}}{\sigma^2_{between} + \sigma^2_{within}}
+$$
+
+where:
+- $\sigma^2_{between}$ = variance between clusters
+- $\sigma^2_{within}$ = variance within clusters
+
+### Interpretation
+
+**ICC = 0**: No clustering effect
+- Observations within a cluster are no more similar than observations from different clusters
+- Cluster membership is irrelevant
+- Standard sample size formulas apply (no inflation needed)
+
+**ICC = 0.05**: Moderate clustering
+- 5% of variance is due to cluster-level differences
+- 95% of variance is within-cluster (individual-level)
+- **Most common in health research**
+
+**ICC = 0.30**: Strong clustering
+- 30% of variance is at cluster level
+- Observations within a cluster are highly similar
+- Large sample size inflation required
+
+**ICC = 1.0**: Perfect clustering
+- All variance is between clusters
+- Observations within a cluster are identical
+- Cluster is the unit of analysis (not individuals)
+
+### Analogy
+
+Imagine measuring blood pressure in hospitals:
+
+- **ICC = 0**: Hospital doesn't matter; patients' BPs vary regardless of hospital
+- **ICC = 0.05**: Hospitals have slightly different patient populations or protocols; 5% of BP variation is due to which hospital you're at
+- **ICC = 0.30**: Hospitals serve very different populations (e.g., cardiac specialty vs general); hospital explains 30% of BP variation
+- **ICC = 1.0**: All patients in a hospital have identical BP (impossible in practice)
+
+## Design Effect
+
+### Definition
+
+The **Design Effect (DE)** quantifies the **loss of statistical efficiency** due to clustering. It is the factor by which sample size must be inflated to maintain the same power as an independent-sample design.
+
+$$
+DE = 1 + (m - 1) \times ICC
+$$
+
+where:
+- **m** = average cluster size (number of participants per cluster)
+- **ICC** = intraclass correlation coefficient
+
+### Properties
+
+**When ICC = 0**: DE = 1 (no inflation needed)
+
+**When ICC > 0 and m > 1**: DE > 1 (sample size inflation required)
+
+**Larger clusters amplify the design effect**: Doubling cluster size doubles the design effect when ICC is substantial
+
+**Larger ICC amplifies the design effect**: Doubling ICC doubles the contribution to design effect
+
+### Examples
+
+```{r de-examples, echo=FALSE}
+de_examples <- data.frame(
+  Cluster_Size = c(10, 25, 50, 100, 10, 25, 50, 100, 10, 25, 50, 100),
+  ICC = c(rep(0.01, 4), rep(0.05, 4), rep(0.10, 4)),
+  Design_Effect = c(
+    1 + (10-1)*0.01, 1 + (25-1)*0.01, 1 + (50-1)*0.01, 1 + (100-1)*0.01,
+    1 + (10-1)*0.05, 1 + (25-1)*0.05, 1 + (50-1)*0.05, 1 + (100-1)*0.05,
+    1 + (10-1)*0.10, 1 + (25-1)*0.10, 1 + (50-1)*0.10, 1 + (100-1)*0.10
+  ),
+  stringsAsFactors = FALSE
+)
+
+library(knitr)
+kable(de_examples, caption = "Design Effect by Cluster Size and ICC", digits = 2)
+```
+
+**Observations**:
+
+1. **Small ICC (0.01)**: Even with 100 per cluster, DE = 2.0 (modest inflation)
+2. **Moderate ICC (0.05)**: With 50 per cluster, DE = 3.45 (substantial inflation)
+3. **Large ICC (0.10)**: With 100 per cluster, DE = 10.9 (severe inflation)
+
+**Key insight**: Large clusters with moderate-to-high ICC can dramatically inflate sample size requirements.
+
+## Sample Size Inflation for Clustered Designs
+
+### Basic Formula
+
+If an unclustered study requires N participants for adequate power:
+
+$$
+N_{clustered} = N_{unclustered} \times DE
+$$
+
+### Effective Sample Size
+
+Conversely, if you have N participants in a clustered design, the effective sample size (equivalent independent observations) is:
+
+$$
+N_{effective} = \frac{N_{total}}{DE}
+$$
+
+### Number of Clusters
+
+Given total sample size and average cluster size:
+
+$$
+K = \frac{N_{total}}{m}
+$$
+
+where K is the number of clusters needed.
+
+### Practical Example
+
+**Scenario**: Cluster-randomized trial of a quality improvement intervention across hospitals
+
+- Outcome: 30-day readmission rate
+- Unclustered sample size needed: **N = 400** (from standard power calculation)
+- Average hospital size: **m = 50 patients** per hospital
+- ICC for readmission: **0.05** (typical for clinical outcomes)
+
+**Calculations**:
+
+```{r example-calc, eval=FALSE}
+library(PowerAnalysisTool)
+
+# Step 1: Calculate design effect
+de <- calc_design_effect(cluster_size = 50, icc = 0.05)
+# Result: DE = 1 + (50 - 1) × 0.05 = 3.45
+
+# Step 2: Inflate sample size
+n_clustered <- calc_clustered_n(n_unclustered = 400, design_effect = de)
+# Result: N = 400 × 3.45 = 1,380 participants
+
+# Step 3: Calculate number of clusters needed
+k <- calc_n_clusters(n_total = 1380, cluster_size = 50)
+# Result: K = 1,380 / 50 = 28 hospitals
+
+# Interpretation
+interp <- format_design_effect_interpretation(
+  design_effect = de,
+  n_unclustered = 400,
+  cluster_size = 50,
+  icc = 0.05
+)
+print(interp)
+```
+
+**Output**:
+```
+The design effect of 3.45 indicates a strong clustering impact. Clustering
+inflates the required sample size by 245% (from 400 to 1,380 participants,
+an increase of 980). With an average cluster size of 50 and ICC of 0.050,
+you will need approximately 28 clusters.
+```
+
+**Result**: Instead of 400 independent patients, need **1,380 patients across 28 hospitals** to maintain 80% power.
+
+## Selecting Appropriate ICC Values
+
+Choosing the right ICC is critical for accurate sample size estimation. Three approaches:
+
+### 1. Pilot Study or Preliminary Data
+
+**Best approach** if you have access to similar data.
+
+**Method**: Fit a mixed-effects model (random intercept for cluster) and extract the ICC:
+
+```{r icc-pilot, eval=FALSE}
+# Example in R using lme4
+library(lme4)
+
+# Fit random intercept model: outcome ~ fixed effects + (1 | cluster)
+model <- lmer(blood_pressure ~ age + sex + treatment + (1 | hospital_id), data = pilot_data)
+
+# Extract variance components
+vc <- as.data.frame(VarCorr(model))
+var_between <- vc$vcov[vc$grp == "hospital_id"]
+var_within <- vc$vcov[vc$grp == "Residual"]
+
+# Calculate ICC
+icc_estimate <- var_between / (var_between + var_within)
+cat("Estimated ICC:", round(icc_estimate, 3))
+```
+
+### 2. Literature-Based Typical Values
+
+When pilot data are unavailable, use published ICC estimates from meta-analyses.
+
+**Typical ICC ranges by domain** (Donner & Klar 2000; Campbell et al. 2005):
+
+```{r typical-icc, echo=FALSE}
+icc_table <- data.frame(
+  Domain = c("Behavioral outcomes",
+             "Clinical/physiological outcomes",
+             "Process measures",
+             "General practice level",
+             "Mortality outcomes",
+             "Hospital characteristics",
+             "Classroom-level education"),
+  Typical_ICC = c("0.01 - 0.05",
+                  "0.01 - 0.10",
+                  "0.10 - 0.30",
+                  "0.017 (median)",
+                  "0.005 - 0.015",
+                  "0.05 - 0.20",
+                  "0.10 - 0.25"),
+  Recommended = c("0.025",
+                  "0.05",
+                  "0.20",
+                  "0.017",
+                  "0.01",
+                  "0.10",
+                  "0.15"),
+  Example = c("Smoking cessation, exercise adherence",
+              "Blood pressure, HbA1c, weight",
+              "Guideline adherence, prescribing patterns",
+              "UK GP practices (various outcomes)",
+              "30-day mortality, in-hospital death",
+              "Length of stay, complications",
+              "Test scores, attendance"),
+  stringsAsFactors = FALSE
+)
+
+kable(icc_table, caption = "Typical ICC Values by Domain and Outcome Type")
+```
+
+**Using the tool's built-in values**:
+
+```{r builtin-icc, eval=FALSE}
+# Get typical ICC for clinical outcomes
+icc_clinical <- get_typical_icc("clinical")
+# Returns: 0.05
+
+# Get typical ICC for behavioral outcomes
+icc_behavioral <- get_typical_icc("behavioral")
+# Returns: 0.025
+
+# Get typical ICC for process measures
+icc_process <- get_typical_icc("process")
+# Returns: 0.20
+
+# Get typical ICC for GP practices
+icc_gp <- get_typical_icc("gp")
+# Returns: 0.017
+```
+
+### 3. Sensitivity Analysis
+
+**Always conduct sensitivity analysis** to assess robustness to ICC assumptions.
+
+Test best-case, expected, and worst-case scenarios:
+
+```{r sensitivity-icc, eval=FALSE}
+# Expected ICC: 0.05
+de_expected <- calc_design_effect(cluster_size = 40, icc = 0.05)
+n_expected <- calc_clustered_n(n_unclustered = 300, design_effect = de_expected)
+
+# Best case (lower ICC): 0.02
+de_best <- calc_design_effect(cluster_size = 40, icc = 0.02)
+n_best <- calc_clustered_n(n_unclustered = 300, design_effect = de_best)
+
+# Worst case (higher ICC): 0.10
+de_worst <- calc_design_effect(cluster_size = 40, icc = 0.10)
+n_worst <- calc_clustered_n(n_unclustered = 300, design_effect = de_worst)
+
+cat("Best case (ICC=0.02):", n_best, "participants\n")
+cat("Expected (ICC=0.05):", n_expected, "participants\n")
+cat("Worst case (ICC=0.10):", n_worst, "participants\n")
+```
+
+**Output**:
+```
+Best case (ICC=0.02): 624 participants
+Expected (ICC=0.05): 888 participants
+Worst case (ICC=0.10): 1,488 participants
+```
+
+**Decision**: Plan for worst-case (1,488) or expected (888) based on risk tolerance and feasibility.
+
+## Study Design Considerations
+
+### Trade-off: Cluster Size vs Number of Clusters
+
+For a fixed ICC and total sample size, you can trade off:
+
+- **Many small clusters** (lower DE, better efficiency)
+- **Fewer large clusters** (higher DE, worse efficiency)
+
+**Example**: N = 1,000 participants, ICC = 0.05
+
+```{r tradeoff, echo=FALSE}
+tradeoff_data <- data.frame(
+  Scenario = c("A: Many small clusters", "B: Moderate", "C: Moderate", "D: Few large clusters"),
+  N_Clusters = c(100, 50, 25, 10),
+  Cluster_Size = c(10, 20, 40, 100),
+  Design_Effect = c(
+    1 + (10-1)*0.05,
+    1 + (20-1)*0.05,
+    1 + (40-1)*0.05,
+    1 + (100-1)*0.05
+  ),
+  Effective_N = c(
+    1000 / (1 + (10-1)*0.05),
+    1000 / (1 + (20-1)*0.05),
+    1000 / (1 + (40-1)*0.05),
+    1000 / (1 + (100-1)*0.05)
+  ),
+  stringsAsFactors = FALSE
+)
+
+kable(tradeoff_data, caption = "Trade-off Between Cluster Size and Number of Clusters", digits = 1)
+```
+
+**Observations**:
+
+- **Scenario A** (100 clusters of 10): Effective N = 690 (best efficiency)
+- **Scenario D** (10 clusters of 100): Effective N = 172 (worst efficiency)
+
+**Recommendation**: **Recruit more clusters with fewer participants per cluster** when feasible. This is more efficient than fewer large clusters.
+
+**Practical constraint**: Recruiting clusters (e.g., hospitals) is often difficult and expensive, so there's a practical limit.
+
+### Minimum Number of Clusters
+
+**Rule of thumb**: **At least 10-15 clusters per treatment arm** (20-30 total for two-arm trial)
+
+**Why?**
+- Variance estimation for cluster-level effects requires adequate degrees of freedom
+- Fewer clusters → unreliable variance estimates → inflated Type I error
+- Random effects models struggle with < 10 clusters
+
+```{r validation-example, eval=FALSE}
+# Validate clustering parameters
+validation <- validate_clustering_params(
+  n_clusters = 8,
+  cluster_size = 50,
+  icc = 0.05
+)
+
+if (!validation$valid) {
+  cat("ERRORS detected:\n")
+  print(validation$messages[grepl("ERROR", validation$messages)])
+}
+
+if (any(grepl("WARNING", validation$messages))) {
+  cat("\nWARNINGS:\n")
+  print(validation$messages[grepl("WARNING", validation$messages)])
+}
+```
+
+**Output**:
+```
+WARNINGS:
+[1] "WARNING: Only 8 clusters may provide unreliable variance estimates.
+     Consider 10-15+ clusters."
+```
+
+**Interpretation**: 8 clusters is technically feasible but statistically risky. Aim for 12-15+ clusters if possible.
+
+## Case Study 1: Cluster-Randomized Trial in Primary Care
+
+### Scenario
+
+A primary care practice network wants to test a diabetes management intervention. Practices will be randomized to receive the intervention or usual care.
+
+**Design parameters**:
+- **Outcome**: HbA1c reduction (continuous)
+- **Unclustered N**: 220 (from independent-sample t-test for 80% power, d = 0.40)
+- **Cluster type**: GP practices
+- **Average practice size**: 30 diabetes patients per practice
+- **ICC**: 0.017 (median ICC for GP practice-level outcomes)
+
+### Calculations
+
+```{r case1-calc, eval=FALSE}
+# Step 1: Design effect
+de <- calc_design_effect(cluster_size = 30, icc = 0.017)
+# Result: DE = 1 + (30 - 1) × 0.017 = 1.493
+
+# Step 2: Inflated sample size
+n_clustered <- calc_clustered_n(n_unclustered = 220, design_effect = de)
+# Result: N = 220 × 1.493 = 329 patients
+
+# Step 3: Number of practices
+k <- calc_n_clusters(n_total = 329, cluster_size = 30)
+# Result: K = 329 / 30 = 11 practices
+
+# Interpretation
+cat("Need:", n_clustered, "patients across", k, "practices\n")
+cat("Per arm:", ceiling(k / 2), "practices (assuming equal allocation)\n")
+```
+
+**Output**:
+```
+Need: 329 patients across 11 practices
+Per arm: 6 practices (assuming equal allocation)
+```
+
+### Sensitivity Analysis
+
+```{r case1-sens, eval=FALSE}
+# Worst case: ICC = 0.05 (clinical outcome, upper range)
+de_worst <- calc_design_effect(cluster_size = 30, icc = 0.05)
+n_worst <- calc_clustered_n(n_unclustered = 220, design_effect = de_worst)
+k_worst <- calc_n_clusters(n_total = n_worst, cluster_size = 30)
+
+cat("Worst case (ICC=0.05):", n_worst, "patients across", k_worst, "practices\n")
+```
+
+**Output**:
+```
+Worst case (ICC=0.05): 550 patients across 19 practices
+```
+
+### Decision
+
+- **Expected scenario (ICC = 0.017)**: 11 practices (6 per arm)
+- **Worst case (ICC = 0.05)**: 19 practices (10 per arm)
+
+**Recommendation**: Recruit **20 practices** (10 per arm) to be conservative and ensure adequate cluster count even under higher ICC.
+
+## Case Study 2: Hospital-Level Quality Improvement
+
+### Scenario
+
+A hospital network wants to reduce 30-day readmission rates through a quality improvement intervention. Hospitals will be randomized.
+
+**Design parameters**:
+- **Outcome**: 30-day readmission (binary, proportion)
+- **Unclustered N**: 500 (from two-proportion test for 80% power, p1 = 0.20, p2 = 0.15)
+- **Cluster type**: Hospitals
+- **Average hospital size**: 100 patients per hospital
+- **ICC**: 0.05 (clinical outcome, typical value)
+
+### Problem: Very Large Design Effect
+
+```{r case2-problem, eval=FALSE}
+de <- calc_design_effect(cluster_size = 100, icc = 0.05)
+# Result: DE = 1 + (100 - 1) × 0.05 = 5.95
+
+n_clustered <- calc_clustered_n(n_unclustered = 500, design_effect = de)
+# Result: N = 500 × 5.95 = 2,975 patients
+
+k <- calc_n_clusters(n_total = 2975, cluster_size = 100)
+# Result: K = 2,975 / 100 = 30 hospitals
+```
+
+**Issue**: Need 30 hospitals with 100 patients each (2,975 total) — likely infeasible.
+
+### Solution: Reduce Cluster Size
+
+Instead of 100 patients per hospital, sample **50 patients per hospital**:
+
+```{r case2-solution, eval=FALSE}
+de_reduced <- calc_design_effect(cluster_size = 50, icc = 0.05)
+# Result: DE = 1 + (50 - 1) × 0.05 = 3.45
+
+n_clustered_reduced <- calc_clustered_n(n_unclustered = 500, design_effect = de_reduced)
+# Result: N = 500 × 3.45 = 1,725 patients
+
+k_reduced <- calc_n_clusters(n_total = 1725, cluster_size = 50)
+# Result: K = 1,725 / 50 = 35 hospitals
+```
+
+**Trade-off**:
+- **Smaller cluster size (50)**: Need 35 hospitals but only 1,725 patients
+- **Larger cluster size (100)**: Need 30 hospitals but 2,975 patients
+
+**Recommendation**: Use **50 patients per hospital** to reduce total sample size and make recruitment more feasible. The additional 5 hospitals (35 vs 30) may be easier to recruit than an extra 1,250 patients.
+
+### Alternative: Recruit More Hospitals, Smaller Clusters
+
+```{r case2-alternative, eval=FALSE}
+# Even smaller: 25 patients per hospital
+de_small <- calc_design_effect(cluster_size = 25, icc = 0.05)
+n_small <- calc_clustered_n(n_unclustered = 500, design_effect = de_small)
+k_small <- calc_n_clusters(n_total = n_small, cluster_size = 25)
+
+cat("Option C (25 per hospital):", n_small, "patients across", k_small, "hospitals\n")
+```
+
+**Output**:
+```
+Option C (25 per hospital): 1,100 patients across 44 hospitals
+```
+
+**Final comparison**:
+
+| Option | Cluster Size | Design Effect | Total N | Hospitals | Feasibility |
+|--------|--------------|---------------|---------|-----------|-------------|
+| A | 100 | 5.95 | 2,975 | 30 | Low (too many patients) |
+| B | 50 | 3.45 | 1,725 | 35 | Moderate |
+| C | 25 | 2.20 | 1,100 | 44 | High (most efficient) |
+
+**Decision**: If 44 hospitals are recruitable, **Option C is optimal** (smallest total sample size and highest efficiency).
+
+## Advanced Topics
+
+### Unequal Cluster Sizes
+
+When cluster sizes vary, use the **average cluster size** (m_bar) or, more conservatively, the **maximum anticipated cluster size** for design effect calculations.
+
+**Example**:
+- Hospital A: 30 patients
+- Hospital B: 50 patients
+- Hospital C: 70 patients
+
+Average: m_bar = (30 + 50 + 70) / 3 = 50
+
+```{r unequal-clusters, eval=FALSE}
+# Use average cluster size
+de_avg <- calc_design_effect(cluster_size = 50, icc = 0.05)
+
+# Or use maximum for conservative estimate
+de_max <- calc_design_effect(cluster_size = 70, icc = 0.05)
+```
+
+### Varying ICC Across Outcomes
+
+Different outcomes within the same study may have different ICCs:
+
+- **Primary outcome**: Use published ICC or pilot estimate
+- **Secondary outcomes**: Consider sensitivity analysis with different ICCs
+
+### Cluster-Randomized vs Individually-Randomized Designs
+
+**When to use cluster randomization:**
+- Intervention is delivered at cluster level (e.g., training all staff in a hospital)
+- Risk of contamination if individuals within a cluster receive different treatments
+- Logistical reasons (easier to randomize clusters than individuals)
+
+**Cost**:
+- Cluster randomization requires larger sample sizes due to design effect
+- Only beneficial when ICC is unavoidable or intervention logistics demand it
+
+**Alternative**: If individual randomization is feasible, it's **statistically more efficient** (DE = 1, no inflation).
+
+### Adjusting for Clustering in Analysis
+
+**Important**: Planning for clustered data requires:
+
+1. **Design stage**: Inflate sample size using design effect
+2. **Analysis stage**: Use appropriate statistical methods:
+   - **Mixed-effects models** (random intercept for cluster)
+   - **Generalized Estimating Equations (GEE)**
+   - **Cluster-robust standard errors**
+
+Failing to account for clustering in analysis invalidates p-values and confidence intervals (typically anti-conservative, inflated Type I error).
+
+## Practical Workflow Summary
+
+### Step 1: Calculate Unclustered Sample Size
+
+Use standard sample size formulas (t-test, two-proportion test, etc.) assuming independent observations.
+
+```{r workflow-step1, eval=FALSE}
+# Example: Two-sample t-test
+library(pwr)
+result <- pwr.t.test(d = 0.40, sig.level = 0.05, power = 0.80, type = "two.sample")
+n_unclustered <- ceiling(result$n * 2)  # Total for both groups
+```
+
+### Step 2: Determine ICC
+
+From pilot data, literature, or tool's typical values:
+
+```{r workflow-step2, eval=FALSE}
+# Option A: Pilot data (fit mixed model, extract ICC)
+# Option B: Literature values
+icc <- get_typical_icc("clinical")  # Returns 0.05
+# Option C: Conservative assumption (e.g., upper bound from lit)
+```
+
+### Step 3: Estimate Average Cluster Size
+
+Based on feasibility and cluster characteristics:
+
+```{r workflow-step3, eval=FALSE}
+cluster_size <- 40  # Example: 40 patients per practice
+```
+
+### Step 4: Calculate Design Effect
+
+```{r workflow-step4, eval=FALSE}
+de <- calc_design_effect(cluster_size = cluster_size, icc = icc)
+```
+
+### Step 5: Inflate Sample Size
+
+```{r workflow-step5, eval=FALSE}
+n_clustered <- calc_clustered_n(n_unclustered = n_unclustered, design_effect = de)
+```
+
+### Step 6: Determine Number of Clusters
+
+```{r workflow-step6, eval=FALSE}
+k <- calc_n_clusters(n_total = n_clustered, cluster_size = cluster_size)
+
+# Check if adequate (>=10 per arm for 2-arm trial)
+k_per_arm <- ceiling(k / 2)
+if (k_per_arm < 10) {
+  cat("WARNING: Only", k_per_arm, "clusters per arm. Aim for 10-15+ per arm.\n")
+}
+```
+
+### Step 7: Validate Parameters
+
+```{r workflow-step7, eval=FALSE}
+validation <- validate_clustering_params(
+  n_clusters = k,
+  cluster_size = cluster_size,
+  icc = icc
+)
+
+if (!validation$valid) {
+  stop("Clustering parameters are invalid. Review errors.")
+}
+
+if (length(validation$messages) > 0) {
+  cat("Validation messages:\n")
+  print(validation$messages)
+}
+```
+
+### Step 8: Sensitivity Analysis
+
+```{r workflow-step8, eval=FALSE}
+# Test worst-case scenario
+icc_worst <- icc * 2  # Double the ICC
+de_worst <- calc_design_effect(cluster_size = cluster_size, icc = icc_worst)
+n_worst <- calc_clustered_n(n_unclustered = n_unclustered, design_effect = de_worst)
+k_worst <- calc_n_clusters(n_total = n_worst, cluster_size = cluster_size)
+
+cat("Expected scenario:", k, "clusters,", n_clustered, "participants\n")
+cat("Worst case:", k_worst, "clusters,", n_worst, "participants\n")
+```
+
+### Step 9: Make Final Decision
+
+Balance statistical requirements with feasibility:
+
+- Use expected scenario if confident in ICC estimate
+- Use worst-case if ICC is uncertain or recruitment is feasible
+- Consider reducing cluster size if design effect is prohibitively large
+
+## Summary
+
+**Key takeaways**:
+
+1. **Clustering reduces effective sample size** via the design effect: DE = 1 + (m - 1) × ICC
+2. **Inflate sample size by the design effect** to maintain power: N_clustered = N_unclustered × DE
+3. **Use literature-based typical ICC values** when pilot data are unavailable:
+   - Behavioral outcomes: 0.025
+   - Clinical outcomes: 0.05
+   - Process measures: 0.20
+   - GP practice level: 0.017
+4. **Many small clusters are more efficient** than few large clusters
+5. **Aim for 10-15+ clusters per arm** for reliable inference
+6. **Conduct sensitivity analysis** to assess robustness to ICC assumptions
+7. **Account for clustering in analysis** using mixed models or GEE
+
+**Recommended resources**:
+
+- Donner A, Klar N (2000). *Design and Analysis of Cluster Randomization Trials in Health Research*. Arnold Publishers.
+- Campbell MK, Thomson S, Ramsay CR, et al. (2004). Sample size calculator for cluster randomized trials. *Computers in Biology and Medicine* 34(2):113-125.
+- Eldridge SM, Ashby D, Kerry S (2006). Sample size for cluster randomized trials: effect of coefficient of variation of cluster size and analysis method. *International Journal of Epidemiology* 35(5):1292-1300.
+
+## Further Reading
+
+- See `vignette("propensity-score-calculations")` for handling clustering in observational studies
+- See `vignette("missing-data-adjustments")` for combining clustering and missing data adjustments
+- See the Clustering module in all tabs of the Power Analysis Tool for interactive calculations

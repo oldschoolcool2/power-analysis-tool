@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Power Analysis Tool Development Team" />
+
+<meta name="date" content="2025-10-26" />
+
+<title>Missing Data Adjustment Strategies for Sample Size Calculations</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Missing Data Adjustment Strategies for
+Sample Size Calculations</h1>
+<h4 class="author">Power Analysis Tool Development Team</h4>
+<h4 class="date">2025-10-26</h4>
+
+
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>Missing data is ubiquitous in real-world studies. Failing to account
+for missingness during sample size planning can lead to underpowered
+studies that cannot detect true effects. This vignette explains:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Why missing data reduces power</strong> and effective sample
+size</li>
+<li><strong>Three missing data mechanisms</strong> (MCAR, MAR, MNAR) and
+their implications</li>
+<li><strong>Two analysis approaches</strong>: Complete Case Analysis
+(CCA) vs Multiple Imputation (MI)</li>
+<li><strong>How to calculate sample size inflation</strong> for each
+approach</li>
+<li><strong>Practical decision-making</strong> for choosing between CCA
+and MI</li>
+</ol>
+</div>
+<div id="why-missing-data-matters-for-power" class="section level2">
+<h2>Why Missing Data Matters for Power</h2>
+<p>Statistical power depends on <strong>effective sample size</strong> —
+the number of observations actually used in analysis. Missing data
+reduces this:</p>
+<ul>
+<li><strong>Lost observations</strong>: Each missing case reduces the
+dataset</li>
+<li><strong>Reduced precision</strong>: Smaller sample → wider
+confidence intervals → lower power</li>
+<li><strong>Increased variance</strong>: Uncertainty increases with less
+complete data</li>
+</ul>
+<p><strong>Key principle</strong>: Always plan for more participants
+than theoretically required to account for expected missingness.</p>
+</div>
+<div id="missing-data-mechanisms" class="section level2">
+<h2>Missing Data Mechanisms</h2>
+<p>Understanding the <strong>mechanism</strong> of missingness is
+critical for choosing the right approach and interpreting results.</p>
+<div id="mcar-missing-completely-at-random" class="section level3">
+<h3>MCAR: Missing Completely at Random</h3>
+<p><strong>Definition</strong>: Missingness is unrelated to any observed
+or unobserved variables.</p>
+<p><strong>Example</strong>: A lab machine randomly malfunctions,
+causing 10% of blood samples to be lost.</p>
+<p><strong>Properties</strong>: - Complete cases are a random sample of
+the full data - No bias introduced (only loss of power) - CCA is valid
+but inefficient - MI offers efficiency gains</p>
+<p><strong>Analogy</strong>: Randomly flipping a coin to decide whether
+to measure someone — the flip has nothing to do with their
+characteristics or outcomes.</p>
+</div>
+<div id="mar-missing-at-random" class="section level3">
+<h3>MAR: Missing at Random</h3>
+<p><strong>Definition</strong>: Missingness depends on
+<strong>observed</strong> variables, but not on the missing values
+themselves (conditional on observed data).</p>
+<p><strong>Example</strong>: Older patients are more likely to miss
+follow-up visits, but among patients of the same age, missingness is
+random. If we know age, we can account for the missingness pattern.</p>
+<p><strong>Properties</strong>: - Complete cases may be biased (e.g.,
+overrepresenting younger patients) - CCA can introduce bias unless the
+analysis model includes predictors of missingness - MI can provide
+unbiased estimates if the imputation model includes predictors of
+missingness - <strong>Most common mechanism in practice</strong></p>
+<p><strong>Analogy</strong>: Whether a student submits homework depends
+on their GPA (observed), but conditional on GPA, missingness is
+random.</p>
+</div>
+<div id="mnar-missing-not-at-random" class="section level3">
+<h3>MNAR: Missing Not at Random</h3>
+<p><strong>Definition</strong>: Missingness depends on
+<strong>unobserved</strong> values (the missing data itself).</p>
+<p><strong>Example</strong>: Patients with severe side effects are more
+likely to drop out, but we don’t observe the severity for those who
+dropped out.</p>
+<p><strong>Properties</strong>: - Both CCA and MI can be biased - Bias
+cannot be fully eliminated without additional information - Sensitivity
+analysis required to assess impact - May require specialized methods
+(e.g., selection models, pattern mixture models)</p>
+<p><strong>Analogy</strong>: Students who would have failed the exam are
+more likely not to show up (the missing exam score is related to what it
+would have been).</p>
+</div>
+<div id="practical-guidance" class="section level3">
+<h3>Practical Guidance</h3>
+<p>In most studies:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Assume MAR</strong> unless you have strong reason to suspect
+MNAR</li>
+<li><strong>Plan for sensitivity analyses</strong> to explore MNAR
+scenarios</li>
+<li><strong>Collect predictors of missingness</strong> during study
+design (e.g., age, baseline severity) to strengthen MAR assumption and
+improve MI models</li>
+</ol>
+</div>
+</div>
+<div id="two-analysis-approaches" class="section level2">
+<h2>Two Analysis Approaches</h2>
+<div id="complete-case-analysis-cca" class="section level3">
+<h3>Complete Case Analysis (CCA)</h3>
+<p><strong>Method</strong>: Use only observations with complete data;
+discard any observation with missingness.</p>
+<p><strong>Advantages</strong>: - Simple and transparent - No modeling
+assumptions about missing data - Unbiased under MCAR - Unbiased under
+MAR if missingness predictors are in the analysis model</p>
+<p><strong>Disadvantages</strong>: - Inefficient: discards partial
+information - Requires larger sample sizes - Can introduce bias under
+MAR if not handled carefully - Substantial power loss with high
+missingness</p>
+<p><strong>Sample size adjustment</strong>:</p>
+<p><span class="math display">\[
+N_{CCA} = \frac{N_{required}}{1 - p_{missing}}
+\]</span></p>
+<p>where <span class="math inline">\(p_{missing}\)</span> is the
+proportion of expected missingness.</p>
+<p><strong>Example</strong>: If 20% missingness expected and N = 400
+required, need N = 400 / 0.80 = <strong>500</strong> to ensure 400
+complete cases.</p>
+</div>
+<div id="multiple-imputation-mi" class="section level3">
+<h3>Multiple Imputation (MI)</h3>
+<p><strong>Method</strong>: Create multiple plausible datasets by
+imputing missing values based on observed data, analyze each dataset
+separately, then pool results using Rubin’s rules.</p>
+<p><strong>Advantages</strong>: - More efficient: uses all available
+information - Reduces sample size inflation compared to CCA - Unbiased
+under MAR with good imputation model - Can incorporate auxiliary
+variables not in analysis model</p>
+<p><strong>Disadvantages</strong>: - More complex to implement -
+Requires careful imputation model specification - Can be biased if
+imputation model is misspecified - Requires sufficient computational
+resources for many imputations</p>
+<p><strong>Sample size adjustment</strong>:</p>
+<p><span class="math display">\[
+N_{MI} = N_{required} \times \frac{1}{1 - p_{missing}} \times
+\sqrt{\frac{1}{RE}}
+\]</span></p>
+<p>where RE is the relative efficiency of MI, which depends on: - Number
+of imputations (m) - Imputation model quality (R²) - Fraction of missing
+information (FMI)</p>
+<p><strong>Key insight</strong>: MI recovers information lost to
+missingness, so requires fewer additional participants than CCA.</p>
+</div>
+</div>
+<div id="calculating-sample-size-inflation" class="section level2">
+<h2>Calculating Sample Size Inflation</h2>
+<div id="cca-example" class="section level3">
+<h3>CCA Example</h3>
+<p><strong>Scenario</strong>: - Required sample size (complete data):
+<strong>N = 400</strong> - Expected missingness: <strong>15%</strong> -
+Mechanism: MAR - Analysis: Complete case analysis</p>
+<p><strong>Calculation</strong>:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(PowerAnalysisTool)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>result_cca <span class="ot">&lt;-</span> <span class="fu">calc_missing_data_inflation</span>(</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>  <span class="at">n_required =</span> <span class="dv">400</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>  <span class="at">missing_pct =</span> <span class="dv">15</span>,</span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>  <span class="at">mechanism =</span> <span class="st">&quot;mar&quot;</span>,</span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>  <span class="at">analysis_type =</span> <span class="st">&quot;complete_case&quot;</span></span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>)</span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Inflated sample size:&quot;</span>, result_cca<span class="sc">$</span>n_inflated, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Inflation factor:&quot;</span>, result_cca<span class="sc">$</span>inflation_factor, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Additional participants needed:&quot;</span>, result_cca<span class="sc">$</span>n_increase, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Percent increase:&quot;</span>, result_cca<span class="sc">$</span>pct_increase, <span class="st">&quot;%</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;</span><span class="sc">\n</span><span class="st">Interpretation:&quot;</span>, result_cca<span class="sc">$</span>interpretation, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<p><strong>Output</strong>:</p>
+<pre><code>Inflated sample size: 471
+Inflation factor: 1.176
+Additional participants needed: 71
+Percent increase: 17.6%
+
+Interpretation: Assuming 15% missingness (MAR) with complete-case analysis,
+inflate sample size by 17.6% (add 71 participants) to ensure adequate
+complete-case sample.</code></pre>
+<p><strong>Result</strong>: Need to recruit <strong>471</strong>
+participants to ensure 400 complete cases.</p>
+</div>
+<div id="mi-example" class="section level3">
+<h3>MI Example</h3>
+<p><strong>Scenario</strong>: - Required sample size (complete data):
+<strong>N = 400</strong> - Expected missingness: <strong>15%</strong> -
+Mechanism: MAR - Analysis: Multiple imputation - Number of imputations:
+<strong>m = 20</strong> - Imputation model R²: <strong>0.60</strong>
+(good predictive quality)</p>
+<p><strong>Calculation</strong>:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>result_mi <span class="ot">&lt;-</span> <span class="fu">calc_missing_data_inflation</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="at">n_required =</span> <span class="dv">400</span>,</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="at">missing_pct =</span> <span class="dv">15</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  <span class="at">mechanism =</span> <span class="st">&quot;mar&quot;</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>  <span class="at">analysis_type =</span> <span class="st">&quot;multiple_imputation&quot;</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>  <span class="at">mi_imputations =</span> <span class="dv">20</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>  <span class="at">mi_r_squared =</span> <span class="fl">0.60</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>)</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Inflated sample size (MI):&quot;</span>, result_mi<span class="sc">$</span>n_inflated, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Inflation factor:&quot;</span>, result_mi<span class="sc">$</span>inflation_factor, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Additional participants needed:&quot;</span>, result_mi<span class="sc">$</span>n_increase, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Percent increase:&quot;</span>, result_mi<span class="sc">$</span>pct_increase, <span class="st">&quot;%</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;</span><span class="sc">\n</span><span class="st">Comparison with CCA:</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;CCA would require:&quot;</span>, result_mi<span class="sc">$</span>mi_comparison<span class="sc">$</span>cca_n, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;MI requires:&quot;</span>, result_mi<span class="sc">$</span>mi_comparison<span class="sc">$</span>mi_n, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Efficiency gain:&quot;</span>, result_mi<span class="sc">$</span>mi_comparison<span class="sc">$</span>efficiency_gain, <span class="st">&quot;fewer participants</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Relative efficiency:&quot;</span>, result_mi<span class="sc">$</span>mi_comparison<span class="sc">$</span>relative_efficiency, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Fraction of missing information:&quot;</span>, result_mi<span class="sc">$</span>mi_comparison<span class="sc">$</span>fmi, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a></span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;</span><span class="sc">\n</span><span class="st">Recommendations:</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Number of imputations adequate?&quot;</span>, result_mi<span class="sc">$</span>mi_recommendations<span class="sc">$</span>m_adequate, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Recommended m:&quot;</span>, result_mi<span class="sc">$</span>mi_recommendations<span class="sc">$</span>m_recommended, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Imputation model quality:&quot;</span>, result_mi<span class="sc">$</span>mi_recommendations<span class="sc">$</span>r_squared_quality, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<p><strong>Output</strong>:</p>
+<pre><code>Inflated sample size (MI): 439
+Inflation factor: 1.098
+Additional participants needed: 39
+Percent increase: 9.8%
+
+Comparison with CCA:
+CCA would require: 471
+MI requires: 439
+Efficiency gain: 32 fewer participants
+Relative efficiency: 0.989
+Fraction of missing information: 0.007
+
+Recommendations:
+Number of imputations adequate? TRUE
+Recommended m: 15
+Imputation model quality: moderate</code></pre>
+<p><strong>Result</strong>: Need to recruit <strong>439</strong>
+participants using MI, compared to 471 using CCA — a savings of
+<strong>32 participants</strong> (6.8%).</p>
+</div>
+</div>
+<div id="comparison-cca-vs-mi" class="section level2">
+<h2>Comparison: CCA vs MI</h2>
+<div id="scenario-varying-missingness-rates" class="section level3">
+<h3>Scenario: Varying Missingness Rates</h3>
+<p>Let’s compare CCA and MI across different missingness rates with a
+good imputation model (R² = 0.60, m = 20):</p>
+<table>
+<caption>Sample Size Requirements: CCA vs MI (R² = 0.60, m =
+20)</caption>
+<thead>
+<tr class="header">
+<th align="left">Missingness</th>
+<th align="right">N_Required</th>
+<th align="right">N_CCA</th>
+<th align="right">N_MI</th>
+<th align="right">Savings</th>
+<th align="left">Savings_Pct</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">5%</td>
+<td align="right">400</td>
+<td align="right">421</td>
+<td align="right">408</td>
+<td align="right">13</td>
+<td align="left">3.1%</td>
+</tr>
+<tr class="even">
+<td align="left">10%</td>
+<td align="right">400</td>
+<td align="right">444</td>
+<td align="right">416</td>
+<td align="right">28</td>
+<td align="left">6.3%</td>
+</tr>
+<tr class="odd">
+<td align="left">15%</td>
+<td align="right">400</td>
+<td align="right">471</td>
+<td align="right">439</td>
+<td align="right">32</td>
+<td align="left">6.8%</td>
+</tr>
+<tr class="even">
+<td align="left">20%</td>
+<td align="right">400</td>
+<td align="right">500</td>
+<td align="right">458</td>
+<td align="right">42</td>
+<td align="left">8.4%</td>
+</tr>
+<tr class="odd">
+<td align="left">30%</td>
+<td align="right">400</td>
+<td align="right">571</td>
+<td align="right">501</td>
+<td align="right">70</td>
+<td align="left">12.3%</td>
+</tr>
+<tr class="even">
+<td align="left">40%</td>
+<td align="right">400</td>
+<td align="right">667</td>
+<td align="right">552</td>
+<td align="right">115</td>
+<td align="left">17.2%</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Observations</strong>:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Higher missingness → greater MI advantage</strong>: At 40%
+missingness, MI saves 115 participants (17.2%)</li>
+<li><strong>MI is always more efficient</strong> than CCA when R² &gt;
+0</li>
+<li><strong>Diminishing returns</strong>: Even excellent imputation
+models cannot fully eliminate inflation at high missingness</li>
+</ol>
+</div>
+<div id="effect-of-imputation-model-quality-r²" class="section level3">
+<h3>Effect of Imputation Model Quality (R²)</h3>
+<p>With 20% missingness and m = 20, varying imputation model
+quality:</p>
+<table>
+<caption>MI Efficiency by Imputation Model Quality (20% Missingness, m =
+20)</caption>
+<colgroup>
+<col width="34%" />
+<col width="13%" />
+<col width="6%" />
+<col width="8%" />
+<col width="11%" />
+<col width="25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Imputation_Model_Quality</th>
+<th align="right">R_Squared</th>
+<th align="right">N_MI</th>
+<th align="right">N_CCA</th>
+<th align="right">Savings</th>
+<th align="left">Efficiency_vs_CCA</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Excellent (R² = 0.80)</td>
+<td align="right">0.8</td>
+<td align="right">446</td>
+<td align="right">500</td>
+<td align="right">54</td>
+<td align="left">10.8%</td>
+</tr>
+<tr class="even">
+<td align="left">Good (R² = 0.60)</td>
+<td align="right">0.6</td>
+<td align="right">458</td>
+<td align="right">500</td>
+<td align="right">42</td>
+<td align="left">8.4%</td>
+</tr>
+<tr class="odd">
+<td align="left">Moderate (R² = 0.40)</td>
+<td align="right">0.4</td>
+<td align="right">470</td>
+<td align="right">500</td>
+<td align="right">30</td>
+<td align="left">6.0%</td>
+</tr>
+<tr class="even">
+<td align="left">Poor (R² = 0.20)</td>
+<td align="right">0.2</td>
+<td align="right">483</td>
+<td align="right">500</td>
+<td align="right">17</td>
+<td align="left">3.4%</td>
+</tr>
+<tr class="odd">
+<td align="left">Very Poor (R² = 0.10)</td>
+<td align="right">0.1</td>
+<td align="right">489</td>
+<td align="right">500</td>
+<td align="right">11</td>
+<td align="left">2.2%</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Observations</strong>:</p>
+<ol style="list-style-type: decimal">
+<li><strong>R² matters</strong>: Excellent models (R² = 0.80) save 54
+participants vs CCA; poor models (R² = 0.20) save only 17</li>
+<li><strong>Even poor imputation is better than CCA</strong> (unless
+grossly misspecified)</li>
+<li><strong>Invest in good predictors</strong>: Including strong
+auxiliary variables improves R² and efficiency</li>
+</ol>
+</div>
+<div id="effect-of-number-of-imputations-m" class="section level3">
+<h3>Effect of Number of Imputations (m)</h3>
+<p>With 20% missingness and R² = 0.60:</p>
+<table>
+<caption>MI Efficiency by Number of Imputations (20% Missingness, R² =
+0.60)</caption>
+<thead>
+<tr class="header">
+<th align="left">Number_of_Imputations</th>
+<th align="right">m</th>
+<th align="right">N_MI</th>
+<th align="right">Relative_Efficiency</th>
+<th align="left">Marginal_Gain</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">m = 5</td>
+<td align="right">5</td>
+<td align="right">466</td>
+<td align="right">0.981</td>
+<td align="left">—</td>
+</tr>
+<tr class="even">
+<td align="left">m = 10</td>
+<td align="right">10</td>
+<td align="right">460</td>
+<td align="right">0.986</td>
+<td align="left">6</td>
+</tr>
+<tr class="odd">
+<td align="left">m = 20</td>
+<td align="right">20</td>
+<td align="right">458</td>
+<td align="right">0.989</td>
+<td align="left">2</td>
+</tr>
+<tr class="even">
+<td align="left">m = 50</td>
+<td align="right">50</td>
+<td align="right">457</td>
+<td align="right">0.990</td>
+<td align="left">1</td>
+</tr>
+<tr class="odd">
+<td align="left">m = 100</td>
+<td align="right">100</td>
+<td align="right">456</td>
+<td align="right">0.991</td>
+<td align="left">1</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Observations</strong>:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Diminishing returns</strong>: Going from m = 5 to m = 10
+saves 6 participants; m = 50 to m = 100 saves only 1</li>
+<li><strong>Rule of thumb</strong>: Use m ≥ % missingness (e.g., 20%
+missing → m ≥ 20)</li>
+<li><strong>Practical recommendation</strong>: m = 20 to 50 is
+sufficient for most applications</li>
+<li><strong>Computational cost</strong>: Higher m increases analysis
+time; balance efficiency gains vs runtime</li>
+</ol>
+</div>
+</div>
+<div id="practical-decision-framework" class="section level2">
+<h2>Practical Decision Framework</h2>
+<div id="step-1-estimate-expected-missingness" class="section level3">
+<h3>Step 1: Estimate Expected Missingness</h3>
+<p>From pilot data, literature, or expert judgment:</p>
+<ul>
+<li><strong>Low</strong>: &lt; 10%</li>
+<li><strong>Moderate</strong>: 10-25%</li>
+<li><strong>High</strong>: &gt; 25%</li>
+</ul>
+<p><strong>Sources</strong>: - Similar studies in same population -
+Pilot study retention rates - Domain expertise (e.g., longitudinal
+studies typically have higher missingness)</p>
+</div>
+<div id="step-2-identify-mechanism" class="section level3">
+<h3>Step 2: Identify Mechanism</h3>
+<p>Ask: - <strong>Is missingness related to any observed
+variables?</strong> (If yes → likely MAR) - <strong>Could missingness
+depend on unobserved values?</strong> (If yes → potentially MNAR; plan
+sensitivity analysis)</p>
+<p><strong>Default assumption</strong>: MAR (most common in
+practice)</p>
+</div>
+<div id="step-3-choose-analysis-approach" class="section level3">
+<h3>Step 3: Choose Analysis Approach</h3>
+<div id="choose-cca-if" class="section level4">
+<h4>Choose CCA if:</h4>
+<ul>
+<li>Very low missingness (&lt; 5%): Efficiency difference
+negligible</li>
+<li>Simple study design with no auxiliary variables</li>
+<li>Reviewers/stakeholders prefer simpler methods</li>
+<li>Imputation model difficult to specify (e.g., complex interactions,
+non-normal data)</li>
+</ul>
+</div>
+<div id="choose-mi-if" class="section level4">
+<h4>Choose MI if:</h4>
+<ul>
+<li>Moderate to high missingness (≥ 10%): MI offers substantial
+efficiency gains</li>
+<li>Good auxiliary variables available to predict missingness</li>
+<li>MAR assumption plausible</li>
+<li>Resources available for proper MI implementation</li>
+</ul>
+</div>
+</div>
+<div id="step-4-calculate-inflation-factor" class="section level3">
+<h3>Step 4: Calculate Inflation Factor</h3>
+<div id="for-cca" class="section level4">
+<h4>For CCA:</h4>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">calc_missing_data_inflation</span>(</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="at">n_required =</span> [your required N],</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="at">missing_pct =</span> [expected % missing],</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>  <span class="at">mechanism =</span> <span class="st">&quot;mar&quot;</span>,  <span class="co"># or &quot;mcar&quot; or &quot;mnar&quot;</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>  <span class="at">analysis_type =</span> <span class="st">&quot;complete_case&quot;</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>)</span></code></pre></div>
+</div>
+<div id="for-mi" class="section level4">
+<h4>For MI:</h4>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">calc_missing_data_inflation</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  <span class="at">n_required =</span> [your required N],</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  <span class="at">missing_pct =</span> [expected % missing],</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  <span class="at">mechanism =</span> <span class="st">&quot;mar&quot;</span>,</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>  <span class="at">analysis_type =</span> <span class="st">&quot;multiple_imputation&quot;</span>,</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>  <span class="at">mi_imputations =</span> <span class="dv">20</span>,       <span class="co"># Adjust based on % missing</span></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>  <span class="at">mi_r_squared =</span> <span class="fl">0.60</span>        <span class="co"># Estimate from pilot or literature</span></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>)</span></code></pre></div>
+</div>
+</div>
+<div id="step-5-plan-for-worst-case-scenarios" class="section level3">
+<h3>Step 5: Plan for Worst-Case Scenarios</h3>
+<p>Conduct sensitivity analysis:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co"># Worst case: higher missingness, poorer imputation model</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>worst_case <span class="ot">&lt;-</span> <span class="fu">calc_missing_data_inflation</span>(</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  <span class="at">n_required =</span> <span class="dv">400</span>,</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  <span class="at">missing_pct =</span> <span class="dv">30</span>,          <span class="co"># Increase from expected 20%</span></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>  <span class="at">mechanism =</span> <span class="st">&quot;mar&quot;</span>,</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>  <span class="at">analysis_type =</span> <span class="st">&quot;multiple_imputation&quot;</span>,</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>  <span class="at">mi_imputations =</span> <span class="dv">30</span>,</span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>  <span class="at">mi_r_squared =</span> <span class="fl">0.40</span>        <span class="co"># Decrease from expected 0.60</span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>)</span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="co"># Best case: lower missingness, better imputation</span></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a>best_case <span class="ot">&lt;-</span> <span class="fu">calc_missing_data_inflation</span>(</span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a>  <span class="at">n_required =</span> <span class="dv">400</span>,</span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a>  <span class="at">missing_pct =</span> <span class="dv">10</span>,</span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a>  <span class="at">mechanism =</span> <span class="st">&quot;mar&quot;</span>,</span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a>  <span class="at">analysis_type =</span> <span class="st">&quot;multiple_imputation&quot;</span>,</span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a>  <span class="at">mi_imputations =</span> <span class="dv">20</span>,</span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a>  <span class="at">mi_r_squared =</span> <span class="fl">0.75</span></span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a>)</span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a></span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Worst case N:&quot;</span>, worst_case<span class="sc">$</span>n_inflated, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Best case N:&quot;</span>, best_case<span class="sc">$</span>n_inflated, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<p>Use the worst-case estimate for conservative planning.</p>
+</div>
+</div>
+<div id="case-study-longitudinal-rct" class="section level2">
+<h2>Case Study: Longitudinal RCT</h2>
+<div id="scenario" class="section level3">
+<h3>Scenario</h3>
+<p>A 12-month randomized trial comparing a behavioral intervention to
+usual care for weight loss.</p>
+<p><strong>Parameters</strong>: - Primary outcome: Weight change at 12
+months - Required sample size (complete data): <strong>N = 300</strong>
+(150 per arm) - Expected missingness: <strong>25%</strong> (based on
+similar studies) - Mechanism: MAR (dropout related to baseline BMI and
+early weight change, which will be measured) - Available auxiliary
+variables: Baseline BMI, demographics, 3-month and 6-month weight -
+Imputation model R² estimate: <strong>0.65</strong> (good predictors
+available)</p>
+</div>
+<div id="cca-approach" class="section level3">
+<h3>CCA Approach</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>result_cca <span class="ot">&lt;-</span> <span class="fu">calc_missing_data_inflation</span>(</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>  <span class="at">n_required =</span> <span class="dv">300</span>,</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>  <span class="at">missing_pct =</span> <span class="dv">25</span>,</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>  <span class="at">mechanism =</span> <span class="st">&quot;mar&quot;</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>  <span class="at">analysis_type =</span> <span class="st">&quot;complete_case&quot;</span></span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>)</span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a><span class="co"># Result: N = 400 (add 100 participants)</span></span></code></pre></div>
+<p><strong>Interpretation</strong>: Recruit 400 participants (200 per
+arm) to ensure 300 complete cases.</p>
+</div>
+<div id="mi-approach" class="section level3">
+<h3>MI Approach</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>result_mi <span class="ot">&lt;-</span> <span class="fu">calc_missing_data_inflation</span>(</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>  <span class="at">n_required =</span> <span class="dv">300</span>,</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>  <span class="at">missing_pct =</span> <span class="dv">25</span>,</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>  <span class="at">mechanism =</span> <span class="st">&quot;mar&quot;</span>,</span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>  <span class="at">analysis_type =</span> <span class="st">&quot;multiple_imputation&quot;</span>,</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>  <span class="at">mi_imputations =</span> <span class="dv">30</span>,</span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>  <span class="at">mi_r_squared =</span> <span class="fl">0.65</span></span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>)</span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a></span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a><span class="co"># Result: N = 343 (add 43 participants)</span></span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a><span class="co"># Efficiency gain: 57 fewer than CCA (14.3% savings)</span></span></code></pre></div>
+<p><strong>Interpretation</strong>: Recruit 343 participants (172 per
+arm) using MI, saving 57 participants compared to CCA.</p>
+</div>
+<div id="budget-analysis" class="section level3">
+<h3>Budget Analysis</h3>
+<ul>
+<li><strong>Cost per participant</strong>: $500 (recruitment,
+intervention, measurements)</li>
+<li><strong>CCA cost</strong>: 400 × $500 =
+<strong>$200,000</strong></li>
+<li><strong>MI cost</strong>: 343 × $500 =
+<strong>$171,500</strong></li>
+<li><strong>Savings with MI</strong>: <strong>$28,500</strong>
+(14.3%)</li>
+</ul>
+<p><strong>Decision</strong>: Use MI approach given substantial cost
+savings and availability of good auxiliary predictors.</p>
+</div>
+<div id="sensitivity-analysis" class="section level3">
+<h3>Sensitivity Analysis</h3>
+<p>Test robustness to assumptions:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="co"># Scenario 1: Higher missingness (30% instead of 25%)</span></span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>sens_high_miss <span class="ot">&lt;-</span> <span class="fu">calc_missing_data_inflation</span>(</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>  <span class="at">n_required =</span> <span class="dv">300</span>,</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>  <span class="at">missing_pct =</span> <span class="dv">30</span>,</span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>  <span class="at">mechanism =</span> <span class="st">&quot;mar&quot;</span>,</span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>  <span class="at">analysis_type =</span> <span class="st">&quot;multiple_imputation&quot;</span>,</span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a>  <span class="at">mi_imputations =</span> <span class="dv">30</span>,</span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a>  <span class="at">mi_r_squared =</span> <span class="fl">0.65</span></span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a>)</span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a><span class="co"># Result: N = 368 (vs 343 baseline)</span></span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a></span>
+<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a><span class="co"># Scenario 2: Poorer imputation model (R² = 0.45 instead of 0.65)</span></span>
+<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a>sens_poor_model <span class="ot">&lt;-</span> <span class="fu">calc_missing_data_inflation</span>(</span>
+<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a>  <span class="at">n_required =</span> <span class="dv">300</span>,</span>
+<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a>  <span class="at">missing_pct =</span> <span class="dv">25</span>,</span>
+<span id="cb10-16"><a href="#cb10-16" tabindex="-1"></a>  <span class="at">mechanism =</span> <span class="st">&quot;mar&quot;</span>,</span>
+<span id="cb10-17"><a href="#cb10-17" tabindex="-1"></a>  <span class="at">analysis_type =</span> <span class="st">&quot;multiple_imputation&quot;</span>,</span>
+<span id="cb10-18"><a href="#cb10-18" tabindex="-1"></a>  <span class="at">mi_imputations =</span> <span class="dv">30</span>,</span>
+<span id="cb10-19"><a href="#cb10-19" tabindex="-1"></a>  <span class="at">mi_r_squared =</span> <span class="fl">0.45</span></span>
+<span id="cb10-20"><a href="#cb10-20" tabindex="-1"></a>)</span>
+<span id="cb10-21"><a href="#cb10-21" tabindex="-1"></a><span class="co"># Result: N = 356 (vs 343 baseline)</span></span>
+<span id="cb10-22"><a href="#cb10-22" tabindex="-1"></a></span>
+<span id="cb10-23"><a href="#cb10-23" tabindex="-1"></a><span class="co"># Scenario 3: Both (worst case)</span></span>
+<span id="cb10-24"><a href="#cb10-24" tabindex="-1"></a>sens_worst <span class="ot">&lt;-</span> <span class="fu">calc_missing_data_inflation</span>(</span>
+<span id="cb10-25"><a href="#cb10-25" tabindex="-1"></a>  <span class="at">n_required =</span> <span class="dv">300</span>,</span>
+<span id="cb10-26"><a href="#cb10-26" tabindex="-1"></a>  <span class="at">missing_pct =</span> <span class="dv">30</span>,</span>
+<span id="cb10-27"><a href="#cb10-27" tabindex="-1"></a>  <span class="at">mechanism =</span> <span class="st">&quot;mar&quot;</span>,</span>
+<span id="cb10-28"><a href="#cb10-28" tabindex="-1"></a>  <span class="at">analysis_type =</span> <span class="st">&quot;multiple_imputation&quot;</span>,</span>
+<span id="cb10-29"><a href="#cb10-29" tabindex="-1"></a>  <span class="at">mi_imputations =</span> <span class="dv">30</span>,</span>
+<span id="cb10-30"><a href="#cb10-30" tabindex="-1"></a>  <span class="at">mi_r_squared =</span> <span class="fl">0.45</span></span>
+<span id="cb10-31"><a href="#cb10-31" tabindex="-1"></a>)</span>
+<span id="cb10-32"><a href="#cb10-32" tabindex="-1"></a><span class="co"># Result: N = 382 (still better than CCA&#39;s 400)</span></span></code></pre></div>
+<p><strong>Conclusion</strong>: Even under worst-case assumptions (30%
+missingness, R² = 0.45), MI requires N = 382, still 18 fewer
+participants than CCA’s 400.</p>
+<p><strong>Final decision</strong>: Recruit <strong>N = 380</strong>
+(rounded up from worst-case 382) to provide adequate power across
+plausible scenarios.</p>
+</div>
+</div>
+<div id="advanced-topics" class="section level2">
+<h2>Advanced Topics</h2>
+<div id="handling-mnar-missingness" class="section level3">
+<h3>Handling MNAR Missingness</h3>
+<p>If MNAR is suspected:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Conduct CCA as primary analysis</strong> (conservative,
+avoids imputation model assumptions)</li>
+<li><strong>Perform MI as sensitivity analysis</strong> (with different
+imputation models)</li>
+<li><strong>Explore pattern mixture models</strong> or selection models
+if feasible</li>
+<li><strong>Report results under multiple scenarios</strong> to assess
+robustness</li>
+</ol>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>result_mnar_cca <span class="ot">&lt;-</span> <span class="fu">calc_missing_data_inflation</span>(</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>  <span class="at">n_required =</span> <span class="dv">400</span>,</span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>  <span class="at">missing_pct =</span> <span class="dv">20</span>,</span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>  <span class="at">mechanism =</span> <span class="st">&quot;mnar&quot;</span>,</span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>  <span class="at">analysis_type =</span> <span class="st">&quot;complete_case&quot;</span></span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a>)</span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a></span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a>result_mnar_mi <span class="ot">&lt;-</span> <span class="fu">calc_missing_data_inflation</span>(</span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a>  <span class="at">n_required =</span> <span class="dv">400</span>,</span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a>  <span class="at">missing_pct =</span> <span class="dv">20</span>,</span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a>  <span class="at">mechanism =</span> <span class="st">&quot;mnar&quot;</span>,</span>
+<span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a>  <span class="at">analysis_type =</span> <span class="st">&quot;multiple_imputation&quot;</span>,</span>
+<span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a>  <span class="at">mi_imputations =</span> <span class="dv">25</span>,</span>
+<span id="cb11-14"><a href="#cb11-14" tabindex="-1"></a>  <span class="at">mi_r_squared =</span> <span class="fl">0.55</span></span>
+<span id="cb11-15"><a href="#cb11-15" tabindex="-1"></a>)</span>
+<span id="cb11-16"><a href="#cb11-16" tabindex="-1"></a></span>
+<span id="cb11-17"><a href="#cb11-17" tabindex="-1"></a><span class="co"># Compare results and report both</span></span>
+<span id="cb11-18"><a href="#cb11-18" tabindex="-1"></a><span class="co"># Acknowledge potential for bias and conduct sensitivity analyses</span></span></code></pre></div>
+</div>
+<div id="differential-missingness-by-treatment-arm" class="section level3">
+<h3>Differential Missingness by Treatment Arm</h3>
+<p>If missingness differs between treatment groups:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Use the higher missingness rate</strong> for conservative
+inflation</li>
+<li><strong>Account for unequal retention</strong> in primary
+analysis</li>
+<li><strong>Report missingness by arm</strong> (important for
+interpretation)</li>
+</ol>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="co"># Treatment arm: 15% missingness</span></span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a><span class="co"># Control arm: 30% missingness</span></span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a><span class="co"># Use 30% for both arms to be conservative</span></span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>result_conservative <span class="ot">&lt;-</span> <span class="fu">calc_missing_data_inflation</span>(</span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>  <span class="at">n_required =</span> <span class="dv">400</span>,</span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>  <span class="at">missing_pct =</span> <span class="dv">30</span>,  <span class="co"># Higher of the two rates</span></span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a>  <span class="at">mechanism =</span> <span class="st">&quot;mar&quot;</span>,</span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a>  <span class="at">analysis_type =</span> <span class="st">&quot;multiple_imputation&quot;</span>,</span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a>  <span class="at">mi_imputations =</span> <span class="dv">30</span>,</span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a>  <span class="at">mi_r_squared =</span> <span class="fl">0.60</span></span>
+<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a>)</span></code></pre></div>
+</div>
+<div id="choosing-number-of-imputations" class="section level3">
+<h3>Choosing Number of Imputations</h3>
+<p><strong>Rule of thumb</strong>: m ≥ % missingness</p>
+<ul>
+<li>10% missing → m ≥ 10</li>
+<li>25% missing → m ≥ 25</li>
+<li>40% missing → m ≥ 40</li>
+</ul>
+<p><strong>Practical guidelines</strong>: - Minimum: m = 5 (rarely
+adequate; avoid) - Standard: m = 20-30 (suitable for most studies) -
+High missingness: m = 50-100 (if &gt; 30% missing)</p>
+<p><strong>Computational note</strong>: Modern computers can handle m =
+50-100 easily; prioritize statistical validity over runtime.</p>
+</div>
+</div>
+<div id="summary" class="section level2">
+<h2>Summary</h2>
+<p><strong>Key takeaways</strong>:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Always account for missing data</strong> during sample size
+planning</li>
+<li><strong>CCA requires larger samples</strong> than MI (simple
+formula: N / (1 - p_missing))</li>
+<li><strong>MI offers efficiency gains</strong> of 5-20% depending on
+missingness rate and imputation model quality</li>
+<li><strong>Assume MAR in most cases</strong>; plan sensitivity analyses
+for MNAR if suspected</li>
+<li><strong>Invest in auxiliary variables</strong> to improve imputation
+model R² and efficiency</li>
+<li><strong>Use m ≥ % missingness</strong> for number of
+imputations</li>
+<li><strong>Conduct sensitivity analysis</strong> to assess robustness
+to assumptions</li>
+</ol>
+<p><strong>Recommended workflow</strong>:</p>
+<ol style="list-style-type: decimal">
+<li>Estimate expected missingness from pilot data or literature</li>
+<li>Identify likely mechanism (default: MAR)</li>
+<li>Choose analysis approach (MI preferred for ≥ 10% missingness)</li>
+<li>Calculate inflation factor using appropriate method</li>
+<li>Plan for worst-case scenarios (higher missingness, poorer
+imputation)</li>
+<li>Document assumptions in protocol and report missingness patterns in
+results</li>
+</ol>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<ol style="list-style-type: decimal">
+<li><p>Rubin DB (1987). <em>Multiple Imputation for Nonresponse in
+Surveys</em>. John Wiley &amp; Sons.</p></li>
+<li><p>van Buuren S (2018). <em>Flexible Imputation of Missing Data</em>
+(2nd ed.). CRC Press.</p></li>
+<li><p>Little RJA, Rubin DB (2019). <em>Statistical Analysis with
+Missing Data</em> (3rd ed.). John Wiley &amp; Sons.</p></li>
+<li><p>Sterne JAC, White IR, Carlin JB, et al. (2009). Multiple
+imputation for missing data in epidemiological and clinical research:
+potential and pitfalls. <em>BMJ</em> 338:b2393.</p></li>
+<li><p>White IR, Royston P, Wood AM (2011). Multiple imputation using
+chained equations: Issues and guidance for practice. <em>Statistics in
+Medicine</em> 30(4):377-399.</p></li>
+<li><p>Madley-Dowd P, Hughes R, Tilling K, Heron J (2019). The
+proportion of missing data should not be used to guide decisions on
+multiple imputation. <em>Journal of Clinical Epidemiology</em>
+110:63-73.</p></li>
+<li><p>Jakobsen JC, Gluud C, Wetterslev J, Winkel P (2017). When and how
+should multiple imputation be used for handling missing data in
+randomised clinical trials – a practical guide with flowcharts. <em>BMC
+Medical Research Methodology</em> 17(1):162.</p></li>
+</ol>
+</div>
+<div id="further-reading" class="section level2">
+<h2>Further Reading</h2>
+<ul>
+<li>See <code>vignette(&quot;propensity-score-calculations&quot;)</code> for
+handling missing data in observational studies with propensity score
+weighting</li>
+<li>See <code>vignette(&quot;minimal-detectable-effects&quot;)</code> for
+determining what effect sizes are realistically detectable given sample
+size constraints</li>
+<li>See the Missing Data module in all tabs of the Power Analysis Tool
+for interactive calculations</li>
+</ul>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

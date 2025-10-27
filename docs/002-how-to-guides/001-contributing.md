@@ -353,16 +353,20 @@ When updating CLAUDE.md, place content in the appropriate section:
 
 ### Adding a New Analysis Type
 
-See [How to Add a New Analysis Type](CLAUDE.md#how-to-add-a-new-analysis-type) in CLAUDE.md for step-by-step instructions.
+See [How to Add a New Analysis Type](008-add-new-analysis-type.md) for complete step-by-step instructions.
 
-**Summary:**
-1. Create new UI tab in `tabsetPanel()`
-2. Add validation logic in server section
-3. Add output renderers using delayed evaluation pattern
-4. Create CSV export handler
-5. Add Example and Reset buttons
-6. Add tests for new calculations
-7. Update documentation
+**Quick Summary:**
+1. Design your analysis (inputs, calculations, outputs)
+2. Add to sidebar navigation
+3. Create UI using helper functions (`create_numeric_input_with_tooltip()`, `missing_data_ui()`, etc.)
+4. Add server calculation logic
+5. Add result text using helper functions (`format_numeric()`, `format_effect_measures()`, etc.)
+6. Add visualization using plot helpers (`create_power_curve_plot()`, etc.)
+7. Add example and reset button functionality
+8. Test thoroughly
+9. Document and commit
+
+**Key Principle:** Use existing modules and helpers to maintain consistency with the refactored codebase.
 
 ### Fixing a Bug
 

@@ -92,6 +92,13 @@
   --bg-input-focus: var(--color-white);        /* Input focus state */
   --bg-input-disabled: var(--color-neutral-100);
   --bg-overlay: rgba(0, 0, 0, 0.5);            /* Modal overlays */
+  --bg-loading-overlay: rgba(15, 23, 42, 0.8); /* Loading spinner overlay */
+  
+  /* Sidebar overlay backgrounds (for dark sidebar) */
+  --bg-sidebar-overlay-subtle: rgba(255, 255, 255, 0.05);
+  --bg-sidebar-overlay-medium: rgba(255, 255, 255, 0.1);
+  --bg-sidebar-overlay-strong: rgba(255, 255, 255, 0.15);
+  --bg-sidebar-overlay-dark: rgba(0, 0, 0, 0.1);
 
   /* ========================================================================
      SEMANTIC APPLICATION TOKENS - Text Colors
@@ -109,6 +116,33 @@
   --text-warning: var(--color-warning-600);
   --text-error: var(--color-error-600);
   --text-info: var(--color-info-600);
+  
+  /* Sidebar text with opacity (on dark backgrounds) - Updated for WCAG AA */
+  --text-sidebar-dimmed: rgba(255, 255, 255, 0.7);
+  --text-sidebar-medium: rgba(255, 255, 255, 0.85);  /* Increased from 0.75 for better contrast */
+  --text-sidebar-bright: rgba(255, 255, 255, 0.9);   /* Increased from 0.8 for better contrast */
+  --text-sidebar-primary: rgba(255, 255, 255, 1.0);  /* Increased from 0.9 to pure white for WCAG AA */
+
+  /* ========================================================================
+     BOOTSTRAP 5 SEMANTIC VARIABLE MAPPINGS
+     ======================================================================== */
+  
+  /* Map Bootstrap's alert/badge semantic colors to our design tokens */
+  --bs-success-text-emphasis: var(--text-success);
+  --bs-success-bg-subtle: var(--color-success-100);
+  --bs-success-border-subtle: var(--color-success-600);
+  
+  --bs-info-text-emphasis: var(--text-info);
+  --bs-info-bg-subtle: var(--color-info-100);
+  --bs-info-border-subtle: var(--color-info-600);
+  
+  --bs-warning-text-emphasis: var(--text-warning);
+  --bs-warning-bg-subtle: var(--color-warning-100);
+  --bs-warning-border-subtle: var(--color-warning-600);
+  
+  --bs-danger-text-emphasis: var(--text-error);
+  --bs-danger-bg-subtle: var(--color-error-100);
+  --bs-danger-border-subtle: var(--color-error-600);
 
   /* ========================================================================
      BORDERS
@@ -118,6 +152,10 @@
   --border-color-default: var(--color-neutral-300);
   --border-color-strong: var(--color-neutral-400);
   --border-color-primary: var(--color-primary-600);
+  
+  /* Sidebar borders (semi-transparent on dark background) */
+  --border-color-sidebar-subtle: rgba(255, 255, 255, 0.1);
+  --border-color-sidebar-medium: rgba(255, 255, 255, 0.2);
 
   --border-subtle: 1px solid var(--border-color-subtle);
   --border-default: 1px solid var(--border-color-default);
@@ -145,6 +183,12 @@
   /* Focus shadow with primary color */
   --shadow-focus: 0 0 0 3px var(--color-primary-100);
   --shadow-focus-error: 0 0 0 3px var(--color-error-100);
+  
+  /* Validation focus shadows */
+  --shadow-validation-error: 0 0 0 0.2rem rgba(220, 38, 38, 0.15);
+  --shadow-validation-error-focus: 0 0 0 0.25rem rgba(220, 38, 38, 0.25);
+  --shadow-validation-success: 0 0 0 0.2rem rgba(16, 185, 129, 0.15);
+  --shadow-validation-info: 0 0 0 0.2rem rgba(37, 99, 235, 0.1);
 
   /* ========================================================================
      SPACING SYSTEM (8px base)
@@ -259,7 +303,40 @@
    ======================================================================== */
 
 /* Dark mode when user toggles it manually */
+html[data-theme="dark"],
 [data-theme="dark"] {
+  /* ========================================================================
+     BOOTSTRAP 5 CSS VARIABLE OVERRIDES FOR DARK MODE
+     Critical: These must come first to ensure Bootstrap components respect dark mode
+     ======================================================================== */
+  
+  /* Bootstrap 5 body/text colors */
+  --bs-body-color: #F8F9FA !important;
+  --bs-body-color-rgb: 248, 249, 250 !important;
+  --bs-body-bg: #0F172A !important;
+  --bs-body-bg-rgb: 15, 23, 42 !important;
+  
+  /* Bootstrap 5 text colors */
+  --bs-heading-color: #F8F9FA;
+  --bs-link-color: #6B9EC7;
+  --bs-link-hover-color: #8FB5D9;
+  
+  /* Bootstrap 5 border colors */
+  --bs-border-color: #4A5568;
+  --bs-border-color-translucent: rgba(255, 255, 255, 0.15);
+  
+  /* Bootstrap 5 emphasis colors */
+  --bs-emphasis-color: #F8F9FA;
+  --bs-emphasis-color-rgb: 248, 249, 250;
+  --bs-secondary-color: rgba(248, 249, 250, 0.75);
+  --bs-secondary-color-rgb: 248, 249, 250;
+  --bs-secondary-bg: #1E293B;
+  --bs-secondary-bg-rgb: 30, 41, 59;
+  --bs-tertiary-color: rgba(248, 249, 250, 0.5);
+  --bs-tertiary-color-rgb: 248, 249, 250;
+  --bs-tertiary-bg: #0F172A;
+  --bs-tertiary-bg-rgb: 15, 23, 42;
+  
   /* Primary Colors - Adjusted for dark backgrounds */
   --color-primary-900: #D6E7F7;     /* Lightest in dark mode */
   --color-primary-800: #B3CDEB;
@@ -322,6 +399,17 @@
   --bg-input-focus: #1E293B;               /* Input focus */
   --bg-input-disabled: #0F172A;
   --bg-overlay: rgba(0, 0, 0, 0.75);       /* Darker overlay */
+  --bg-loading-overlay: rgba(15, 23, 42, 0.95); /* Loading spinner overlay (dark mode) */
+  
+  /* Dark mode sidebar overlays */
+  --bg-sidebar-overlay-subtle: rgba(255, 255, 255, 0.03);
+  --bg-sidebar-overlay-medium: rgba(255, 255, 255, 0.08);
+  --bg-sidebar-overlay-strong: rgba(255, 255, 255, 0.12);
+  --bg-sidebar-overlay-dark: rgba(0, 0, 0, 0.2);
+  
+  /* Dark mode validation feedback backgrounds */
+  --bg-validation-error-dark: rgba(220, 38, 38, 0.2);
+  --bg-validation-info-dark: rgba(37, 99, 235, 0.2);
 
   /* Text Colors - Dark Mode */
   --text-primary: #F8F9FA;                 /* Almost white */
@@ -329,13 +417,30 @@
   --text-tertiary: #A0AEC0;                /* Medium gray */
   --text-placeholder: #718096;
   --text-disabled: #4A5568;
-  --text-inverse: #1A202C;                 /* Dark text on light bg */
+  --text-inverse: #FFFFFF;                 /* White text for dark backgrounds */
   --text-link: #6B9EC7;
   --text-link-hover: #8FB5D9;
   --text-success: #4ADE80;
   --text-warning: #FBBF24;
   --text-error: #F87171;
   --text-info: #60A5FA;
+
+  /* Bootstrap 5 Semantic Variable Mappings - Dark Mode */
+  --bs-success-text-emphasis: var(--text-success);
+  --bs-success-bg-subtle: var(--color-success-100);
+  --bs-success-border-subtle: var(--color-success-600);
+  
+  --bs-info-text-emphasis: var(--text-info);
+  --bs-info-bg-subtle: var(--color-info-100);
+  --bs-info-border-subtle: var(--color-info-600);
+  
+  --bs-warning-text-emphasis: var(--text-warning);
+  --bs-warning-bg-subtle: var(--color-warning-100);
+  --bs-warning-border-subtle: var(--color-warning-600);
+  
+  --bs-danger-text-emphasis: var(--text-error);
+  --bs-danger-bg-subtle: var(--color-error-100);
+  --bs-danger-border-subtle: var(--color-error-600);
 
   /* Borders - Dark Mode */
   --border-color-subtle: #2D3748;
@@ -351,6 +456,13 @@
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
   --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
   --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.3);
+  
+  /* Dark mode specific shadows for enhanced depth */
+  --shadow-dark-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+  --shadow-dark-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  
+  /* High contrast mode shadow */
+  --shadow-high-contrast: 0 4px 8px rgba(0, 0, 0, 0.3);
 
   --shadow-focus: 0 0 0 3px rgba(107, 158, 199, 0.3);
   --shadow-focus-error: 0 0 0 3px rgba(248, 113, 113, 0.3);

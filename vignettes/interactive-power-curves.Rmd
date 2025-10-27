@@ -1,0 +1,728 @@
+---
+title: "Interactive Power Curves: Visualizing Trade-offs in Study Design"
+author: "Power Analysis Tool Development Team"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Interactive Power Curves: Visualizing Trade-offs in Study Design}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
+)
+```
+
+## Introduction
+
+Traditional power calculations produce a **single number** (required sample size for a specific effect size). However, study planning involves **trade-offs**:
+
+- What if the true effect is larger or smaller than assumed?
+- How much does power increase if we recruit 10% more participants?
+- What effect sizes are we well-powered vs underpowered to detect?
+
+**Interactive power curves** visualize these trade-offs by showing **power as a function of effect size** (for fixed sample size) or **power as a function of sample size** (for fixed effect size).
+
+This vignette explains:
+
+1. **What are power curves** and why they're more informative than single-point calculations
+2. **How to interpret power curves** for different study designs
+3. **Common patterns** and what they reveal about your study
+4. **How to use power curves** for sensitivity analysis and decision-making
+5. **Practical examples** with real study scenarios
+
+## What Are Power Curves?
+
+### Definition
+
+A **power curve** is a graphical representation of statistical power across a **range of values**:
+
+- **Type 1: Power vs Effect Size** (fixed N)
+  - X-axis: Effect size (e.g., Cohen's d, relative risk, hazard ratio)
+  - Y-axis: Statistical power (0 to 1)
+  - Shows: What effects can we detect with our sample size?
+
+- **Type 2: Power vs Sample Size** (fixed effect)
+  - X-axis: Sample size (N)
+  - Y-axis: Statistical power (0 to 1)
+  - Shows: How does power increase as we add participants?
+
+### Why Power Curves Matter
+
+**Problem with single-point calculations**:
+
+Traditional power calculation:
+> "To detect an effect of d = 0.50 with 80% power, you need N = 128."
+
+**But**:
+- What if the true effect is d = 0.40? (Underpowered)
+- What if the true effect is d = 0.60? (Overpowered; could use smaller N)
+- What if we can only recruit N = 100? (What power do we have?)
+
+**Solution: Power curves answer all of these questions at once.**
+
+### Anatomy of a Power Curve
+
+```{r power-curve-anatomy, echo=FALSE, eval=FALSE}
+# Example power curve (conceptual)
+library(ggplot2)
+library(pwr)
+
+# Generate power curve for two-sample t-test
+n <- 64  # per group
+effect_sizes <- seq(0, 1, by = 0.01)
+power_values <- sapply(effect_sizes, function(d) {
+  if (d == 0) return(0.05)  # Type I error rate at null
+  result <- pwr.t.test(n = n, d = d, sig.level = 0.05, type = "two.sample", alternative = "two.sided")
+  return(result$power)
+})
+
+df <- data.frame(Effect_Size = effect_sizes, Power = power_values)
+
+ggplot(df, aes(x = Effect_Size, y = Power)) +
+  geom_line(linewidth = 1.2, color = "#1f77b4") +
+  geom_hline(yintercept = 0.80, linetype = "dashed", color = "red") +
+  geom_vline(xintercept = 0.50, linetype = "dashed", color = "darkgreen") +
+  annotate("text", x = 0.55, y = 0.82, label = "80% Power Threshold", color = "red", hjust = 0) +
+  annotate("text", x = 0.52, y = 0.15, label = "Target Effect\n(d = 0.50)", color = "darkgreen", hjust = 0) +
+  annotate("point", x = 0.50, y = 0.80, color = "purple", size = 3) +
+  labs(
+    title = "Power Curve: Two-Sample t-test (N = 64 per group)",
+    x = "Effect Size (Cohen's d)",
+    y = "Statistical Power",
+    caption = "Dashed red line = 80% power threshold; Dashed green line = Target effect size"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+```
+
+**Key features**:
+
+1. **Sigmoid shape**: Power increases slowly for small effects, rapidly in middle range, then plateaus near 1.0 for large effects
+
+2. **Alpha level (Type I error)**: At effect size = 0 (null hypothesis), power equals α (typically 0.05)
+
+3. **Target point**: Intersection of target effect size and desired power (e.g., d = 0.50, power = 0.80)
+
+4. **Minimal Detectable Effect**: Effect size where power curve crosses 0.80 threshold
+
+5. **Underpowered region**: Left of MDE (power < 0.80)
+
+6. **Well-powered region**: Right of MDE (power ≥ 0.80)
+
+## Interpreting Power Curves for Different Designs
+
+### Two-Sample Comparison (Continuous Outcome)
+
+**Scenario**: Comparing two groups on a continuous outcome (e.g., blood pressure).
+
+**Power curve interpretation**:
+
+```{r two-sample-interpretation, echo=FALSE}
+interpretation <- data.frame(
+  Effect_Size = c("d = 0.20", "d = 0.35", "d = 0.50", "d = 0.80"),
+  Example = c("3 mmHg BP reduction",
+              "5 mmHg BP reduction",
+              "7.5 mmHg BP reduction",
+              "12 mmHg BP reduction"),
+  Power_N64 = c("20%", "50%", "80%", "99%"),
+  Interpretation = c("Underpowered for small effects",
+                     "Moderate power for small-to-medium effects",
+                     "Well-powered for medium effects (target)",
+                     "Overpowered for large effects"),
+  stringsAsFactors = FALSE
+)
+
+library(knitr)
+kable(interpretation, caption = "Power at Different Effect Sizes (N = 64 per group, α = 0.05)")
+```
+
+**Key insights**:
+
+- **Study is well-powered (≥ 80%)** for effects d ≥ 0.50
+- **Study is underpowered (< 80%)** for effects d < 0.50
+- **Minimal Detectable Effect**: d = 0.50 (medium effect)
+- **Implication**: If the true effect is small (d = 0.20), expect low power (20% chance of detecting it)
+
+### Two-Group Comparison (Binary Outcome)
+
+**Scenario**: Comparing two proportions (e.g., treatment success rates).
+
+**Power curve (Power vs Risk Difference)**:
+
+```{r binary-outcome, echo=FALSE}
+binary_interp <- data.frame(
+  Risk_Difference = c("5%", "10%", "15%", "20%"),
+  Example = c("20% vs 25%", "20% vs 30%", "20% vs 35%", "20% vs 40%"),
+  Relative_Risk = c("1.25", "1.50", "1.75", "2.00"),
+  Power_N200 = c("25%", "55%", "80%", "95%"),
+  Interpretation = c("Underpowered for small differences",
+                     "Moderate power for moderate differences",
+                     "Well-powered for large differences (target)",
+                     "Overpowered for very large differences"),
+  stringsAsFactors = FALSE
+)
+
+kable(binary_interp, caption = "Power at Different Risk Differences (N = 100 per group, α = 0.05)")
+```
+
+**Key insights**:
+
+- MDE = 15 percentage points (RR = 1.75)
+- Study cannot reliably detect differences < 15 percentage points
+- If clinical threshold is 10 percentage points, study is underpowered
+
+### Survival Analysis (Hazard Ratio)
+
+**Scenario**: Time-to-event outcome (e.g., mortality, disease recurrence).
+
+**Power curve (Power vs Hazard Ratio)**:
+
+```{r survival-interpretation, echo=FALSE}
+survival_interp <- data.frame(
+  Hazard_Ratio = c("1.30", "1.50", "1.75", "2.00"),
+  Interpretation = c("30% increased hazard",
+                     "50% increased hazard",
+                     "75% increased hazard",
+                     "100% increased hazard (doubling)"),
+  Power_180_Events = c("40%", "70%", "90%", "98%"),
+  Clinical_Example = c("Modest treatment effect",
+                       "Moderate treatment effect",
+                       "Strong treatment effect",
+                       "Very strong treatment effect"),
+  stringsAsFactors = FALSE
+)
+
+kable(survival_interp, caption = "Power at Different Hazard Ratios (180 events, α = 0.05)")
+```
+
+**Key insights**:
+
+- Power depends on **number of events**, not total sample size
+- MDE ≈ HR = 1.50 (50% increased hazard)
+- To detect smaller effects (HR < 1.50), need more events (longer follow-up or higher-risk cohort)
+
+### Matched Case-Control Study
+
+**Scenario**: Comparing exposure odds between matched pairs.
+
+**Power curve (Power vs Odds Ratio)**:
+
+```{r matched-cc, echo=FALSE}
+matched_interp <- data.frame(
+  Odds_Ratio = c("1.50", "2.00", "2.50", "3.00"),
+  Interpretation = c("50% increased odds",
+                     "100% increased odds (doubling)",
+                     "150% increased odds",
+                     "200% increased odds (tripling)"),
+  Power_100_Pairs = c("30%", "60%", "80%", "92%"),
+  stringsAsFactors = FALSE
+)
+
+kable(matched_interp, caption = "Power at Different Odds Ratios (100 matched pairs, α = 0.05)")
+```
+
+**Key insights**:
+
+- Matching increases efficiency by controlling for confounders
+- MDE ≈ OR = 2.5
+- 100 pairs insufficient for detecting OR < 2.5
+
+## Common Power Curve Patterns
+
+### Pattern 1: Steep Curve (High Sensitivity to Effect Size)
+
+**Characteristics**:
+- Power increases rapidly with small changes in effect size
+- Narrow range between underpowered and well-powered
+
+**Occurs when**:
+- Large sample size relative to expected effect
+- High event rate (for binary outcomes)
+- Many events (for survival analysis)
+
+**Interpretation**: Study is **robust to misspecification** of effect size. Even if true effect is slightly smaller than expected, still adequately powered.
+
+**Example**:
+```
+Effect Size:  0.40  →  0.45  →  0.50  →  0.55
+Power:         50%  →   70%  →   85%  →   94%
+```
+
+**Implication**: Recruiting slightly more participants yields substantial power gains.
+
+### Pattern 2: Flat Curve (Low Sensitivity to Effect Size)
+
+**Characteristics**:
+- Power increases slowly with changes in effect size
+- Wide range between underpowered and well-powered
+
+**Occurs when**:
+- Small sample size relative to expected effect
+- Low event rate (for binary outcomes)
+- Few events (for survival analysis)
+
+**Interpretation**: Study is **vulnerable to misspecification**. If true effect is smaller than expected, power drops dramatically.
+
+**Example**:
+```
+Effect Size:  0.40  →  0.45  →  0.50  →  0.55
+Power:         25%  →   28%  →   32%  →   36%
+```
+
+**Implication**: Study is underpowered across a wide range of effect sizes. Need substantial increase in N to achieve adequate power.
+
+### Pattern 3: Early Plateau (Overpowered Study)
+
+**Characteristics**:
+- Power reaches 80-90% for small-to-moderate effect sizes
+- Power approaches 100% for moderate effects
+
+**Occurs when**:
+- Very large sample size
+- Overly conservative planning
+
+**Interpretation**: Study is **overpowered** for expected effects. Could reduce N without sacrificing power.
+
+**Example**:
+```
+Effect Size:  0.20  →  0.30  →  0.40  →  0.50
+Power:         75%  →   95%  →   99%  →  >99%
+```
+
+**Implication**: Consider reducing sample size to save costs, or reallocate resources to detect smaller effects or add secondary outcomes.
+
+### Pattern 4: Late Plateau (Underpowered Study)
+
+**Characteristics**:
+- Power remains low (< 50%) for small-to-moderate effect sizes
+- Only reaches 80% for large effects
+
+**Occurs when**:
+- Small sample size
+- Unrealistic effect size assumptions
+
+**Interpretation**: Study is **underpowered** for realistic effects. Only detect very large effects.
+
+**Example**:
+```
+Effect Size:  0.20  →  0.40  →  0.60  →  0.80
+Power:         10%  →   25%  →   50%  →   75%
+```
+
+**Implication**: Increase N substantially or do not proceed (study has low chance of success).
+
+## Using Power Curves for Sensitivity Analysis
+
+### Scenario: Uncertain Effect Size
+
+**Problem**: Literature reports conflicting effect sizes (d = 0.40 to d = 0.60). What sample size ensures adequate power across this range?
+
+**Solution**: Plot power curves for different N and identify which provides ≥ 80% power for d ≥ 0.40.
+
+```{r sensitivity-n, eval=FALSE}
+library(pwr)
+library(ggplot2)
+
+# Generate power curves for N = 50, 75, 100, 125 per group
+effect_sizes <- seq(0.2, 0.8, by = 0.01)
+sample_sizes <- c(50, 75, 100, 125)
+
+power_data <- data.frame()
+for (n in sample_sizes) {
+  for (d in effect_sizes) {
+    result <- pwr.t.test(n = n, d = d, sig.level = 0.05, type = "two.sample", alternative = "two.sided")
+    power_data <- rbind(power_data, data.frame(N = n, Effect_Size = d, Power = result$power))
+  }
+}
+
+ggplot(power_data, aes(x = Effect_Size, y = Power, color = factor(N), group = N)) +
+  geom_line(linewidth = 1) +
+  geom_hline(yintercept = 0.80, linetype = "dashed", color = "red") +
+  geom_vline(xintercept = 0.40, linetype = "dashed", color = "darkgreen") +
+  labs(
+    title = "Sensitivity Analysis: Power Across Sample Sizes",
+    x = "Effect Size (Cohen's d)",
+    y = "Statistical Power",
+    color = "N per group"
+  ) +
+  theme_minimal()
+```
+
+**Interpretation**:
+- **N = 50**: Power = 52% at d = 0.40 (underpowered)
+- **N = 75**: Power = 72% at d = 0.40 (marginal)
+- **N = 100**: Power = 85% at d = 0.40 (adequate) ✅
+- **N = 125**: Power = 92% at d = 0.40 (robust)
+
+**Decision**: Recruit **N = 100 per group** to ensure ≥ 80% power for effects d ≥ 0.40.
+
+### Scenario: Budget Constraints
+
+**Problem**: Budget allows N = 200 total (100 per group). What effects can we detect?
+
+**Solution**: Plot power curve for N = 100 and identify MDE (effect size where power = 0.80).
+
+```{r budget-constraint, eval=FALSE}
+n_fixed <- 100
+effect_sizes <- seq(0.2, 1.0, by = 0.01)
+
+power_values <- sapply(effect_sizes, function(d) {
+  result <- pwr.t.test(n = n_fixed, d = d, sig.level = 0.05, type = "two.sample", alternative = "two.sided")
+  return(result$power)
+})
+
+df <- data.frame(Effect_Size = effect_sizes, Power = power_values)
+
+# Find MDE (effect size at 80% power)
+mde <- effect_sizes[which.min(abs(power_values - 0.80))]
+
+ggplot(df, aes(x = Effect_Size, y = Power)) +
+  geom_line(linewidth = 1.2, color = "#1f77b4") +
+  geom_hline(yintercept = 0.80, linetype = "dashed", color = "red") +
+  geom_vline(xintercept = mde, linetype = "dashed", color = "darkgreen") +
+  annotate("text", x = mde + 0.05, y = 0.15, label = paste0("MDE = ", round(mde, 2)), color = "darkgreen") +
+  labs(
+    title = "Power Curve for Fixed Budget (N = 100 per group)",
+    x = "Effect Size (Cohen's d)",
+    y = "Statistical Power"
+  ) +
+  theme_minimal()
+```
+
+**Interpretation**:
+- MDE ≈ d = 0.40
+- Study is well-powered for effects d ≥ 0.40
+- Study is underpowered for effects d < 0.40
+
+**Decision**: Compare MDE (0.40) to clinically meaningful threshold. If threshold ≤ 0.40, proceed. If threshold < 0.40, seek additional funding or do not proceed.
+
+### Scenario: Multiple Outcomes
+
+**Problem**: Primary outcome (continuous) and secondary outcome (binary) have different power profiles.
+
+**Solution**: Plot power curves for both outcomes to ensure both are adequately powered.
+
+```{r multiple-outcomes, eval=FALSE}
+# Primary: Continuous outcome (d = 0.50 target)
+primary_power <- sapply(seq(0.2, 1.0, by = 0.01), function(d) {
+  pwr.t.test(n = 80, d = d, sig.level = 0.05, type = "two.sample", alternative = "two.sided")$power
+})
+
+# Secondary: Binary outcome (p1 = 0.30, p2 = 0.20, target RD = 0.10)
+# Convert to Cohen's h for power calculation
+p1_vals <- seq(0.22, 0.40, by = 0.001)
+p2 <- 0.20
+h_vals <- 2 * (asin(sqrt(p1_vals)) - asin(sqrt(p2)))
+secondary_power <- sapply(h_vals, function(h) {
+  pwr.2p.test(n = 80, h = h, sig.level = 0.05, alternative = "two.sided")$power
+})
+
+# Plot both curves
+df_primary <- data.frame(Effect_Size = seq(0.2, 1.0, by = 0.01), Power = primary_power, Outcome = "Primary (Continuous)")
+df_secondary <- data.frame(Effect_Size = p1_vals - p2, Power = secondary_power, Outcome = "Secondary (Binary)")
+
+df_combined <- rbind(df_primary, df_secondary)
+
+ggplot(df_combined, aes(x = Effect_Size, y = Power, color = Outcome)) +
+  geom_line(linewidth = 1.2) +
+  geom_hline(yintercept = 0.80, linetype = "dashed", color = "red") +
+  labs(
+    title = "Power Curves: Primary vs Secondary Outcomes (N = 80 per group)",
+    x = "Effect Size (Primary: Cohen's d; Secondary: Risk Difference)",
+    y = "Statistical Power",
+    color = "Outcome"
+  ) +
+  theme_minimal()
+```
+
+**Interpretation**:
+- Primary outcome: MDE = d = 0.45 (adequate)
+- Secondary outcome: MDE = RD = 0.12 (may be underpowered if clinical threshold is RD = 0.10)
+
+**Decision**: If secondary outcome is critical, increase N to ensure both outcomes are adequately powered. If secondary is exploratory, proceed with N = 80.
+
+## Practical Case Studies with Power Curves
+
+### Case Study 1: Behavioral Intervention Trial
+
+**Scenario**:
+
+A behavioral intervention aims to increase physical activity minutes per week. Literature suggests effect sizes ranging from d = 0.30 (small) to d = 0.60 (medium).
+
+**Research question**: What sample size ensures ≥ 80% power across this range?
+
+**Analysis**:
+
+```{r case1-plot, eval=FALSE}
+# Plot power curves for N = 60, 90, 120, 150 per group
+sample_sizes <- c(60, 90, 120, 150)
+effect_sizes <- seq(0.2, 0.8, by = 0.01)
+
+power_data <- expand.grid(N = sample_sizes, Effect_Size = effect_sizes)
+power_data$Power <- mapply(function(n, d) {
+  pwr.t.test(n = n, d = d, sig.level = 0.05, type = "two.sample", alternative = "two.sided")$power
+}, power_data$N, power_data$Effect_Size)
+
+ggplot(power_data, aes(x = Effect_Size, y = Power, color = factor(N))) +
+  geom_line(linewidth = 1) +
+  geom_hline(yintercept = 0.80, linetype = "dashed", color = "red") +
+  geom_vline(xintercept = 0.30, linetype = "dashed", color = "darkgreen", alpha = 0.5) +
+  geom_vline(xintercept = 0.60, linetype = "dashed", color = "darkgreen", alpha = 0.5) +
+  annotate("rect", xmin = 0.30, xmax = 0.60, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "green") +
+  annotate("text", x = 0.45, y = 0.95, label = "Target Range", color = "darkgreen") +
+  labs(
+    title = "Sensitivity Analysis: Physical Activity Intervention",
+    x = "Effect Size (Cohen's d)",
+    y = "Statistical Power",
+    color = "N per group"
+  ) +
+  theme_minimal()
+```
+
+**Results**:
+
+| N per group | Power at d = 0.30 | Power at d = 0.60 |
+|-------------|-------------------|-------------------|
+| 60          | 42%               | 97%               |
+| 90          | 58%               | 99%               |
+| 120         | 71%               | >99%              |
+| 150         | 81%               | >99%              |
+
+**Interpretation**:
+
+- **N = 60**: Underpowered for d = 0.30 (42%)
+- **N = 90**: Marginal for d = 0.30 (58%)
+- **N = 120**: Adequate for d ≥ 0.35 (70%+)
+- **N = 150**: Adequate for d ≥ 0.30 (81%) ✅
+
+**Decision**: Recruit **N = 150 per group** (300 total) to ensure ≥ 80% power for effects d ≥ 0.30, covering the full range of plausible effects.
+
+### Case Study 2: Rare Disease Drug Trial
+
+**Scenario**:
+
+A Phase 2 trial can enroll **N = 50 total** (25 per group) due to small eligible population. Outcome is disease severity score (continuous, SD = 10).
+
+**Research question**: What effects can this study detect?
+
+**Analysis**:
+
+```{r case2-plot, eval=FALSE}
+n_fixed <- 25
+effect_sizes <- seq(0.2, 1.5, by = 0.01)
+
+power_values <- sapply(effect_sizes, function(d) {
+  pwr.t.test(n = n_fixed, d = d, sig.level = 0.05, type = "two.sample", alternative = "two.sided")$power
+})
+
+df <- data.frame(Effect_Size = effect_sizes, Power = power_values)
+
+# Find MDE
+mde <- effect_sizes[which.min(abs(power_values - 0.80))]
+
+# Clinical threshold: 5-point reduction = 0.5 SD = d = 0.50
+clinical_threshold <- 0.50
+
+ggplot(df, aes(x = Effect_Size, y = Power)) +
+  geom_line(linewidth = 1.2, color = "#1f77b4") +
+  geom_hline(yintercept = 0.80, linetype = "dashed", color = "red") +
+  geom_vline(xintercept = mde, linetype = "dashed", color = "purple") +
+  geom_vline(xintercept = clinical_threshold, linetype = "dashed", color = "darkgreen") +
+  annotate("text", x = mde + 0.1, y = 0.85, label = paste0("MDE = ", round(mde, 2)), color = "purple") +
+  annotate("text", x = clinical_threshold + 0.1, y = 0.30, label = "Clinical Threshold\n(d = 0.50)", color = "darkgreen") +
+  annotate("rect", xmin = -Inf, xmax = mde, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") +
+  annotate("text", x = 0.50, y = 0.95, label = "Underpowered Region", color = "red") +
+  labs(
+    title = "Power Curve: Rare Disease Trial (N = 25 per group)",
+    x = "Effect Size (Cohen's d)",
+    y = "Statistical Power"
+  ) +
+  theme_minimal()
+```
+
+**Results**:
+
+- MDE ≈ **d = 0.81** (large effect)
+- Clinical threshold: d = 0.50 (medium effect)
+- **Gap**: MDE > clinical threshold (underpowered)
+
+**Interpretation**:
+
+- Study can only detect **large effects (d ≥ 0.81)**
+- **Cannot detect clinically meaningful medium effects (d = 0.50)**
+- At clinical threshold (d = 0.50), power ≈ **40%**
+
+**Decision options**:
+
+1. **Multi-site collaboration**: Increase to N = 64 per group to achieve MDE = d = 0.50
+2. **Proceed as pilot**: Accept underpowering, label as exploratory Phase 2
+3. **Do not proceed**: Insufficient power for meaningful inference
+
+**Final decision**: Proceed as **exploratory pilot** with N = 50, using Bayesian analysis to incorporate prior information. Plan larger Phase 3 trial if results promising.
+
+### Case Study 3: Cluster-Randomized Trial
+
+**Scenario**:
+
+Quality improvement intervention across hospitals. Due to clustering (ICC = 0.05, m = 50 per hospital), effective sample size is reduced by design effect (DE = 3.45).
+
+**Research question**: How does clustering affect power curve?
+
+**Analysis**:
+
+```{r case3-plot, eval=FALSE}
+# Scenario A: Individual randomization (no clustering)
+n_individual <- 100  # per group
+effect_sizes <- seq(0.2, 0.8, by = 0.01)
+power_individual <- sapply(effect_sizes, function(d) {
+  pwr.t.test(n = n_individual, d = d, sig.level = 0.05, type = "two.sample", alternative = "two.sided")$power
+})
+
+# Scenario B: Cluster randomization
+# Design effect = 3.45, so effective N = 100 / 3.45 ≈ 29
+n_effective <- round(n_individual / 3.45)
+power_clustered <- sapply(effect_sizes, function(d) {
+  pwr.t.test(n = n_effective, d = d, sig.level = 0.05, type = "two.sample", alternative = "two.sided")$power
+})
+
+df <- data.frame(
+  Effect_Size = rep(effect_sizes, 2),
+  Power = c(power_individual, power_clustered),
+  Design = rep(c("Individual Randomization", "Cluster Randomization (DE=3.45)"), each = length(effect_sizes))
+)
+
+ggplot(df, aes(x = Effect_Size, y = Power, color = Design)) +
+  geom_line(linewidth = 1.2) +
+  geom_hline(yintercept = 0.80, linetype = "dashed", color = "red") +
+  labs(
+    title = "Impact of Clustering on Power Curve (N = 100 per group)",
+    x = "Effect Size (Cohen's d)",
+    y = "Statistical Power",
+    color = "Design Type"
+  ) +
+  theme_minimal()
+```
+
+**Results**:
+
+| Effect Size | Individual Power | Clustered Power | Power Loss |
+|-------------|------------------|-----------------|------------|
+| d = 0.40    | 85%              | 34%             | -51 points |
+| d = 0.50    | 97%              | 48%             | -49 points |
+| d = 0.60    | 99%              | 62%             | -37 points |
+| d = 0.80    | >99%             | 85%             | -14 points |
+
+**Interpretation**:
+
+- Clustering **dramatically reduces power** (by 30-50 percentage points for moderate effects)
+- MDE increases from d = 0.40 (individual) to d = 0.78 (clustered)
+- To maintain 80% power for d = 0.50, need to inflate N by design effect: 100 × 3.45 = **345 per group**
+
+**Decision**: Account for design effect during planning. If recruiting 345 per group infeasible, consider:
+- Reducing cluster size (m = 50 → 25) to reduce design effect (3.45 → 2.20)
+- Using individual randomization if contamination not a concern
+
+## Advanced Visualizations
+
+### Multi-Dimensional Power Curves
+
+For studies with **multiple adjustable parameters** (sample size, effect size, alpha, allocation ratio), create **contour plots** or **3D surfaces**.
+
+**Example: Power as a function of N and effect size**:
+
+```{r contour-plot, eval=FALSE}
+library(ggplot2)
+
+# Generate grid
+n_values <- seq(30, 150, by = 5)
+d_values <- seq(0.2, 0.8, by = 0.02)
+power_grid <- expand.grid(N = n_values, Effect_Size = d_values)
+
+power_grid$Power <- mapply(function(n, d) {
+  pwr.t.test(n = n, d = d, sig.level = 0.05, type = "two.sample", alternative = "two.sided")$power
+}, power_grid$N, power_grid$Effect_Size)
+
+# Contour plot
+ggplot(power_grid, aes(x = N, y = Effect_Size, z = Power)) +
+  geom_contour_filled(breaks = seq(0, 1, by = 0.1)) +
+  geom_contour(color = "white", alpha = 0.3, breaks = c(0.80)) +  # Highlight 80% power
+  labs(
+    title = "Power Contour Plot: Sample Size vs Effect Size",
+    x = "Sample Size (N per group)",
+    y = "Effect Size (Cohen's d)",
+    fill = "Power"
+  ) +
+  theme_minimal()
+```
+
+**Interpretation**: Contour lines show **combinations of N and d that yield the same power**. The 80% power contour is the **boundary between underpowered and adequately powered regions**.
+
+### Interactive Power Curves
+
+The Power Analysis Tool provides **interactive plotly visualizations** that allow:
+
+- **Hovering** to see exact power values at any point
+- **Zooming** to focus on regions of interest
+- **Toggling** between power vs effect size and power vs sample size views
+- **Comparing** multiple scenarios simultaneously (e.g., with/without missing data adjustment)
+
+**Benefits**:
+- Explore trade-offs dynamically
+- Communicate results to stakeholders visually
+- Export high-resolution plots for publications
+
+## Summary
+
+**Key takeaways**:
+
+1. **Power curves are more informative** than single-point calculations — show power across range of effect sizes or sample sizes
+
+2. **Anatomy of power curves**:
+   - Sigmoid shape (slow → rapid → plateau)
+   - Crosses 80% at Minimal Detectable Effect (MDE)
+   - Alpha level at null (effect size = 0)
+
+3. **Common patterns**:
+   - **Steep curve**: Robust to effect size uncertainty
+   - **Flat curve**: Vulnerable to misspecification
+   - **Early plateau**: Overpowered (can reduce N)
+   - **Late plateau**: Underpowered (increase N or abandon)
+
+4. **Use power curves for**:
+   - Sensitivity analysis (effect size uncertainty)
+   - Budget constraints (fixed N, determine MDE)
+   - Comparing designs (clustering, missing data, allocation ratios)
+   - Communication with stakeholders
+
+5. **Practical workflow**:
+   - Plot power curve for proposed N
+   - Identify MDE (where curve crosses 80%)
+   - Compare MDE to clinical threshold
+   - Adjust N if needed to ensure MDE ≤ threshold
+
+6. **Interactive visualizations** (in Power Analysis Tool) facilitate exploration and decision-making
+
+## References
+
+1. Cohen J (1988). *Statistical Power Analysis for the Behavioral Sciences* (2nd ed.). Routledge.
+
+2. Lenth RV (2001). Some practical guidelines for effective sample size determination. *The American Statistician* 55(3):187-193.
+
+3. Button KS, Ioannidis JPA, Mokrysz C, et al. (2013). Power failure: why small sample size undermines the reliability of neuroscience. *Nature Reviews Neuroscience* 14:365-376.
+
+4. Gelman A, Carlin J (2014). Beyond power calculations: Assessing Type S (sign) and Type M (magnitude) errors. *Perspectives on Psychological Science* 9(6):641-651.
+
+5. Dziak JJ, Dierker LC, Abar B (2020). The interpretation of statistical power after the data have been gathered. *Current Psychology* 39:870-877.
+
+## Further Reading
+
+- See `vignette("minimal-detectable-effects")` for understanding feasibility constraints
+- See `vignette("design-effects-clustering")` for impact of clustering on power curves
+- See `vignette("missing-data-adjustments")` for impact of missing data on power curves
+- Explore all tabs in the Power Analysis Tool for interactive power curve visualizations

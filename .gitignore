@@ -14,7 +14,29 @@ renv/staging/
 .build
 Dockerfile~
 *.backup
+*.bak
+archive/
 
 # Claude Code configuration (user-specific)
 .claude/
 CLAUDE.md
+
+# Development script artifacts
+.dev.log
+.dev.pid
+
+# Research and temporary documentation
+docs/research/
+
+# Vignette build artifacts
+vignettes/*.html
+vignettes/.build.timestamp
+inst/doc/
+/doc/
+/Meta/
+
+# R CMD check and build artifacts
+/*.tar.gz
+/*.Rcheck/
+.R/
+inst/resources/

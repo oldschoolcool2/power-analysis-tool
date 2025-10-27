@@ -1,0 +1,1652 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Power Analysis Tool Development Team" />
+
+<meta name="date" content="2025-10-26" />
+
+<title>Study Design Reference</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Study Design Reference</h1>
+<h4 class="author">Power Analysis Tool Development Team</h4>
+<h4 class="date">2025-10-26</h4>
+
+
+
+<div id="overview" class="section level2">
+<h2>Overview</h2>
+<p>This reference provides technical specifications for all nine
+analysis types supported by the Power Analysis Tool. Use this as a quick
+lookup when selecting the appropriate design for your study.</p>
+</div>
+<div id="analysis-type-index" class="section level2">
+<h2>Analysis Type Index</h2>
+<table>
+<colgroup>
+<col width="6%" />
+<col width="28%" />
+<col width="28%" />
+<col width="36%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>#</th>
+<th>Analysis Type</th>
+<th>Outcome Type</th>
+<th>Primary Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>Single Proportion (Rule of 3)</td>
+<td>Binary</td>
+<td>Quality improvement, rare event monitoring</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>Two-Group Comparison</td>
+<td>Binary</td>
+<td>RCTs, cohort studies comparing proportions</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>Survival Analysis</td>
+<td>Time-to-event</td>
+<td>Cox regression, time to event studies</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>Matched Case-Control</td>
+<td>Binary</td>
+<td>Case-control studies with matching</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td>Continuous Outcomes</td>
+<td>Continuous</td>
+<td>t-tests comparing means between groups</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td>Non-Inferiority Testing</td>
+<td>Binary</td>
+<td>Regulatory trials testing equivalence</td>
+</tr>
+<tr class="odd">
+<td>7</td>
+<td>Propensity Score Sample Size</td>
+<td>Binary/Continuous</td>
+<td>Observational studies with confounding</td>
+</tr>
+<tr class="even">
+<td>8</td>
+<td>Mediation Analysis</td>
+<td>Any</td>
+<td>Testing indirect effects (X→M→Y)</td>
+</tr>
+<tr class="odd">
+<td>9</td>
+<td>Survival Equivalence/NI</td>
+<td>Time-to-event</td>
+<td>Equivalence for time-to-event outcomes</td>
+</tr>
+</tbody>
+</table>
+<hr />
+</div>
+<div id="single-proportion-rule-of-3" class="section level2">
+<h2>1. Single Proportion (Rule of 3)</h2>
+<div id="description" class="section level3">
+<h3>Description</h3>
+<p>Tests whether a single proportion differs from a known standard or
+historical control. Based on exact binomial test framework. Commonly
+used in quality improvement and post-market surveillance.</p>
+</div>
+<div id="when-to-use" class="section level3">
+<h3>When to Use</h3>
+<ul>
+<li>Comparing a single group to a known population rate</li>
+<li>Monitoring rare adverse events</li>
+<li>Quality improvement initiatives</li>
+<li>Hospital-acquired infection surveillance</li>
+<li>Post-market device/drug safety monitoring</li>
+</ul>
+</div>
+<div id="parameters" class="section level3">
+<h3>Parameters</h3>
+<table>
+<colgroup>
+<col width="24%" />
+<col width="13%" />
+<col width="28%" />
+<col width="33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+<th>Typical Range</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Sample size (N)</strong></td>
+<td>Integer</td>
+<td>Number of participants</td>
+<td>20 - 10,000+</td>
+</tr>
+<tr class="even">
+<td><strong>Event frequency</strong></td>
+<td>Integer</td>
+<td>“1 in X” format (e.g., 1 in 50)</td>
+<td>3 - 1,000</td>
+</tr>
+<tr class="odd">
+<td><strong>Null proportion (p₀)</strong></td>
+<td>Proportion</td>
+<td>Historical/reference rate</td>
+<td>0.01 - 0.50</td>
+</tr>
+<tr class="even">
+<td><strong>Alternative proportion (p₁)</strong></td>
+<td>Proportion</td>
+<td>Expected rate in study</td>
+<td>0.01 - 0.50</td>
+</tr>
+<tr class="odd">
+<td><strong>Power</strong></td>
+<td>Probability</td>
+<td>Desired power</td>
+<td>0.80, 0.90</td>
+</tr>
+<tr class="even">
+<td><strong>Significance level (α)</strong></td>
+<td>Probability</td>
+<td>Type I error rate</td>
+<td>0.05</td>
+</tr>
+<tr class="odd">
+<td><strong>Test type</strong></td>
+<td>One/Two-sided</td>
+<td>Directional hypothesis</td>
+<td>Two-sided (default)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="effect-measures" class="section level3">
+<h3>Effect Measures</h3>
+<ul>
+<li><strong>Event frequency</strong>: Expressed as “1 in X” (e.g., 1 in
+50 = 2%)</li>
+<li><strong>Proportion</strong>: Decimal format (0.02 = 2%)</li>
+<li><strong>Cohen’s h</strong>: Effect size for proportions</li>
+</ul>
+</div>
+<div id="statistical-method" class="section level3">
+<h3>Statistical Method</h3>
+<ul>
+<li>Exact binomial test</li>
+<li>Effect size conversion via <code>ES.h()</code> from <code>pwr</code>
+package</li>
+<li>Power calculation via <code>pwr.p.test()</code></li>
+</ul>
+</div>
+<div id="adjustments-available" class="section level3">
+<h3>Adjustments Available</h3>
+<ul>
+<li>✅ Missing data inflation</li>
+<li>✅ Clustering (design effect)</li>
+<li>✅ Multiple testing correction</li>
+</ul>
+</div>
+<div id="example-use-case" class="section level3">
+<h3>Example Use Case</h3>
+<p><strong>Scenario</strong>: Hospital monitoring central-line
+associated bloodstream infections (CLABSI).</p>
+<p><strong>Parameters</strong>: - National benchmark: 1 in 1,000
+line-days (0.1%) - Hospital target: 1 in 2,000 line-days (0.05%) -
+Sample size: 5,000 line-days - Power: 80%</p>
+<p><strong>Output</strong>: Determines whether 5,000 line-days provides
+adequate power to detect improvement from national benchmark.</p>
+<hr />
+</div>
+</div>
+<div id="two-group-comparison-proportions" class="section level2">
+<h2>2. Two-Group Comparison (Proportions)</h2>
+<div id="description-1" class="section level3">
+<h3>Description</h3>
+<p>Compares event rates between two independent groups. Standard design
+for RCTs and cohort studies with binary outcomes. Uses two-proportion
+z-test framework.</p>
+</div>
+<div id="when-to-use-1" class="section level3">
+<h3>When to Use</h3>
+<ul>
+<li>Randomized controlled trials (RCT)</li>
+<li>Cohort studies (exposed vs. unexposed)</li>
+<li>Cross-sectional comparisons</li>
+<li>Parallel group designs</li>
+<li>A/B testing</li>
+</ul>
+</div>
+<div id="parameters-1" class="section level3">
+<h3>Parameters</h3>
+<table>
+<colgroup>
+<col width="24%" />
+<col width="13%" />
+<col width="28%" />
+<col width="33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+<th>Typical Range</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Sample size per group</strong></td>
+<td>Integer</td>
+<td>n₁ and n₂</td>
+<td>20 - 5,000 per group</td>
+</tr>
+<tr class="even">
+<td><strong>Allocation ratio</strong></td>
+<td>Ratio</td>
+<td>n₂/n₁ ratio</td>
+<td>1:1, 2:1, 3:1</td>
+</tr>
+<tr class="odd">
+<td><strong>Group 1 proportion (p₁)</strong></td>
+<td>Percentage</td>
+<td>Event rate in group 1</td>
+<td>5% - 95%</td>
+</tr>
+<tr class="even">
+<td><strong>Group 2 proportion (p₂)</strong></td>
+<td>Percentage</td>
+<td>Event rate in group 2</td>
+<td>5% - 95%</td>
+</tr>
+<tr class="odd">
+<td><strong>Power</strong></td>
+<td>Probability</td>
+<td>Desired power</td>
+<td>0.80, 0.90</td>
+</tr>
+<tr class="even">
+<td><strong>Significance level (α)</strong></td>
+<td>Probability</td>
+<td>Type I error rate</td>
+<td>0.05</td>
+</tr>
+<tr class="odd">
+<td><strong>Test type</strong></td>
+<td>One/Two-sided</td>
+<td>Directional hypothesis</td>
+<td>Two-sided (default)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="effect-measures-1" class="section level3">
+<h3>Effect Measures</h3>
+<p>Automatically calculates three effect measures:</p>
+<ul>
+<li><strong>Risk Difference (RD)</strong>: p₁ - p₂ (absolute difference
+in percentage points)</li>
+<li><strong>Relative Risk (RR)</strong>: p₁ / p₂ (ratio of
+proportions)</li>
+<li><strong>Odds Ratio (OR)</strong>: (p₁/(1-p₁)) / (p₂/(1-p₂))</li>
+</ul>
+</div>
+<div id="statistical-method-1" class="section level3">
+<h3>Statistical Method</h3>
+<ul>
+<li>Two-proportion z-test (Chi-square equivalent)</li>
+<li>Cohen’s h effect size</li>
+<li>Equal allocation: <code>pwr.2p.test()</code></li>
+<li>Unequal allocation: <code>pwr.2p2n.test()</code></li>
+</ul>
+</div>
+<div id="adjustments-available-1" class="section level3">
+<h3>Adjustments Available</h3>
+<ul>
+<li>✅ Missing data inflation</li>
+<li>✅ Clustering (design effect)</li>
+<li>✅ Multiple testing correction</li>
+</ul>
+</div>
+<div id="calculation-options" class="section level3">
+<h3>Calculation Options</h3>
+<ol style="list-style-type: decimal">
+<li><strong>Calculate Sample Size</strong>: Given effect size and power
+→ Calculate n per group</li>
+<li><strong>Calculate Power</strong>: Given sample sizes and effect size
+→ Calculate power</li>
+<li><strong>Calculate Minimal Detectable Effect</strong>: Given n and
+power → Calculate smallest detectable RD</li>
+</ol>
+</div>
+<div id="example-use-case-1" class="section level3">
+<h3>Example Use Case</h3>
+<p><strong>Scenario</strong>: RCT comparing new anticoagulant
+vs. standard care for stroke prevention.</p>
+<p><strong>Parameters</strong>: - Standard care stroke rate: 15% - New
+treatment stroke rate: 10% - Allocation: 1:1 - Power: 90% - α: 0.05
+(two-sided)</p>
+<p><strong>Output</strong>: - Required sample size: ~516 per group
+(1,032 total) - RD = 5 percentage points, RR = 0.67, OR = 0.63</p>
+<hr />
+</div>
+</div>
+<div id="survival-analysis-cox-regression" class="section level2">
+<h2>3. Survival Analysis (Cox Regression)</h2>
+<div id="description-2" class="section level3">
+<h3>Description</h3>
+<p>Power and sample size calculations for time-to-event outcomes using
+Cox proportional hazards framework. Based on Schoenfeld formula.
+Event-driven (not sample-driven) design.</p>
+</div>
+<div id="when-to-use-2" class="section level3">
+<h3>When to Use</h3>
+<ul>
+<li>Time-to-event outcomes (death, hospitalization, disease
+progression)</li>
+<li>Survival analysis with censoring</li>
+<li>Comparing hazard rates between groups</li>
+<li>Cox regression studies</li>
+<li>Requires proportional hazards assumption</li>
+</ul>
+</div>
+<div id="parameters-2" class="section level3">
+<h3>Parameters</h3>
+<table>
+<colgroup>
+<col width="24%" />
+<col width="13%" />
+<col width="28%" />
+<col width="33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+<th>Typical Range</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Total sample size (N)</strong></td>
+<td>Integer</td>
+<td>Total participants</td>
+<td>100 - 5,000</td>
+</tr>
+<tr class="even">
+<td><strong>Hazard Ratio (HR)</strong></td>
+<td>Ratio</td>
+<td>Treatment effect</td>
+<td>0.50 - 2.0</td>
+</tr>
+<tr class="odd">
+<td><strong>Proportion exposed</strong></td>
+<td>Proportion</td>
+<td>% in treatment group</td>
+<td>0.30 - 0.70</td>
+</tr>
+<tr class="even">
+<td><strong>Event rate</strong></td>
+<td>Percentage</td>
+<td>Overall event rate</td>
+<td>10% - 80%</td>
+</tr>
+<tr class="odd">
+<td><strong>Power</strong></td>
+<td>Probability</td>
+<td>Desired power</td>
+<td>0.80, 0.90</td>
+</tr>
+<tr class="even">
+<td><strong>Significance level (α)</strong></td>
+<td>Probability</td>
+<td>Type I error rate</td>
+<td>0.05</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="effect-measures-2" class="section level3">
+<h3>Effect Measures</h3>
+<ul>
+<li><strong>Hazard Ratio (HR)</strong>: Ratio of hazards (treatment
+vs. control)
+<ul>
+<li>HR &lt; 1: Treatment reduces hazard (beneficial)</li>
+<li>HR = 1: No effect</li>
+<li>HR &gt; 1: Treatment increases hazard (harmful)</li>
+</ul></li>
+</ul>
+<p><strong>Interpretation</strong>: - HR = 0.75 means 25% reduction in
+hazard - HR = 0.50 means 50% reduction in hazard - HR = 2.0 means
+doubling of hazard</p>
+</div>
+<div id="statistical-method-2" class="section level3">
+<h3>Statistical Method</h3>
+<ul>
+<li>Log-rank test (equivalent to Cox proportional hazards)</li>
+<li>Schoenfeld formula for events required</li>
+<li>Power calculation via
+<code>powerSurvEpi::ssizeLR.default()</code></li>
+</ul>
+</div>
+<div id="key-concept-event-driven-design" class="section level3">
+<h3>Key Concept: Event-Driven Design</h3>
+<p><strong>Critical</strong>: Survival studies are powered by
+<strong>number of events</strong>, not total sample size.</p>
+<p><strong>Formula</strong>:</p>
+<pre><code>Number of events required = f(HR, power, α)
+Total sample size = Events required / Overall event rate</code></pre>
+<p><strong>Example</strong>: - Need 150 events for 80% power - Expected
+event rate: 30% - Total sample size: 150 / 0.30 = 500 participants</p>
+</div>
+<div id="adjustments-available-2" class="section level3">
+<h3>Adjustments Available</h3>
+<ul>
+<li>✅ Missing data inflation (for enrollment)</li>
+<li>✅ Clustering (design effect)</li>
+<li>❌ Multiple testing (must adjust α manually)</li>
+</ul>
+</div>
+<div id="example-use-case-2" class="section level3">
+<h3>Example Use Case</h3>
+<p><strong>Scenario</strong>: Clinical trial of new cancer therapy on
+overall survival.</p>
+<p><strong>Parameters</strong>: - Hazard ratio: 0.70 (30% reduction) -
+Allocation: 50% treatment, 50% control - Expected event rate: 60%
+(deaths during follow-up) - Power: 80% - α: 0.05</p>
+<p><strong>Output</strong>: - Events required: 183 deaths - Total sample
+size: 305 participants</p>
+<hr />
+</div>
+</div>
+<div id="matched-case-control-study" class="section level2">
+<h2>4. Matched Case-Control Study</h2>
+<div id="description-3" class="section level3">
+<h3>Description</h3>
+<p>Sample size calculations for matched case-control studies using
+McNemar’s test framework. Accounts for matching efficiency and
+discordant pairs.</p>
+</div>
+<div id="when-to-use-3" class="section level3">
+<h3>When to Use</h3>
+<ul>
+<li>Case-control studies with individual matching</li>
+<li>Matched pairs design</li>
+<li>1:1, 1:2, or 1:M matching ratios</li>
+<li>Outcomes with strong confounding requiring matching</li>
+<li>Rare disease studies</li>
+</ul>
+</div>
+<div id="parameters-3" class="section level3">
+<h3>Parameters</h3>
+<table>
+<colgroup>
+<col width="24%" />
+<col width="13%" />
+<col width="28%" />
+<col width="33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+<th>Typical Range</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Number of matched sets</strong></td>
+<td>Integer</td>
+<td>Pairs or sets</td>
+<td>50 - 2,000</td>
+</tr>
+<tr class="even">
+<td><strong>Odds Ratio (OR)</strong></td>
+<td>Ratio</td>
+<td>Exposure effect</td>
+<td>1.5 - 10.0</td>
+</tr>
+<tr class="odd">
+<td><strong>Exposure in controls (p₀)</strong></td>
+<td>Proportion</td>
+<td>Baseline exposure</td>
+<td>0.05 - 0.50</td>
+</tr>
+<tr class="even">
+<td><strong>Matching ratio</strong></td>
+<td>Integer</td>
+<td>Controls per case</td>
+<td>1, 2, 3, 4, 5</td>
+</tr>
+<tr class="odd">
+<td><strong>Power</strong></td>
+<td>Probability</td>
+<td>Desired power</td>
+<td>0.80, 0.90</td>
+</tr>
+<tr class="even">
+<td><strong>Significance level (α)</strong></td>
+<td>Probability</td>
+<td>Type I error rate</td>
+<td>0.05</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="effect-measures-3" class="section level3">
+<h3>Effect Measures</h3>
+<ul>
+<li><strong>Odds Ratio (OR)</strong>: Measure of association in
+case-control studies
+<ul>
+<li>OR = 1: No association</li>
+<li>OR &gt; 1: Positive association (exposure increases odds)</li>
+<li>OR &lt; 1: Negative association (exposure decreases odds)</li>
+</ul></li>
+</ul>
+</div>
+<div id="statistical-method-3" class="section level3">
+<h3>Statistical Method</h3>
+<ul>
+<li>McNemar’s test for matched proportions</li>
+<li>Uses <code>epiR::epi.sscc()</code> for matched case-control
+designs</li>
+<li>Accounts for discordant pairs</li>
+</ul>
+</div>
+<div id="adjustments-available-3" class="section level3">
+<h3>Adjustments Available</h3>
+<ul>
+<li>✅ Missing data inflation</li>
+<li>❌ Clustering (matching already accounts for correlation)</li>
+<li>❌ Multiple testing (adjust α manually)</li>
+</ul>
+</div>
+<div id="example-use-case-3" class="section level3">
+<h3>Example Use Case</h3>
+<p><strong>Scenario</strong>: Case-control study of lung cancer and
+occupational asbestos exposure.</p>
+<p><strong>Parameters</strong>: - Target odds ratio: 3.0 - Expected
+exposure in controls: 10% - Matching: 1:2 (2 controls per case) - Power:
+80% - α: 0.05</p>
+<p><strong>Output</strong>: Required number of matched sets (case
+triplets)</p>
+<hr />
+</div>
+</div>
+<div id="continuous-outcomes-t-test" class="section level2">
+<h2>5. Continuous Outcomes (t-test)</h2>
+<div id="description-4" class="section level3">
+<h3>Description</h3>
+<p>Power and sample size for comparing means between two independent
+groups. Uses two-sample t-test framework with Cohen’s d effect size.</p>
+</div>
+<div id="when-to-use-4" class="section level3">
+<h3>When to Use</h3>
+<ul>
+<li>Comparing means between two groups</li>
+<li>Continuous outcomes (weight, blood pressure, quality of life scores,
+lab values)</li>
+<li>Independent samples</li>
+<li>Approximately normally distributed outcomes</li>
+<li>Equal or unequal group sizes</li>
+</ul>
+</div>
+<div id="parameters-4" class="section level3">
+<h3>Parameters</h3>
+<table>
+<colgroup>
+<col width="24%" />
+<col width="13%" />
+<col width="28%" />
+<col width="33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+<th>Typical Range</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Sample size per group</strong></td>
+<td>Integer</td>
+<td>n₁ and n₂</td>
+<td>20 - 1,000 per group</td>
+</tr>
+<tr class="even">
+<td><strong>Allocation ratio</strong></td>
+<td>Ratio</td>
+<td>n₂/n₁ ratio</td>
+<td>1:1, 2:1, 3:1</td>
+</tr>
+<tr class="odd">
+<td><strong>Cohen’s d</strong></td>
+<td>Standardized</td>
+<td>Standardized mean difference</td>
+<td>0.2 - 1.0</td>
+</tr>
+<tr class="even">
+<td><strong>Power</strong></td>
+<td>Probability</td>
+<td>Desired power</td>
+<td>0.80, 0.90</td>
+</tr>
+<tr class="odd">
+<td><strong>Significance level (α)</strong></td>
+<td>Probability</td>
+<td>Type I error rate</td>
+<td>0.05</td>
+</tr>
+<tr class="even">
+<td><strong>Test type</strong></td>
+<td>One/Two-sided</td>
+<td>Directional hypothesis</td>
+<td>Two-sided (default)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="effect-measures-4" class="section level3">
+<h3>Effect Measures</h3>
+<p><strong>Cohen’s d</strong>: Standardized mean difference</p>
+<p><strong>Formula</strong>:</p>
+<pre><code>d = (μ₁ - μ₂) / σ_pooled</code></pre>
+<p><strong>Interpretation guidelines</strong>: - <strong>Small
+effect</strong>: d = 0.2 - <strong>Medium effect</strong>: d = 0.5 -
+<strong>Large effect</strong>: d = 0.8</p>
+<p><strong>Converting raw differences to Cohen’s d</strong>:</p>
+<pre><code>d = (Mean₁ - Mean₂) / SD_pooled</code></pre>
+<p><strong>Example</strong>: Blood pressure reduction of 5 mmHg with SD
+= 10 mmHg → d = 5/10 = 0.5 (medium effect)</p>
+</div>
+<div id="statistical-method-4" class="section level3">
+<h3>Statistical Method</h3>
+<ul>
+<li>Two-sample t-test (equal or unequal variance)</li>
+<li>Uses <code>pwr::pwr.t.test()</code> for equal allocation</li>
+<li>Custom implementation for unequal allocation</li>
+</ul>
+</div>
+<div id="adjustments-available-4" class="section level3">
+<h3>Adjustments Available</h3>
+<ul>
+<li>✅ Missing data inflation</li>
+<li>✅ Clustering (design effect)</li>
+<li>✅ Multiple testing correction</li>
+</ul>
+</div>
+<div id="example-use-case-4" class="section level3">
+<h3>Example Use Case</h3>
+<p><strong>Scenario</strong>: Clinical trial comparing weight loss
+between diet intervention vs. control.</p>
+<p><strong>Parameters</strong>: - Expected mean difference: 3 kg -
+Pooled standard deviation: 6 kg - Cohen’s d: 3/6 = 0.5 - Allocation: 1:1
+- Power: 80% - α: 0.05 (two-sided)</p>
+<p><strong>Output</strong>: Required sample size per group</p>
+<hr />
+</div>
+</div>
+<div id="non-inferiority-testing" class="section level2">
+<h2>6. Non-Inferiority Testing</h2>
+<div id="description-5" class="section level3">
+<h3>Description</h3>
+<p>Sample size calculations for non-inferiority and equivalence trials
+with binary outcomes. Uses one-sided testing framework with
+pre-specified margin.</p>
+</div>
+<div id="when-to-use-5" class="section level3">
+<h3>When to Use</h3>
+<ul>
+<li><strong>Non-inferiority</strong>: Proving new treatment is “not
+worse” than standard by more than a margin</li>
+<li><strong>Equivalence</strong>: Proving new treatment is “similar” to
+standard within margin bounds</li>
+<li>Regulatory trials (FDA/EMA submissions)</li>
+<li>Generic drug approval</li>
+<li>Biosimilar studies</li>
+</ul>
+</div>
+<div id="parameters-5" class="section level3">
+<h3>Parameters</h3>
+<table>
+<colgroup>
+<col width="24%" />
+<col width="13%" />
+<col width="28%" />
+<col width="33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+<th>Typical Range</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Sample size per group</strong></td>
+<td>Integer</td>
+<td>n₁ and n₂</td>
+<td>100 - 5,000 per group</td>
+</tr>
+<tr class="even">
+<td><strong>Test group rate</strong></td>
+<td>Percentage</td>
+<td>Event rate in new treatment</td>
+<td>5% - 50%</td>
+</tr>
+<tr class="odd">
+<td><strong>Reference group rate</strong></td>
+<td>Percentage</td>
+<td>Event rate in standard</td>
+<td>5% - 50%</td>
+</tr>
+<tr class="even">
+<td><strong>NI margin</strong></td>
+<td>Percentage</td>
+<td>Non-inferiority margin</td>
+<td>2% - 15%</td>
+</tr>
+<tr class="odd">
+<td><strong>Allocation ratio</strong></td>
+<td>Ratio</td>
+<td>n₂/n₁ ratio</td>
+<td>1:1, 2:1</td>
+</tr>
+<tr class="even">
+<td><strong>Power</strong></td>
+<td>Probability</td>
+<td>Desired power</td>
+<td>0.80, 0.90</td>
+</tr>
+<tr class="odd">
+<td><strong>Significance level (α)</strong></td>
+<td>Probability</td>
+<td>One-sided Type I error</td>
+<td>0.025</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="key-concepts" class="section level3">
+<h3>Key Concepts</h3>
+<p><strong>Non-Inferiority Margin (Δ)</strong>: - Maximum acceptable
+difference - Set based on clinical importance and regulatory guidance -
+Typically 50% of active control effect (FDA guidance)</p>
+<p><strong>Hypothesis</strong>: - <strong>Null (H₀)</strong>: Test
+treatment is inferior by ≥ Δ - <strong>Alternative (H₁)</strong>: Test
+treatment is non-inferior (within Δ)</p>
+<p><strong>One-sided test</strong>: Uses α = 0.025 (equivalent to
+two-sided α = 0.05)</p>
+</div>
+<div id="effect-measures-5" class="section level3">
+<h3>Effect Measures</h3>
+<ul>
+<li><strong>Risk Difference (RD)</strong>: Absolute difference</li>
+<li><strong>Relative Risk (RR)</strong>: Ratio of proportions</li>
+<li><strong>Non-inferiority margin</strong>: Δ (percentage points or
+relative)</li>
+</ul>
+</div>
+<div id="statistical-method-5" class="section level3">
+<h3>Statistical Method</h3>
+<ul>
+<li>One-sided z-test with non-inferiority margin</li>
+<li>Custom implementation following FDA/ICH guidelines</li>
+</ul>
+</div>
+<div id="adjustments-available-5" class="section level3">
+<h3>Adjustments Available</h3>
+<ul>
+<li>✅ Missing data inflation (MAR, MNAR, MCAR with Complete-Case or
+Multiple Imputation)</li>
+<li>✅ Clustering (design effect with ICC specification)</li>
+<li>✅ Multiple testing correction (Bonferroni, Holm, BH, Šidák)</li>
+</ul>
+</div>
+<div id="example-use-case-5" class="section level3">
+<h3>Example Use Case</h3>
+<p><strong>Scenario</strong>: Generic drug approval for antibiotic
+efficacy.</p>
+<p><strong>Parameters</strong>: - Reference drug cure rate: 85% -
+Generic drug expected cure rate: 83% - Non-inferiority margin: 10
+percentage points - Allocation: 1:1 - Power: 90% - α: 0.025
+(one-sided)</p>
+<p><strong>Output</strong>: - Sample size per group - Conclusion: “If
+lower bound of 95% CI for RD &gt; -10%, declare non-inferiority”</p>
+<hr />
+</div>
+</div>
+<div id="propensity-score-sample-size" class="section level2">
+<h2>7. Propensity Score Sample Size</h2>
+<div id="description-6" class="section level3">
+<h3>Description</h3>
+<p>Advanced sample size adjustment for observational studies using
+propensity score weighting methods. Accounts for covariate overlap and
+confounding. Based on Li et al. (2025) and Austin (2021) methods.</p>
+</div>
+<div id="when-to-use-6" class="section level3">
+<h3>When to Use</h3>
+<ul>
+<li>Observational studies (no randomization)</li>
+<li>Confounding control via propensity scores</li>
+<li>Real-world evidence (RWE) studies</li>
+<li>Comparing effectiveness of treatments in routine care</li>
+<li>When covariate imbalance is expected</li>
+</ul>
+</div>
+<div id="parameters-6" class="section level3">
+<h3>Parameters</h3>
+<table>
+<colgroup>
+<col width="24%" />
+<col width="13%" />
+<col width="28%" />
+<col width="33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+<th>Typical Range</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Treatment prevalence</strong></td>
+<td>Proportion</td>
+<td>% receiving treatment</td>
+<td>0.10 - 0.90</td>
+</tr>
+<tr class="even">
+<td><strong>Overlap coefficient (φ)</strong></td>
+<td>Proportion</td>
+<td>Bhattacharyya coefficient</td>
+<td>0.30 - 0.95</td>
+</tr>
+<tr class="odd">
+<td><strong>C-statistic</strong></td>
+<td>AUC</td>
+<td>PS model discrimination</td>
+<td>0.55 - 0.90</td>
+</tr>
+<tr class="even">
+<td><strong>Weighting method</strong></td>
+<td>Category</td>
+<td>ATE, ATT, ATC, Matching</td>
+<td>ATE (default)</td>
+</tr>
+<tr class="odd">
+<td><strong>Effect size</strong></td>
+<td>Varies</td>
+<td>Depends on outcome type</td>
+<td>0.2 - 0.8 (Cohen’s d)</td>
+</tr>
+<tr class="even">
+<td><strong>Power</strong></td>
+<td>Probability</td>
+<td>Desired power</td>
+<td>0.80, 0.90</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="key-concepts-1" class="section level3">
+<h3>Key Concepts</h3>
+<p><strong>Propensity Score (PS)</strong>: Probability of treatment
+given covariates</p>
+<p><strong>Overlap (φ)</strong>: Bhattacharyya coefficient measuring
+covariate balance - φ = 1: Perfect overlap (like RCT) - φ = 0.7:
+Moderate overlap - φ &lt; 0.5: Poor overlap (questionable validity)</p>
+<p><strong>Weighting Methods</strong>: - <strong>ATE</strong> (Average
+Treatment Effect): Weights both groups to represent full population -
+<strong>ATT</strong> (Average Treatment Effect on Treated): Weights
+control to match treated - <strong>ATC</strong> (Average Treatment
+Effect on Controls): Weights treated to match controls -
+<strong>Matching</strong>: 1:1 or 1:M matching with replacement</p>
+<p><strong>VIF (Variance Inflation Factor)</strong>: - Quantifies
+efficiency loss vs. RCT - VIF = 2.0 means observational study needs 2×
+sample size of equivalent RCT</p>
+</div>
+<div id="statistical-method-6" class="section level3">
+<h3>Statistical Method</h3>
+<ul>
+<li>Li et al. (2025): Confounding adjustment via R² parameters</li>
+<li>Austin (2021): VIF estimation from c-statistic</li>
+<li>Custom implementation:
+<code>calculate_bhattacharyya_coefficient()</code>,
+<code>estimate_vif_propensity_score()</code></li>
+</ul>
+</div>
+<div id="effect-measures-6" class="section level3">
+<h3>Effect Measures</h3>
+<p>Same as underlying outcome type: - Binary: RD, RR, OR - Continuous:
+Cohen’s d, mean difference - Time-to-event: HR</p>
+</div>
+<div id="example-use-case-6" class="section level3">
+<h3>Example Use Case</h3>
+<p><strong>Scenario</strong>: EHR study comparing Drug A vs. Drug B for
+diabetes control (HbA1c reduction).</p>
+<p><strong>Parameters</strong>: - Treatment prevalence: 30% receive Drug
+A - Expected overlap: φ = 0.75 (good overlap) - PS model c-statistic:
+0.70 (moderate discrimination) - Weighting method: ATE - Effect size: d
+= 0.3 (small-medium) - Power: 80%</p>
+<p><strong>Output</strong>: - RCT-equivalent sample size: 350 per group
+- VIF: 1.8 - Adjusted observational sample size: 630 per group (1,260
+total)</p>
+<hr />
+</div>
+</div>
+<div id="mediation-analysis-power" class="section level2">
+<h2>8. Mediation Analysis Power</h2>
+<div id="description-7" class="section level3">
+<h3>Description</h3>
+<p>Power calculations for testing indirect effects in mediation models
+(X → M → Y). Uses Sobel test framework for the product of path
+coefficients.</p>
+</div>
+<div id="when-to-use-7" class="section level3">
+<h3>When to Use</h3>
+<ul>
+<li>Testing mechanisms of action (how does X affect Y?)</li>
+<li>Causal pathway analysis</li>
+<li>Behavioral intervention research</li>
+<li>Identifying mediators of treatment effects</li>
+<li>Theory-driven hypothesis testing</li>
+</ul>
+</div>
+<div id="parameters-7" class="section level3">
+<h3>Parameters</h3>
+<table>
+<colgroup>
+<col width="24%" />
+<col width="13%" />
+<col width="28%" />
+<col width="33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+<th>Typical Range</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Sample size (N)</strong></td>
+<td>Integer</td>
+<td>Total participants</td>
+<td>100 - 1,000</td>
+</tr>
+<tr class="even">
+<td><strong>Path a</strong></td>
+<td>Correlation</td>
+<td>X → M (exposure to mediator)</td>
+<td>0.1 - 0.7</td>
+</tr>
+<tr class="odd">
+<td><strong>Path b</strong></td>
+<td>Correlation</td>
+<td>M → Y|X (mediator to outcome)</td>
+<td>0.1 - 0.7</td>
+</tr>
+<tr class="even">
+<td><strong>Path c’</strong></td>
+<td>Correlation</td>
+<td>X → Y (direct effect, optional)</td>
+<td>0.0 - 0.5</td>
+</tr>
+<tr class="odd">
+<td><strong>Power</strong></td>
+<td>Probability</td>
+<td>Desired power</td>
+<td>0.80, 0.90</td>
+</tr>
+<tr class="even">
+<td><strong>Significance level (α)</strong></td>
+<td>Probability</td>
+<td>Type I error rate</td>
+<td>0.05</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="key-concepts-2" class="section level3">
+<h3>Key Concepts</h3>
+<p><strong>Mediation Model</strong>:</p>
+<pre><code>      a        b
+X -------&gt; M -------&gt; Y
+ \                   /
+  \       c&#39;        /
+   -----------------</code></pre>
+<p><strong>Effects</strong>: - <strong>Path a</strong>: Effect of X on
+mediator M - <strong>Path b</strong>: Effect of M on outcome Y
+(controlling for X) - <strong>Indirect effect (a×b)</strong>: Effect of
+X on Y <em>through</em> M - <strong>Direct effect (c’)</strong>: Effect
+of X on Y <em>not</em> through M - <strong>Total effect (c)</strong>: c
+= c’ + a×b</p>
+<p><strong>Sobel Test</strong>: Tests whether indirect effect (a×b) is
+significantly different from zero</p>
+</div>
+<div id="statistical-method-7" class="section level3">
+<h3>Statistical Method</h3>
+<ul>
+<li>Sobel test for indirect effects</li>
+<li>Standard error: SE(a×b) = √(b²×SE(a)² + a²×SE(b)²)</li>
+<li>Power via normal approximation</li>
+<li>Custom implementation: <code>calc_mediation_power()</code>,
+<code>calc_mediation_n()</code>, <code>calc_mediation_mde()</code></li>
+</ul>
+</div>
+<div id="effect-size-guidelines" class="section level3">
+<h3>Effect Size Guidelines</h3>
+<p><strong>Path coefficients</strong> (standardized): - Small: 0.10 -
+0.30 - Medium: 0.30 - 0.50 - Large: 0.50+</p>
+<p><strong>Indirect effect (a×b)</strong>: - Small: 0.01 - 0.09 -
+Medium: 0.09 - 0.25 - Large: 0.25+</p>
+</div>
+<div id="example-use-case-7" class="section level3">
+<h3>Example Use Case</h3>
+<p><strong>Scenario</strong>: Testing whether physical activity (M)
+mediates the effect of a health coaching intervention (X) on weight loss
+(Y).</p>
+<p><strong>Parameters</strong>: - Path a (coaching → activity): 0.40
+(medium) - Path b (activity → weight loss): 0.35 (medium) - Indirect
+effect (a×b): 0.40 × 0.35 = 0.14 (medium) - Power: 80% - α: 0.05</p>
+<p><strong>Output</strong>: Required sample size to detect mediation
+effect</p>
+<hr />
+</div>
+</div>
+<div id="survival-equivalencenon-inferiority" class="section level2">
+<h2>9. Survival Equivalence/Non-Inferiority</h2>
+<div id="description-8" class="section level3">
+<h3>Description</h3>
+<p>Sample size calculations for equivalence and non-inferiority testing
+with time-to-event outcomes. Extends Cox regression framework with
+margin-based testing.</p>
+</div>
+<div id="when-to-use-8" class="section level3">
+<h3>When to Use</h3>
+<ul>
+<li>Non-inferiority trials with survival outcomes</li>
+<li>Equivalence trials for time-to-event endpoints</li>
+<li>Comparing survival curves within acceptable margin</li>
+<li>Regulatory submissions for time-to-event endpoints</li>
+</ul>
+</div>
+<div id="parameters-8" class="section level3">
+<h3>Parameters</h3>
+<table>
+<colgroup>
+<col width="24%" />
+<col width="13%" />
+<col width="28%" />
+<col width="33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+<th>Typical Range</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Expected hazard ratio</strong></td>
+<td>Ratio</td>
+<td>HR (typically near 1.0)</td>
+<td>0.80 - 1.25</td>
+</tr>
+<tr class="even">
+<td><strong>NI margin (HR scale)</strong></td>
+<td>Ratio</td>
+<td>Equivalence margin</td>
+<td>1.15 - 1.50</td>
+</tr>
+<tr class="odd">
+<td><strong>Proportion exposed</strong></td>
+<td>Proportion</td>
+<td>% in treatment group</td>
+<td>0.30 - 0.70</td>
+</tr>
+<tr class="even">
+<td><strong>Event rate</strong></td>
+<td>Percentage</td>
+<td>Overall event rate</td>
+<td>20% - 80%</td>
+</tr>
+<tr class="odd">
+<td><strong>Power</strong></td>
+<td>Probability</td>
+<td>Desired power</td>
+<td>0.80, 0.90</td>
+</tr>
+<tr class="even">
+<td><strong>Significance level (α)</strong></td>
+<td>Probability</td>
+<td>One-sided α</td>
+<td>0.025</td>
+</tr>
+<tr class="odd">
+<td><strong>Test type</strong></td>
+<td>NI or Equivalence</td>
+<td>One-sided or two-sided</td>
+<td>Non-inferiority</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="key-concepts-3" class="section level3">
+<h3>Key Concepts</h3>
+<p><strong>Non-Inferiority Hypothesis</strong>: - <strong>Null
+(H₀)</strong>: HR_upper ≥ Δ (treatment is inferior) -
+<strong>Alternative (H₁)</strong>: HR_upper &lt; Δ (treatment is
+non-inferior)</p>
+<p><strong>Equivalence Hypothesis</strong> (two one-sided tests): -
+<strong>Test 1</strong>: HR_lower &gt; Δ_lower - <strong>Test
+2</strong>: HR_upper &lt; Δ_upper</p>
+<p><strong>Margin Selection</strong>: - Typically 15-20% increase in
+hazard is considered acceptable - Margin = 1.20 means “up to 20%
+increase in hazard is acceptable”</p>
+</div>
+<div id="statistical-method-8" class="section level3">
+<h3>Statistical Method</h3>
+<ul>
+<li>Schoenfeld formula adapted for margins</li>
+<li>One-sided test for non-inferiority</li>
+<li>Two one-sided tests (TOST) for equivalence</li>
+<li>Custom implementation: <code>ssize_survival_ni()</code>,
+<code>ssize_survival_equiv()</code></li>
+</ul>
+</div>
+<div id="example-use-case-8" class="section level3">
+<h3>Example Use Case</h3>
+<p><strong>Scenario</strong>: Non-inferiority trial comparing new
+vs. standard chemotherapy for overall survival.</p>
+<p><strong>Parameters</strong>: - Expected HR: 1.05 (5% increase, but
+within acceptable range) - Non-inferiority margin: 1.20 (20% increase is
+maximum acceptable) - Allocation: 1:1 (50% in each group) - Event rate:
+60% - Power: 90% - α: 0.025 (one-sided)</p>
+<p><strong>Output</strong>: - Events required: ~250 deaths - Total
+sample size: 417 participants</p>
+<p><strong>Conclusion criterion</strong>: “If upper bound of 95% CI for
+HR &lt; 1.20, declare non-inferiority”</p>
+<hr />
+</div>
+</div>
+<div id="adjustment-features-cross-cutting" class="section level2">
+<h2>Adjustment Features (Cross-Cutting)</h2>
+<div id="missing-data-adjustment" class="section level3">
+<h3>Missing Data Adjustment</h3>
+<p><strong>Applies to</strong>: Single proportion, two-group,
+continuous, non-inferiority, survival</p>
+<p><strong>Mechanisms</strong>: - <strong>MCAR</strong> (Missing
+Completely At Random): Least impact - <strong>MAR</strong> (Missing At
+Random): Moderate impact - <strong>MNAR</strong> (Missing Not At
+Random): Largest impact</p>
+<p><strong>Analysis Plans</strong>: - <strong>Complete-case
+analysis</strong>: Most conservative, discards incomplete cases -
+Inflation factor: 1 / (1 - dropout_rate) - <strong>Multiple Imputation
+(MI)</strong>: More efficient, imputes missing values - Inflation factor
+depends on R² of imputation model and number of imputations (m)</p>
+</div>
+<div id="clustering-adjustment-design-effect" class="section level3">
+<h3>Clustering Adjustment (Design Effect)</h3>
+<p><strong>Applies to</strong>: Single proportion, two-group,
+non-inferiority</p>
+<p><strong>Formula</strong>:</p>
+<pre><code>Design Effect (DE) = 1 + (m - 1) × ICC
+
+Where:
+- m = cluster size (participants per cluster)
+- ICC = Intraclass Correlation Coefficient (0 - 1)
+
+Adjusted sample size = n_unadjusted × DE</code></pre>
+<p><strong>ICC Guidelines</strong>: - Behavioral outcomes: 0.01 - 0.05 -
+Clinical outcomes: 0.001 - 0.02 - Educational outcomes: 0.10 - 0.20</p>
+</div>
+<div id="multiple-testing-correction" class="section level3">
+<h3>Multiple Testing Correction</h3>
+<p><strong>Applies to</strong>: Single proportion, two-group,
+continuous, non-inferiority</p>
+<p><strong>Methods</strong>: - <strong>Bonferroni</strong>: α_adj = α /
+k (most conservative) - <strong>Holm-Bonferroni</strong>: Sequential
+correction (less conservative) - <strong>Benjamini-Hochberg</strong>:
+Controls False Discovery Rate - <strong>Šidák</strong>: α_adj = 1 - (1 -
+α)^(1/k)</p>
+<p><strong>Impact</strong>: Requires 10-30% larger sample size to
+maintain power</p>
+<hr />
+</div>
+</div>
+<div id="selecting-the-right-design-decision-guide" class="section level2">
+<h2>Selecting the Right Design: Decision Guide</h2>
+<div id="step-1-identify-outcome-type" class="section level3">
+<h3>Step 1: Identify Outcome Type</h3>
+<table>
+<colgroup>
+<col width="45%" />
+<col width="32%" />
+<col width="22%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Outcome Type</th>
+<th>Examples</th>
+<th>Go To</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Binary</td>
+<td>Yes/No, Event/No Event, Success/Failure</td>
+<td>Step 2</td>
+</tr>
+<tr class="even">
+<td>Continuous</td>
+<td>Weight, blood pressure, QoL score, lab values</td>
+<td>Design #5</td>
+</tr>
+<tr class="odd">
+<td>Time-to-Event</td>
+<td>Time to death, time to readmission, time to cure</td>
+<td>Step 3</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="step-2-binary-outcome---number-of-groups" class="section level3">
+<h3>Step 2: Binary Outcome - Number of Groups?</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Groups</th>
+<th>Study Type</th>
+<th>Design #</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>One group</td>
+<td>Single proportion vs. standard</td>
+<td>#1</td>
+</tr>
+<tr class="even">
+<td>Two groups (independent)</td>
+<td>RCT, cohort study</td>
+<td>#2</td>
+</tr>
+<tr class="odd">
+<td>Two groups (matched)</td>
+<td>Matched case-control</td>
+<td>#4</td>
+</tr>
+<tr class="even">
+<td>Two groups (equivalence)</td>
+<td>Non-inferiority trial</td>
+<td>#6</td>
+</tr>
+<tr class="odd">
+<td>Observational (confounded)</td>
+<td>Propensity score adjustment</td>
+<td>#7</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="step-3-time-to-event---testing-difference-or-equivalence" class="section level3">
+<h3>Step 3: Time-to-Event - Testing Difference or Equivalence?</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Hypothesis Type</th>
+<th>Design #</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Testing for a difference</td>
+<td>#3 (Survival Analysis)</td>
+</tr>
+<tr class="even">
+<td>Testing for equivalence/non-inferiority</td>
+<td>#9 (Survival Equivalence)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="step-4-special-analyses" class="section level3">
+<h3>Step 4: Special Analyses</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Research Question</th>
+<th>Design #</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Testing indirect effects (mediation)</td>
+<td>#8</td>
+</tr>
+<tr class="even">
+<td>Sensitivity to unmeasured confounding</td>
+<td>E-value (post-hoc)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+</div>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<div id="primary-sources" class="section level3">
+<h3>Primary Sources</h3>
+<ol style="list-style-type: decimal">
+<li><p><strong>Cohen, J.</strong> (1988). <em>Statistical Power Analysis
+for the Behavioral Sciences</em> (2nd ed.). Routledge.</p></li>
+<li><p><strong>Chow, S.C., Shao, J., Wang, H., &amp; Lokhnygina,
+Y.</strong> (2017). <em>Sample Size Calculations in Clinical
+Research</em> (3rd ed.). Chapman &amp; Hall/CRC.</p></li>
+<li><p><strong>Li, F., Morgan, K.L., Zaslavsky, A.M.</strong> (2025).
+Sample size and power calculations for causal inference of observational
+studies. <em>arXiv preprint</em> arXiv:2501.11181.</p></li>
+<li><p><strong>Schoenfeld, D.</strong> (1983). Sample-size formula for
+the proportional-hazards regression model. <em>Biometrics</em>, 39(2),
+499-503.</p></li>
+<li><p><strong>Austin, P.C.</strong> (2021). Informing power and sample
+size calculations when using inverse probability of treatment weighting.
+<em>Statistics in Medicine</em>, 40(27), 6150-6163.</p></li>
+<li><p><strong>VanderWeele, T.J., &amp; Ding, P.</strong> (2017).
+Sensitivity analysis in observational research: Introducing the E-value.
+<em>Annals of Internal Medicine</em>, 167(4), 268-274.</p></li>
+</ol>
+</div>
+<div id="r-packages" class="section level3">
+<h3>R Packages</h3>
+<ul>
+<li><strong>pwr</strong> (1.3-0+): Basic power calculations</li>
+<li><strong>powerSurvEpi</strong> (0.1.3): Survival analysis power</li>
+<li><strong>epiR</strong> (2.0.76+): Epidemiological study designs</li>
+</ul>
+<hr />
+<p><strong>Last Updated</strong>: 2025-10-26</p>
+<p><strong>See Also</strong>: - <a href="www/doc/getting-started.html">Getting Started Guide</a> - Tutorial
+for beginners - <a href="www/doc/statistical-methods.html">Statistical
+Methods Reference</a> - Detailed formulas and calculations</p>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

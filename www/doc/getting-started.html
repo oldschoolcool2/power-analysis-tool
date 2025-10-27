@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Power Analysis Tool Development Team" />
+
+<meta name="date" content="2025-10-26" />
+
+<title>Getting Started with Power Analysis</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Getting Started with Power Analysis</h1>
+<h4 class="author">Power Analysis Tool Development Team</h4>
+<h4 class="date">2025-10-26</h4>
+
+
+
+<div id="welcome-to-the-power-analysis-tool" class="section level2">
+<h2>Welcome to the Power Analysis Tool</h2>
+<p>This guide will help you understand the basics of power analysis and
+sample size calculations, and show you how to use this tool effectively
+for planning your research studies.</p>
+<div id="what-youll-learn" class="section level3">
+<h3>What You’ll Learn</h3>
+<p>By the end of this tutorial, you’ll understand:</p>
+<ol style="list-style-type: decimal">
+<li><strong>What is power analysis</strong> and why it matters</li>
+<li><strong>The four key components</strong> of any power
+calculation</li>
+<li><strong>How to choose</strong> the right analysis type for your
+study</li>
+<li><strong>Step-by-step examples</strong> for common study designs</li>
+<li><strong>How to interpret</strong> and report your results</li>
+</ol>
+</div>
+</div>
+<div id="what-is-power-analysis" class="section level2">
+<h2>What is Power Analysis?</h2>
+<div id="the-core-question" class="section level3">
+<h3>The Core Question</h3>
+<p>Power analysis helps you answer one of three fundamental
+questions:</p>
+<p><strong>Question 1: Sample Size</strong> &gt; “How many participants
+do I need to detect a meaningful effect?”</p>
+<p><strong>Question 2: Statistical Power</strong> &gt; “Given my
+available sample size, what is my chance of detecting the effect?”</p>
+<p><strong>Question 3: Minimal Detectable Effect</strong> &gt; “Given my
+sample size and desired power, what is the smallest effect I can
+reliably detect?”</p>
+</div>
+<div id="why-power-analysis-matters" class="section level3">
+<h3>Why Power Analysis Matters</h3>
+<p><strong>Underpowered studies</strong> (too few participants): - Miss
+real effects (Type II error) - Waste resources and participant time -
+Contribute to publication bias - May be unethical if participants are
+exposed to risk</p>
+<p><strong>Overpowered studies</strong> (too many participants): - Waste
+resources on unnecessary recruitment - Expose more participants to
+potential risks - Detect statistically significant but clinically
+trivial effects</p>
+<p><strong>Well-powered studies</strong> (just right): - Balance
+efficiency with adequate detection capability - Maximize scientific and
+ethical value - Meet regulatory and funding requirements</p>
+</div>
+</div>
+<div id="the-four-key-components" class="section level2">
+<h2>The Four Key Components</h2>
+<p>Every power calculation involves exactly <strong>four
+components</strong>. If you know any three, you can calculate the
+fourth.</p>
+<div id="sample-size-n" class="section level3">
+<h3>1. Sample Size (N)</h3>
+<p><strong>Definition</strong>: The number of participants (or events)
+in your study.</p>
+<p><strong>Typical questions</strong>: - How many patients do I need to
+recruit? - How many matched pairs for a case-control study? - How many
+events for a survival analysis?</p>
+<p><strong>Typical values</strong>: Varies widely by design and effect
+size (from 50 to 5,000+)</p>
+</div>
+<div id="effect-size" class="section level3">
+<h3>2. Effect Size</h3>
+<p><strong>Definition</strong>: The magnitude of the difference or
+association you want to detect.</p>
+<p><strong>Effect size measures</strong> (depends on outcome type):</p>
+<p><strong>Binary outcomes</strong> (Yes/No, Event/No Event): -
+<strong>Risk Difference (RD)</strong>: Absolute difference in
+proportions (e.g., 10% vs 20% = 10 percentage points) - <strong>Relative
+Risk (RR)</strong>: Ratio of proportions (e.g., 0.20/0.10 = 2.0) -
+<strong>Odds Ratio (OR)</strong>: For case-control studies (e.g., OR =
+2.5) - <strong>Hazard Ratio (HR)</strong>: For time-to-event outcomes
+(e.g., HR = 0.75)</p>
+<p><strong>Continuous outcomes</strong> (e.g., blood pressure, BMI): -
+<strong>Cohen’s d</strong>: Standardized mean difference - Small: d =
+0.2 - Medium: d = 0.5 - Large: d = 0.8 - <strong>Raw
+difference</strong>: Actual units (e.g., 5 mmHg blood pressure
+reduction)</p>
+<p><strong>How to choose an effect size</strong>:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Clinical importance</strong>: What difference would change
+clinical practice?</li>
+<li><strong>Prior literature</strong>: What effects have similar studies
+found?</li>
+<li><strong>Pilot data</strong>: What preliminary estimates do you
+have?</li>
+<li><strong>Regulatory standards</strong>: What margins are accepted by
+FDA/EMA?</li>
+</ol>
+</div>
+<div id="statistical-power-1---β" class="section level3">
+<h3>3. Statistical Power (1 - β)</h3>
+<p><strong>Definition</strong>: The probability of detecting an effect
+if it truly exists.</p>
+<p><strong>Common convention</strong>: Power ≥ 0.80 (80%)</p>
+<p><strong>Interpretation</strong>: - Power = 0.80 means you have an 80%
+chance of finding a significant result if the effect is real - Power =
+0.50 means you’re essentially flipping a coin (inadequate) - Power =
+0.90 is higher confidence but requires more participants</p>
+<p><strong>When to use higher power</strong>: - Costly interventions -
+Irreversible outcomes - Regulatory submissions (often require 90% power)
+- Confirmatory trials</p>
+</div>
+<div id="significance-level-α" class="section level3">
+<h3>4. Significance Level (α)</h3>
+<p><strong>Definition</strong>: The probability of a false positive
+(Type I error rate).</p>
+<p><strong>Common convention</strong>: α = 0.05 (5%)</p>
+<p><strong>One-sided vs. two-sided</strong>: -
+<strong>Two-sided</strong> (default): Tests whether groups differ in
+either direction (e.g., “Is A different from B?”) -
+<strong>One-sided</strong>: Tests whether one group is higher/lower
+(e.g., “Is A better than B?”) - Use for non-inferiority or superiority
+trials - Requires strong prior justification - α = 0.025 for one-sided
+test (equivalent to two-sided α = 0.05)</p>
+</div>
+</div>
+<div id="choosing-the-right-analysis-type" class="section level2">
+<h2>Choosing the Right Analysis Type</h2>
+<p>The tool supports 9 different analysis types. Here’s how to
+choose:</p>
+<div id="decision-tree" class="section level3">
+<h3>Decision Tree</h3>
+<p><strong>Step 1: What type of outcome do you have?</strong></p>
+<p><strong>Binary outcome</strong> (Yes/No, Event/No Event,
+Success/Failure): - → Go to Step 2</p>
+<p><strong>Continuous outcome</strong> (measured on a scale: weight,
+blood pressure, QoL score): - → <strong>Continuous Outcomes
+(t-test)</strong></p>
+<p><strong>Time-to-event outcome</strong> (survival, time to
+hospitalization, time to cure): - → Go to Step 3</p>
+<hr />
+<p><strong>Step 2: Binary Outcome - How many groups?</strong></p>
+<p><strong>One group</strong> (comparing to a known rate): - →
+<strong>Single Proportion (Rule of 3)</strong> - Example: “What is the
+infection rate in our hospital compared to the national average?”</p>
+<p><strong>Two groups</strong> (comparing two treatments/exposures): -
+Are cases and controls matched (paired)? - <strong>Yes</strong> →
+<strong>Matched Case-Control Study</strong> - <strong>No</strong> →
+<strong>Two-Group Comparison (Proportions)</strong></p>
+<hr />
+<p><strong>Step 3: Time-to-Event - What type of comparison?</strong></p>
+<p><strong>Testing for a difference</strong>: - → <strong>Survival
+Analysis (Cox Regression)</strong></p>
+<p><strong>Testing for equivalence or non-inferiority</strong>: - →
+<strong>Survival Equivalence/Non-Inferiority</strong></p>
+<hr />
+<p><strong>Step 4: Special Study Designs</strong></p>
+<p><strong>Non-inferiority or equivalence trial</strong> (binary
+outcome): - → <strong>Non-Inferiority Testing</strong></p>
+<p><strong>Mediation analysis</strong> (testing indirect effects): - →
+<strong>Mediation Analysis Power</strong></p>
+<p><strong>Observational study with propensity score weighting</strong>:
+- → <strong>Propensity Score Sample Size</strong></p>
+</div>
+</div>
+<div id="step-by-step-examples" class="section level2">
+<h2>Step-by-Step Examples</h2>
+<div id="example-1-simple-two-group-comparison" class="section level3">
+<h3>Example 1: Simple Two-Group Comparison</h3>
+<p><strong>Research Question</strong>: Does a new smoking cessation
+intervention improve quit rates compared to standard care?</p>
+<p><strong>Study Design</strong>: - Two groups: Intervention
+vs. Standard Care - Outcome: Binary (Quit smoking: Yes/No) - Equal
+allocation (1:1 ratio)</p>
+<p><strong>Known information</strong>: - Standard care quit rate:
+<strong>20%</strong> (from literature) - Intervention quit rate:
+<strong>35%</strong> (clinically meaningful improvement) - Desired
+power: <strong>80%</strong> - Significance level: <strong>α =
+0.05</strong> (two-sided)</p>
+<p><strong>Step 1</strong>: Navigate to <strong>“Two-Group
+Comparison”</strong> tab in the tool</p>
+<p><strong>Step 2</strong>: Select <strong>“Calculate Sample
+Size”</strong></p>
+<p><strong>Step 3</strong>: Enter parameters: - Group 1 proportion: 35
+(intervention) - Group 2 proportion: 20 (standard care) - Desired power:
+0.80 - Significance level: 0.05 - Test type: Two-sided - Allocation
+ratio: 1.0 (equal groups)</p>
+<p><strong>Step 4</strong>: Click <strong>“Calculate”</strong></p>
+<p><strong>Expected Result</strong>:</p>
+<pre><code>Sample size per group: 150 participants
+Total sample size: 300 participants
+
+Effect Measures:
+- Risk Difference (RD): 15 percentage points
+- Relative Risk (RR): 1.75
+- Odds Ratio (OR): 2.17</code></pre>
+<p><strong>Interpretation</strong>: You need to recruit 150 participants
+per group (300 total) to have an 80% chance of detecting a 15 percentage
+point improvement in quit rates.</p>
+<hr />
+</div>
+<div id="example-2-feasibility-constrained-study-minimal-detectable-effect" class="section level3">
+<h3>Example 2: Feasibility-Constrained Study (Minimal Detectable
+Effect)</h3>
+<p><strong>Research Question</strong>: What effect size can we detect
+with our limited budget?</p>
+<p><strong>Study Design</strong>: - Two groups comparing continuous
+outcome (systolic blood pressure) - Maximum affordable sample: <strong>N
+= 100</strong> (50 per group)</p>
+<p><strong>Known information</strong>: - Available sample: <strong>50
+per group</strong> - Desired power: <strong>80%</strong> - Significance
+level: <strong>α = 0.05</strong></p>
+<p><strong>Step 1</strong>: Navigate to <strong>“Continuous
+Outcomes”</strong> tab</p>
+<p><strong>Step 2</strong>: Select <strong>“Calculate Minimal Detectable
+Effect”</strong></p>
+<p><strong>Step 3</strong>: Enter parameters: - Sample size per group:
+50 - Desired power: 0.80 - Significance level: 0.05 - Test type:
+Two-sided</p>
+<p><strong>Step 4</strong>: Click <strong>“Calculate”</strong></p>
+<p><strong>Expected Result</strong>:</p>
+<pre><code>Minimal Detectable Effect Size (Cohen&#39;s d): 0.57 (medium effect)
+
+With n=50 per group, you can reliably detect:
+- Effects of medium size or larger (d ≥ 0.57)
+- You are underpowered for small effects (d &lt; 0.5)</code></pre>
+<p><strong>Interpretation</strong>: With 50 participants per group, you
+can detect medium-to-large effects but will miss small effects. Decide
+whether this is acceptable based on your research question.</p>
+<hr />
+</div>
+<div id="example-3-survival-analysis-time-to-event" class="section level3">
+<h3>Example 3: Survival Analysis (Time-to-Event)</h3>
+<p><strong>Research Question</strong>: Does a new medication reduce time
+to hospital readmission?</p>
+<p><strong>Study Design</strong>: - Cox proportional hazards analysis -
+Outcome: Time to readmission (days) - Comparing treated vs. untreated
+patients</p>
+<p><strong>Known information</strong>: - Expected hazard ratio:
+<strong>HR = 0.70</strong> (30% reduction in hazard) - Proportion
+exposed (treated): <strong>50%</strong> - Overall event rate:
+<strong>40%</strong> (40% of patients readmitted during follow-up) -
+Desired power: <strong>80%</strong> - Significance level: <strong>α =
+0.05</strong></p>
+<p><strong>Step 1</strong>: Navigate to <strong>“Survival
+Analysis”</strong> tab</p>
+<p><strong>Step 2</strong>: Select <strong>“Calculate Sample
+Size”</strong></p>
+<p><strong>Step 3</strong>: Enter parameters: - Hazard ratio: 0.70 -
+Proportion exposed: 0.50 - Event rate: 40% - Desired power: 0.80 -
+Significance level: 0.05</p>
+<p><strong>Step 4</strong>: Click <strong>“Calculate”</strong></p>
+<p><strong>Expected Result</strong>:</p>
+<pre><code>Total sample size required: 426 participants
+Number of events required: 170 events
+
+With HR = 0.70:
+- Study needs to observe 170 readmission events
+- Requires enrolling 426 participants (given 40% event rate)</code></pre>
+<p><strong>Interpretation</strong>: Unlike sample-size based analyses,
+survival studies are <strong>event-driven</strong>. You need 170 events
+(readmissions), which requires following 426 participants until 40%
+experience the event.</p>
+</div>
+</div>
+<div id="understanding-adjustments-and-special-features" class="section level2">
+<h2>Understanding Adjustments and Special Features</h2>
+<div id="missing-data-adjustment" class="section level3">
+<h3>Missing Data Adjustment</h3>
+<p><strong>Why it matters</strong>: Not all enrolled participants
+provide complete data.</p>
+<p><strong>Example scenario</strong>: - Calculated sample size: 300
+participants - Expected dropout rate: 20% - Missing data mechanism: MAR
+(Missing At Random) - Analysis plan: Complete-case analysis</p>
+<p><strong>Adjustment</strong>:</p>
+<pre><code>Adjusted sample size: 375 participants
+- Base calculation: 300
+- Inflation factor: 1.25 (to account for 20% missing data)
+- Additional participants: 75</code></pre>
+<p><strong>Tool feature</strong>: Check <strong>“Adjust for missing
+data”</strong> and specify your dropout rate and analysis plan
+(complete-case vs. multiple imputation).</p>
+</div>
+<div id="clustering-adjustment-design-effect" class="section level3">
+<h3>Clustering Adjustment (Design Effect)</h3>
+<p><strong>Why it matters</strong>: When participants are clustered
+(e.g., patients within hospitals), observations are not independent.</p>
+<p><strong>Example scenario</strong>: - Calculated sample size (assuming
+independence): 200 participants - Study design: Patients nested within
+10 hospitals - Average cluster size: 20 patients per hospital -
+Intraclass Correlation (ICC): 0.05</p>
+<p><strong>Adjustment</strong>:</p>
+<pre><code>Design Effect (DE) = 1 + (m-1) × ICC
+                   = 1 + (20-1) × 0.05
+                   = 1.95
+
+Adjusted sample size = 200 × 1.95 = 390 participants</code></pre>
+<p><strong>Tool feature</strong>: Check <strong>“Adjust for
+clustering”</strong> and specify ICC and cluster size.</p>
+</div>
+<div id="multiple-testing-correction" class="section level3">
+<h3>Multiple Testing Correction</h3>
+<p><strong>Why it matters</strong>: Testing multiple hypotheses
+increases false positive risk.</p>
+<p><strong>Example scenario</strong>: - Primary outcome + 2 secondary
+outcomes = 3 tests - Nominal α = 0.05 per test - Correction method:
+Bonferroni</p>
+<p><strong>Adjustment</strong>:</p>
+<pre><code>Adjusted α = 0.05 / 3 = 0.0167 per test
+
+Sample size increase: ~15-20% to maintain power</code></pre>
+<p><strong>Tool feature</strong>: Check <strong>“Adjust for multiple
+testing”</strong> and specify number of comparisons and correction
+method.</p>
+</div>
+</div>
+<div id="interpreting-and-reporting-results" class="section level2">
+<h2>Interpreting and Reporting Results</h2>
+<div id="what-to-report-in-your-protocol" class="section level3">
+<h3>What to Report in Your Protocol</h3>
+<p>When presenting power analysis results, include:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Study design</strong>: (e.g., “Two-group parallel randomized
+trial”)</li>
+<li><strong>Primary outcome</strong>: (e.g., “Binary outcome: 30-day
+mortality”)</li>
+<li><strong>Effect size assumption</strong>: (e.g., “Reduction from 20%
+to 15% (RD=5%, RR=0.75)”)</li>
+<li><strong>Justification</strong>: (e.g., “Based on Smith et al. (2020)
+pilot study”)</li>
+<li><strong>Sample size</strong>: (e.g., “150 per group, 300
+total”)</li>
+<li><strong>Power</strong>: (e.g., “80% power at α=0.05
+(two-sided)”)</li>
+<li><strong>Adjustments</strong>: (e.g., “Inflated by 20% for expected
+dropout (final N=375)”)</li>
+</ol>
+<p><strong>Example paragraph</strong> (generated by the tool):</p>
+<blockquote>
+<p>A sample size of 150 participants per group (300 total) provides 80%
+power to detect a risk difference of 5 percentage points (from 20% to
+15%), corresponding to a relative risk of 0.75, using a two-sided test
+at the 0.05 significance level. This effect size is based on findings
+from Smith et al. (2020) and represents a clinically meaningful
+reduction in 30-day mortality. The sample size is inflated by 20% (final
+N=375) to account for expected dropout.</p>
+</blockquote>
+</div>
+<div id="common-pitfalls-to-avoid" class="section level3">
+<h3>Common Pitfalls to Avoid</h3>
+<p><strong>Pitfall 1: Post-hoc power analysis</strong> -
+<strong>DON’T</strong>: Calculate power after seeing non-significant
+results - <strong>WHY</strong>: Power is for planning, not post-hoc
+rationalization - <strong>DO INSTEAD</strong>: Report confidence
+intervals and effect estimates</p>
+<p><strong>Pitfall 2: Overly optimistic effect sizes</strong> -
+<strong>DON’T</strong>: Assume large effects without justification -
+<strong>WHY</strong>: Leads to underpowered studies that fail -
+<strong>DO INSTEAD</strong>: Use conservative estimates from literature
+or pilot data</p>
+<p><strong>Pitfall 3: Ignoring multiple comparisons</strong> -
+<strong>DON’T</strong>: Plan 10 secondary analyses without correction -
+<strong>WHY</strong>: Inflates false positive rate - <strong>DO
+INSTEAD</strong>: Pre-specify primary outcome and adjust α or use
+correction</p>
+<p><strong>Pitfall 4: Forgetting about feasibility</strong> -
+<strong>DON’T</strong>: Calculate N=5,000 when you can only recruit 500
+- <strong>WHY</strong>: Sets up study for failure - <strong>DO
+INSTEAD</strong>: Calculate minimal detectable effect for N=500 and
+assess feasibility</p>
+</div>
+</div>
+<div id="next-steps" class="section level2">
+<h2>Next Steps</h2>
+<p>Now that you understand the basics, explore these advanced
+topics:</p>
+<div id="advanced-adjustments" class="section level3">
+<h3>1. Advanced Adjustments</h3>
+<ul>
+<li><strong>Missing Data Adjustments</strong>: <a href="www/doc/missing-data-adjustments.html">Read Vignette</a></li>
+<li><strong>Design Effects in Clustered Studies</strong>: <a href="www/doc/design-effects-clustering.html">Read Vignette</a></li>
+</ul>
+</div>
+<div id="feasibility-planning" class="section level3">
+<h3>2. Feasibility Planning</h3>
+<ul>
+<li><strong>Minimal Detectable Effect Sizes</strong>: <a href="www/doc/minimal-detectable-effects.html">Read Vignette</a></li>
+<li><strong>Interactive Power Curves</strong>: <a href="www/doc/interactive-power-curves.html">Read Vignette</a></li>
+</ul>
+</div>
+<div id="observational-studies" class="section level3">
+<h3>3. Observational Studies</h3>
+<ul>
+<li><strong>Propensity Score Sample Size</strong>: <a href="www/doc/propensity-score-calculations.html">Read Vignette</a></li>
+</ul>
+</div>
+<div id="reference-materials" class="section level3">
+<h3>4. Reference Materials</h3>
+<ul>
+<li><strong>Study Design Reference</strong>: Complete technical
+specifications for all 9 analysis types</li>
+<li><strong>Statistical Methods</strong>: Detailed formulas and
+calculations used by the tool</li>
+</ul>
+</div>
+</div>
+<div id="quick-reference-card" class="section level2">
+<h2>Quick Reference Card</h2>
+<table>
+<colgroup>
+<col width="33%" />
+<col width="28%" />
+<col width="37%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>If you have…</th>
+<th>Calculate…</th>
+<th>Use this tab…</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Two proportions to compare</td>
+<td>Sample size or power</td>
+<td>Two-Group Comparison</td>
+</tr>
+<tr class="even">
+<td>One proportion vs. a standard</td>
+<td>Sample size or power</td>
+<td>Single Proportion</td>
+</tr>
+<tr class="odd">
+<td>Two means to compare</td>
+<td>Sample size or power</td>
+<td>Continuous Outcomes</td>
+</tr>
+<tr class="even">
+<td>Time-to-event outcome</td>
+<td>Sample size or power</td>
+<td>Survival Analysis</td>
+</tr>
+<tr class="odd">
+<td>Matched pairs</td>
+<td>Sample size</td>
+<td>Matched Case-Control</td>
+</tr>
+<tr class="even">
+<td>Non-inferiority design</td>
+<td>Sample size</td>
+<td>Non-Inferiority Testing</td>
+</tr>
+<tr class="odd">
+<td>Fixed sample size</td>
+<td>Minimal detectable effect</td>
+<td>Any tab (select MDE option)</td>
+</tr>
+<tr class="even">
+<td>Mediation hypothesis</td>
+<td>Sample size or power</td>
+<td>Mediation Analysis</td>
+</tr>
+<tr class="odd">
+<td>Propensity score study</td>
+<td>Adjusted sample size</td>
+<td>Propensity Score Sample Size</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="getting-help" class="section level2">
+<h2>Getting Help</h2>
+<p><strong>Within the Tool</strong>: - Look for <strong>blue information
+icons</strong> (ℹ️) next to each parameter for definitions - Expand
+<strong>“Example Scenario”</strong> sections for worked examples -
+Review <strong>“Help &amp; Interpretation”</strong> accordions at the
+bottom of each tab</p>
+<p><strong>External Resources</strong>: - Cohen, J. (1988).
+<em>Statistical Power Analysis for the Behavioral Sciences</em> (2nd
+ed.) - Noordzij et al. (2010). “Sample size calculations: basic
+principles and common pitfalls.” <em>Nephrology Dialysis
+Transplantation</em>, 25(5), 1388-1393. - Chow, S.C., Shao, J., Wang,
+H., &amp; Lokhnygina, Y. (2017). <em>Sample Size Calculations in
+Clinical Research</em> (3rd ed.)</p>
+<hr />
+<p><strong>Feedback</strong>: Found an issue or have a suggestion?
+Please report it at <a href="https://github.com/anthropics/claude-code/issues">GitHub
+Issues</a></p>
+<p><strong>Last Updated</strong>: 2025-10-26</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

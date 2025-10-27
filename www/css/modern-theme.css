@@ -34,10 +34,23 @@ body {
   font-family: var(--font-family-base);
   font-size: var(--font-size-base);
   line-height: var(--line-height-normal);
-  color: var(--text-primary);
+  color: var(--text-primary) !important;
   background-color: var(--bg-app);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Ensure all text elements respect the color variables */
+p, span, div, li, td, th, label {
+  color: inherit;
+}
+
+/* Force Bootstrap text utilities to respect our variables */
+.text-muted,
+.form-text,
+.help-block,
+.text-secondary {
+  color: var(--text-secondary) !important;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -243,7 +256,7 @@ code {
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   color: var(--text-inverse);
-  background-color: var(--color-primary-600);
+  background-color: var(--color-primary-700);  /* Changed from 600 to 700 for WCAG AA contrast (4.5:1) */
   border: none;
   border-radius: var(--border-radius-md);
   padding: var(--space-4) var(--space-8);
@@ -257,7 +270,7 @@ code {
 
 .btn-primary:hover,
 .btn-primary.btn-lg:hover {
-  background-color: var(--color-primary-700);
+  background-color: var(--color-primary-800);  /* Changed from 700 to 800 to maintain visual hierarchy */
   box-shadow: var(--shadow-lg);
   transform: translateY(-1px);
   color: var(--text-inverse);
@@ -546,6 +559,48 @@ select:disabled {
   border-bottom: none;
 }
 
+/* DataTables pagination and info */
+.dataTables_wrapper .dataTables_info {
+  padding-top: var(--space-3);
+  padding-bottom: var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  float: left;
+  clear: both;
+}
+
+.dataTables_wrapper .dataTables_paginate {
+  padding-top: var(--space-3);
+  padding-bottom: var(--space-3);
+  float: right;
+  clear: both;
+}
+
+.dataTables_wrapper .dataTables_length {
+  padding-bottom: var(--space-3);
+  float: left;
+  font-size: var(--font-size-sm);
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+  padding: 0.25rem 0.5rem;
+  margin: 0 0.125rem;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+  background-color: var(--color-primary);
+  color: white !important;
+}
+
+/* Clear floats after pagination */
+.dataTables_wrapper::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
 /* Regular tables */
 table {
   width: 100%;
@@ -740,7 +795,7 @@ tr:hover {
   height: var(--footer-height);
   background: var(--bg-footer);
   border-top: var(--border-subtle);
-  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-sm);
   display: flex;
   align-items: center;
   padding: 0 var(--space-6);
@@ -805,25 +860,25 @@ tr:hover {
 .alert-success {
   background-color: var(--color-success-100);
   border-color: var(--color-success-600);
-  color: var(--color-success-700);
+  color: var(--text-success);
 }
 
 .alert-info {
   background-color: var(--color-info-100);
   border-color: var(--color-info-600);
-  color: var(--color-info-700);
+  color: var(--text-info);
 }
 
 .alert-warning {
   background-color: var(--color-warning-100);
   border-color: var(--color-warning-600);
-  color: var(--color-warning-700);
+  color: var(--text-warning);
 }
 
 .alert-danger {
   background-color: var(--color-error-100);
   border-color: var(--color-error-600);
-  color: var(--color-error-700);
+  color: var(--text-error);
 }
 
 /* Shiny Notifications (Toast Messages) */
@@ -857,21 +912,21 @@ tr:hover {
 /* Default notification (info/message) */
 .shiny-notification-message {
   background-color: var(--color-info-600) !important;
-  color: #FFFFFF !important;
+  color: var(--color-white) !important;
   border-left: 4px solid var(--color-info-700);
 }
 
 /* Warning notification */
 .shiny-notification-warning {
   background-color: var(--color-warning-700) !important;
-  color: #FFFFFF !important;
+  color: var(--color-white) !important;
   border-left: 4px solid var(--color-warning-600);
 }
 
 /* Error notification */
 .shiny-notification-error {
   background-color: var(--color-error-600) !important;
-  color: #FFFFFF !important;
+  color: var(--color-white) !important;
   border-left: 4px solid var(--color-error-700);
 }
 
@@ -880,7 +935,7 @@ tr:hover {
   opacity: 1;
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-bold);
-  color: rgba(255, 255, 255, 0.9) !important;
+  color: var(--color-white) !important;
   text-shadow: none;
   cursor: pointer;
   transition: opacity var(--transition-base);
@@ -892,7 +947,7 @@ tr:hover {
 
 /* Content area */
 .shiny-notification-content {
-  color: #FFFFFF !important;
+  color: var(--color-white) !important;
 }
 
 /* ========================================================================
@@ -905,8 +960,8 @@ tr:hover {
 }
 
 .tooltip-inner {
-  background-color: #1A202C !important;  /* Force dark background for WCAG AA */
-  color: #FFFFFF !important;             /* Force white text for WCAG AA */
+  background-color: var(--color-neutral-900) !important;  /* Force dark background for WCAG AA */
+  color: var(--color-white) !important;                   /* Force white text for WCAG AA */
   padding: var(--space-2) var(--space-3);
   border-radius: var(--border-radius-md);
   max-width: 300px;
@@ -964,3 +1019,123 @@ tr:hover {
 .shadow-sm { box-shadow: var(--shadow-sm) !important; }
 .shadow-md { box-shadow: var(--shadow-md) !important; }
 .shadow-lg { box-shadow: var(--shadow-lg) !important; }
+
+/* ========================================================================
+   DARK MODE COMPREHENSIVE FIX
+   ======================================================================== */
+
+/* Ensure all text content respects dark mode colors */
+html[data-theme="dark"] body,
+html[data-theme="dark"] p,
+html[data-theme="dark"] span:not(.badge):not(.btn),
+html[data-theme="dark"] div:not(.btn):not(.badge),
+html[data-theme="dark"] li,
+html[data-theme="dark"] .help-block,
+html[data-theme="dark"] .shiny-text-output,
+[data-theme="dark"] body,
+[data-theme="dark"] p,
+[data-theme="dark"] span:not(.badge):not(.btn),
+[data-theme="dark"] div:not(.btn):not(.badge),
+[data-theme="dark"] li,
+[data-theme="dark"] .help-block,
+[data-theme="dark"] .shiny-text-output {
+  color: var(--text-primary) !important;
+}
+
+/* Dark mode headings */
+html[data-theme="dark"] h1,
+html[data-theme="dark"] h2,
+html[data-theme="dark"] h3,
+html[data-theme="dark"] h4,
+html[data-theme="dark"] h5,
+html[data-theme="dark"] h6,
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4,
+[data-theme="dark"] h5,
+[data-theme="dark"] h6 {
+  color: var(--text-primary) !important;
+}
+
+/* Dark mode secondary text */
+html[data-theme="dark"] .text-muted,
+html[data-theme="dark"] .text-secondary,
+html[data-theme="dark"] .form-text,
+html[data-theme="dark"] label,
+html[data-theme="dark"] .control-label,
+[data-theme="dark"] .text-muted,
+[data-theme="dark"] .text-secondary,
+[data-theme="dark"] .form-text,
+[data-theme="dark"] label,
+[data-theme="dark"] .control-label {
+  color: var(--text-secondary) !important;
+}
+
+/* Dark mode links */
+html[data-theme="dark"] a,
+[data-theme="dark"] a {
+  color: var(--text-link) !important;
+}
+
+html[data-theme="dark"] a:hover,
+[data-theme="dark"] a:hover {
+  color: var(--text-link-hover) !important;
+}
+
+/* Ensure content cards have proper background and text */
+html[data-theme="dark"] .content-card,
+[data-theme="dark"] .content-card {
+  background-color: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Dark mode form inputs */
+html[data-theme="dark"] .form-control,
+html[data-theme="dark"] input[type="number"],
+html[data-theme="dark"] input[type="text"],
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select,
+[data-theme="dark"] .form-control,
+[data-theme="dark"] input[type="number"],
+[data-theme="dark"] input[type="text"],
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+  background-color: var(--bg-input) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color-default) !important;
+}
+
+/* Dark mode tables */
+html[data-theme="dark"] .dataTable thead th,
+html[data-theme="dark"] th,
+[data-theme="dark"] .dataTable thead th,
+[data-theme="dark"] th {
+  background-color: var(--color-neutral-100) !important;
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="dark"] .dataTable tbody td,
+html[data-theme="dark"] td,
+[data-theme="dark"] .dataTable tbody td,
+[data-theme="dark"] td {
+  color: var(--text-primary) !important;
+}
+
+/* Dark mode accordions */
+html[data-theme="dark"] .accordion-body,
+html[data-theme="dark"] .panel-body,
+[data-theme="dark"] .accordion-body,
+[data-theme="dark"] .panel-body {
+  color: var(--text-primary) !important;
+}
+
+/* Ensure Bootstrap's emphasis text respects dark mode */
+html[data-theme="dark"] .text-emphasis,
+html[data-theme="dark"] strong,
+html[data-theme="dark"] b,
+[data-theme="dark"] .text-emphasis,
+[data-theme="dark"] strong,
+[data-theme="dark"] b {
+  color: var(--text-primary) !important;
+}

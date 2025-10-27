@@ -1,0 +1,192 @@
+/**
+ * Multi-Bias Result Cards
+ * Statistical Power Analysis Tool
+ *
+ * Styles for multiple-bias sensitivity analysis result displays
+ * Uses semantic CSS variables for proper dark mode support
+ */
+
+/* ========================================================================
+   BASE MULTI-BIAS CARD
+   ======================================================================== */
+
+.multi-bias-result-card {
+  padding: var(--space-4);
+  margin: var(--space-4) 0;
+  border-radius: var(--border-radius-lg);
+  border-left: 4px solid;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-base);
+}
+
+.multi-bias-result-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateX(2px);
+}
+
+/* Multi-bias heading */
+.multi-bias-result-card h4 {
+  margin-top: 0;
+  margin-bottom: var(--space-3);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+}
+
+/* Multi-bias text content */
+.multi-bias-result-card p {
+  margin-bottom: var(--space-3);
+  line-height: var(--line-height-normal);
+  color: var(--text-primary);
+}
+
+.multi-bias-result-card p:last-child {
+  margin-bottom: 0;
+}
+
+/* ========================================================================
+   MAGNITUDE-SPECIFIC STYLES (for E-values)
+   ======================================================================== */
+
+/* Weak Multi-bias E-value (< 1.5) - Danger/Red */
+.multi-bias-result-card.multi-bias-weak {
+  background-color: var(--color-error-100);
+  border-left-color: var(--color-error-600);
+}
+
+.multi-bias-result-card.multi-bias-weak h4 {
+  color: var(--text-error);
+}
+
+/* Moderate Multi-bias E-value (1.5-2.0) - Warning/Orange */
+.multi-bias-result-card.multi-bias-moderate {
+  background-color: var(--color-warning-100);
+  border-left-color: var(--color-warning-600);
+}
+
+.multi-bias-result-card.multi-bias-moderate h4 {
+  color: var(--text-warning);
+}
+
+/* Strong Multi-bias E-value (2.0-3.0) - Success/Green */
+.multi-bias-result-card.multi-bias-strong {
+  background-color: var(--color-success-100);
+  border-left-color: var(--color-success-600);
+}
+
+.multi-bias-result-card.multi-bias-strong h4 {
+  color: var(--text-success);
+}
+
+/* Very Strong Multi-bias E-value (>= 3.0) - Info/Blue */
+.multi-bias-result-card.multi-bias-very-strong {
+  background-color: var(--color-info-100);
+  border-left-color: var(--color-info-600);
+}
+
+.multi-bias-result-card.multi-bias-very-strong h4 {
+  color: var(--text-info);
+}
+
+/* ========================================================================
+   BOUND-SPECIFIC STYLES
+   ======================================================================== */
+
+/* Adjusted estimate that crosses null - Warning */
+.multi-bias-result-card.multi-bias-null {
+  background-color: var(--color-warning-100);
+  border-left-color: var(--color-warning-600);
+}
+
+.multi-bias-result-card.multi-bias-null h4 {
+  color: var(--text-warning);
+}
+
+/* Adjusted estimate (general case) - Info/Blue */
+.multi-bias-result-card.multi-bias-adjusted {
+  background-color: var(--color-info-100);
+  border-left-color: var(--color-info-600);
+}
+
+.multi-bias-result-card.multi-bias-adjusted h4 {
+  color: var(--text-info);
+}
+
+/* ========================================================================
+   BIAS PARAMETER DISPLAY
+   ======================================================================== */
+
+.bias-parameters-table {
+  margin: var(--space-3) 0;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.bias-parameters-table th {
+  text-align: left;
+  padding: var(--space-2);
+  background-color: var(--bg-secondary);
+  border-bottom: 2px solid var(--border-color-default);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+}
+
+.bias-parameters-table td {
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--border-color-subtle);
+}
+
+.bias-parameters-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* ========================================================================
+   RESPONSIVE DESIGN
+   ======================================================================== */
+
+@media (max-width: 639px) {
+  .multi-bias-result-card {
+    padding: var(--space-3);
+    margin: var(--space-3) 0;
+  }
+
+  .multi-bias-result-card h4 {
+    font-size: var(--font-size-base);
+  }
+
+  .bias-parameters-table {
+    font-size: var(--font-size-sm);
+  }
+}
+
+/* ========================================================================
+   PRINT STYLES
+   ======================================================================== */
+
+@media print {
+  .multi-bias-result-card {
+    box-shadow: none !important;
+    border: 1px solid #ccc;
+    page-break-inside: avoid;
+  }
+
+  .bias-parameters-table {
+    border: 1px solid #ccc;
+  }
+}
+
+/* ========================================================================
+   DARK MODE ADJUSTMENTS
+   ======================================================================== */
+
+[data-theme="dark"] .multi-bias-result-card {
+  box-shadow: var(--shadow-dark-sm);
+}
+
+[data-theme="dark"] .multi-bias-result-card:hover {
+  box-shadow: var(--shadow-dark-md);
+}
+
+[data-theme="dark"] .bias-parameters-table th {
+  background-color: var(--bg-tertiary);
+}

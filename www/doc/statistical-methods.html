@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Power Analysis Tool Development Team" />
+
+<meta name="date" content="2025-10-26" />
+
+<title>Statistical Methods and Formulas</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Statistical Methods and Formulas</h1>
+<h4 class="author">Power Analysis Tool Development Team</h4>
+<h4 class="date">2025-10-26</h4>
+
+
+
+<div id="overview" class="section level2">
+<h2>Overview</h2>
+<p>This document provides detailed statistical methods, formulas, and
+calculations used by the Power Analysis Tool. It serves as a technical
+reference for understanding the mathematical foundations of each
+analysis type.</p>
+</div>
+<div id="contents" class="section level2">
+<h2>Contents</h2>
+<ol style="list-style-type: decimal">
+<li><a href="#fundamental-concepts">Fundamental Power Analysis
+Concepts</a></li>
+<li><a href="#effect-size-measures">Effect Size Measures</a></li>
+<li><a href="#single-proportion">Single Proportion Tests</a></li>
+<li><a href="#two-proportion">Two-Proportion Tests</a></li>
+<li><a href="#continuous-outcomes">Continuous Outcomes
+(t-tests)</a></li>
+<li><a href="#survival-analysis">Survival Analysis (Cox
+Regression)</a></li>
+<li><a href="#matched-case-control">Matched Case-Control
+Studies</a></li>
+<li><a href="#non-inferiority">Non-Inferiority and Equivalence</a></li>
+<li><a href="#propensity-score">Propensity Score Methods</a></li>
+<li><a href="#mediation-analysis">Mediation Analysis</a></li>
+<li><a href="#adjustment-methods">Adjustment Methods</a></li>
+</ol>
+<hr />
+</div>
+<div id="fundamental-concepts" class="section level2">
+<h2>Fundamental Power Analysis Concepts</h2>
+<div id="the-four-components" class="section level3">
+<h3>The Four Components</h3>
+<p>Every power calculation involves exactly four quantities:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Sample size (N)</strong>: Number of participants</li>
+<li><strong>Effect size (δ)</strong>: Magnitude of difference to
+detect</li>
+<li><strong>Significance level (α)</strong>: Type I error rate
+(probability of false positive)</li>
+<li><strong>Power (1 - β)</strong>: Type II error complement
+(probability of detecting true effect)</li>
+</ol>
+<p><strong>Relationship</strong>: If any three are specified, the fourth
+can be calculated.</p>
+</div>
+<div id="type-i-and-type-ii-errors" class="section level3">
+<h3>Type I and Type II Errors</h3>
+<p><strong>Type I Error (α)</strong>: - Probability of rejecting null
+hypothesis when it is true - False positive rate - Conventional: α =
+0.05 (5%)</p>
+<p><strong>Type II Error (β)</strong>: - Probability of failing to
+reject null hypothesis when it is false - False negative rate -
+Conventional: β = 0.20 (20%), implying power = 1 - β = 0.80 (80%)</p>
+</div>
+<div id="statistical-power" class="section level3">
+<h3>Statistical Power</h3>
+<p><strong>Definition</strong>:</p>
+<pre><code>Power = P(Reject H₀ | H₁ is true)
+      = 1 - β</code></pre>
+<p><strong>Interpretation</strong>: Probability of detecting an effect
+of size δ if it truly exists.</p>
+</div>
+<div id="critical-values-and-non-centrality-parameter" class="section level3">
+<h3>Critical Values and Non-Centrality Parameter</h3>
+<p><strong>Standard normal critical value</strong>:</p>
+<pre><code>z_α/2 = Φ^(-1)(1 - α/2)
+
+Where Φ^(-1) is the inverse standard normal CDF
+For α = 0.05, z_α/2 = 1.96</code></pre>
+<p><strong>Power calculation via non-centrality</strong>:</p>
+<pre><code>Power = Φ(z_δ - z_α/2) + Φ(-z_δ - z_α/2)
+
+Where z_δ is the non-centrality parameter (effect size × √n)</code></pre>
+<p>For two-sided tests, the second term is often negligible when power
+is high.</p>
+<hr />
+</div>
+</div>
+<div id="effect-size-measures" class="section level2">
+<h2>Effect Size Measures</h2>
+<div id="binary-outcomes" class="section level3">
+<h3>Binary Outcomes</h3>
+<div id="risk-difference-rd" class="section level4">
+<h4>Risk Difference (RD)</h4>
+<p><strong>Definition</strong>: Absolute difference in proportions</p>
+<pre><code>RD = p₁ - p₂</code></pre>
+<p><strong>Range</strong>: -1 to +1</p>
+<p><strong>Interpretation</strong>: - RD = 0: No difference - RD &gt; 0:
+Group 1 has higher risk - RD &lt; 0: Group 2 has higher risk</p>
+<p><strong>Example</strong>: 30% vs 20% → RD = 0.10 (10 percentage
+points)</p>
+</div>
+<div id="relative-risk-rr" class="section level4">
+<h4>Relative Risk (RR)</h4>
+<p><strong>Definition</strong>: Ratio of proportions</p>
+<pre><code>RR = p₁ / p₂</code></pre>
+<p><strong>Range</strong>: 0 to +∞</p>
+<p><strong>Interpretation</strong>: - RR = 1: No difference - RR &gt; 1:
+Group 1 has higher risk - RR &lt; 1: Group 1 has lower risk</p>
+<p><strong>Example</strong>: 30% vs 20% → RR = 1.5 (50% increased
+risk)</p>
+<p><strong>Undefined cases</strong>: RR is undefined when p₂ = 0</p>
+</div>
+<div id="odds-ratio-or" class="section level4">
+<h4>Odds Ratio (OR)</h4>
+<p><strong>Definition</strong>: Ratio of odds</p>
+<pre><code>OR = (p₁/(1-p₁)) / (p₂/(1-p₂))
+   = (p₁ × (1-p₂)) / (p₂ × (1-p₁))</code></pre>
+<p><strong>Range</strong>: 0 to +∞</p>
+<p><strong>Interpretation</strong>: - OR = 1: No association - OR &gt;
+1: Positive association - OR &lt; 1: Negative association</p>
+<p><strong>Relationship to RR</strong>: - When outcome is rare (p &lt;
+0.10), OR ≈ RR - OR is always further from 1 than RR (more extreme)</p>
+<p><strong>Example</strong>: 30% vs 20% → OR = (0.30/0.70) / (0.20/0.80)
+= 1.71</p>
+</div>
+<div id="cohens-h-proportions" class="section level4">
+<h4>Cohen’s h (Proportions)</h4>
+<p><strong>Definition</strong>: Standardized difference in
+arcsin-transformed proportions</p>
+<pre><code>h = 2 × (arcsin(√p₁) - arcsin(√p₂))</code></pre>
+<p><strong>Range</strong>: -π to +π (approximately -3.14 to +3.14)</p>
+<p><strong>Interpretation</strong>: - Small: h = 0.20 - Medium: h = 0.50
+- Large: h = 0.80</p>
+<p><strong>Purpose</strong>: Used in <code>pwr</code> package for
+proportion tests; stabilizes variance across proportion values</p>
+</div>
+</div>
+<div id="continuous-outcomes" class="section level3">
+<h3>Continuous Outcomes</h3>
+<div id="cohens-d" class="section level4">
+<h4>Cohen’s d</h4>
+<p><strong>Definition</strong>: Standardized mean difference</p>
+<pre><code>d = (μ₁ - μ₂) / σ_pooled</code></pre>
+<p>Where:</p>
+<pre><code>σ_pooled = √((σ₁² + σ₂²) / 2)</code></pre>
+<p><strong>Range</strong>: -∞ to +∞</p>
+<p><strong>Interpretation guidelines</strong>: - Small: d = 0.20 -
+Medium: d = 0.50 - Large: d = 0.80</p>
+<p><strong>Example</strong>: Mean difference = 5 kg, SD = 10 kg → d =
+5/10 = 0.50</p>
+</div>
+<div id="raw-mean-difference" class="section level4">
+<h4>Raw Mean Difference</h4>
+<p><strong>Definition</strong>: Unstandardized difference in means</p>
+<pre><code>Δ = μ₁ - μ₂</code></pre>
+<p><strong>Units</strong>: Same as outcome variable</p>
+<p><strong>Conversion to Cohen’s d</strong>:</p>
+<pre><code>d = Δ / σ_pooled</code></pre>
+</div>
+</div>
+<div id="time-to-event-outcomes" class="section level3">
+<h3>Time-to-Event Outcomes</h3>
+<div id="hazard-ratio-hr" class="section level4">
+<h4>Hazard Ratio (HR)</h4>
+<p><strong>Definition</strong>: Ratio of hazard rates</p>
+<pre><code>HR = λ₁ / λ₂</code></pre>
+<p>Where λ is the instantaneous event rate (hazard)</p>
+<p><strong>Range</strong>: 0 to +∞</p>
+<p><strong>Interpretation</strong>: - HR = 1: No difference in hazards -
+HR &gt; 1: Group 1 has higher hazard (worse survival) - HR &lt; 1: Group
+1 has lower hazard (better survival)</p>
+<p><strong>Example</strong>: HR = 0.70 means 30% reduction in hazard
+(beneficial treatment)</p>
+<p><strong>Assumption</strong>: Proportional hazards (constant HR over
+time)</p>
+<hr />
+</div>
+</div>
+</div>
+<div id="single-proportion" class="section level2">
+<h2>Single Proportion Tests</h2>
+<div id="statistical-test" class="section level3">
+<h3>Statistical Test</h3>
+<p><strong>Null hypothesis</strong>:</p>
+<pre><code>H₀: p = p₀</code></pre>
+<p><strong>Alternative hypothesis</strong>:</p>
+<pre><code>H₁: p ≠ p₀  (two-sided)
+H₁: p &gt; p₀  (one-sided, upper)
+H₁: p &lt; p₀  (one-sided, lower)</code></pre>
+</div>
+<div id="test-statistic" class="section level3">
+<h3>Test Statistic</h3>
+<p><strong>Approximate z-test</strong>:</p>
+<pre><code>z = (p̂ - p₀) / √(p₀(1-p₀)/n)</code></pre>
+<p><strong>Exact binomial test</strong>: Based on binomial probability
+mass function (more accurate for small n or extreme p)</p>
+</div>
+<div id="effect-size-cohens-h" class="section level3">
+<h3>Effect Size: Cohen’s h</h3>
+<p><strong>Formula</strong>:</p>
+<pre><code>h = 2 × (arcsin(√p₁) - arcsin(√p₀))</code></pre>
+</div>
+<div id="sample-size-formula" class="section level3">
+<h3>Sample Size Formula</h3>
+<p><strong>General form</strong> (via
+<code>pwr::pwr.p.test()</code>):</p>
+<pre><code>n = ((z_{α/2} + z_β) / h)²
+
+Where:
+- z_{α/2} = critical value for significance level
+- z_β = critical value for power (1 - β)
+- h = Cohen&#39;s h effect size</code></pre>
+<p><strong>Two-sided test</strong>:</p>
+<pre><code>n = (z_{α/2} + z_β)² / h²</code></pre>
+<p><strong>Example calculation</strong>:</p>
+<pre><code>p₀ = 0.30, p₁ = 0.20, α = 0.05, power = 0.80
+
+h = 2 × (arcsin(√0.20) - arcsin(√0.30))
+  = 2 × (0.464 - 0.588)
+  = -0.228
+
+|h| = 0.228
+
+z_{0.025} = 1.96, z_{0.20} = 0.842
+
+n = (1.96 + 0.842)² / (0.228)²
+  = 7.85 / 0.052
+  = 151</code></pre>
+</div>
+<div id="power-formula" class="section level3">
+<h3>Power Formula</h3>
+<p><strong>Given n, solve for power</strong>:</p>
+<pre><code>z_β = |h|√n - z_{α/2}
+
+Power = Φ(z_β)
+
+Where Φ is the standard normal CDF</code></pre>
+<hr />
+</div>
+</div>
+<div id="two-proportion" class="section level2">
+<h2>Two-Proportion Tests</h2>
+<div id="statistical-test-1" class="section level3">
+<h3>Statistical Test</h3>
+<p><strong>Null hypothesis</strong>:</p>
+<pre><code>H₀: p₁ = p₂  (or p₁ - p₂ = 0)</code></pre>
+<p><strong>Alternative hypothesis</strong>:</p>
+<pre><code>H₁: p₁ ≠ p₂  (two-sided)</code></pre>
+</div>
+<div id="test-statistic-1" class="section level3">
+<h3>Test Statistic</h3>
+<p><strong>Pooled z-test</strong>:</p>
+<pre><code>z = (p̂₁ - p̂₂) / SE_pooled
+
+Where:
+SE_pooled = √(p̂_pooled × (1 - p̂_pooled) × (1/n₁ + 1/n₂))
+
+p̂_pooled = (x₁ + x₂) / (n₁ + n₂)</code></pre>
+</div>
+<div id="effect-size-cohens-h-1" class="section level3">
+<h3>Effect Size: Cohen’s h</h3>
+<p><strong>Formula</strong>:</p>
+<pre><code>h = 2 × (arcsin(√p₁) - arcsin(√p₂))</code></pre>
+</div>
+<div id="sample-size-formula-equal-allocation" class="section level3">
+<h3>Sample Size Formula (Equal Allocation)</h3>
+<p><strong>Equal sample sizes</strong> (n₁ = n₂ = n):</p>
+<pre><code>n = 2 × ((z_{α/2} + z_β) / h)²</code></pre>
+<p><strong>Via <code>pwr::pwr.2p.test()</code></strong>:</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" tabindex="-1"></a><span class="fu">pwr.2p.test</span>(<span class="at">h =</span> h, <span class="at">sig.level =</span> α, <span class="at">power =</span> power, <span class="at">alternative =</span> <span class="st">&quot;two.sided&quot;</span>)</span></code></pre></div>
+</div>
+<div id="sample-size-formula-unequal-allocation" class="section level3">
+<h3>Sample Size Formula (Unequal Allocation)</h3>
+<p><strong>Allocation ratio</strong>: r = n₂/n₁</p>
+<p><strong>Sample size in group 1</strong>:</p>
+<pre><code>n₁ = (z_{α/2}√((1+r)p̄(1-p̄)) + z_β√(p₁(1-p₁) + r×p₂(1-p₂)))² / (r(p₁-p₂)²)
+
+Where:
+p̄ = (p₁ + r×p₂) / (1 + r)</code></pre>
+<p><strong>Sample size in group 2</strong>:</p>
+<pre><code>n₂ = r × n₁</code></pre>
+<p><strong>Total sample size</strong>:</p>
+<pre><code>N = n₁ + n₂ = n₁(1 + r)</code></pre>
+<p><strong>Via <code>pwr::pwr.2p2n.test()</code></strong>:</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" tabindex="-1"></a><span class="fu">pwr.2p2n.test</span>(<span class="at">h =</span> h, <span class="at">n1 =</span> n1, <span class="at">n2 =</span> <span class="cn">NULL</span>, <span class="at">sig.level =</span> α, <span class="at">power =</span> power)</span></code></pre></div>
+</div>
+<div id="effect-measure-calculations" class="section level3">
+<h3>Effect Measure Calculations</h3>
+<p><strong>Given p₁ and p₂</strong>:</p>
+<p><strong>Risk Difference</strong>:</p>
+<pre><code>RD = p₁ - p₂</code></pre>
+<p><strong>Relative Risk</strong>:</p>
+<pre><code>RR = p₁ / p₂  (undefined if p₂ = 0)</code></pre>
+<p><strong>Odds Ratio</strong>:</p>
+<pre><code>OR = (p₁/(1-p₁)) / (p₂/(1-p₂))
+   = (p₁(1-p₂)) / (p₂(1-p₁))</code></pre>
+<hr />
+</div>
+</div>
+<div id="continuous-outcomes" class="section level2">
+<h2>Continuous Outcomes (t-tests)</h2>
+<div id="statistical-test-2" class="section level3">
+<h3>Statistical Test</h3>
+<p><strong>Null hypothesis</strong>:</p>
+<pre><code>H₀: μ₁ = μ₂</code></pre>
+<p><strong>Alternative hypothesis</strong>:</p>
+<pre><code>H₁: μ₁ ≠ μ₂  (two-sided)</code></pre>
+</div>
+<div id="test-statistic-2" class="section level3">
+<h3>Test Statistic</h3>
+<p><strong>Two-sample t-test</strong>:</p>
+<pre><code>t = (x̄₁ - x̄₂) / SE_diff
+
+Where:
+SE_diff = σ_pooled × √(1/n₁ + 1/n₂)
+
+σ_pooled = √(((n₁-1)σ₁² + (n₂-1)σ₂²) / (n₁ + n₂ - 2))</code></pre>
+<p><strong>Degrees of freedom</strong>: df = n₁ + n₂ - 2</p>
+</div>
+<div id="effect-size-cohens-d" class="section level3">
+<h3>Effect Size: Cohen’s d</h3>
+<p><strong>Formula</strong>:</p>
+<pre><code>d = (μ₁ - μ₂) / σ_pooled</code></pre>
+<p><strong>Interpretation</strong>: - Small: d = 0.20 (means differ by
+0.2 standard deviations) - Medium: d = 0.50 (means differ by 0.5
+standard deviations) - Large: d = 0.80 (means differ by 0.8 standard
+deviations)</p>
+</div>
+<div id="sample-size-formula-equal-allocation-1" class="section level3">
+<h3>Sample Size Formula (Equal Allocation)</h3>
+<p><strong>Equal sample sizes</strong> (n₁ = n₂ = n):</p>
+<pre><code>n = 2 × ((z_{α/2} + z_β) / d)²</code></pre>
+<p><strong>For t-distribution</strong> (more accurate for small
+samples):</p>
+<pre><code>n = 2 × ((t_{α/2,df} + t_{β,df}) / d)²</code></pre>
+<p>Where df = 2n - 2 (requires iterative solution)</p>
+<p><strong>Via <code>pwr::pwr.t.test()</code></strong>:</p>
+<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" tabindex="-1"></a><span class="fu">pwr.t.test</span>(<span class="at">d =</span> d, <span class="at">sig.level =</span> α, <span class="at">power =</span> power, <span class="at">type =</span> <span class="st">&quot;two.sample&quot;</span>, <span class="at">alternative =</span> <span class="st">&quot;two.sided&quot;</span>)</span></code></pre></div>
+</div>
+<div id="sample-size-formula-unequal-allocation-1" class="section level3">
+<h3>Sample Size Formula (Unequal Allocation)</h3>
+<p><strong>Allocation ratio</strong>: r = n₂/n₁</p>
+<p><strong>Sample size in group 1</strong>:</p>
+<pre><code>n₁ = (1 + r) × (z_{α/2} + z_β)² / (r × d²)</code></pre>
+<p><strong>Sample size in group 2</strong>:</p>
+<pre><code>n₂ = r × n₁</code></pre>
+</div>
+<div id="power-formula-1" class="section level3">
+<h3>Power Formula</h3>
+<p><strong>Given n per group and d</strong>:</p>
+<pre><code>z_δ = d × √(n/2)
+
+Power = Φ(z_δ - z_{α/2})</code></pre>
+<p>For two-sided test with high power, the approximation is:</p>
+<pre><code>Power ≈ Φ(|d|√(n/2) - z_{α/2})</code></pre>
+<hr />
+</div>
+</div>
+<div id="survival-analysis" class="section level2">
+<h2>Survival Analysis (Cox Regression)</h2>
+<div id="statistical-test-3" class="section level3">
+<h3>Statistical Test</h3>
+<p><strong>Cox Proportional Hazards Model</strong>:</p>
+<pre><code>λ(t|X) = λ₀(t) × exp(β×X)</code></pre>
+<p>Where: - λ(t|X) = hazard at time t given covariate X - λ₀(t) =
+baseline hazard function - β = log(HR) (regression coefficient) - X =
+treatment indicator (0 = control, 1 = treated)</p>
+<p><strong>Null hypothesis</strong>:</p>
+<pre><code>H₀: HR = 1  (or β = 0)</code></pre>
+<p><strong>Alternative hypothesis</strong>:</p>
+<pre><code>H₁: HR ≠ 1  (or β ≠ 0)</code></pre>
+</div>
+<div id="test-statistic-3" class="section level3">
+<h3>Test Statistic</h3>
+<p><strong>Log-rank test</strong> (equivalent to Cox regression with
+single binary covariate):</p>
+<pre><code>z = (O₁ - E₁) / √V
+
+Where:
+O₁ = observed events in group 1
+E₁ = expected events in group 1 under H₀
+V = variance of (O₁ - E₁)</code></pre>
+</div>
+<div id="effect-size-hazard-ratio" class="section level3">
+<h3>Effect Size: Hazard Ratio</h3>
+<p><strong>Definition</strong>:</p>
+<pre><code>HR = exp(β)</code></pre>
+<p><strong>Relationship to β</strong>:</p>
+<pre><code>β = log(HR)</code></pre>
+<p><strong>Example</strong>: - HR = 0.70 → β = log(0.70) = -0.357 - HR =
+2.00 → β = log(2.00) = 0.693</p>
+</div>
+<div id="schoenfeld-formula-number-of-events" class="section level3">
+<h3>Schoenfeld Formula (Number of Events)</h3>
+<p><strong>Required number of events</strong> (Schoenfeld, 1983):</p>
+<pre><code>d = (z_{α/2} + z_β)² / (p(1-p) × (log(HR))²)
+
+Where:
+d = total number of events required
+p = proportion in exposed/treatment group</code></pre>
+<p><strong>For equal allocation</strong> (p = 0.50):</p>
+<pre><code>d = 4 × (z_{α/2} + z_β)² / (log(HR))²</code></pre>
+<p><strong>Example calculation</strong>:</p>
+<pre><code>HR = 0.70, p = 0.50, α = 0.05, power = 0.80
+
+log(HR) = log(0.70) = -0.357
+z_{0.025} = 1.96, z_{0.20} = 0.842
+
+d = 4 × (1.96 + 0.842)² / (-0.357)²
+  = 4 × 7.85 / 0.127
+  = 247 events</code></pre>
+</div>
+<div id="sample-size-calculation" class="section level3">
+<h3>Sample Size Calculation</h3>
+<p><strong>Total sample size</strong>:</p>
+<pre><code>N = d / P_event
+
+Where:
+d = required events
+P_event = overall event rate (proportion experiencing event)</code></pre>
+<p><strong>Example</strong>:</p>
+<pre><code>Required events: d = 247
+Expected event rate: 60%
+
+N = 247 / 0.60 = 412 participants</code></pre>
+</div>
+<div id="power-calculation-via-powersurvepi" class="section level3">
+<h3>Power Calculation via <code>powerSurvEpi</code></h3>
+<p><strong>Using
+<code>powerSurvEpi::ssizeLR.default()</code></strong>:</p>
+<div class="sourceCode" id="cb56"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" tabindex="-1"></a>powerSurvEpi<span class="sc">::</span><span class="fu">ssizeLR.default</span>(</span>
+<span id="cb56-2"><a href="#cb56-2" tabindex="-1"></a>  <span class="at">power =</span> power,</span>
+<span id="cb56-3"><a href="#cb56-3" tabindex="-1"></a>  <span class="at">k =</span> proportion_exposed,</span>
+<span id="cb56-4"><a href="#cb56-4" tabindex="-1"></a>  <span class="at">pE =</span> event_rate,</span>
+<span id="cb56-5"><a href="#cb56-5" tabindex="-1"></a>  <span class="at">pA =</span> event_rate,</span>
+<span id="cb56-6"><a href="#cb56-6" tabindex="-1"></a>  <span class="at">RR =</span> hazard_ratio,</span>
+<span id="cb56-7"><a href="#cb56-7" tabindex="-1"></a>  <span class="at">alpha =</span> α</span>
+<span id="cb56-8"><a href="#cb56-8" tabindex="-1"></a>)</span></code></pre></div>
+<p><strong>Returns</strong>: Total sample size N and number of events
+d</p>
+<hr />
+</div>
+</div>
+<div id="matched-case-control" class="section level2">
+<h2>Matched Case-Control Studies</h2>
+<div id="study-design" class="section level3">
+<h3>Study Design</h3>
+<p><strong>Matching structure</strong>: - M controls per case - Matching
+on confounders - Analysis accounts for correlation within matched
+sets</p>
+</div>
+<div id="statistical-test-4" class="section level3">
+<h3>Statistical Test</h3>
+<p><strong>McNemar’s Test</strong> (for 1:1 matching):</p>
+<p><strong>Null hypothesis</strong>:</p>
+<pre><code>H₀: OR = 1</code></pre>
+<p><strong>Test statistic</strong>:</p>
+<pre><code>χ² = (b - c)² / (b + c)
+
+Where:
+b = discordant pairs (case exposed, control unexposed)
+c = discordant pairs (case unexposed, control exposed)</code></pre>
+<p><strong>Degrees of freedom</strong>: df = 1</p>
+</div>
+<div id="effect-size-odds-ratio" class="section level3">
+<h3>Effect Size: Odds Ratio</h3>
+<p><strong>For matched pairs</strong>:</p>
+<pre><code>OR = b / c
+
+Where:
+b = discordant pairs (case exposed, control not)
+c = discordant pairs (case not exposed, control exposed)</code></pre>
+</div>
+<div id="sample-size-formula-11-matching" class="section level3">
+<h3>Sample Size Formula (1:1 Matching)</h3>
+<p><strong>General form</strong>:</p>
+<pre><code>n_pairs = (z_{α/2} + z_β)² × (ψ + 1)² / (ψ - 1)² × (1/(p₁₀ + p₀₁))
+
+Where:
+ψ = OR (odds ratio)
+p₁₀ = P(case exposed, control unexposed)
+p₀₁ = P(case unexposed, control exposed)</code></pre>
+<p><strong>Assuming conditional independence</strong>:</p>
+<pre><code>p₁₀ = p_case × (1 - p_control)
+p₀₁ = (1 - p_case) × p_control
+
+Where:
+p_case = P(exposure | case)
+p_control = P(exposure | control)</code></pre>
+</div>
+<div id="sample-size-via-epir" class="section level3">
+<h3>Sample Size via <code>epiR</code></h3>
+<p><strong>Using <code>epiR::epi.sscc()</code></strong>:</p>
+<div class="sourceCode" id="cb62"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" tabindex="-1"></a>epiR<span class="sc">::</span><span class="fu">epi.sscc</span>(</span>
+<span id="cb62-2"><a href="#cb62-2" tabindex="-1"></a>  <span class="at">OR =</span> odds_ratio,</span>
+<span id="cb62-3"><a href="#cb62-3" tabindex="-1"></a>  <span class="at">p1 =</span> <span class="cn">NULL</span>,</span>
+<span id="cb62-4"><a href="#cb62-4" tabindex="-1"></a>  <span class="at">p0 =</span> exposure_in_controls,</span>
+<span id="cb62-5"><a href="#cb62-5" tabindex="-1"></a>  <span class="at">n =</span> <span class="cn">NULL</span>,</span>
+<span id="cb62-6"><a href="#cb62-6" tabindex="-1"></a>  <span class="at">power =</span> power,</span>
+<span id="cb62-7"><a href="#cb62-7" tabindex="-1"></a>  <span class="at">r =</span> <span class="dv">1</span>,  <span class="co"># matching ratio (controls per case)</span></span>
+<span id="cb62-8"><a href="#cb62-8" tabindex="-1"></a>  <span class="at">rho =</span> <span class="dv">0</span>,  <span class="co"># correlation (set to 0 for matched)</span></span>
+<span id="cb62-9"><a href="#cb62-9" tabindex="-1"></a>  <span class="at">design =</span> <span class="dv">1</span>,  <span class="co"># matched design</span></span>
+<span id="cb62-10"><a href="#cb62-10" tabindex="-1"></a>  <span class="at">sided.test =</span> <span class="dv">2</span>,</span>
+<span id="cb62-11"><a href="#cb62-11" tabindex="-1"></a>  <span class="at">nfractional =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb62-12"><a href="#cb62-12" tabindex="-1"></a>  <span class="at">conf.level =</span> <span class="dv">1</span> <span class="sc">-</span> α</span>
+<span id="cb62-13"><a href="#cb62-13" tabindex="-1"></a>)</span></code></pre></div>
+<p><strong>Returns</strong>: Number of matched sets required</p>
+</div>
+<div id="extension-to-1m-matching" class="section level3">
+<h3>Extension to 1:M Matching</h3>
+<p><strong>For M controls per case</strong>, the formula generalizes
+to:</p>
+<pre><code>n_sets = (z_{α/2} + z_β)² × (M×ψ + 1)² / (M(ψ - 1)²) × (1/(M×p₁₀ + p₀₁))</code></pre>
+<p><strong>Efficiency</strong>: Diminishing returns after 4-5 controls
+per case</p>
+<hr />
+</div>
+</div>
+<div id="non-inferiority" class="section level2">
+<h2>Non-Inferiority and Equivalence</h2>
+<div id="non-inferiority-testing" class="section level3">
+<h3>Non-Inferiority Testing</h3>
+<p><strong>Null hypothesis</strong>:</p>
+<pre><code>H₀: p_test - p_ref ≥ Δ  (test is inferior by at least Δ)</code></pre>
+<p><strong>Alternative hypothesis</strong>:</p>
+<pre><code>H₁: p_test - p_ref &lt; Δ  (test is non-inferior, within margin Δ)</code></pre>
+<p><strong>Where</strong>: - Δ = non-inferiority margin (&gt; 0) -
+One-sided test at α/2 level</p>
+</div>
+<div id="test-statistic-4" class="section level3">
+<h3>Test Statistic</h3>
+<p><strong>One-sided z-test with margin</strong>:</p>
+<pre><code>z = ((p̂_test - p̂_ref) - Δ) / SE
+
+Where:
+SE = √(p̂_test(1-p̂_test)/n_test + p̂_ref(1-p̂_ref)/n_ref)</code></pre>
+<p><strong>Decision rule</strong>:</p>
+<pre><code>Reject H₀ (conclude non-inferiority) if:
+Upper bound of (1-2α) CI for (p_test - p_ref) &lt; Δ</code></pre>
+</div>
+<div id="sample-size-formula-1" class="section level3">
+<h3>Sample Size Formula</h3>
+<p><strong>General form</strong> (equal allocation, n₁ = n₂ = n):</p>
+<pre><code>n = 2 × ((z_α + z_β)² × (p_test(1-p_test) + p_ref(1-p_ref))) / (p_test - p_ref - Δ)²
+
+Where:
+- z_α = critical value for one-sided α (typically α = 0.025)
+- z_β = critical value for power (1 - β)
+- Δ = non-inferiority margin</code></pre>
+<p><strong>Key difference from superiority</strong>: Denominator uses
+(p_test - p_ref - Δ) instead of (p_test - p_ref)</p>
+<p><strong>Effect of margin</strong>: - Smaller Δ (tighter margin) →
+Larger sample size required - Larger Δ (more lenient) → Smaller sample
+size required</p>
+</div>
+<div id="equivalence-testing-tost" class="section level3">
+<h3>Equivalence Testing (TOST)</h3>
+<p><strong>Two One-Sided Tests (TOST)</strong>:</p>
+<p><strong>Hypotheses</strong>:</p>
+<pre><code>H₀₁: p_test - p_ref ≤ -Δ  (test is worse by at least Δ)
+H₀₂: p_test - p_ref ≥ +Δ  (test is better by at least Δ)
+
+H₁: -Δ &lt; p_test - p_ref &lt; +Δ  (test is equivalent within ±Δ)</code></pre>
+<p><strong>Decision rule</strong>:</p>
+<pre><code>Reject both H₀₁ and H₀₂ (conclude equivalence) if:
+- Lower bound of (1-2α) CI &gt; -Δ  AND
+- Upper bound of (1-2α) CI &lt; +Δ</code></pre>
+</div>
+<div id="sample-size-for-equivalence" class="section level3">
+<h3>Sample Size for Equivalence</h3>
+<p><strong>Requires larger sample</strong> than non-inferiority:</p>
+<pre><code>n_equivalence ≈ 2 × n_non-inferiority</code></pre>
+<p><strong>Formula</strong> (symmetric margins ±Δ):</p>
+<pre><code>n = 2 × ((z_α + z_β)² × (p_test(1-p_test) + p_ref(1-p_ref))) / Δ²</code></pre>
+<p><strong>Note</strong>: Both tails must be tested, effectively
+doubling the requirement.</p>
+<hr />
+</div>
+</div>
+<div id="propensity-score" class="section level2">
+<h2>Propensity Score Methods</h2>
+<div id="background" class="section level3">
+<h3>Background</h3>
+<p><strong>Propensity Score (PS)</strong>: Probability of treatment
+given observed covariates</p>
+<pre><code>e(X) = P(T=1 | X)</code></pre>
+<p><strong>Purpose</strong>: Balance covariates between treated and
+control groups in observational studies</p>
+</div>
+<div id="variance-inflation-factor-vif" class="section level3">
+<h3>Variance Inflation Factor (VIF)</h3>
+<p><strong>Definition</strong>: Factor by which variance is inflated
+compared to RCT</p>
+<pre><code>VIF = Var_obs / Var_RCT</code></pre>
+<p><strong>Interpretation</strong>: - VIF = 1: Observational study as
+efficient as RCT (perfect balance) - VIF = 2: Need 2× sample size of RCT
+- VIF = 4: Need 4× sample size of RCT</p>
+</div>
+<div id="austin-2021-method-vif-from-c-statistic" class="section level3">
+<h3>Austin (2021) Method: VIF from C-Statistic</h3>
+<p><strong>Empirical relationship</strong> (Austin, 2021):</p>
+<pre><code>VIF ≈ 1.5 + 0.5 × (c - 0.5)² / (0.5)²
+    = 1.5 + 2 × (c - 0.5)²
+
+Where c = AUC/c-statistic of propensity score model</code></pre>
+<p><strong>Example</strong>:</p>
+<pre><code>c = 0.70 (moderate discrimination)
+
+VIF = 1.5 + 2 × (0.70 - 0.50)²
+    = 1.5 + 2 × 0.04
+    = 1.58
+
+→ Need 58% more participants than RCT</code></pre>
+<p><strong>C-statistic interpretation</strong>: - c = 0.50: No
+discrimination (random prediction) → VIF = 1.5 - c = 0.60: Weak
+discrimination → VIF = 1.52 - c = 0.70: Moderate discrimination → VIF =
+1.58 - c = 0.80: Strong discrimination → VIF = 1.68 - c = 0.90: Very
+strong discrimination → VIF = 1.82</p>
+<p><strong>Counterintuitive</strong>: Higher c-statistic (better PS
+model) → Higher VIF → More sample needed</p>
+<p><strong>Reason</strong>: Good PS model indicates strong confounding;
+adjusting for it reduces effective sample size</p>
+</div>
+<div id="li-et-al.-2025-method-confounding-and-overlap" class="section level3">
+<h3>Li et al. (2025) Method: Confounding and Overlap</h3>
+<p><strong>Bhattacharyya Coefficient (φ)</strong>: Measure of covariate
+overlap</p>
+<pre><code>φ = ∫ √(f₁(x) × f₀(x)) dx
+
+Where:
+f₁(x) = density of covariates in treated
+f₀(x) = density of covariates in controls</code></pre>
+<p><strong>Range</strong>: 0 to 1 - φ = 1: Perfect overlap
+(distributions identical) - φ = 0.7: Good overlap - φ &lt; 0.5: Poor
+overlap (limited extrapolation validity)</p>
+<p><strong>Estimating φ from treatment prevalence and PS
+c-statistic</strong> (Li et al., 2025):</p>
+<p>Approximate relationship (requires PS model parameters):</p>
+<pre><code>φ ≈ function(π, c, R²)
+
+Where:
+π = P(T=1) = treatment prevalence
+c = c-statistic
+R² = strength of confounding (correlation between treatment and outcome via covariates)</code></pre>
+<p><strong>VIF calculation</strong> (Li et al., 2025):</p>
+<pre><code>VIF_ATE = 1 / (φ²×π×(1-π))
+
+Where ATE = Average Treatment Effect weighting</code></pre>
+</div>
+<div id="weighting-methods" class="section level3">
+<h3>Weighting Methods</h3>
+<p><strong>ATE (Average Treatment Effect)</strong>: Weights to represent
+full population</p>
+<pre><code>w_treated = 1 / e(X)
+w_control = 1 / (1 - e(X))
+
+VIF_ATE = 1 / (φ²×π×(1-π))</code></pre>
+<p><strong>ATT (Average Treatment Effect on Treated)</strong>: Weights
+controls to match treated</p>
+<pre><code>w_treated = 1
+w_control = e(X) / (1 - e(X))
+
+VIF_ATT = 1 / (φ²×π)</code></pre>
+<p><strong>ATC (Average Treatment Effect on Controls)</strong>: Weights
+treated to match controls</p>
+<pre><code>w_treated = (1 - e(X)) / e(X)
+w_control = 1
+
+VIF_ATC = 1 / (φ²×(1-π))</code></pre>
+</div>
+<div id="sample-size-adjustment" class="section level3">
+<h3>Sample Size Adjustment</h3>
+<p><strong>Observational sample size</strong>:</p>
+<pre><code>N_obs = N_RCT × VIF
+
+Where:
+N_RCT = sample size for equivalent RCT
+VIF = variance inflation factor</code></pre>
+<p><strong>Example</strong>:</p>
+<pre><code>RCT requires: 400 participants (200 per group)
+VIF from overlap and confounding: 2.3
+
+Observational study requires: 400 × 2.3 = 920 participants</code></pre>
+<hr />
+</div>
+</div>
+<div id="mediation-analysis" class="section level2">
+<h2>Mediation Analysis</h2>
+<div id="mediation-model" class="section level3">
+<h3>Mediation Model</h3>
+<p><strong>Path diagram</strong>:</p>
+<pre><code>      a        b
+X -------&gt; M -------&gt; Y
+ \                   /
+  \       c&#39;        /
+   -----------------</code></pre>
+<p><strong>Effects</strong>: - <strong>a</strong>: X → M (effect of
+exposure on mediator) - <strong>b</strong>: M → Y|X (effect of mediator
+on outcome, controlling for X) - <strong>c’</strong>: X → Y (direct
+effect of exposure on outcome) - <strong>c</strong>: X → Y (total
+effect, without controlling for M)</p>
+<p><strong>Relationship</strong>:</p>
+<pre><code>c = c&#39; + a×b
+
+Total effect = Direct effect + Indirect effect</code></pre>
+</div>
+<div id="indirect-effect" class="section level3">
+<h3>Indirect Effect</h3>
+<p><strong>Definition</strong>:</p>
+<pre><code>Indirect effect = a × b</code></pre>
+<p><strong>Interpretation</strong>: Effect of X on Y that operates
+<em>through</em> mediator M</p>
+</div>
+<div id="sobel-test" class="section level3">
+<h3>Sobel Test</h3>
+<p><strong>Test statistic</strong>:</p>
+<pre><code>z = (a×b) / SE(a×b)</code></pre>
+<p><strong>Standard error (Sobel formula)</strong>:</p>
+<pre><code>SE(a×b) = √(b²×SE(a)² + a²×SE(b)²)</code></pre>
+<p><strong>Simplified (ignoring covariance)</strong>:</p>
+<pre><code>SE(a×b) ≈ √(b²×σ_a² + a²×σ_b²)
+
+Where:
+σ_a² = variance of path a coefficient
+σ_b² = variance of path b coefficient</code></pre>
+<p><strong>For standardized coefficients</strong> (correlation
+scale):</p>
+<pre><code>SE(a) ≈ 1 / √(n - 3)
+SE(b) ≈ 1 / √(n - 3)</code></pre>
+</div>
+<div id="power-formula-sobel-test" class="section level3">
+<h3>Power Formula (Sobel Test)</h3>
+<p><strong>Non-centrality parameter</strong>:</p>
+<pre><code>λ = (a×b) / SE(a×b)
+  = (a×b) / √(b²×σ_a² + a²×σ_b²)
+  ≈ (a×b) × √(n - 3)</code></pre>
+<p><strong>Power</strong>:</p>
+<pre><code>Power = Φ(λ - z_{α/2})
+      = Φ((a×b)×√(n-3) - z_{α/2})</code></pre>
+</div>
+<div id="sample-size-formula-2" class="section level3">
+<h3>Sample Size Formula</h3>
+<p><strong>Rearranging for n</strong>:</p>
+<pre><code>n = ((z_{α/2} + z_β) / (a×b))² × (b²/n + a²/n) + 3
+  ≈ ((z_{α/2} + z_β) / (a×b))² × (a² + b²) + 3</code></pre>
+<p><strong>Simplified (large n)</strong>:</p>
+<pre><code>n ≈ (z_{α/2} + z_β)² × (a² + b²) / (a×b)²</code></pre>
+<p><strong>Example</strong>:</p>
+<pre><code>a = 0.40, b = 0.30, α = 0.05, power = 0.80
+
+Indirect effect = 0.40 × 0.30 = 0.12
+
+z_{0.025} = 1.96, z_{0.20} = 0.842
+
+n ≈ (1.96 + 0.842)² × (0.40² + 0.30²) / (0.12)²
+  = 7.85 × 0.25 / 0.0144
+  = 136 participants</code></pre>
+</div>
+<div id="effect-size-guidelines" class="section level3">
+<h3>Effect Size Guidelines</h3>
+<p><strong>Path coefficients</strong> (standardized): - Small: 0.10 -
+0.30 - Medium: 0.30 - 0.50 - Large: 0.50+</p>
+<p><strong>Indirect effects (a×b)</strong>: - Small: 0.01 - 0.09 -
+Medium: 0.09 - 0.25 - Large: 0.25+</p>
+<hr />
+</div>
+</div>
+<div id="adjustment-methods" class="section level2">
+<h2>Adjustment Methods</h2>
+<div id="missing-data-adjustment" class="section level3">
+<h3>Missing Data Adjustment</h3>
+<div id="complete-case-analysis-cca" class="section level4">
+<h4>Complete-Case Analysis (CCA)</h4>
+<p><strong>Inflation factor</strong>:</p>
+<pre><code>f_CCA = 1 / (1 - p_missing)
+
+Adjusted n = n_complete × f_CCA</code></pre>
+<p><strong>Example</strong>:</p>
+<pre><code>Complete-case sample size: 300
+Expected dropout: 20%
+
+Enrolled sample size = 300 / (1 - 0.20) = 375</code></pre>
+<p><strong>Assumptions</strong>: - MCAR (Missing Completely At Random):
+No bias, only efficiency loss - MAR (Missing At Random): Potential bias
+if not adjusted - MNAR (Missing Not At Random): Biased estimates</p>
+</div>
+<div id="multiple-imputation-mi" class="section level4">
+<h4>Multiple Imputation (MI)</h4>
+<p><strong>Relative Efficiency (RE)</strong>:</p>
+<pre><code>RE = 1 / (1 + (FMI / m))
+
+Where:
+FMI = Fraction of Missing Information
+m = number of imputations</code></pre>
+<p><strong>Fraction of Missing Information</strong>:</p>
+<pre><code>FMI = (1 + 1/m) × B / T
+
+Where:
+B = between-imputation variance
+T = total variance</code></pre>
+<p><strong>Approximate FMI from missing rate and R²</strong>:</p>
+<pre><code>FMI ≈ p_missing × (1 - R²)
+
+Where:
+R² = variance explained by imputation model</code></pre>
+<p><strong>Inflation factor</strong>:</p>
+<pre><code>f_MI = 1 / (RE × (1 - p_missing))</code></pre>
+<p><strong>Example</strong>:</p>
+<pre><code>Missing rate: 20%
+R² of imputation model: 0.50
+Number of imputations: m = 20
+
+FMI ≈ 0.20 × (1 - 0.50) = 0.10
+RE = 1 / (1 + 0.10/20) = 0.995
+
+Inflation = 1 / (0.995 × 0.80) = 1.256
+
+→ 25.6% inflation (vs. 33% for CCA)</code></pre>
+<p><strong>Recommended m</strong> (White et al., 2011):</p>
+<pre><code>m ≥ % missing
+
+E.g., 20% missing → m ≥ 20 imputations</code></pre>
+</div>
+</div>
+<div id="clustering-adjustment-design-effect" class="section level3">
+<h3>Clustering Adjustment (Design Effect)</h3>
+<p><strong>Design Effect (DE)</strong>:</p>
+<pre><code>DE = 1 + (m - 1) × ICC
+
+Where:
+m = average cluster size
+ICC = Intraclass Correlation Coefficient</code></pre>
+<p><strong>Effective sample size</strong>:</p>
+<pre><code>n_eff = n_total / DE</code></pre>
+<p><strong>Required sample size with clustering</strong>:</p>
+<pre><code>n_clustered = n_unclustered × DE</code></pre>
+<p><strong>Number of clusters</strong>:</p>
+<pre><code>K = n_clustered / m</code></pre>
+<p><strong>Example</strong>:</p>
+<pre><code>Unclustered sample size: 400
+Cluster size: m = 20
+ICC: 0.05
+
+DE = 1 + (20-1) × 0.05 = 1.95
+
+Clustered sample size = 400 × 1.95 = 780
+Number of clusters = 780 / 20 = 39 clusters</code></pre>
+<p><strong>ICC interpretation</strong>: - 0.00 - 0.01: Very low (minimal
+clustering effect) - 0.01 - 0.05: Low to moderate (behavioral outcomes)
+- 0.05 - 0.10: Moderate (clinical outcomes) - 0.10 - 0.20: High
+(educational outcomes, provider effects) - 0.20+: Very high (geographic
+or institutional effects)</p>
+</div>
+<div id="multiple-testing-correction" class="section level3">
+<h3>Multiple Testing Correction</h3>
+<div id="bonferroni-correction" class="section level4">
+<h4>Bonferroni Correction</h4>
+<p><strong>Adjusted significance level</strong>:</p>
+<pre><code>α_adj = α / k
+
+Where k = number of comparisons</code></pre>
+<p><strong>Example</strong>:</p>
+<pre><code>3 comparisons, α = 0.05
+
+α_adj = 0.05 / 3 = 0.0167</code></pre>
+<p><strong>Sample size impact</strong>: Requires larger n to maintain
+power with smaller α</p>
+<p><strong>Power with Bonferroni</strong>:</p>
+<pre><code>Power_adj = Φ(z_δ - z_{α_adj/2})
+          = Φ(z_δ - z_{α/(2k)})</code></pre>
+</div>
+<div id="holm-bonferroni-step-down" class="section level4">
+<h4>Holm-Bonferroni (Step-Down)</h4>
+<p><strong>Sequential correction</strong>: Tests ordered p-values</p>
+<p><strong>Adjusted α for i-th test</strong>:</p>
+<pre><code>α_i = α / (k - i + 1)</code></pre>
+<p><strong>Less conservative than Bonferroni, controls FWER</strong></p>
+</div>
+<div id="benjamini-hochberg-fdr" class="section level4">
+<h4>Benjamini-Hochberg (FDR)</h4>
+<p><strong>Controls False Discovery Rate</strong> (proportion of false
+positives among rejections)</p>
+<p><strong>Adjusted α for i-th test</strong>:</p>
+<pre><code>α_i = (i/k) × α</code></pre>
+<p><strong>Less conservative than FWER methods</strong></p>
+</div>
+<div id="šidák-correction" class="section level4">
+<h4>Šidák Correction</h4>
+<p><strong>Adjusted significance level</strong>:</p>
+<pre><code>α_adj = 1 - (1 - α)^(1/k)</code></pre>
+<p><strong>Example</strong>:</p>
+<pre><code>3 comparisons, α = 0.05
+
+α_adj = 1 - (1 - 0.05)^(1/3) = 0.0170</code></pre>
+<p><strong>Slightly less conservative than Bonferroni</strong></p>
+<hr />
+</div>
+</div>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<div id="foundational-texts" class="section level3">
+<h3>Foundational Texts</h3>
+<ol style="list-style-type: decimal">
+<li><p><strong>Cohen, J.</strong> (1988). <em>Statistical Power Analysis
+for the Behavioral Sciences</em> (2nd ed.). Routledge.</p></li>
+<li><p><strong>Chow, S.C., Shao, J., Wang, H., &amp; Lokhnygina,
+Y.</strong> (2017). <em>Sample Size Calculations in Clinical
+Research</em> (3rd ed.). Chapman &amp; Hall/CRC.</p></li>
+<li><p><strong>Julious, S.A.</strong> (2010). <em>Sample Sizes for
+Clinical Trials</em>. Chapman &amp; Hall/CRC.</p></li>
+</ol>
+</div>
+<div id="methods-papers" class="section level3">
+<h3>Methods Papers</h3>
+<ol start="4" style="list-style-type: decimal">
+<li><p><strong>Schoenfeld, D.</strong> (1983). Sample-size formula for
+the proportional-hazards regression model. <em>Biometrics</em>, 39(2),
+499-503.</p></li>
+<li><p><strong>Li, F., Morgan, K.L., Zaslavsky, A.M.</strong> (2025).
+Sample size and power calculations for causal inference of observational
+studies. <em>arXiv preprint</em> arXiv:2501.11181.</p></li>
+<li><p><strong>Austin, P.C.</strong> (2021). Informing power and sample
+size calculations when using inverse probability of treatment weighting.
+<em>Statistics in Medicine</em>, 40(27), 6150-6163.</p></li>
+<li><p><strong>VanderWeele, T.J., &amp; Ding, P.</strong> (2017).
+Sensitivity analysis in observational research: Introducing the E-value.
+<em>Annals of Internal Medicine</em>, 167(4), 268-274.</p></li>
+<li><p><strong>Sobel, M.E.</strong> (1982). Asymptotic confidence
+intervals for indirect effects in structural equation models.
+<em>Sociological Methodology</em>, 13, 290-312.</p></li>
+<li><p><strong>MacKinnon, D.P., Lockwood, C.M., Hoffman, J.M., West,
+S.G., &amp; Sheets, V.</strong> (2002). A comparison of methods to test
+mediation and other intervening variable effects. <em>Psychological
+Methods</em>, 7(1), 83-104.</p></li>
+<li><p><strong>White, I.R., Royston, P., &amp; Wood, A.M.</strong>
+(2011). Multiple imputation using chained equations: Issues and guidance
+for practice. <em>Statistics in Medicine</em>, 30(4), 377-399.</p></li>
+</ol>
+</div>
+<div id="r-packages" class="section level3">
+<h3>R Packages</h3>
+<ul>
+<li><strong>pwr</strong> (Champely, 2020): Version 1.3-0+. Basic power
+calculations.</li>
+<li><strong>powerSurvEpi</strong> (Weiliang &amp; Xiaodong, 2012):
+Version 0.1.3. Survival power calculations.</li>
+<li><strong>epiR</strong> (Stevenson et al., 2023): Version 2.0.76+.
+Epidemiological study designs.</li>
+</ul>
+<hr />
+<p><strong>Last Updated</strong>: 2025-10-26</p>
+<p><strong>See Also</strong>: - <a href="www/doc/getting-started.html">Getting Started Guide</a> - Tutorial
+introduction - <a href="www/doc/study-design-reference.html">Study
+Design Reference</a> - Quick lookup for each design</p>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

@@ -98,8 +98,7 @@ linters: linters_with_tags(
     # ANTIPATTERN: Using <<- outside of closures
     # Priority: MEDIUM - Global state modification
     # Note: Shiny reactiveValues use is acceptable
-    outer_negation_linter = lintr::outer_negation_linter()
-  )
+    outer_negation_linter = lintr::outer_negation_linter())
 
 encoding: "UTF-8"
 

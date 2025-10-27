@@ -1,0 +1,337 @@
+/**
+ * Success Animations
+ * Visual feedback for successful operations
+ */
+
+/* Success checkmark animation */
+@keyframes checkmark {
+  0% {
+    stroke-dashoffset: 100;
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+@keyframes checkmark-circle {
+  0% {
+    stroke-dashoffset: 166;
+    transform: scale(0.9);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    stroke-dashoffset: 0;
+    transform: scale(1);
+  }
+}
+
+/* Success flash effect */
+@keyframes successFlash {
+  0% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
+}
+
+/* Slide in from bottom */
+@keyframes slideInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Bounce effect */
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+
+/* Pulse effect */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Fade in scale */
+@keyframes fadeInScale {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Success banner */
+.success-banner {
+  background: linear-gradient(135deg, var(--color-success-600) 0%, var(--color-success-500) 100%);
+  color: var(--text-inverse);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-4) 0;
+  box-shadow: var(--shadow-lg);
+  animation: slideInUp 0.4s ease, successFlash 0.6s ease 0.2s;
+}
+
+.success-banner-icon {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.success-banner-content {
+  flex: 1;
+}
+
+.success-banner-title {
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-base);
+  margin-bottom: var(--space-1);
+}
+
+.success-banner-message {
+  font-size: var(--font-size-sm);
+  opacity: 0.95;
+}
+
+/* Success card highlight */
+.result-card.success-highlight {
+  animation: pulse 0.5s ease;
+}
+
+/* Calculate button success state */
+.btn-primary.success {
+  background: var(--color-success) !important;
+  border-color: var(--color-success) !important;
+  animation: successFlash 0.8s ease;
+}
+
+/* Success checkmark SVG */
+.success-checkmark {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto;
+  display: block;
+}
+
+.success-checkmark-circle {
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  stroke-width: 2;
+  stroke: var(--color-success);
+  fill: none;
+  animation: checkmark-circle 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.success-checkmark-check {
+  transform-origin: 50% 50%;
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  stroke-width: 3;
+  stroke: var(--color-success);
+  fill: none;
+  animation: checkmark 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.6s forwards;
+}
+
+/* Success overlay (alternative to spinner) */
+.success-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.95);
+  z-index: 10000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  animation: fadeInScale 0.3s ease;
+}
+
+.success-overlay.active {
+  display: flex;
+}
+
+[data-theme='dark'] .success-overlay {
+  background: rgba(15, 23, 42, 0.95);
+}
+
+.success-overlay-content {
+  text-align: center;
+  padding: var(--space-8);
+}
+
+.success-overlay-icon {
+  margin-bottom: var(--space-4);
+}
+
+.success-overlay-title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-success);
+  margin-bottom: var(--space-2);
+}
+
+.success-overlay-message {
+  font-size: var(--font-size-lg);
+  color: var(--text-secondary);
+}
+
+/* Confetti animation (optional celebration) */
+@keyframes confetti-fall {
+  to {
+    transform: translateY(100vh) rotate(360deg);
+  }
+}
+
+.confetti {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  background: var(--color-primary);
+  top: -10px;
+  z-index: 9999;
+  animation: confetti-fall 3s linear forwards;
+  pointer-events: none;
+}
+
+.confetti:nth-child(2n) {
+  background: var(--color-success);
+}
+
+.confetti:nth-child(3n) {
+  background: var(--color-warning);
+}
+
+.confetti:nth-child(4n) {
+  width: 8px;
+  height: 8px;
+}
+
+/* Results appear animation */
+.results-container {
+  animation: slideInUp 0.5s ease;
+}
+
+/* Highlight new results */
+.new-result-highlight {
+  position: relative;
+  overflow: hidden;
+}
+
+.new-result-highlight::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(34, 197, 94, 0.3),
+    transparent
+  );
+  animation: shimmer 1.5s ease;
+}
+
+@keyframes shimmer {
+  to {
+    left: 100%;
+  }
+}
+
+/* Button click feedback */
+.btn-primary:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease;
+}
+
+/* Input validation success */
+.form-control.is-valid {
+  border-color: var(--color-success);
+  animation: successFlash 0.5s ease;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .success-banner,
+  .result-card.success-highlight,
+  .btn-primary.success,
+  .success-checkmark-circle,
+  .success-checkmark-check,
+  .success-overlay,
+  .results-container,
+  .new-result-highlight::before {
+    animation: none;
+  }
+
+  .confetti {
+    display: none;
+  }
+
+  .btn-primary:active {
+    transform: none;
+  }
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .success-checkmark {
+    width: 60px;
+    height: 60px;
+  }
+
+  .success-overlay-title {
+    font-size: var(--font-size-xl);
+  }
+
+  .success-overlay-message {
+    font-size: var(--font-size-base);
+  }
+
+  .success-banner {
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .success-banner-icon {
+    width: 24px;
+    height: 24px;
+  }
+}

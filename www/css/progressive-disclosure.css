@@ -1,0 +1,368 @@
+/**
+ * Progressive Disclosure Styles
+ * Statistical Power Analysis Tool
+ *
+ * Styles for collapsible sections and progressive disclosure patterns
+ */
+
+/* ========================================================================
+   PROGRESSIVE DISCLOSURE WRAPPER
+   ======================================================================== */
+
+.progressive-disclosure-wrapper {
+  margin: var(--space-4) 0;
+}
+
+/* ========================================================================
+   TOGGLE BUTTON
+   ======================================================================== */
+
+.progressive-disclosure-toggle {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-card);
+  border: var(--border-default);
+  border-radius: var(--border-radius-md);
+  color: var(--text-primary);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-base);
+  transition: all var(--transition-base);
+  cursor: pointer;
+  box-shadow: var(--shadow-xs);
+}
+
+.progressive-disclosure-toggle:hover {
+  background: var(--bg-input-hover);
+  border-color: var(--color-primary-600);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.progressive-disclosure-toggle:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-xs);
+}
+
+.progressive-disclosure-toggle:focus {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+  border-color: var(--color-primary-600);
+}
+
+/* Toggle icon animation */
+.progressive-disclosure-toggle .toggle-icon {
+  transition: transform var(--transition-base);
+  color: var(--text-secondary);
+}
+
+.progressive-disclosure-toggle[aria-expanded="true"] .toggle-icon {
+  transform: rotate(180deg);
+}
+
+/* Button text and icon styling */
+.progressive-disclosure-toggle > span {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.progressive-disclosure-toggle .fa,
+.progressive-disclosure-toggle .svg-inline--fa {
+  color: var(--color-primary-600);
+  font-size: 1rem;
+}
+
+/* ========================================================================
+   COLLAPSIBLE CONTENT
+   ======================================================================== */
+
+.progressive-disclosure-content {
+  padding: var(--space-4);
+  background: var(--bg-card);
+  border: var(--border-subtle);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-sm);
+  animation: slideDown var(--transition-base);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Smooth collapse transitions */
+.collapse {
+  transition: height 0.35s ease;
+}
+
+.collapsing {
+  transition: height 0.35s ease;
+}
+
+/* ========================================================================
+   CONTENT SPACING
+   ======================================================================== */
+
+.progressive-disclosure-content > *:first-child {
+  margin-top: 0;
+}
+
+.progressive-disclosure-content > *:last-child {
+  margin-bottom: 0;
+}
+
+.progressive-disclosure-content .form-group {
+  margin-bottom: var(--space-4);
+}
+
+.progressive-disclosure-content .form-group:last-child {
+  margin-bottom: 0;
+}
+
+/* ========================================================================
+   TABBED OPTIONS
+   ======================================================================== */
+
+.tabbed-options-wrapper {
+  margin: var(--space-4) 0;
+}
+
+.tabbed-options-wrapper .nav-tabs {
+  border-bottom: 2px solid var(--border-color-default);
+  margin-bottom: 0;
+}
+
+.tabbed-options-wrapper .nav-tabs .nav-item {
+  margin-bottom: -2px;
+}
+
+.tabbed-options-wrapper .nav-tabs .nav-link {
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: var(--space-3) var(--space-4);
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-medium);
+  background: transparent;
+  transition: all var(--transition-base);
+}
+
+.tabbed-options-wrapper .nav-tabs .nav-link:hover {
+  color: var(--text-primary);
+  background: var(--color-neutral-100);
+  border-bottom-color: var(--color-neutral-400);
+}
+
+.tabbed-options-wrapper .nav-tabs .nav-link.active {
+  color: var(--color-primary-700);
+  background: transparent;
+  border-bottom-color: var(--color-primary-600);
+  font-weight: var(--font-weight-semibold);
+}
+
+.tabbed-options-wrapper .tab-content {
+  padding: var(--space-4) 0;
+}
+
+.tabbed-options-wrapper .tab-pane {
+  animation: fadeIn var(--transition-base);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ========================================================================
+   NESTED SECTIONS (for multi-level disclosure)
+   ======================================================================== */
+
+.progressive-disclosure-content .progressive-disclosure-wrapper {
+  margin-left: var(--space-2);
+  padding-left: var(--space-4);
+  border-left: 2px solid var(--border-color-subtle);
+}
+
+.progressive-disclosure-content .progressive-disclosure-toggle {
+  font-size: var(--font-size-sm);
+  padding: var(--space-2) var(--space-3);
+}
+
+/* ========================================================================
+   STATES
+   ======================================================================== */
+
+/* Disabled state */
+.progressive-disclosure-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--bg-input-disabled);
+}
+
+.progressive-disclosure-toggle:disabled:hover {
+  transform: none;
+  border-color: var(--border-color-default);
+}
+
+/* Loading state */
+.progressive-disclosure-toggle.loading::after {
+  content: "";
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid var(--color-primary-600);
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 0.6s linear infinite;
+  margin-left: var(--space-2);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ========================================================================
+   BADGES (for showing counts or status)
+   ======================================================================== */
+
+.progressive-disclosure-toggle .badge {
+  margin-left: var(--space-2);
+  padding: 0.25rem 0.5rem;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  background: var(--color-primary-200);
+  color: var(--color-primary-700);
+  border-radius: var(--border-radius-full);
+}
+
+/* ========================================================================
+   RESPONSIVE DESIGN
+   ======================================================================== */
+
+@media (max-width: 768px) {
+  .progressive-disclosure-toggle {
+    font-size: var(--font-size-sm);
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .progressive-disclosure-content {
+    padding: var(--space-3);
+  }
+
+  .tabbed-options-wrapper .nav-tabs .nav-link {
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--font-size-sm);
+  }
+}
+
+/* ========================================================================
+   DARK MODE ADJUSTMENTS
+   ======================================================================== */
+
+[data-theme="dark"] .progressive-disclosure-toggle {
+  background: var(--bg-card);
+  border-color: var(--border-color-default);
+}
+
+[data-theme="dark"] .progressive-disclosure-toggle:hover {
+  background: var(--bg-input-hover);
+  border-color: var(--color-primary-600);
+}
+
+[data-theme="dark"] .progressive-disclosure-content {
+  background: var(--bg-card);
+  border-color: var(--border-color-subtle);
+  box-shadow: var(--shadow-dark-md);
+}
+
+[data-theme="dark"] .tabbed-options-wrapper .nav-tabs {
+  border-bottom-color: var(--border-color-default);
+}
+
+[data-theme="dark"] .tabbed-options-wrapper .nav-tabs .nav-link:hover {
+  background: var(--bg-input-hover);
+}
+
+[data-theme="dark"] .tabbed-options-wrapper .nav-tabs .nav-link.active {
+  color: var(--color-primary-500);
+  border-bottom-color: var(--color-primary-500);
+}
+
+/* ========================================================================
+   PRINT STYLES
+   ======================================================================== */
+
+@media print {
+  .progressive-disclosure-toggle {
+    display: none;
+  }
+
+  .progressive-disclosure-content {
+    display: block !important;
+    height: auto !important;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+  }
+
+  .collapse {
+    display: block !important;
+    height: auto !important;
+  }
+}
+
+/* ========================================================================
+   ACCESSIBILITY
+   ======================================================================== */
+
+/* Focus visible for keyboard navigation */
+.progressive-disclosure-toggle:focus-visible {
+  outline: 2px solid var(--color-primary-600);
+  outline-offset: 2px;
+}
+
+/* Reduced motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .progressive-disclosure-toggle,
+  .progressive-disclosure-toggle .toggle-icon,
+  .progressive-disclosure-content,
+  .collapse,
+  .collapsing {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* Screen reader text for state */
+.progressive-disclosure-toggle[aria-expanded="false"]::before {
+  content: "Collapsed. ";
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.progressive-disclosure-toggle[aria-expanded="true"]::before {
+  content: "Expanded. ";
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}

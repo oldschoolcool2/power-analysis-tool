@@ -1,0 +1,402 @@
+#!/usr/bin/env bash
+
+# ==============================================================================
+# Development Script for Power Analysis Tool (Shiny App)
+# ==============================================================================
+#
+# This script provides a simple interface for starting, stopping, and managing
+# the Shiny application in development mode with hot reload support.
+#
+# Usage:
+#   ./dev [command] [options]
+#
+# Commands:
+#   start       Start the development server (default)
+#   stop        Stop the development server
+#   restart     Restart the development server
+#   status      Check if the server is running
+#   logs        View logs (Docker mode only)
+#   help        Show this help message
+#
+# Options:
+#   --docker          Use Docker instead of local R
+#   --port PORT       Port to run on (default: 3838)
+#   --host HOST       Host to bind to (default: 0.0.0.0)
+#   --no-browser      Don't open browser automatically
+#   --no-reload       Disable hot reload (local mode only)
+#
+# Examples:
+#   ./dev                         # Start with hot reload on port 3838
+#   ./dev start --port 8080       # Start on custom port
+#   ./dev start --docker          # Start using Docker
+#   ./dev restart                 # Restart the server
+#   ./dev stop                    # Stop the server
+#
+# ==============================================================================
+
+set -euo pipefail
+
+# Configuration
+PROJECT_NAME="power-analysis-tool"
+PID_FILE=".dev.pid"
+DEFAULT_PORT=3838
+DEFAULT_HOST="0.0.0.0"
+DOCKER_COMPOSE_FILE="docker-compose.dev.yml"
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Functions
+print_info() {
+    echo -e "${BLUE}ℹ${NC} $1"
+}
+
+print_success() {
+    echo -e "${GREEN}✓${NC} $1"
+}
+
+print_warning() {
+    echo -e "${YELLOW}⚠${NC} $1"
+}
+
+print_error() {
+    echo -e "${RED}✗${NC} $1"
+}
+
+show_help() {
+    cat << EOF
+Development Script for Power Analysis Tool
+
+Usage: ./dev [command] [options]
+
+Commands:
+  start       Start the development server (default)
+  stop        Stop the development server
+  restart     Restart the development server
+  status      Check if the server is running
+  logs        View logs (Docker mode only)
+  help        Show this help message
+
+Options:
+  --docker          Use Docker instead of local R
+  --port PORT       Port to run on (default: 3838)
+  --host HOST       Host to bind to (default: 0.0.0.0)
+  --no-browser      Don't open browser automatically
+  --no-reload       Disable hot reload (local mode only)
+
+Examples:
+  ./dev                         # Start with hot reload on port 3838
+  ./dev start --port 8080       # Start on custom port
+  ./dev start --docker          # Start using Docker
+  ./dev restart                 # Restart the server
+  ./dev stop                    # Stop the server
+
+EOF
+}
+
+check_r_installed() {
+    if ! command -v R &> /dev/null; then
+        print_error "R is not installed or not in PATH"
+        print_info "Install R or use --docker flag"
+        exit 1
+    fi
+}
+
+check_docker_installed() {
+    if ! command -v docker &> /dev/null; then
+        print_error "Docker is not installed or not in PATH"
+        exit 1
+    fi
+    if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
+        print_error "docker-compose is not installed or not available"
+        exit 1
+    fi
+}
+
+get_docker_compose_cmd() {
+    if command -v docker-compose &> /dev/null; then
+        echo "docker-compose"
+    else
+        echo "docker compose"
+    fi
+}
+
+is_running() {
+    if [ "$USE_DOCKER" = true ]; then
+        local compose_cmd=$(get_docker_compose_cmd)
+        $compose_cmd -f "$DOCKER_COMPOSE_FILE" ps -q shiny 2>/dev/null | grep -q .
+    else
+        [ -f "$PID_FILE" ] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null
+    fi
+}
+
+get_status() {
+    if is_running; then
+        if [ "$USE_DOCKER" = true ]; then
+            print_success "Server is running (Docker mode)"
+            local compose_cmd=$(get_docker_compose_cmd)
+            $compose_cmd -f "$DOCKER_COMPOSE_FILE" ps shiny
+        else
+            print_success "Server is running (local mode, PID: $(cat "$PID_FILE"))"
+            print_info "URL: http://${HOST}:${PORT}"
+        fi
+        return 0
+    else
+        print_warning "Server is not running"
+        return 1
+    fi
+}
+
+start_local() {
+    if is_running; then
+        print_warning "Server is already running"
+        get_status
+        return 0
+    fi
+
+    print_info "Starting local development server..."
+    print_info "Port: $PORT"
+    print_info "Host: $HOST"
+    print_info "Hot reload: $([ "$ENABLE_RELOAD" = true ] && echo "enabled" || echo "disabled")"
+    print_info "Browser: $([ "$LAUNCH_BROWSER" = true ] && echo "will open" || echo "disabled")"
+
+    # Create R script to run the app
+    local R_SCRIPT=$(cat << 'RSCRIPT'
+# Load development dependencies
+if (!requireNamespace("pkgload", quietly = TRUE)) {
+  install.packages("pkgload", repos = "https://cloud.r-project.org")
+}
+
+# Load the package in development mode
+pkgload::load_all(".", quiet = FALSE)
+
+# Set development options
+options(
+  "golem.app.prod" = FALSE,
+  shiny.port = PORT_PLACEHOLDER,
+  shiny.host = "HOST_PLACEHOLDER",
+  shiny.autoreload = RELOAD_PLACEHOLDER,
+  shiny.launch.browser = BROWSER_PLACEHOLDER
+)
+
+# Enable developer mode for additional debugging
+if (requireNamespace("shiny", quietly = TRUE)) {
+  shiny::devmode(TRUE)
+}
+
+# Run the app
+PowerAnalysisTool::run_app(
+  options = list(
+    host = "HOST_PLACEHOLDER",
+    port = PORT_PLACEHOLDER,
+    launch.browser = BROWSER_PLACEHOLDER
+  )
+)
+RSCRIPT
+)
+
+    # Replace placeholders
+    # Convert bash booleans to R booleans (TRUE/FALSE)
+    local R_RELOAD=$([ "$ENABLE_RELOAD" = true ] && echo "TRUE" || echo "FALSE")
+    local R_BROWSER=$([ "$LAUNCH_BROWSER" = true ] && echo "TRUE" || echo "FALSE")
+
+    R_SCRIPT="${R_SCRIPT//PORT_PLACEHOLDER/$PORT}"
+    R_SCRIPT="${R_SCRIPT//HOST_PLACEHOLDER/$HOST}"
+    R_SCRIPT="${R_SCRIPT//RELOAD_PLACEHOLDER/$R_RELOAD}"
+    R_SCRIPT="${R_SCRIPT//BROWSER_PLACEHOLDER/$R_BROWSER}"
+
+    # Run R in background and save PID
+    echo "$R_SCRIPT" | R --quiet --no-save > .dev.log 2>&1 &
+    echo $! > "$PID_FILE"
+
+    # Wait a moment and check if it's still running
+    sleep 2
+    if is_running; then
+        print_success "Server started successfully"
+        print_info "URL: http://${HOST}:${PORT}"
+        print_info "Logs: tail -f .dev.log"
+        print_info "Stop with: ./dev stop"
+    else
+        print_error "Server failed to start. Check .dev.log for details:"
+        tail -20 .dev.log
+        rm -f "$PID_FILE"
+        exit 1
+    fi
+}
+
+start_docker() {
+    if is_running; then
+        print_warning "Docker container is already running"
+        get_status
+        return 0
+    fi
+
+    print_info "Starting Docker development environment..."
+
+    local compose_cmd=$(get_docker_compose_cmd)
+
+    # Build and start the container
+    $compose_cmd -f "$DOCKER_COMPOSE_FILE" up -d --build
+
+    if is_running; then
+        print_success "Docker container started successfully"
+        print_info "URL: http://localhost:3838"
+        print_info "Logs: ./dev logs"
+        print_info "Stop with: ./dev stop --docker"
+    else
+        print_error "Failed to start Docker container"
+        exit 1
+    fi
+}
+
+stop_local() {
+    if ! is_running; then
+        print_warning "Server is not running"
+        return 0
+    fi
+
+    print_info "Stopping local development server..."
+
+    local PID=$(cat "$PID_FILE")
+    kill "$PID" 2>/dev/null || true
+
+    # Wait for graceful shutdown
+    local count=0
+    while kill -0 "$PID" 2>/dev/null && [ $count -lt 10 ]; do
+        sleep 1
+        count=$((count + 1))
+    done
+
+    # Force kill if still running
+    if kill -0 "$PID" 2>/dev/null; then
+        print_warning "Forcing shutdown..."
+        kill -9 "$PID" 2>/dev/null || true
+    fi
+
+    rm -f "$PID_FILE"
+    print_success "Server stopped"
+}
+
+stop_docker() {
+    if ! is_running; then
+        print_warning "Docker container is not running"
+        return 0
+    fi
+
+    print_info "Stopping Docker container..."
+
+    local compose_cmd=$(get_docker_compose_cmd)
+    $compose_cmd -f "$DOCKER_COMPOSE_FILE" down
+
+    print_success "Docker container stopped"
+}
+
+show_logs() {
+    if [ "$USE_DOCKER" = false ]; then
+        if [ -f .dev.log ]; then
+            tail -f .dev.log
+        else
+            print_error "No log file found. Is the server running?"
+            exit 1
+        fi
+    else
+        local compose_cmd=$(get_docker_compose_cmd)
+        $compose_cmd -f "$DOCKER_COMPOSE_FILE" logs -f shiny
+    fi
+}
+
+# Parse arguments
+COMMAND="start"
+USE_DOCKER=false
+PORT=$DEFAULT_PORT
+HOST=$DEFAULT_HOST
+LAUNCH_BROWSER=true
+ENABLE_RELOAD=true
+
+# Parse command first
+if [ $# -gt 0 ] && [[ ! "$1" =~ ^-- ]]; then
+    COMMAND="$1"
+    shift
+fi
+
+# Parse options
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --docker)
+            USE_DOCKER=true
+            shift
+            ;;
+        --port)
+            PORT="$2"
+            shift 2
+            ;;
+        --host)
+            HOST="$2"
+            shift 2
+            ;;
+        --no-browser)
+            LAUNCH_BROWSER=false
+            shift
+            ;;
+        --no-reload)
+            ENABLE_RELOAD=false
+            shift
+            ;;
+        --help)
+            show_help
+            exit 0
+            ;;
+        *)
+            print_error "Unknown option: $1"
+            show_help
+            exit 1
+            ;;
+    esac
+done
+
+# Execute command
+case "$COMMAND" in
+    start|run)
+        if [ "$USE_DOCKER" = true ]; then
+            check_docker_installed
+            start_docker
+        else
+            check_r_installed
+            start_local
+        fi
+        ;;
+    stop)
+        if [ "$USE_DOCKER" = true ]; then
+            stop_docker
+        else
+            stop_local
+        fi
+        ;;
+    restart)
+        if [ "$USE_DOCKER" = true ]; then
+            stop_docker
+            start_docker
+        else
+            stop_local
+            start_local
+        fi
+        ;;
+    status)
+        get_status
+        ;;
+    logs)
+        show_logs
+        ;;
+    help|--help|-h)
+        show_help
+        ;;
+    *)
+        print_error "Unknown command: $COMMAND"
+        show_help
+        exit 1
+        ;;
+esac

@@ -1,0 +1,1277 @@
+---
+title: "Statistical Methods and Formulas"
+author: "Power Analysis Tool Development Team"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Statistical Methods and Formulas}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
+)
+```
+
+## Overview
+
+This document provides detailed statistical methods, formulas, and calculations used by the Power Analysis Tool. It serves as a technical reference for understanding the mathematical foundations of each analysis type.
+
+## Contents
+
+1. [Fundamental Power Analysis Concepts](#fundamental-concepts)
+2. [Effect Size Measures](#effect-size-measures)
+3. [Single Proportion Tests](#single-proportion)
+4. [Two-Proportion Tests](#two-proportion)
+5. [Continuous Outcomes (t-tests)](#continuous-outcomes)
+6. [Survival Analysis (Cox Regression)](#survival-analysis)
+7. [Matched Case-Control Studies](#matched-case-control)
+8. [Non-Inferiority and Equivalence](#non-inferiority)
+9. [Propensity Score Methods](#propensity-score)
+10. [Mediation Analysis](#mediation-analysis)
+11. [Adjustment Methods](#adjustment-methods)
+
+---
+
+## Fundamental Power Analysis Concepts {#fundamental-concepts}
+
+### The Four Components
+
+Every power calculation involves exactly four quantities:
+
+1. **Sample size (N)**: Number of participants
+2. **Effect size (δ)**: Magnitude of difference to detect
+3. **Significance level (α)**: Type I error rate (probability of false positive)
+4. **Power (1 - β)**: Type II error complement (probability of detecting true effect)
+
+**Relationship**: If any three are specified, the fourth can be calculated.
+
+### Type I and Type II Errors
+
+**Type I Error (α)**:
+- Probability of rejecting null hypothesis when it is true
+- False positive rate
+- Conventional: α = 0.05 (5%)
+
+**Type II Error (β)**:
+- Probability of failing to reject null hypothesis when it is false
+- False negative rate
+- Conventional: β = 0.20 (20%), implying power = 1 - β = 0.80 (80%)
+
+### Statistical Power
+
+**Definition**:
+```
+Power = P(Reject H₀ | H₁ is true)
+      = 1 - β
+```
+
+**Interpretation**: Probability of detecting an effect of size δ if it truly exists.
+
+### Critical Values and Non-Centrality Parameter
+
+**Standard normal critical value**:
+```
+z_α/2 = Φ^(-1)(1 - α/2)
+
+Where Φ^(-1) is the inverse standard normal CDF
+For α = 0.05, z_α/2 = 1.96
+```
+
+**Power calculation via non-centrality**:
+```
+Power = Φ(z_δ - z_α/2) + Φ(-z_δ - z_α/2)
+
+Where z_δ is the non-centrality parameter (effect size × √n)
+```
+
+For two-sided tests, the second term is often negligible when power is high.
+
+---
+
+## Effect Size Measures {#effect-size-measures}
+
+### Binary Outcomes
+
+#### Risk Difference (RD)
+
+**Definition**: Absolute difference in proportions
+```
+RD = p₁ - p₂
+```
+
+**Range**: -1 to +1
+
+**Interpretation**:
+- RD = 0: No difference
+- RD > 0: Group 1 has higher risk
+- RD < 0: Group 2 has higher risk
+
+**Example**: 30% vs 20% → RD = 0.10 (10 percentage points)
+
+#### Relative Risk (RR)
+
+**Definition**: Ratio of proportions
+```
+RR = p₁ / p₂
+```
+
+**Range**: 0 to +∞
+
+**Interpretation**:
+- RR = 1: No difference
+- RR > 1: Group 1 has higher risk
+- RR < 1: Group 1 has lower risk
+
+**Example**: 30% vs 20% → RR = 1.5 (50% increased risk)
+
+**Undefined cases**: RR is undefined when p₂ = 0
+
+#### Odds Ratio (OR)
+
+**Definition**: Ratio of odds
+```
+OR = (p₁/(1-p₁)) / (p₂/(1-p₂))
+   = (p₁ × (1-p₂)) / (p₂ × (1-p₁))
+```
+
+**Range**: 0 to +∞
+
+**Interpretation**:
+- OR = 1: No association
+- OR > 1: Positive association
+- OR < 1: Negative association
+
+**Relationship to RR**:
+- When outcome is rare (p < 0.10), OR ≈ RR
+- OR is always further from 1 than RR (more extreme)
+
+**Example**: 30% vs 20% → OR = (0.30/0.70) / (0.20/0.80) = 1.71
+
+#### Cohen's h (Proportions)
+
+**Definition**: Standardized difference in arcsin-transformed proportions
+```
+h = 2 × (arcsin(√p₁) - arcsin(√p₂))
+```
+
+**Range**: -π to +π (approximately -3.14 to +3.14)
+
+**Interpretation**:
+- Small: h = 0.20
+- Medium: h = 0.50
+- Large: h = 0.80
+
+**Purpose**: Used in `pwr` package for proportion tests; stabilizes variance across proportion values
+
+### Continuous Outcomes
+
+#### Cohen's d
+
+**Definition**: Standardized mean difference
+```
+d = (μ₁ - μ₂) / σ_pooled
+```
+
+Where:
+```
+σ_pooled = √((σ₁² + σ₂²) / 2)
+```
+
+**Range**: -∞ to +∞
+
+**Interpretation guidelines**:
+- Small: d = 0.20
+- Medium: d = 0.50
+- Large: d = 0.80
+
+**Example**: Mean difference = 5 kg, SD = 10 kg → d = 5/10 = 0.50
+
+#### Raw Mean Difference
+
+**Definition**: Unstandardized difference in means
+```
+Δ = μ₁ - μ₂
+```
+
+**Units**: Same as outcome variable
+
+**Conversion to Cohen's d**:
+```
+d = Δ / σ_pooled
+```
+
+### Time-to-Event Outcomes
+
+#### Hazard Ratio (HR)
+
+**Definition**: Ratio of hazard rates
+```
+HR = λ₁ / λ₂
+```
+
+Where λ is the instantaneous event rate (hazard)
+
+**Range**: 0 to +∞
+
+**Interpretation**:
+- HR = 1: No difference in hazards
+- HR > 1: Group 1 has higher hazard (worse survival)
+- HR < 1: Group 1 has lower hazard (better survival)
+
+**Example**: HR = 0.70 means 30% reduction in hazard (beneficial treatment)
+
+**Assumption**: Proportional hazards (constant HR over time)
+
+---
+
+## Single Proportion Tests {#single-proportion}
+
+### Statistical Test
+
+**Null hypothesis**:
+```
+H₀: p = p₀
+```
+
+**Alternative hypothesis**:
+```
+H₁: p ≠ p₀  (two-sided)
+H₁: p > p₀  (one-sided, upper)
+H₁: p < p₀  (one-sided, lower)
+```
+
+### Test Statistic
+
+**Approximate z-test**:
+```
+z = (p̂ - p₀) / √(p₀(1-p₀)/n)
+```
+
+**Exact binomial test**: Based on binomial probability mass function (more accurate for small n or extreme p)
+
+### Effect Size: Cohen's h
+
+**Formula**:
+```
+h = 2 × (arcsin(√p₁) - arcsin(√p₀))
+```
+
+### Sample Size Formula
+
+**General form** (via `pwr::pwr.p.test()`):
+```
+n = ((z_{α/2} + z_β) / h)²
+
+Where:
+- z_{α/2} = critical value for significance level
+- z_β = critical value for power (1 - β)
+- h = Cohen's h effect size
+```
+
+**Two-sided test**:
+```
+n = (z_{α/2} + z_β)² / h²
+```
+
+**Example calculation**:
+```
+p₀ = 0.30, p₁ = 0.20, α = 0.05, power = 0.80
+
+h = 2 × (arcsin(√0.20) - arcsin(√0.30))
+  = 2 × (0.464 - 0.588)
+  = -0.228
+
+|h| = 0.228
+
+z_{0.025} = 1.96, z_{0.20} = 0.842
+
+n = (1.96 + 0.842)² / (0.228)²
+  = 7.85 / 0.052
+  = 151
+```
+
+### Power Formula
+
+**Given n, solve for power**:
+```
+z_β = |h|√n - z_{α/2}
+
+Power = Φ(z_β)
+
+Where Φ is the standard normal CDF
+```
+
+---
+
+## Two-Proportion Tests {#two-proportion}
+
+### Statistical Test
+
+**Null hypothesis**:
+```
+H₀: p₁ = p₂  (or p₁ - p₂ = 0)
+```
+
+**Alternative hypothesis**:
+```
+H₁: p₁ ≠ p₂  (two-sided)
+```
+
+### Test Statistic
+
+**Pooled z-test**:
+```
+z = (p̂₁ - p̂₂) / SE_pooled
+
+Where:
+SE_pooled = √(p̂_pooled × (1 - p̂_pooled) × (1/n₁ + 1/n₂))
+
+p̂_pooled = (x₁ + x₂) / (n₁ + n₂)
+```
+
+### Effect Size: Cohen's h
+
+**Formula**:
+```
+h = 2 × (arcsin(√p₁) - arcsin(√p₂))
+```
+
+### Sample Size Formula (Equal Allocation)
+
+**Equal sample sizes** (n₁ = n₂ = n):
+```
+n = 2 × ((z_{α/2} + z_β) / h)²
+```
+
+**Via `pwr::pwr.2p.test()`**:
+```r
+pwr.2p.test(h = h, sig.level = α, power = power, alternative = "two.sided")
+```
+
+### Sample Size Formula (Unequal Allocation)
+
+**Allocation ratio**: r = n₂/n₁
+
+**Sample size in group 1**:
+```
+n₁ = (z_{α/2}√((1+r)p̄(1-p̄)) + z_β√(p₁(1-p₁) + r×p₂(1-p₂)))² / (r(p₁-p₂)²)
+
+Where:
+p̄ = (p₁ + r×p₂) / (1 + r)
+```
+
+**Sample size in group 2**:
+```
+n₂ = r × n₁
+```
+
+**Total sample size**:
+```
+N = n₁ + n₂ = n₁(1 + r)
+```
+
+**Via `pwr::pwr.2p2n.test()`**:
+```r
+pwr.2p2n.test(h = h, n1 = n1, n2 = NULL, sig.level = α, power = power)
+```
+
+### Effect Measure Calculations
+
+**Given p₁ and p₂**:
+
+**Risk Difference**:
+```
+RD = p₁ - p₂
+```
+
+**Relative Risk**:
+```
+RR = p₁ / p₂  (undefined if p₂ = 0)
+```
+
+**Odds Ratio**:
+```
+OR = (p₁/(1-p₁)) / (p₂/(1-p₂))
+   = (p₁(1-p₂)) / (p₂(1-p₁))
+```
+
+---
+
+## Continuous Outcomes (t-tests) {#continuous-outcomes}
+
+### Statistical Test
+
+**Null hypothesis**:
+```
+H₀: μ₁ = μ₂
+```
+
+**Alternative hypothesis**:
+```
+H₁: μ₁ ≠ μ₂  (two-sided)
+```
+
+### Test Statistic
+
+**Two-sample t-test**:
+```
+t = (x̄₁ - x̄₂) / SE_diff
+
+Where:
+SE_diff = σ_pooled × √(1/n₁ + 1/n₂)
+
+σ_pooled = √(((n₁-1)σ₁² + (n₂-1)σ₂²) / (n₁ + n₂ - 2))
+```
+
+**Degrees of freedom**: df = n₁ + n₂ - 2
+
+### Effect Size: Cohen's d
+
+**Formula**:
+```
+d = (μ₁ - μ₂) / σ_pooled
+```
+
+**Interpretation**:
+- Small: d = 0.20 (means differ by 0.2 standard deviations)
+- Medium: d = 0.50 (means differ by 0.5 standard deviations)
+- Large: d = 0.80 (means differ by 0.8 standard deviations)
+
+### Sample Size Formula (Equal Allocation)
+
+**Equal sample sizes** (n₁ = n₂ = n):
+```
+n = 2 × ((z_{α/2} + z_β) / d)²
+```
+
+**For t-distribution** (more accurate for small samples):
+```
+n = 2 × ((t_{α/2,df} + t_{β,df}) / d)²
+```
+
+Where df = 2n - 2 (requires iterative solution)
+
+**Via `pwr::pwr.t.test()`**:
+```r
+pwr.t.test(d = d, sig.level = α, power = power, type = "two.sample", alternative = "two.sided")
+```
+
+### Sample Size Formula (Unequal Allocation)
+
+**Allocation ratio**: r = n₂/n₁
+
+**Sample size in group 1**:
+```
+n₁ = (1 + r) × (z_{α/2} + z_β)² / (r × d²)
+```
+
+**Sample size in group 2**:
+```
+n₂ = r × n₁
+```
+
+### Power Formula
+
+**Given n per group and d**:
+```
+z_δ = d × √(n/2)
+
+Power = Φ(z_δ - z_{α/2})
+```
+
+For two-sided test with high power, the approximation is:
+```
+Power ≈ Φ(|d|√(n/2) - z_{α/2})
+```
+
+---
+
+## Survival Analysis (Cox Regression) {#survival-analysis}
+
+### Statistical Test
+
+**Cox Proportional Hazards Model**:
+```
+λ(t|X) = λ₀(t) × exp(β×X)
+```
+
+Where:
+- λ(t|X) = hazard at time t given covariate X
+- λ₀(t) = baseline hazard function
+- β = log(HR) (regression coefficient)
+- X = treatment indicator (0 = control, 1 = treated)
+
+**Null hypothesis**:
+```
+H₀: HR = 1  (or β = 0)
+```
+
+**Alternative hypothesis**:
+```
+H₁: HR ≠ 1  (or β ≠ 0)
+```
+
+### Test Statistic
+
+**Log-rank test** (equivalent to Cox regression with single binary covariate):
+```
+z = (O₁ - E₁) / √V
+
+Where:
+O₁ = observed events in group 1
+E₁ = expected events in group 1 under H₀
+V = variance of (O₁ - E₁)
+```
+
+### Effect Size: Hazard Ratio
+
+**Definition**:
+```
+HR = exp(β)
+```
+
+**Relationship to β**:
+```
+β = log(HR)
+```
+
+**Example**:
+- HR = 0.70 → β = log(0.70) = -0.357
+- HR = 2.00 → β = log(2.00) = 0.693
+
+### Schoenfeld Formula (Number of Events)
+
+**Required number of events** (Schoenfeld, 1983):
+```
+d = (z_{α/2} + z_β)² / (p(1-p) × (log(HR))²)
+
+Where:
+d = total number of events required
+p = proportion in exposed/treatment group
+```
+
+**For equal allocation** (p = 0.50):
+```
+d = 4 × (z_{α/2} + z_β)² / (log(HR))²
+```
+
+**Example calculation**:
+```
+HR = 0.70, p = 0.50, α = 0.05, power = 0.80
+
+log(HR) = log(0.70) = -0.357
+z_{0.025} = 1.96, z_{0.20} = 0.842
+
+d = 4 × (1.96 + 0.842)² / (-0.357)²
+  = 4 × 7.85 / 0.127
+  = 247 events
+```
+
+### Sample Size Calculation
+
+**Total sample size**:
+```
+N = d / P_event
+
+Where:
+d = required events
+P_event = overall event rate (proportion experiencing event)
+```
+
+**Example**:
+```
+Required events: d = 247
+Expected event rate: 60%
+
+N = 247 / 0.60 = 412 participants
+```
+
+### Power Calculation via `powerSurvEpi`
+
+**Using `powerSurvEpi::ssizeLR.default()`**:
+```r
+powerSurvEpi::ssizeLR.default(
+  power = power,
+  k = proportion_exposed,
+  pE = event_rate,
+  pA = event_rate,
+  RR = hazard_ratio,
+  alpha = α
+)
+```
+
+**Returns**: Total sample size N and number of events d
+
+---
+
+## Matched Case-Control Studies {#matched-case-control}
+
+### Study Design
+
+**Matching structure**:
+- M controls per case
+- Matching on confounders
+- Analysis accounts for correlation within matched sets
+
+### Statistical Test
+
+**McNemar's Test** (for 1:1 matching):
+
+**Null hypothesis**:
+```
+H₀: OR = 1
+```
+
+**Test statistic**:
+```
+χ² = (b - c)² / (b + c)
+
+Where:
+b = discordant pairs (case exposed, control unexposed)
+c = discordant pairs (case unexposed, control exposed)
+```
+
+**Degrees of freedom**: df = 1
+
+### Effect Size: Odds Ratio
+
+**For matched pairs**:
+```
+OR = b / c
+
+Where:
+b = discordant pairs (case exposed, control not)
+c = discordant pairs (case not exposed, control exposed)
+```
+
+### Sample Size Formula (1:1 Matching)
+
+**General form**:
+```
+n_pairs = (z_{α/2} + z_β)² × (ψ + 1)² / (ψ - 1)² × (1/(p₁₀ + p₀₁))
+
+Where:
+ψ = OR (odds ratio)
+p₁₀ = P(case exposed, control unexposed)
+p₀₁ = P(case unexposed, control exposed)
+```
+
+**Assuming conditional independence**:
+```
+p₁₀ = p_case × (1 - p_control)
+p₀₁ = (1 - p_case) × p_control
+
+Where:
+p_case = P(exposure | case)
+p_control = P(exposure | control)
+```
+
+### Sample Size via `epiR`
+
+**Using `epiR::epi.sscc()`**:
+```r
+epiR::epi.sscc(
+  OR = odds_ratio,
+  p1 = NULL,
+  p0 = exposure_in_controls,
+  n = NULL,
+  power = power,
+  r = 1,  # matching ratio (controls per case)
+  rho = 0,  # correlation (set to 0 for matched)
+  design = 1,  # matched design
+  sided.test = 2,
+  nfractional = FALSE,
+  conf.level = 1 - α
+)
+```
+
+**Returns**: Number of matched sets required
+
+### Extension to 1:M Matching
+
+**For M controls per case**, the formula generalizes to:
+```
+n_sets = (z_{α/2} + z_β)² × (M×ψ + 1)² / (M(ψ - 1)²) × (1/(M×p₁₀ + p₀₁))
+```
+
+**Efficiency**: Diminishing returns after 4-5 controls per case
+
+---
+
+## Non-Inferiority and Equivalence {#non-inferiority}
+
+### Non-Inferiority Testing
+
+**Null hypothesis**:
+```
+H₀: p_test - p_ref ≥ Δ  (test is inferior by at least Δ)
+```
+
+**Alternative hypothesis**:
+```
+H₁: p_test - p_ref < Δ  (test is non-inferior, within margin Δ)
+```
+
+**Where**:
+- Δ = non-inferiority margin (> 0)
+- One-sided test at α/2 level
+
+### Test Statistic
+
+**One-sided z-test with margin**:
+```
+z = ((p̂_test - p̂_ref) - Δ) / SE
+
+Where:
+SE = √(p̂_test(1-p̂_test)/n_test + p̂_ref(1-p̂_ref)/n_ref)
+```
+
+**Decision rule**:
+```
+Reject H₀ (conclude non-inferiority) if:
+Upper bound of (1-2α) CI for (p_test - p_ref) < Δ
+```
+
+### Sample Size Formula
+
+**General form** (equal allocation, n₁ = n₂ = n):
+```
+n = 2 × ((z_α + z_β)² × (p_test(1-p_test) + p_ref(1-p_ref))) / (p_test - p_ref - Δ)²
+
+Where:
+- z_α = critical value for one-sided α (typically α = 0.025)
+- z_β = critical value for power (1 - β)
+- Δ = non-inferiority margin
+```
+
+**Key difference from superiority**: Denominator uses (p_test - p_ref - Δ) instead of (p_test - p_ref)
+
+**Effect of margin**:
+- Smaller Δ (tighter margin) → Larger sample size required
+- Larger Δ (more lenient) → Smaller sample size required
+
+### Equivalence Testing (TOST)
+
+**Two One-Sided Tests (TOST)**:
+
+**Hypotheses**:
+```
+H₀₁: p_test - p_ref ≤ -Δ  (test is worse by at least Δ)
+H₀₂: p_test - p_ref ≥ +Δ  (test is better by at least Δ)
+
+H₁: -Δ < p_test - p_ref < +Δ  (test is equivalent within ±Δ)
+```
+
+**Decision rule**:
+```
+Reject both H₀₁ and H₀₂ (conclude equivalence) if:
+- Lower bound of (1-2α) CI > -Δ  AND
+- Upper bound of (1-2α) CI < +Δ
+```
+
+### Sample Size for Equivalence
+
+**Requires larger sample** than non-inferiority:
+```
+n_equivalence ≈ 2 × n_non-inferiority
+```
+
+**Formula** (symmetric margins ±Δ):
+```
+n = 2 × ((z_α + z_β)² × (p_test(1-p_test) + p_ref(1-p_ref))) / Δ²
+```
+
+**Note**: Both tails must be tested, effectively doubling the requirement.
+
+---
+
+## Propensity Score Methods {#propensity-score}
+
+### Background
+
+**Propensity Score (PS)**: Probability of treatment given observed covariates
+```
+e(X) = P(T=1 | X)
+```
+
+**Purpose**: Balance covariates between treated and control groups in observational studies
+
+### Variance Inflation Factor (VIF)
+
+**Definition**: Factor by which variance is inflated compared to RCT
+```
+VIF = Var_obs / Var_RCT
+```
+
+**Interpretation**:
+- VIF = 1: Observational study as efficient as RCT (perfect balance)
+- VIF = 2: Need 2× sample size of RCT
+- VIF = 4: Need 4× sample size of RCT
+
+### Austin (2021) Method: VIF from C-Statistic
+
+**Empirical relationship** (Austin, 2021):
+```
+VIF ≈ 1.5 + 0.5 × (c - 0.5)² / (0.5)²
+    = 1.5 + 2 × (c - 0.5)²
+
+Where c = AUC/c-statistic of propensity score model
+```
+
+**Example**:
+```
+c = 0.70 (moderate discrimination)
+
+VIF = 1.5 + 2 × (0.70 - 0.50)²
+    = 1.5 + 2 × 0.04
+    = 1.58
+
+→ Need 58% more participants than RCT
+```
+
+**C-statistic interpretation**:
+- c = 0.50: No discrimination (random prediction) → VIF = 1.5
+- c = 0.60: Weak discrimination → VIF = 1.52
+- c = 0.70: Moderate discrimination → VIF = 1.58
+- c = 0.80: Strong discrimination → VIF = 1.68
+- c = 0.90: Very strong discrimination → VIF = 1.82
+
+**Counterintuitive**: Higher c-statistic (better PS model) → Higher VIF → More sample needed
+
+**Reason**: Good PS model indicates strong confounding; adjusting for it reduces effective sample size
+
+### Li et al. (2025) Method: Confounding and Overlap
+
+**Bhattacharyya Coefficient (φ)**: Measure of covariate overlap
+```
+φ = ∫ √(f₁(x) × f₀(x)) dx
+
+Where:
+f₁(x) = density of covariates in treated
+f₀(x) = density of covariates in controls
+```
+
+**Range**: 0 to 1
+- φ = 1: Perfect overlap (distributions identical)
+- φ = 0.7: Good overlap
+- φ < 0.5: Poor overlap (limited extrapolation validity)
+
+**Estimating φ from treatment prevalence and PS c-statistic** (Li et al., 2025):
+
+Approximate relationship (requires PS model parameters):
+```
+φ ≈ function(π, c, R²)
+
+Where:
+π = P(T=1) = treatment prevalence
+c = c-statistic
+R² = strength of confounding (correlation between treatment and outcome via covariates)
+```
+
+**VIF calculation** (Li et al., 2025):
+```
+VIF_ATE = 1 / (φ²×π×(1-π))
+
+Where ATE = Average Treatment Effect weighting
+```
+
+### Weighting Methods
+
+**ATE (Average Treatment Effect)**: Weights to represent full population
+```
+w_treated = 1 / e(X)
+w_control = 1 / (1 - e(X))
+
+VIF_ATE = 1 / (φ²×π×(1-π))
+```
+
+**ATT (Average Treatment Effect on Treated)**: Weights controls to match treated
+```
+w_treated = 1
+w_control = e(X) / (1 - e(X))
+
+VIF_ATT = 1 / (φ²×π)
+```
+
+**ATC (Average Treatment Effect on Controls)**: Weights treated to match controls
+```
+w_treated = (1 - e(X)) / e(X)
+w_control = 1
+
+VIF_ATC = 1 / (φ²×(1-π))
+```
+
+### Sample Size Adjustment
+
+**Observational sample size**:
+```
+N_obs = N_RCT × VIF
+
+Where:
+N_RCT = sample size for equivalent RCT
+VIF = variance inflation factor
+```
+
+**Example**:
+```
+RCT requires: 400 participants (200 per group)
+VIF from overlap and confounding: 2.3
+
+Observational study requires: 400 × 2.3 = 920 participants
+```
+
+---
+
+## Mediation Analysis {#mediation-analysis}
+
+### Mediation Model
+
+**Path diagram**:
+```
+      a        b
+X -------> M -------> Y
+ \                   /
+  \       c'        /
+   -----------------
+```
+
+**Effects**:
+- **a**: X → M (effect of exposure on mediator)
+- **b**: M → Y|X (effect of mediator on outcome, controlling for X)
+- **c'**: X → Y (direct effect of exposure on outcome)
+- **c**: X → Y (total effect, without controlling for M)
+
+**Relationship**:
+```
+c = c' + a×b
+
+Total effect = Direct effect + Indirect effect
+```
+
+### Indirect Effect
+
+**Definition**:
+```
+Indirect effect = a × b
+```
+
+**Interpretation**: Effect of X on Y that operates *through* mediator M
+
+### Sobel Test
+
+**Test statistic**:
+```
+z = (a×b) / SE(a×b)
+```
+
+**Standard error (Sobel formula)**:
+```
+SE(a×b) = √(b²×SE(a)² + a²×SE(b)²)
+```
+
+**Simplified (ignoring covariance)**:
+```
+SE(a×b) ≈ √(b²×σ_a² + a²×σ_b²)
+
+Where:
+σ_a² = variance of path a coefficient
+σ_b² = variance of path b coefficient
+```
+
+**For standardized coefficients** (correlation scale):
+```
+SE(a) ≈ 1 / √(n - 3)
+SE(b) ≈ 1 / √(n - 3)
+```
+
+### Power Formula (Sobel Test)
+
+**Non-centrality parameter**:
+```
+λ = (a×b) / SE(a×b)
+  = (a×b) / √(b²×σ_a² + a²×σ_b²)
+  ≈ (a×b) × √(n - 3)
+```
+
+**Power**:
+```
+Power = Φ(λ - z_{α/2})
+      = Φ((a×b)×√(n-3) - z_{α/2})
+```
+
+### Sample Size Formula
+
+**Rearranging for n**:
+```
+n = ((z_{α/2} + z_β) / (a×b))² × (b²/n + a²/n) + 3
+  ≈ ((z_{α/2} + z_β) / (a×b))² × (a² + b²) + 3
+```
+
+**Simplified (large n)**:
+```
+n ≈ (z_{α/2} + z_β)² × (a² + b²) / (a×b)²
+```
+
+**Example**:
+```
+a = 0.40, b = 0.30, α = 0.05, power = 0.80
+
+Indirect effect = 0.40 × 0.30 = 0.12
+
+z_{0.025} = 1.96, z_{0.20} = 0.842
+
+n ≈ (1.96 + 0.842)² × (0.40² + 0.30²) / (0.12)²
+  = 7.85 × 0.25 / 0.0144
+  = 136 participants
+```
+
+### Effect Size Guidelines
+
+**Path coefficients** (standardized):
+- Small: 0.10 - 0.30
+- Medium: 0.30 - 0.50
+- Large: 0.50+
+
+**Indirect effects (a×b)**:
+- Small: 0.01 - 0.09
+- Medium: 0.09 - 0.25
+- Large: 0.25+
+
+---
+
+## Adjustment Methods {#adjustment-methods}
+
+### Missing Data Adjustment
+
+#### Complete-Case Analysis (CCA)
+
+**Inflation factor**:
+```
+f_CCA = 1 / (1 - p_missing)
+
+Adjusted n = n_complete × f_CCA
+```
+
+**Example**:
+```
+Complete-case sample size: 300
+Expected dropout: 20%
+
+Enrolled sample size = 300 / (1 - 0.20) = 375
+```
+
+**Assumptions**:
+- MCAR (Missing Completely At Random): No bias, only efficiency loss
+- MAR (Missing At Random): Potential bias if not adjusted
+- MNAR (Missing Not At Random): Biased estimates
+
+#### Multiple Imputation (MI)
+
+**Relative Efficiency (RE)**:
+```
+RE = 1 / (1 + (FMI / m))
+
+Where:
+FMI = Fraction of Missing Information
+m = number of imputations
+```
+
+**Fraction of Missing Information**:
+```
+FMI = (1 + 1/m) × B / T
+
+Where:
+B = between-imputation variance
+T = total variance
+```
+
+**Approximate FMI from missing rate and R²**:
+```
+FMI ≈ p_missing × (1 - R²)
+
+Where:
+R² = variance explained by imputation model
+```
+
+**Inflation factor**:
+```
+f_MI = 1 / (RE × (1 - p_missing))
+```
+
+**Example**:
+```
+Missing rate: 20%
+R² of imputation model: 0.50
+Number of imputations: m = 20
+
+FMI ≈ 0.20 × (1 - 0.50) = 0.10
+RE = 1 / (1 + 0.10/20) = 0.995
+
+Inflation = 1 / (0.995 × 0.80) = 1.256
+
+→ 25.6% inflation (vs. 33% for CCA)
+```
+
+**Recommended m** (White et al., 2011):
+```
+m ≥ % missing
+
+E.g., 20% missing → m ≥ 20 imputations
+```
+
+### Clustering Adjustment (Design Effect)
+
+**Design Effect (DE)**:
+```
+DE = 1 + (m - 1) × ICC
+
+Where:
+m = average cluster size
+ICC = Intraclass Correlation Coefficient
+```
+
+**Effective sample size**:
+```
+n_eff = n_total / DE
+```
+
+**Required sample size with clustering**:
+```
+n_clustered = n_unclustered × DE
+```
+
+**Number of clusters**:
+```
+K = n_clustered / m
+```
+
+**Example**:
+```
+Unclustered sample size: 400
+Cluster size: m = 20
+ICC: 0.05
+
+DE = 1 + (20-1) × 0.05 = 1.95
+
+Clustered sample size = 400 × 1.95 = 780
+Number of clusters = 780 / 20 = 39 clusters
+```
+
+**ICC interpretation**:
+- 0.00 - 0.01: Very low (minimal clustering effect)
+- 0.01 - 0.05: Low to moderate (behavioral outcomes)
+- 0.05 - 0.10: Moderate (clinical outcomes)
+- 0.10 - 0.20: High (educational outcomes, provider effects)
+- 0.20+: Very high (geographic or institutional effects)
+
+### Multiple Testing Correction
+
+#### Bonferroni Correction
+
+**Adjusted significance level**:
+```
+α_adj = α / k
+
+Where k = number of comparisons
+```
+
+**Example**:
+```
+3 comparisons, α = 0.05
+
+α_adj = 0.05 / 3 = 0.0167
+```
+
+**Sample size impact**: Requires larger n to maintain power with smaller α
+
+**Power with Bonferroni**:
+```
+Power_adj = Φ(z_δ - z_{α_adj/2})
+          = Φ(z_δ - z_{α/(2k)})
+```
+
+#### Holm-Bonferroni (Step-Down)
+
+**Sequential correction**: Tests ordered p-values
+
+**Adjusted α for i-th test**:
+```
+α_i = α / (k - i + 1)
+```
+
+**Less conservative than Bonferroni, controls FWER**
+
+#### Benjamini-Hochberg (FDR)
+
+**Controls False Discovery Rate** (proportion of false positives among rejections)
+
+**Adjusted α for i-th test**:
+```
+α_i = (i/k) × α
+```
+
+**Less conservative than FWER methods**
+
+#### Šidák Correction
+
+**Adjusted significance level**:
+```
+α_adj = 1 - (1 - α)^(1/k)
+```
+
+**Example**:
+```
+3 comparisons, α = 0.05
+
+α_adj = 1 - (1 - 0.05)^(1/3) = 0.0170
+```
+
+**Slightly less conservative than Bonferroni**
+
+---
+
+## References
+
+### Foundational Texts
+
+1. **Cohen, J.** (1988). *Statistical Power Analysis for the Behavioral Sciences* (2nd ed.). Routledge.
+
+2. **Chow, S.C., Shao, J., Wang, H., & Lokhnygina, Y.** (2017). *Sample Size Calculations in Clinical Research* (3rd ed.). Chapman & Hall/CRC.
+
+3. **Julious, S.A.** (2010). *Sample Sizes for Clinical Trials*. Chapman & Hall/CRC.
+
+### Methods Papers
+
+4. **Schoenfeld, D.** (1983). Sample-size formula for the proportional-hazards regression model. *Biometrics*, 39(2), 499-503.
+
+5. **Li, F., Morgan, K.L., Zaslavsky, A.M.** (2025). Sample size and power calculations for causal inference of observational studies. *arXiv preprint* arXiv:2501.11181.
+
+6. **Austin, P.C.** (2021). Informing power and sample size calculations when using inverse probability of treatment weighting. *Statistics in Medicine*, 40(27), 6150-6163.
+
+7. **VanderWeele, T.J., & Ding, P.** (2017). Sensitivity analysis in observational research: Introducing the E-value. *Annals of Internal Medicine*, 167(4), 268-274.
+
+8. **Sobel, M.E.** (1982). Asymptotic confidence intervals for indirect effects in structural equation models. *Sociological Methodology*, 13, 290-312.
+
+9. **MacKinnon, D.P., Lockwood, C.M., Hoffman, J.M., West, S.G., & Sheets, V.** (2002). A comparison of methods to test mediation and other intervening variable effects. *Psychological Methods*, 7(1), 83-104.
+
+10. **White, I.R., Royston, P., & Wood, A.M.** (2011). Multiple imputation using chained equations: Issues and guidance for practice. *Statistics in Medicine*, 30(4), 377-399.
+
+### R Packages
+
+- **pwr** (Champely, 2020): Version 1.3-0+. Basic power calculations.
+- **powerSurvEpi** (Weiliang & Xiaodong, 2012): Version 0.1.3. Survival power calculations.
+- **epiR** (Stevenson et al., 2023): Version 2.0.76+. Epidemiological study designs.
+
+---
+
+**Last Updated**: `r Sys.Date()`
+
+**See Also**:
+- [Getting Started Guide](www/doc/getting-started.html) - Tutorial introduction
+- [Study Design Reference](www/doc/study-design-reference.html) - Quick lookup for each design
