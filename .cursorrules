@@ -1,0 +1,299 @@
+# Power Analysis Tool - Cursor Rules
+
+This file defines coding standards, documentation practices, and project-specific guidelines for AI agents working on the Power Analysis Tool project.
+
+---
+
+## Core Principles
+
+- **Professional objectivity**: Prioritize technical accuracy over validation. Disagree when necessary.
+- **No emojis**: Unless explicitly requested by the user
+- **Preserve git history**: Always use `git mv` instead of `mv` for tracked files
+- **Snowflake SQL**: All SQL syntax must be Snowflake-compliant
+
+---
+
+## Documentation Framework
+
+This project uses the **Diataxis documentation framework** with four categories:
+
+- **Tutorials** (`docs/001-tutorials/`): Learning-oriented, hands-on guides
+- **How-To Guides** (`docs/002-how-to-guides/`): Task-oriented, problem-solving steps
+- **Reference** (`docs/003-reference/`): Information-oriented technical specs
+- **Explanation** (`docs/004-explanation/`): Understanding-oriented design discussions
+
+### Documentation File Naming Convention
+
+**CRITICAL**: All documentation files MUST follow this pattern:
+
+```
+###-document-name.md
+```
+
+**Rules:**
+- Three-digit number with leading zeros (e.g., `001`, `002`, `010`)
+- Kebab-case for the document name (lowercase, hyphen-separated)
+- `.md` extension for Markdown files
+- Sequential ordering - number files in the order they should be read
+
+**Examples:**
+- ✅ `001-contributing.md`
+- ✅ `002-antipatterns-guide.md`
+- ✅ `010-advanced-features.md`
+- ❌ `1-contributing.md` (missing leading zeros)
+- ❌ `contributing.md` (missing number prefix)
+- ❌ `001_contributing.md` (underscore instead of hyphen)
+
+This applies to **all directories** including `reports/` subdirectories.
+
+---
+
+## Writing Style
+
+### General Guidelines
+- **Clear and concise**: Get to the point quickly
+- **Active voice**: "Run the command" not "The command should be run"
+- **Present tense**: "The function returns" not "The function will return"
+- **Professional but approachable**: Avoid jargon when possible
+- **Sentence case for headers**: "How to add a new analysis type" not "How To Add A New Analysis Type"
+
+### Code Blocks
+
+Always specify the language for syntax highlighting:
+
+````markdown
+```r
+# R code example
+result <- calc_effect_measures(0.15, 0.10)
+```
+
+```bash
+# Bash command example
+docker-compose up --build
+```
+
+```python
+# Python example
+def hello():
+    print("Hello, World!")
+```
+````
+
+### Lists
+- Use `-` for bullet points (not `*` or `+`)
+- Use numbers for ordered lists
+- Keep items parallel in structure
+
+---
+
+## Implementation Plans
+
+When documenting implementation plans or feature roadmaps:
+
+- **Focus on what needs to be done**, not how long it will take
+- **Do NOT include time estimates** (e.g., "2 hours", "1 day", "1 week")
+- **Do NOT include scheduling details** (e.g., "by Friday", "next sprint")
+- Keep steps actionable and clear without temporal commitments
+
+**Why?** Time estimates become outdated quickly and add unnecessary detail. We care about the logical sequence of work, not calendar predictions.
+
+**Examples:**
+- ✅ "Implement input validation for sample size calculation"
+- ✅ "Add unit tests for new effect size functions"
+- ❌ "Implement input validation (2 hours)"
+- ❌ "Add unit tests by end of week"
+
+---
+
+## File Operations
+
+### Moving or Renaming Files
+
+**CRITICAL**: Always use `git mv` to preserve file history
+
+```bash
+# Correct way to move/rename files
+git mv docs/old-location/file.md docs/###-category/###-new-name.md
+
+# Incorrect way (loses git history)
+mv docs/old-location/file.md docs/###-category/###-new-name.md
+```
+
+### Creating New Files
+- **ALWAYS prefer editing existing files** in the codebase
+- **NEVER write new files** unless explicitly required
+- **NEVER proactively create documentation files** (*.md) or README files unless explicitly requested
+
+---
+
+## R Shiny Development
+
+### Project Structure
+- This is a **monolithic Shiny application** in `app.R`
+- Prefer keeping code in `app.R` for simplicity (app is <2000 lines)
+- Use `R/` directory for helper functions and modules if needed
+- Follow **golem** package conventions where applicable
+
+### Code Style
+- Use `<-` for assignment (not `=`)
+- Use snake_case for variable and function names
+- Use meaningful, descriptive names
+- Add roxygen2 comments for exported functions
+
+### Reactivity
+- Use `req()` guards to prevent reactive comparison errors
+- Be mindful of reactive dependencies
+- Use `isolate()` when appropriate
+- Document reactive flows for complex logic
+
+---
+
+## Git Workflow
+
+### Branching
+- Main branch: `master`
+- Feature branches: `feature/descriptive-name`
+- Bug fixes: `fix/descriptive-name`
+
+### Commits
+- Write clear, descriptive commit messages
+- Use conventional commit format when possible:
+  - `feat:` for new features
+  - `fix:` for bug fixes
+  - `docs:` for documentation changes
+  - `refactor:` for code refactoring
+  - `test:` for adding tests
+  - `chore:` for maintenance tasks
+
+---
+
+## Dependencies and Environment
+
+### R Environment
+- Use `renv` for dependency management
+- Keep `renv.lock` up to date
+- Document R version requirements
+- Test with R ≥ 4.2.0
+
+### Package Management
+- Document all package dependencies in DESCRIPTION or app.R
+- Use `renv::snapshot()` after adding new packages
+- Prefer CRAN packages over GitHub packages when possible
+
+---
+
+## Testing
+
+### Test Categories
+- **Unit tests**: Test individual functions in `tests/testthat/`
+- **shinytest2 E2E tests**: Test user workflows and UI interactions
+- **R CMD check**: Ensure package compliance
+
+### Test Guidelines
+- Write tests for all helper functions
+- Test edge cases and error conditions
+- Use descriptive test names
+- Keep tests isolated and independent
+
+---
+
+## Code Quality
+
+### Clean Code Principles
+- Remove commented-out code (dead code)
+- Remove project management metadata from comments
+- Avoid magic numbers - use named constants
+- Extract complex logic into named functions
+- Keep functions short and focused (single responsibility)
+
+### Documentation
+- Add roxygen2 documentation for all exported functions
+- Include examples in function documentation
+- Document function parameters and return values
+- Explain complex algorithms or business logic
+
+---
+
+## Accessibility and Design
+
+### WCAG Compliance
+- Maintain WCAG AA color contrast ratios
+- Use semantic HTML elements
+- Provide alt text for images
+- Ensure keyboard navigation works
+
+### CSS Guidelines
+- Use design tokens from `www/css/design-tokens.css`
+- Follow modern theme conventions in `www/css/modern-theme.css`
+- Use component-specific styles in `www/css/input-components.css`
+
+---
+
+## Documentation Workflow
+
+### When Adding Features
+1. Write the code
+2. Update reference documentation if APIs changed
+3. Add how-to guide if new workflows introduced
+4. Update explanation if design decisions made
+5. Create enhancement report in `reports/enhancements/`
+6. Update main README.md if user-facing changes
+
+### When Refactoring
+1. Update reference documentation if internals changed
+2. Update explanation if architectural changes made
+3. Create quality report in `reports/quality/`
+
+### Before Committing Documentation
+- [ ] Documentation files follow `###-document-name.md` naming
+- [ ] New files added to `docs/README.md` index
+- [ ] Code examples tested and working
+- [ ] Links are relative and working
+- [ ] Spell check completed
+- [ ] Git history preserved if moving files
+
+---
+
+## Context and Reference Files
+
+When you need to understand the codebase:
+- Read `CLAUDE.md` for complete documentation guidelines
+- Check `docs/README.md` for documentation index
+- Review `docs/004-explanation/` for design decisions
+- Consult `docs/003-reference/` for API specifications
+
+---
+
+## Diataxis Quick Reference
+
+### Tutorials (Learning-Oriented)
+- Hands-on exercises
+- Step-by-step guidance
+- Assumes little prior knowledge
+- Works toward a result
+
+### How-To Guides (Task-Oriented)
+- Goal-oriented
+- Practical steps
+- Assumes user knows what they want
+- Multiple valid approaches
+
+### Reference (Information-Oriented)
+- Dry, factual, comprehensive
+- Consistent structure
+- No opinions or explanations
+- Complete information
+
+### Explanation (Understanding-Oriented)
+- Discusses alternatives
+- Explains "why" not "how"
+- Provides context
+- Can be opinionated
+
+---
+
+## Resources
+
+- **Diataxis Framework**: https://diataxis.fr/
+- **CLAUDE.md**: Full documentation guidelines in project root
+- **docs/README.md**: Documentation index and navigation
