@@ -1607,17 +1607,6 @@
       ],
       "Hash": "1c1a2437351984ff592639ae28cda09e"
     },
-    "shinyBS": {
-      "Package": "shinyBS",
-      "Version": "0.61.1",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "htmltools",
-        "shiny"
-      ],
-      "Hash": "e44255f073ecdc26ba6bc2ce3fcf174d"
-    },
     "shinyjs": {
       "Package": "shinyjs",
       "Version": "2.1.0",
