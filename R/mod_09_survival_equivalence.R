@@ -269,26 +269,137 @@ mod_09_survival_equivalence_server <- function(id){
       log_module_event("survival_equivalence", "cleanup", session)
     })
 
+    # Define allowlists for categorical inputs (security best practice)
+    VALID_ALPHA <- c("0.01", "0.025", "0.05", "0.10")
+    VALID_POWER <- c("70", "80", "90", "95")
+    VALID_TEST_TYPES <- c("non-inferiority", "equivalence")
+    VALID_CALC_MODES <- c("calc_n", "calc_margin")
+
+    # Raw reactive inputs (not debounced)
+    inputs_raw <- reactive({
+      # Use req() to prevent execution until inputs are available
+      req(input$test_type)
+      req(input$calc_mode)
+      req(input$power)
+      req(input$hr_expected)
+      req(input$prop_exposed)
+      req(input$event_rate)
+      req(input$allocation_ratio)
+      req(input$alpha)
+
+      # Log reactive execution at TRACE level (only when debugging)
+      log_reactive_execution("survival_equivalence_inputs", session)
+
+      # Validate and sanitize inputs
+      tryCatch({
+        result <- list(
+          test_type = validate_choice_input(
+            input$test_type,
+            VALID_TEST_TYPES,
+            "Test type"
+          ),
+          calc_mode = validate_choice_input(
+            input$calc_mode,
+            VALID_CALC_MODES,
+            "Calculation mode"
+          ),
+          power = as.numeric(validate_choice_input(
+            input$power,
+            VALID_POWER,
+            "Power level"
+          )),
+          hr_expected = validate_numeric_input(
+            input$hr_expected,
+            "Expected hazard ratio",
+            min = 0.01,
+            max = 10
+          ),
+          prop_exposed = validate_proportion_input(
+            input$prop_exposed,
+            "Proportion exposed"
+          ),
+          event_rate = validate_proportion_input(
+            input$event_rate,
+            "Event rate"
+          ),
+          allocation_ratio = validate_numeric_input(
+            input$allocation_ratio,
+            "Allocation ratio",
+            min = 0.1,
+            max = 10
+          ),
+          alpha = as.numeric(validate_choice_input(
+            input$alpha,
+            VALID_ALPHA,
+            "Significance level"
+          ))
+        )
+
+        # Add mode and test-type specific parameters
+        if (result$calc_mode == "calc_n") {
+          # Sample size calculation - need margin
+          if (result$test_type == "non-inferiority") {
+            req(input$hr_margin_ni)
+            result$hr_margin_ni <- validate_numeric_input(
+              input$hr_margin_ni,
+              "Non-inferiority margin",
+              min = 1.0,
+              max = 3.0
+            )
+          } else {
+            req(input$hr_margin_equiv)
+            result$hr_margin_equiv <- validate_numeric_input(
+              input$hr_margin_equiv,
+              "Equivalence margin",
+              min = 1.0,
+              max = 2.0
+            )
+          }
+        } else {
+          # Margin calculation - need fixed sample size
+          req(input$n_fixed)
+          result$n_fixed <- validate_numeric_input(
+            input$n_fixed,
+            "Fixed sample size",
+            min = 50,
+            max = 1e7
+          )
+        }
+
+        result
+
+      }, error = function(e) {
+        # If validation fails, log the error (in production) and return defaults
+        if (golem::app_prod()) {
+          logger::log_warn(
+            "Input validation failed in survival equivalence module",
+            error = conditionMessage(e)
+          )
+        }
+
+        # Return safe defaults
+        list(
+          test_type = "non-inferiority",
+          calc_mode = "calc_n",
+          power = 80,
+          hr_expected = 0.95,
+          hr_margin_ni = 1.25,
+          hr_margin_equiv = 1.20,
+          n_fixed = 500,
+          prop_exposed = 50,
+          event_rate = 30,
+          allocation_ratio = 1,
+          alpha = 0.025
+        )
+      })
+    })
+
+    # Apply debouncing to reduce reactive churn
+    inputs <- inputs_raw %>% debounce(500)
+
     # Return reactive values
     list(
-      inputs = reactive({
-        # Log reactive execution at TRACE level (only when debugging)
-        log_reactive_execution("survival_equivalence_inputs", session)
-
-        list(
-          test_type = input$test_type,
-          calc_mode = input$calc_mode,
-          power = as.numeric(input$power),
-          hr_expected = as.numeric(input$hr_expected),
-          hr_margin_ni = as.numeric(input$hr_margin_ni),
-          hr_margin_equiv = as.numeric(input$hr_margin_equiv),
-          n_fixed = as.numeric(input$n_fixed),
-          prop_exposed = as.numeric(input$prop_exposed),
-          event_rate = as.numeric(input$event_rate),
-          allocation_ratio = as.numeric(input$allocation_ratio),
-          alpha = as.numeric(input$alpha)
-        )
-      }),
+      inputs = inputs,  # Return debounced version
       missing_data_vals = missing_data_vals,
       clustering_vals = clustering_vals,
       multiple_testing_vals = multiple_testing_vals

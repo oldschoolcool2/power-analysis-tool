@@ -227,25 +227,149 @@ mod_08_mediation_server <- function(id) {
       log_module_event("mediation", "cleanup", session)
     })
 
-    # Return reactive values
-    list(
-      inputs = reactive({
-        # Log reactive execution at TRACE level (only when debugging)
-        log_reactive_execution("mediation_inputs", session)
+    # Define allowlists for categorical inputs (security best practice)
+    VALID_ALPHA <- c("0.001", "0.01", "0.05", "0.10")
+    VALID_POWER <- c("70", "80", "90", "95")
+    VALID_SIDED <- c("two.sided", "one.sided")
+    VALID_CALC_MODES <- c("calc_power", "calc_n", "calc_mde")
 
+    # Raw reactive inputs (not debounced)
+    inputs_raw <- reactive({
+      # Use req() to prevent execution until inputs are available
+      req(input$calc_mode)
+      req(input$path_a)
+      req(input$med_alpha)
+      req(input$med_sided)
+
+      # Log reactive execution at TRACE level (only when debugging)
+      log_reactive_execution("mediation_inputs", session)
+
+      # Validate and sanitize inputs
+      tryCatch({
+        result <- list(
+          calc_mode = validate_choice_input(
+            input$calc_mode,
+            VALID_CALC_MODES,
+            "Calculation mode"
+          ),
+          path_a = validate_numeric_input(
+            input$path_a,
+            "Path a coefficient",
+            min = -2,
+            max = 2
+          ),
+          path_c_prime = validate_numeric_input(
+            input$path_c_prime %||% 0,
+            "Direct effect",
+            min = -2,
+            max = 2,
+            allow_null = TRUE
+          ),
+          med_alpha = as.numeric(validate_choice_input(
+            input$med_alpha,
+            VALID_ALPHA,
+            "Significance level"
+          )),
+          med_sided = validate_choice_input(
+            input$med_sided,
+            VALID_SIDED,
+            "Test type"
+          )
+        )
+
+        # Add mode-specific parameters
+        if (result$calc_mode == "calc_power") {
+          req(input$med_n)
+          req(input$path_b)
+          result$med_n <- validate_numeric_input(
+            input$med_n,
+            "Sample size",
+            min = 10,
+            max = 1e7
+          )
+          result$path_b <- validate_numeric_input(
+            input$path_b,
+            "Path b coefficient",
+            min = -2,
+            max = 2
+          )
+        } else if (result$calc_mode == "calc_n") {
+          req(input$med_power)
+          req(input$path_b)
+          result$med_power <- as.numeric(validate_choice_input(
+            input$med_power,
+            VALID_POWER,
+            "Power level"
+          ))
+          result$path_b <- validate_numeric_input(
+            input$path_b,
+            "Path b coefficient",
+            min = -2,
+            max = 2
+          )
+        } else if (result$calc_mode == "calc_mde") {
+          req(input$med_n)
+          req(input$med_power)
+          result$med_n <- validate_numeric_input(
+            input$med_n,
+            "Sample size",
+            min = 10,
+            max = 1e7
+          )
+          result$med_power <- as.numeric(validate_choice_input(
+            input$med_power,
+            VALID_POWER,
+            "Power level"
+          ))
+          # path_b is not needed for calc_mde - it's what we're solving for
+        }
+
+        # Optional parameters (SE)
+        result$se_a <- if (!is.null(input$se_a) && !is.na(input$se_a)) {
+          validate_numeric_input(input$se_a, "SE of path a", min = 0.001, max = 1, allow_null = TRUE)
+        } else {
+          NA_real_
+        }
+
+        result$se_b <- if (!is.null(input$se_b) && !is.na(input$se_b)) {
+          validate_numeric_input(input$se_b, "SE of path b", min = 0.001, max = 1, allow_null = TRUE)
+        } else {
+          NA_real_
+        }
+
+        result
+
+      }, error = function(e) {
+        # If validation fails, log the error (in production) and return defaults
+        if (golem::app_prod()) {
+          logger::log_warn(
+            "Input validation failed in mediation module",
+            error = conditionMessage(e)
+          )
+        }
+
+        # Return safe defaults
         list(
-          calc_mode = input$calc_mode,
-          med_n = as.numeric(input$med_n),
-          med_power = as.numeric(input$med_power),
-          path_a = as.numeric(input$path_a),
-          path_b = as.numeric(input$path_b),
-          path_c_prime = as.numeric(input$path_c_prime),
-          se_a = as.numeric(input$se_a),
-          se_b = as.numeric(input$se_b),
-          med_alpha = as.numeric(input$med_alpha),
-          med_sided = input$med_sided
+          calc_mode = "calc_power",
+          med_n = 200,
+          med_power = 80,
+          path_a = 0.3,
+          path_b = 0.3,
+          path_c_prime = 0.1,
+          se_a = NA_real_,
+          se_b = NA_real_,
+          med_alpha = 0.05,
+          med_sided = "two.sided"
         )
       })
+    })
+
+    # Apply debouncing to reduce reactive churn
+    inputs <- inputs_raw %>% debounce(500)
+
+    # Return reactive values
+    list(
+      inputs = inputs  # Return debounced version
     )
   })
 }

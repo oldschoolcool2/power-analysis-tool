@@ -123,25 +123,71 @@ multiple_testing_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # Calculate multiple testing adjustment
-    mt_calc <- reactive({
+    # Define allowlists for categorical inputs (security best practice)
+    VALID_METHODS <- c("bonferroni", "holm", "hochberg", "BH", "BY", "none")
+
+    # Raw reactive inputs (not debounced)
+    inputs_raw <- reactive({
+      # Only validate if adjustment is enabled
       req(input$adjust_multiple_testing)
       req(input$n_tests)
       req(input$correction_method)
 
-      # Get current inputs
-      n_tests <- input$n_tests
-      method <- input$correction_method
+      # Validate and sanitize inputs
+      tryCatch({
+        list(
+          adjust_multiple_testing = isTRUE(input$adjust_multiple_testing),
+          n_tests = validate_integer_input(
+            input$n_tests,
+            "Number of tests",
+            min = 1,
+            max = 100
+          ),
+          correction_method = validate_choice_input(
+            input$correction_method,
+            VALID_METHODS,
+            "Correction method"
+          )
+        )
+      }, error = function(e) {
+        # If validation fails, log the error (in production) and return defaults
+        if (golem::app_prod()) {
+          logger::log_warn(
+            "Input validation failed in multiple testing module",
+            error = conditionMessage(e)
+          )
+        }
+
+        # Return safe defaults
+        list(
+          adjust_multiple_testing = FALSE,
+          n_tests = 3,
+          correction_method = "holm"
+        )
+      })
+    })
+
+    # Apply debouncing to reduce reactive churn
+    inputs <- inputs_raw %>% debounce(500)
+
+    # Calculate multiple testing adjustment
+    mt_calc <- reactive({
+      # Get validated inputs
+      validated_inputs <- inputs()
+
+      # Only proceed if adjustment is enabled
+      if (!validated_inputs$adjust_multiple_testing) {
+        return(NULL)
+      }
 
       # Use alpha from parent context (typically 0.05)
-      # This will be provided by the parent tab
       alpha <- 0.05
 
       # Validate inputs
       validation <- validate_multiple_testing_inputs(
-        n_tests = n_tests,
+        n_tests = validated_inputs$n_tests,
         alpha = alpha,
-        method = method
+        method = validated_inputs$correction_method
       )
 
       if (!validation$valid) {
@@ -155,8 +201,8 @@ multiple_testing_server <- function(id) {
       result <- tryCatch({
         calc_adjusted_alpha(
           alpha = alpha,
-          n_tests = n_tests,
-          method = method
+          n_tests = validated_inputs$n_tests,
+          method = validated_inputs$correction_method
         )
       }, error = function(e) {
         list(
@@ -273,11 +319,24 @@ multiple_testing_server <- function(id) {
     # Return reactive list of multiple testing parameters
     return(
       reactive({
+        # Return raw checkbox value immediately (no validation needed for boolean)
+        if (!isTRUE(input$adjust_multiple_testing)) {
+          return(list(
+            adjust_multiple_testing = FALSE,
+            n_tests = NA,
+            correction_method = NA,
+            results = NULL
+          ))
+        }
+
+        # Get validated inputs
+        validated_inputs <- inputs()
+
         list(
-          adjust_multiple_testing = input$adjust_multiple_testing,
-          n_tests = as.numeric(input$n_tests),
-          correction_method = input$correction_method,
-          results = if (input$adjust_multiple_testing) mt_calc() else NULL
+          adjust_multiple_testing = validated_inputs$adjust_multiple_testing,
+          n_tests = validated_inputs$n_tests,
+          correction_method = validated_inputs$correction_method,
+          results = mt_calc()
         )
       })
     )

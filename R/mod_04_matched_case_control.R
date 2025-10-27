@@ -304,47 +304,158 @@ mod_04_matched_case_control_server <- function(id){
       log_module_event("matched_case_control", "cleanup", session)
     })
 
-    # Return reactive values based on active tab
-    list(
-      inputs = reactive({
-        # Log reactive execution at TRACE level (only when debugging)
-        log_reactive_execution("matched_case_control_inputs", session)
+    # Define allowlists for categorical inputs (security best practice)
+    VALID_ALPHA <- c("0.001", "0.01", "0.05", "0.10")
+    VALID_POWER <- c("70", "80", "90", "95")
+    VALID_SIDED <- c("two.sided", "one.sided")
+    VALID_ANALYSIS_TYPES <- c("sample_size", "power", "mde")
 
-        # Determine analysis mode from active tab (with fallback to sample_size)
-        analysis_type <- if (is.null(input$match_analysis_type) || input$match_analysis_type == "") {
-          "sample_size"
-        } else {
-          input$match_analysis_type
-        }
+    # Raw reactive inputs (not debounced)
+    # This separates input collection from validation
+    inputs_raw <- reactive({
+      # Use req() to prevent execution until common inputs are available
+      req(input$match_ratio)
+      req(input$match_alpha)
+      req(input$match_sided)
+      req(input$match_analysis_type)
 
-        # Base list with common parameters (with safe defaults)
+      # Log reactive execution at TRACE level (only when debugging)
+      log_reactive_execution("matched_case_control_inputs", session)
+
+      # Determine analysis mode from active tab (with fallback to sample_size)
+      analysis_type <- input$match_analysis_type
+      if (is.null(analysis_type) || analysis_type == "") {
+        analysis_type <- "sample_size"
+      }
+
+      # Validate and sanitize inputs
+      tryCatch({
+        # Base list with common parameters
         result <- list(
-          match_analysis_type = analysis_type,
-          match_ratio = if (!is.null(input$match_ratio)) as.numeric(input$match_ratio) else 1,
-          match_alpha = if (!is.null(input$match_alpha)) as.numeric(input$match_alpha) else 0.05,
-          match_sided = if (!is.null(input$match_sided)) input$match_sided else "two.sided"
+          match_analysis_type = validate_choice_input(
+            analysis_type,
+            VALID_ANALYSIS_TYPES,
+            "Analysis type"
+          ),
+          match_ratio = validate_integer_input(
+            input$match_ratio,
+            "Controls per case",
+            min = 1,
+            max = 5
+          ),
+          match_alpha = as.numeric(validate_choice_input(
+            input$match_alpha,
+            VALID_ALPHA,
+            "Significance level"
+          )),
+          match_sided = validate_choice_input(
+            input$match_sided,
+            VALID_SIDED,
+            "Test type"
+          )
         )
 
-        # Add tab-specific parameters
+        # Add tab-specific parameters with validation
         if (analysis_type == "sample_size") {
-          result$match_power <- if (!is.null(input$match_power_ss)) as.numeric(input$match_power_ss) else 80
-          result$match_or <- if (!is.null(input$match_or_ss)) as.numeric(input$match_or_ss) else 2.0
-          result$match_p0 <- if (!is.null(input$match_p0_ss)) as.numeric(input$match_p0_ss) else 20
-          result$match_calc_mode <- "calc_n"  # For backward compatibility
+          req(input$match_power_ss)
+          req(input$match_or_ss)
+          req(input$match_p0_ss)
+
+          result$match_power <- as.numeric(validate_choice_input(
+            input$match_power_ss,
+            VALID_POWER,
+            "Power level"
+          ))
+          result$match_or <- validate_numeric_input(
+            input$match_or_ss,
+            "Odds ratio",
+            min = 0.01,
+            max = 20
+          )
+          result$match_p0 <- validate_proportion_input(
+            input$match_p0_ss,
+            "Exposure probability"
+          )
+          result$match_calc_mode <- "calc_n"
+
         } else if (analysis_type == "power") {
-          result$match_n_pairs <- if (!is.null(input$match_n_pairs_power)) as.numeric(input$match_n_pairs_power) else 100
-          result$match_or <- if (!is.null(input$match_or_power)) as.numeric(input$match_or_power) else 2.0
-          result$match_p0 <- if (!is.null(input$match_p0_power)) as.numeric(input$match_p0_power) else 20
-          result$match_calc_mode <- "calc_power"  # New mode
+          req(input$match_n_pairs_power)
+          req(input$match_or_power)
+          req(input$match_p0_power)
+
+          result$match_n_pairs <- validate_numeric_input(
+            input$match_n_pairs_power,
+            "Number of matched pairs",
+            min = 10,
+            max = 1e6
+          )
+          result$match_or <- validate_numeric_input(
+            input$match_or_power,
+            "Odds ratio",
+            min = 0.01,
+            max = 20
+          )
+          result$match_p0 <- validate_proportion_input(
+            input$match_p0_power,
+            "Exposure probability"
+          )
+          result$match_calc_mode <- "calc_power"
+
         } else if (analysis_type == "mde") {
-          result$match_n_pairs <- if (!is.null(input$match_n_pairs_mde)) as.numeric(input$match_n_pairs_mde) else 100
-          result$match_power <- if (!is.null(input$match_power_mde)) as.numeric(input$match_power_mde) else 80
-          result$match_p0 <- if (!is.null(input$match_p0_mde)) as.numeric(input$match_p0_mde) else 20
-          result$match_calc_mode <- "calc_effect"  # For backward compatibility
+          req(input$match_n_pairs_mde)
+          req(input$match_power_mde)
+          req(input$match_p0_mde)
+
+          result$match_n_pairs <- validate_numeric_input(
+            input$match_n_pairs_mde,
+            "Number of matched pairs",
+            min = 10,
+            max = 1e6
+          )
+          result$match_power <- as.numeric(validate_choice_input(
+            input$match_power_mde,
+            VALID_POWER,
+            "Power level"
+          ))
+          result$match_p0 <- validate_proportion_input(
+            input$match_p0_mde,
+            "Exposure probability"
+          )
+          result$match_calc_mode <- "calc_effect"
         }
 
         result
-      }),
+
+      }, error = function(e) {
+        # If validation fails, log the error (in production) and return defaults
+        if (golem::app_prod()) {
+          logger::log_warn(
+            "Input validation failed in matched case-control module",
+            error = conditionMessage(e),
+            analysis_type = analysis_type
+          )
+        }
+
+        # Return safe defaults
+        list(
+          match_analysis_type = analysis_type,
+          match_ratio = 1,
+          match_alpha = 0.05,
+          match_sided = "two.sided",
+          match_calc_mode = "calc_n",
+          match_power = 80,
+          match_or = 2.0,
+          match_p0 = 20
+        )
+      })
+    })
+
+    # Apply debouncing to reduce reactive churn
+    inputs <- inputs_raw %>% debounce(500)
+
+    # Return reactive values
+    list(
+      inputs = inputs,  # Return debounced version
       missing_data_vals = missing_data_vals,
       clustering_vals = clustering_vals,
       multiple_testing_vals = multiple_testing_vals

@@ -599,57 +599,37 @@ app_server <- function(input, output, session) {
           duration = 5
         )
       }
-    # Tab 4: Matched Case-Control (tab-aware validation)
+    # Tab 4: Matched Case-Control
     } else if (page == "match_casecontrol") {
+      # Use req() to guard against NULL inputs
+      req(tab4_vals$inputs())
       tab4_inputs <- tab4_vals$inputs()
-      calc_mode <- tab4_inputs$match_calc_mode
 
-      # Guard against NULL calc_mode
-      if (is.null(calc_mode) || length(calc_mode) == 0 || identical(calc_mode, "")) {
-        calc_mode <- "calc_n"  # Default to sample size
-      }
-
-      # Common validations for all tabs (with proper NULL handling)
-      validate(
-        need(!is.null(tab4_inputs$match_p0), "Exposure probability is required"),
-        need(!is.null(tab4_inputs$match_ratio), "Controls per case is required")
+      # Use dedicated validation function
+      validation <- validate_matched_case_control_inputs(
+        n_pairs = tab4_inputs$match_n_pairs,
+        or_value = tab4_inputs$match_or,
+        p0 = tab4_inputs$match_p0,
+        alpha = tab4_inputs$match_alpha,
+        power = tab4_inputs$match_power,
+        ratio = tab4_inputs$match_ratio,
+        sided = tab4_inputs$match_sided,
+        calc_mode = tab4_inputs$match_calc_mode
       )
 
-      # Only validate ranges if values exist
-      if (!is.null(tab4_inputs$match_p0)) {
+      # Block execution on errors
+      if (!validation$valid) {
         validate(
-          need(tab4_inputs$match_p0 >= 0 && tab4_inputs$match_p0 <= 100, "Exposure probability must be between 0 and 100%")
+          need(FALSE, paste(validation$errors, collapse = "\n"))
         )
       }
 
-      if (!is.null(tab4_inputs$match_ratio)) {
-        validate(
-          need(tab4_inputs$match_ratio >= 1, "Controls per case must be at least 1")
-        )
-      }
-
-      # Tab-specific validations
-      if (identical(calc_mode, "calc_n")) {
-        # Sample Size tab
-        validate(
-          need(!is.null(tab4_inputs$match_or), "Odds ratio is required"),
-          need(tab4_inputs$match_or > 0, "Odds ratio must be positive"),
-          need(tab4_inputs$match_or != 1, "Odds ratio must be different from 1")
-        )
-      } else if (identical(calc_mode, "calc_power")) {
-        # Power Analysis tab
-        validate(
-          need(!is.null(tab4_inputs$match_n_pairs), "Number of matched pairs is required"),
-          need(!is.null(tab4_inputs$match_or), "Odds ratio is required"),
-          need(tab4_inputs$match_n_pairs > 0, "Number of matched pairs must be positive"),
-          need(tab4_inputs$match_or > 0, "Odds ratio must be positive"),
-          need(tab4_inputs$match_or != 1, "Odds ratio must be different from 1")
-        )
-      } else if (identical(calc_mode, "calc_effect")) {
-        # Detectable Effect tab
-        validate(
-          need(!is.null(tab4_inputs$match_n_pairs), "Number of matched pairs is required"),
-          need(tab4_inputs$match_n_pairs > 0, "Number of matched pairs must be positive")
+      # Show warnings as non-blocking notifications
+      if (length(validation$warnings) > 0) {
+        showNotification(
+          paste(validation$warnings, collapse = "\n"),
+          type = "warning",
+          duration = 5
         )
       }
     # Tab 5: Continuous Outcomes
@@ -716,58 +696,107 @@ app_server <- function(input, output, session) {
       }
     # Tab 6: Non-Inferiority
     } else if (page == "noninf") {
+      # Use req() to guard against NULL inputs
+      req(tab6_vals$inputs())
       tab6_inputs <- tab6_vals$inputs()
-      validate(
-        need(tab6_inputs$noninf_p1 >= 0 && tab6_inputs$noninf_p1 <= 100, "Event rate Test Group must be between 0 and 100%"),
-        need(tab6_inputs$noninf_p2 >= 0 && tab6_inputs$noninf_p2 <= 100, "Event rate Reference Group must be between 0 and 100%"),
-        need(tab6_inputs$noninf_margin > 0, "Non-inferiority margin must be positive"),
-        need(tab6_inputs$noninf_margin < 100, "Non-inferiority margin must be less than 100%"),
-        need(tab6_inputs$noninf_ratio > 0, "Allocation ratio must be positive")
+
+      # Use dedicated validation function
+      validation <- validate_non_inferiority_inputs(
+        p1 = tab6_inputs$noninf_p1,
+        p2 = tab6_inputs$noninf_p2,
+        margin = tab6_inputs$noninf_margin,
+        n1_fixed = tab6_inputs$noninf_n1_fixed,
+        alpha = tab6_inputs$noninf_alpha,
+        power = tab6_inputs$noninf_power,
+        ratio = tab6_inputs$noninf_ratio,
+        calc_mode = tab6_inputs$noninf_calc_mode
       )
+
+      # Block execution on errors
+      if (!validation$valid) {
+        validate(
+          need(FALSE, paste(validation$errors, collapse = "\n"))
+        )
+      }
+
+      # Show warnings as non-blocking notifications
+      if (length(validation$warnings) > 0) {
+        showNotification(
+          paste(validation$warnings, collapse = "\n"),
+          type = "warning",
+          duration = 5
+        )
+      }
+    # Tab 8: Mediation Analysis
+    } else if (page == "mediation_analysis") {
+      # Use req() to guard against NULL inputs
+      req(tab8_vals$inputs())
+      tab8_inputs <- tab8_vals$inputs()
+
+      # Use dedicated validation function
+      validation <- validate_mediation_inputs(
+        n = tab8_inputs$med_n,
+        power = tab8_inputs$med_power,
+        path_a = tab8_inputs$path_a,
+        path_b = tab8_inputs$path_b,
+        path_c_prime = tab8_inputs$path_c_prime,
+        se_a = tab8_inputs$se_a,
+        se_b = tab8_inputs$se_b,
+        alpha = tab8_inputs$med_alpha,
+        sided = tab8_inputs$med_sided,
+        calc_mode = tab8_inputs$calc_mode
+      )
+
+      # Block execution on errors
+      if (!validation$valid) {
+        validate(
+          need(FALSE, paste(validation$errors, collapse = "\n"))
+        )
+      }
+
+      # Show warnings as non-blocking notifications
+      if (length(validation$warnings) > 0) {
+        showNotification(
+          paste(validation$warnings, collapse = "\n"),
+          type = "warning",
+          duration = 5
+        )
+      }
 
     # Tab 9: Time-to-Event Equivalence/Non-Inferiority
     } else if (page == "survival_ni_equiv") {
+      # Use req() to guard against NULL inputs
+      req(tab9_vals$inputs())
       tab9_inputs <- tab9_vals$inputs()
 
-      # Guard against NULL calc_mode and test_type
-      calc_mode <- if (is.null(tab9_inputs$calc_mode) || length(tab9_inputs$calc_mode) == 0) {
-        "calc_n"
-      } else {
-        tab9_inputs$calc_mode
-      }
-
-      test_type <- if (is.null(tab9_inputs$test_type) || length(tab9_inputs$test_type) == 0) {
-        "non-inferiority"
-      } else {
-        tab9_inputs$test_type
-      }
-
-      validate(
-        need(tab9_inputs$hr_expected > 0, "Expected HR must be positive"),
-        need(tab9_inputs$prop_exposed > 0 && tab9_inputs$prop_exposed <= 100, "Proportion exposed must be 0-100%"),
-        need(tab9_inputs$event_rate > 0 && tab9_inputs$event_rate <= 100, "Event rate must be 0-100%"),
-        need(tab9_inputs$allocation_ratio > 0, "Allocation ratio must be positive")
+      # Use dedicated validation function
+      validation <- validate_survival_equivalence_inputs(
+        test_type = tab9_inputs$test_type,
+        calc_mode = tab9_inputs$calc_mode,
+        power = tab9_inputs$power,
+        hr_expected = tab9_inputs$hr_expected,
+        hr_margin_ni = tab9_inputs$hr_margin_ni,
+        hr_margin_equiv = tab9_inputs$hr_margin_equiv,
+        n_fixed = tab9_inputs$n_fixed,
+        prop_exposed = tab9_inputs$prop_exposed,
+        event_rate = tab9_inputs$event_rate,
+        allocation_ratio = tab9_inputs$allocation_ratio,
+        alpha = tab9_inputs$alpha
       )
 
-      if (identical(calc_mode, "calc_n")) {
-        if (identical(test_type, "non-inferiority")) {
-          validate(
-            need(!is.null(tab9_inputs$hr_margin_ni) && tab9_inputs$hr_margin_ni > 1.0,
-                 "NI margin must be > 1.0 (e.g., 1.25 for 25% increase)"),
-            need(tab9_inputs$hr_expected < tab9_inputs$hr_margin_ni,
-                 "Expected HR must be better than margin to demonstrate NI")
-          )
-        } else {
-          validate(
-            need(!is.null(tab9_inputs$hr_margin_equiv) && tab9_inputs$hr_margin_equiv > 1.0,
-                 "Equivalence margin must be > 1.0"),
-            need(abs(log(tab9_inputs$hr_expected)) < abs(log(tab9_inputs$hr_margin_equiv)),
-                 "Expected HR must be within equivalence bounds")
-          )
-        }
-      } else {
+      # Block execution on errors
+      if (!validation$valid) {
         validate(
-          need(tab9_inputs$n_fixed >= 50, "Sample size must be at least 50")
+          need(FALSE, paste(validation$errors, collapse = "\n"))
+        )
+      }
+
+      # Show warnings as non-blocking notifications
+      if (length(validation$warnings) > 0) {
+        showNotification(
+          paste(validation$warnings, collapse = "\n"),
+          type = "warning",
+          duration = 5
         )
       }
     }

@@ -109,15 +109,107 @@ mod_06_non_inferiority_server <- function(id){
       log_module_event("non_inferiority", "cleanup", session)
     })
 
-    list(
-      inputs = reactive({
-        # Log reactive execution at TRACE level (only when debugging)
-        log_reactive_execution("non_inferiority_inputs", session)
+    # Define allowlists for categorical inputs (security best practice)
+    VALID_ALPHA <- c("0.01", "0.025", "0.05", "0.10")
+    VALID_POWER <- c("70", "80", "90", "95")
+    VALID_CALC_MODES <- c("calc_n", "calc_effect")
 
-        list(noninf_calc_mode = input$noninf_calc_mode, noninf_power = as.numeric(input$noninf_power),
-             noninf_p1 = as.numeric(input$noninf_p1), noninf_p2 = as.numeric(input$noninf_p2), noninf_margin = as.numeric(input$noninf_margin),
-             noninf_n1_fixed = as.numeric(input$noninf_n1_fixed), noninf_ratio = as.numeric(input$noninf_ratio), noninf_alpha = as.numeric(input$noninf_alpha))
-      }),
+    # Raw reactive inputs (not debounced)
+    inputs_raw <- reactive({
+      # Use req() to prevent execution until inputs are available
+      req(input$noninf_calc_mode)
+      req(input$noninf_power)
+      req(input$noninf_p1)
+      req(input$noninf_p2)
+      req(input$noninf_ratio)
+      req(input$noninf_alpha)
+
+      # Log reactive execution at TRACE level (only when debugging)
+      log_reactive_execution("non_inferiority_inputs", session)
+
+      # Validate and sanitize inputs
+      tryCatch({
+        result <- list(
+          noninf_calc_mode = validate_choice_input(
+            input$noninf_calc_mode,
+            VALID_CALC_MODES,
+            "Calculation mode"
+          ),
+          noninf_power = as.numeric(validate_choice_input(
+            input$noninf_power,
+            VALID_POWER,
+            "Power level"
+          )),
+          noninf_p1 = validate_proportion_input(
+            input$noninf_p1,
+            "Event rate in test group"
+          ),
+          noninf_p2 = validate_proportion_input(
+            input$noninf_p2,
+            "Event rate in reference group"
+          ),
+          noninf_ratio = validate_numeric_input(
+            input$noninf_ratio,
+            "Allocation ratio",
+            min = 0.1,
+            max = 10
+          ),
+          noninf_alpha = as.numeric(validate_choice_input(
+            input$noninf_alpha,
+            VALID_ALPHA,
+            "Significance level"
+          ))
+        )
+
+        # Add mode-specific parameters
+        if (result$noninf_calc_mode == "calc_n") {
+          req(input$noninf_margin)
+          result$noninf_margin <- validate_numeric_input(
+            input$noninf_margin,
+            "Non-inferiority margin",
+            min = 0.1,
+            max = 50
+          )
+        } else if (result$noninf_calc_mode == "calc_effect") {
+          req(input$noninf_n1_fixed)
+          result$noninf_n1_fixed <- validate_numeric_input(
+            input$noninf_n1_fixed,
+            "Fixed sample size",
+            min = 10,
+            max = 1e7
+          )
+        }
+
+        result
+
+      }, error = function(e) {
+        # If validation fails, log the error (in production) and return defaults
+        if (golem::app_prod()) {
+          logger::log_warn(
+            "Input validation failed in non-inferiority module",
+            error = conditionMessage(e)
+          )
+        }
+
+        # Return safe defaults
+        list(
+          noninf_calc_mode = "calc_n",
+          noninf_power = 80,
+          noninf_p1 = 10,
+          noninf_p2 = 10,
+          noninf_margin = 5,
+          noninf_n1_fixed = 500,
+          noninf_ratio = 1,
+          noninf_alpha = 0.025
+        )
+      })
+    })
+
+    # Apply debouncing to reduce reactive churn
+    inputs <- inputs_raw %>% debounce(500)
+
+    list(
+      inputs = inputs,  # Return debounced version
       missing_data_vals = missing_data_vals,
       clustering_vals = clustering_vals,
       multiple_testing_vals = multiple_testing_vals
