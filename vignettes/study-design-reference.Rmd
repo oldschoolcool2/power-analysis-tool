@@ -27,7 +27,7 @@ This reference provides technical specifications for all nine analysis types sup
 
 | # | Analysis Type | Outcome Type | Primary Use Case |
 |---|--------------|--------------|------------------|
-| 1 | Single Proportion (Rule of 3) | Binary | Quality improvement, rare event monitoring |
+| 1 | Single Proportion Test | Binary | Rare event detection, benchmark comparison, quality improvement |
 | 2 | Two-Group Comparison | Binary | RCTs, cohort studies comparing proportions |
 | 3 | Survival Analysis | Time-to-event | Cox regression, time to event studies |
 | 4 | Matched Case-Control | Binary | Case-control studies with matching |
@@ -39,7 +39,7 @@ This reference provides technical specifications for all nine analysis types sup
 
 ---
 
-## 1. Single Proportion (Rule of 3)
+## 1. Single Proportion Test
 
 ### Description
 

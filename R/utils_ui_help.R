@@ -19,18 +19,19 @@ create_contextual_help <- function(analysis_type) {
       accordion_panel(
         title = "About this Analysis",
         icon = icon("info-circle"),
-        p("This analysis performs power and sample size calculations for single proportion hypothesis testing using Cohen's arcsine transformation method. This approach tests whether an observed event rate differs significantly from a null hypothesis (typically zero events)."),
+        p("This analysis performs power and sample size calculations for single proportion hypothesis testing using Cohen's arcsine transformation method. This approach tests whether an observed proportion differs significantly from a reference value."),
         p(strong("Method:"), "Uses the arcsine transformation for proportions (Cohen, 1988), implemented via the pwr.p.test function in R. This is the standard statistical approach for single proportion hypothesis testing."),
-        p(strong("Example:"), "Testing whether an adverse event rate of 1 in 500 (0.2%) can be detected with a sample of 1,500 participants at 80% power and α = 0.05.")
+        p(strong("Rare Event Detection (Reference = 0%):"), "Testing whether an adverse event rate of 0.2% can be detected with a sample of 1,500 participants at 80% power and α = 0.05."),
+        p(strong("Benchmark Comparison (Reference > 0%):"), "Testing whether a new treatment's response rate (75%) exceeds a historical standard of care (65%) with 80% power.")
       ),
       accordion_panel(
         title = "Use Cases",
         icon = icon("lightbulb"),
         tags$ul(
-          tags$li("Post-marketing surveillance of pharmaceutical products"),
-          tags$li("Rare adverse event detection in safety studies"),
-          tags$li("Quality control and manufacturing safety"),
-          tags$li("Clinical trial safety monitoring")
+          tags$li(strong("Rare event detection:"), "Post-marketing surveillance, safety monitoring (reference proportion = 0%)"),
+          tags$li(strong("Quality improvement:"), "Testing if improvement exceeds current performance baseline"),
+          tags$li(strong("Benchmark testing:"), "Comparing against historical controls or published standards"),
+          tags$li(strong("Regulatory compliance:"), "Testing if rates meet or exceed specified thresholds")
         )
       ),
       create_clustering_help_panel(),
@@ -748,6 +749,129 @@ create_global_help <- function() {
           tags$li(strong("Technical details:"), "Ding P, VanderWeele TJ. Sensitivity Analysis Without Assumptions. Epidemiology. 2016;27(3):368-377."),
           tags$li(strong("Applied examples:"), "VanderWeele TJ, Ding P, Mathur M. Technical Considerations in the Use of the E-Value. Journal of Causal Inference. 2019;7(2):20180007."),
           tags$li(strong("E-value calculator website:"), a("www.evalue-calculator.com", href = "https://www.evalue-calculator.com", target = "_blank")),
+          tags$li(strong("EValue R package:"), a("CRAN - EValue package", href = "https://cran.r-project.org/package=EValue", target = "_blank"))
+        )
+      )
+    ),
+
+    # ============================================================
+    # SENSITIVITY ANALYSES - MULTIPLE-BIAS
+    # ============================================================
+    "sensitivity_multi_bias" = accordion(
+      id = paste0("help_", analysis_type),
+      open = FALSE,
+      accordion_panel(
+        title = "About Multiple-Bias Analysis",
+        icon = icon("layer-group"),
+        p("Multiple-bias sensitivity analysis allows you to assess the joint impact of unmeasured confounding, selection bias, and differential misclassification acting together. This approach recognizes that real studies are typically affected by multiple biases simultaneously, not just one in isolation."),
+        p(strong("When to use:"), "Multiple-bias analysis is performed in the ", strong("report phase"), " after completing your analysis. It provides a more comprehensive and realistic assessment than single-bias sensitivity analysis."),
+        p(strong("Example:"), "If your study found RR = 3.0 and the multi-bias E-value = 2.0, all bias parameters (confounding, selection, misclassification) would need to simultaneously reach a magnitude of at least 2.0 to fully explain away your finding.")
+      ),
+      accordion_panel(
+        title = "Types of Biases Included",
+        icon = icon("list-check"),
+        tags$dl(
+          tags$dt(strong("Unmeasured Confounding")),
+          tags$dd("Represents confounders not adjusted for in your study. Characterized by two parameters: the confounder-exposure association and confounder-outcome association."),
+
+          tags$dt(strong("Selection Bias")),
+          tags$dd("Occurs when the study sample differs systematically from the target population. Can be specified as 'general' (inference about total population) or 'selected' (inference about selected population only)."),
+
+          tags$dt(strong("Differential Misclassification")),
+          tags$dd("Measurement error that differs between exposure groups. Can affect either outcome or exposure measurements. Requires specification of sensitivity and specificity parameters.")
+        ),
+        p(style = "margin-top: 10px; background: #e7f3ff; padding: 10px; border-radius: 5px;",
+          icon("lightbulb"), " ",
+          strong("Tip:"), " Start by including biases most plausible in your study context. You can always add more bias types to see how results change.")
+      ),
+      accordion_panel(
+        title = "Two Analysis Modes",
+        icon = icon("calculator"),
+        tags$div(
+          style = "background-color: #f8f9fa; padding: 10px; border-left: 3px solid #007bff; margin: 10px 0;",
+          tags$p(strong("1. Multi-Bias E-value"), style = "margin-top: 0;"),
+          tags$p("Calculates the minimum value that ", em("all"), " bias parameters must take on simultaneously to explain away your observed effect. This is the most common use case."),
+          tags$p(strong("Example:"), "Multi-bias E-value = 1.8 means each bias parameter (RRAUc, RRUcY, RRSUsA1, etc.) must be at least 1.8 to jointly explain away the effect.")
+        ),
+        tags$div(
+          style = "background-color: #f8f9fa; padding: 10px; border-left: 3px solid #28a745; margin: 10px 0;",
+          tags$p(strong("2. Bias-Adjusted Bound"), style = "margin-top: 0;"),
+          tags$p("Calculates what your effect estimate would be ", em("after"), " adjusting for biases of specific magnitudes you specify. Useful for 'what-if' scenarios."),
+          tags$p(strong("Example:"), "If you suspect RRAUc = 2.0 and RRUcY = 1.5, the bound shows your adjusted RR accounting for these specific biases.")
+        )
+      ),
+      accordion_panel(
+        title = "Interpreting Multi-Bias E-values",
+        icon = icon("chart-line"),
+        p("Multi-bias E-value magnitude indicates robustness to combined biases:"),
+        tags$table(
+          class = "table table-sm",
+          style = "margin-top: 10px;",
+          tags$thead(
+            tags$tr(
+              tags$th("E-value Range"),
+              tags$th("Interpretation"),
+              tags$th("Robustness")
+            )
+          ),
+          tags$tbody(
+            tags$tr(
+              tags$td(strong("< 1.5")),
+              tags$td("Minor bias combinations could explain effect"),
+              tags$td(tags$span(style = "color: #dc3545;", "Weak"))
+            ),
+            tags$tr(
+              tags$td(strong("1.5 - 2.0")),
+              tags$td("Requires moderate bias combinations"),
+              tags$td(tags$span(style = "color: #fd7e14;", "Moderate"))
+            ),
+            tags$tr(
+              tags$td(strong("2.0 - 3.0")),
+              tags$td("Requires strong bias combinations"),
+              tags$td(tags$span(style = "color: #28a745;", "Strong"))
+            ),
+            tags$tr(
+              tags$td(strong("> 3.0")),
+              tags$td("Highly robust to multiple biases"),
+              tags$td(tags$span(style = "color: #0d6efd;", "Very Strong"))
+            )
+          )
+        ),
+        p(style = "margin-top: 10px;",
+          strong("Key insight:"), " Multi-bias E-values are often lower than single-bias E-values because multiple biases can work together to explain away an effect, even if each individual bias is modest.")
+      ),
+      accordion_panel(
+        title = "Advantages Over Single-Bias Analysis",
+        icon = icon("trophy"),
+        tags$ul(
+          tags$li(strong("More realistic:"), "Real studies face multiple biases, not just one in isolation"),
+          tags$li(strong("More conservative:"), "Accounts for biases working in concert to explain findings"),
+          tags$li(strong("More comprehensive:"), "Provides a fuller picture of study vulnerability"),
+          tags$li(strong("More informative:"), "Shows how different bias combinations could affect results"),
+          tags$li(strong("Better decision-making:"), "Helps prioritize which biases to address in study design or analysis")
+        )
+      ),
+      accordion_panel(
+        title = "Limitations & Important Notes",
+        icon = icon("exclamation-circle"),
+        tags$ul(
+          tags$li(strong("Assumes independence:"), "Multi-bias analysis assumes biases act independently. In reality, some biases may be correlated."),
+          tags$li(strong("Complexity:"), "More bias types mean more parameters to specify, which can be challenging without prior knowledge."),
+          tags$li(strong("Not a hypothesis test:"), "Like single-bias E-values, multi-bias E-values are descriptive sensitivity measures, not formal tests."),
+          tags$li(strong("Subject matter expertise required:"), "Interpretation requires domain knowledge to assess plausibility of bias combinations."),
+          tags$li(strong("Ordering matters:"), "The sequence of biases (e.g., selection before measurement) affects parameter interpretation.")
+        ),
+        p(style = "margin-top: 10px; background: #fff3cd; padding: 10px; border-radius: 5px;",
+          icon("lightbulb"), " ",
+          strong("Best Practice:"), " Start with the biases most likely in your study. Compare multi-bias E-values to single-bias E-values to understand how biases interact.")
+      ),
+      accordion_panel(
+        title = "References",
+        icon = icon("book"),
+        tags$ul(
+          tags$li(strong("Selection bias bounds:"), "Smith LH, VanderWeele TJ. Bounding Bias Due to Selection. Epidemiology. 2019;30(4):509-516."),
+          tags$li(strong("Multiple-bias methods:"), "Mathur MB, VanderWeele TJ. Sensitivity Analysis for Unmeasured Confounding in Meta-Analyses. Journal of the American Statistical Association. 2020;115(529):163-172."),
+          tags$li(strong("EValue package vignette:"), a("Multiple-bias sensitivity analysis", href = "https://cran.r-project.org/web/packages/EValue/vignettes/multiple-bias.html", target = "_blank")),
           tags$li(strong("EValue R package:"), a("CRAN - EValue package", href = "https://cran.r-project.org/package=EValue", target = "_blank"))
         )
       )

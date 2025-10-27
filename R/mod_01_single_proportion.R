@@ -1,6 +1,6 @@
 #' 01_single_proportion UI Function
 #'
-#' @description Single Proportion (Rule of 3) power and sample size analysis
+#' @description Single Proportion power and sample size analysis
 #'
 #' @param id Module namespace ID
 #'
@@ -15,7 +15,7 @@ mod_01_single_proportion_ui <- function(id) {
     conditionalPanel(
       condition = "input.sidebar_page == 'power_single' || input.sidebar_page == null",
       h2(class = "page-title", "Single Proportion: Power Analysis"),
-      helpText("Calculate power for detecting a single event rate (e.g., post-marketing surveillance)"),
+      helpText("Calculate power for testing a proportion against a reference value"),
       hr(),
       create_numeric_input_with_tooltip(
         ns("power_n"),
@@ -28,11 +28,21 @@ mod_01_single_proportion_ui <- function(id) {
       ),
       create_numeric_input_with_tooltip(
         ns("power_p"),
-        "Event Frequency (1 in x):",
-        value = 100,
-        min = 1,
-        step = 1,
-        tooltip = "Expected frequency of the event. E.g., 100 means 1 event per 100 participants"
+        "Expected Proportion (%):",
+        value = 1,
+        min = 0,
+        max = 100,
+        step = 0.1,
+        tooltip = "Expected proportion in your study (e.g., 1% = 1 event per 100 participants)"
+      ),
+      create_numeric_input_with_tooltip(
+        ns("power_p0"),
+        "Reference Proportion (%):",
+        value = 0,
+        min = 0,
+        max = 100,
+        step = 0.1,
+        tooltip = "Null hypothesis proportion (e.g., historical rate, standard of care). Use 0 for rare event detection."
       ),
       create_progressive_disclosure(
         ns("power_advanced"),
@@ -88,15 +98,25 @@ mod_01_single_proportion_ui <- function(id) {
         selected = 80,
         tooltip = "Probability of detecting the effect if it exists (typically 80% or 90%)"
       ),
+      create_numeric_input_with_tooltip(
+        ns("ss_p0"),
+        "Reference Proportion (%):",
+        value = 0,
+        min = 0,
+        max = 100,
+        step = 0.1,
+        tooltip = "Null hypothesis proportion (e.g., historical rate, standard of care). Use 0 for rare event detection."
+      ),
       conditionalPanel(
         condition = paste0("input['", ns("ss_single_calc_mode"), "'] == 'calc_n'"),
         create_numeric_input_with_tooltip(
           ns("ss_p"),
-          "Event Frequency (1 in x):",
-          value = 100,
-          min = 1,
-          step = 1,
-          tooltip = "Expected frequency of the event. E.g., 100 means 1 event per 100 participants"
+          "Expected Proportion (%):",
+          value = 1,
+          min = 0,
+          max = 100,
+          step = 0.1,
+          tooltip = "Expected proportion in your study (e.g., 1% = 1 event per 100 participants)"
         )
       ),
       conditionalPanel(
@@ -175,7 +195,8 @@ mod_01_single_proportion_server <- function(id, parent_session = NULL){
     # Example button - Power Analysis
     observeEvent(input$example_power_single, {
       updateNumericInput(session, "power_n", value = 1500)
-      updateNumericInput(session, "power_p", value = 500)
+      updateNumericInput(session, "power_p", value = 0.2)  # 0.2% expected
+      updateNumericInput(session, "power_p0", value = 0)   # 0% reference (rare event)
       updateSliderInput(session, "power_discon", value = 15)
       updateRadioButtons(session, "power_alpha", selected = "0.05")
     })
@@ -183,7 +204,8 @@ mod_01_single_proportion_server <- function(id, parent_session = NULL){
     # Reset button - Power Analysis
     observeEvent(input$reset_power_single, {
       updateNumericInput(session, "power_n", value = 230)
-      updateNumericInput(session, "power_p", value = 100)
+      updateNumericInput(session, "power_p", value = 1)    # 1% expected
+      updateNumericInput(session, "power_p0", value = 0)   # 0% reference
       updateSliderInput(session, "power_discon", value = 10)
       updateRadioButtons(session, "power_alpha", selected = "0.05")
     })
@@ -192,7 +214,8 @@ mod_01_single_proportion_server <- function(id, parent_session = NULL){
     observeEvent(input$example_ss_single, {
       updateRadioButtons(session, "ss_single_calc_mode", selected = "calc_n")
       updateRadioButtons(session, "ss_power", selected = "80")
-      updateNumericInput(session, "ss_p", value = 500)
+      updateNumericInput(session, "ss_p", value = 0.2)   # 0.2% expected
+      updateNumericInput(session, "ss_p0", value = 0)    # 0% reference (rare event)
       updateSliderInput(session, "ss_discon", value = 15)
       updateRadioButtons(session, "ss_alpha", selected = "0.05")
     })
@@ -201,7 +224,8 @@ mod_01_single_proportion_server <- function(id, parent_session = NULL){
     observeEvent(input$reset_ss_single, {
       updateRadioButtons(session, "ss_single_calc_mode", selected = "calc_n")
       updateRadioButtons(session, "ss_power", selected = "80")
-      updateNumericInput(session, "ss_p", value = 100)
+      updateNumericInput(session, "ss_p", value = 1)      # 1% expected
+      updateNumericInput(session, "ss_p0", value = 0)     # 0% reference
       updateNumericInput(session, "ss_n_fixed", value = 500)
       updateSliderInput(session, "ss_discon", value = 10)
       updateRadioButtons(session, "ss_alpha", selected = "0.05")
@@ -213,12 +237,14 @@ mod_01_single_proportion_server <- function(id, parent_session = NULL){
       inputs = reactive({
         list(
           power_n = if (is.null(input$power_n) || is.na(as.numeric(input$power_n))) 230 else as.numeric(input$power_n),
-          power_p = if (is.null(input$power_p) || is.na(as.numeric(input$power_p))) 100 else as.numeric(input$power_p),
+          power_p = if (is.null(input$power_p) || is.na(as.numeric(input$power_p))) 1 else as.numeric(input$power_p),
+          power_p0 = if (is.null(input$power_p0) || is.na(as.numeric(input$power_p0))) 0 else as.numeric(input$power_p0),
           power_alpha = if (is.null(input$power_alpha) || is.na(as.numeric(input$power_alpha))) 0.05 else as.numeric(input$power_alpha),
           power_discon = if (is.null(input$power_discon) || is.na(as.numeric(input$power_discon))) 10 else as.numeric(input$power_discon),
           ss_single_calc_mode = if (is.null(input$ss_single_calc_mode)) "calc_n" else input$ss_single_calc_mode,
           ss_power = if (is.null(input$ss_power) || is.na(as.numeric(input$ss_power))) 80 else as.numeric(input$ss_power),
-          ss_p = if (is.null(input$ss_p) || is.na(as.numeric(input$ss_p))) 100 else as.numeric(input$ss_p),
+          ss_p = if (is.null(input$ss_p) || is.na(as.numeric(input$ss_p))) 1 else as.numeric(input$ss_p),
+          ss_p0 = if (is.null(input$ss_p0) || is.na(as.numeric(input$ss_p0))) 0 else as.numeric(input$ss_p0),
           ss_n_fixed = if (is.null(input$ss_n_fixed) || is.na(as.numeric(input$ss_n_fixed))) 500 else as.numeric(input$ss_n_fixed),
           ss_discon = if (is.null(input$ss_discon) || is.na(as.numeric(input$ss_discon))) 10 else as.numeric(input$ss_discon),
           ss_alpha = if (is.null(input$ss_alpha) || is.na(as.numeric(input$ss_alpha))) 0.05 else as.numeric(input$ss_alpha)

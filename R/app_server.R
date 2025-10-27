@@ -84,6 +84,23 @@ app_server <- function(input, output, session) {
     }
   })
 
+  # Clear results when switching pages (prevent content bleeding)
+  # Each page should only show its own results, not previous page results
+  observeEvent(input$sidebar_page, {
+    # Clear all result outputs to prevent "apples and oranges" mixing
+    output$result_text <- renderUI({ NULL })
+    output$effect_measures <- renderUI({ NULL })
+    output$figure_title <- renderUI({ NULL })
+    output$table_title <- renderUI({ NULL })
+    output$table_footnotes <- renderUI({ NULL })
+    output$download_buttons <- renderUI({ NULL })
+    output$scenario_comparison <- renderUI({ NULL })
+    output$live_preview <- renderUI({ NULL })
+
+    # Note: power_plot and result_table are cleared by their renderPlotly/renderDataTable
+    # returning NULL when req() fails (no data available)
+  }, ignoreInit = TRUE)
+
   # ============================================================
   # Helper Functions
   # ============================================================
@@ -196,6 +213,27 @@ app_server <- function(input, output, session) {
         # Fallback to equal-n approximation if root-finding fails
         warning("Root-finding failed; using equal-n approximation")
         pwr.2p.test(h = h, sig.level = sig.level, power = power, alternative = alternative)$n
+      }
+    )
+  }
+
+  # Helper function to solve for n1 in t-test with allocation ratio
+  solve_n1_t_test <- function(d, ratio, sig.level, power, alternative) {
+    f <- function(n1) {
+      n2 <- n1 * ratio
+      pwr.t2n.test(
+        d = d, n1 = n1, n2 = n2, sig.level = sig.level,
+        alternative = alternative, power = NULL
+      )$power - power
+    }
+    tryCatch(
+      {
+        uniroot(f, c(2, 1e6), extendInt = "yes")$root
+      },
+      error = function(e) {
+        # Fallback to equal-n approximation if root-finding fails
+        warning("Root-finding failed for t-test; using equal-n approximation")
+        pwr.t.test(d = d, sig.level = sig.level, power = power, alternative = alternative)$n
       }
     )
   }
@@ -589,7 +627,7 @@ app_server <- function(input, output, session) {
         # Calculate power with adjustments
         power <- pwr.p.test(
           sig.level = alpha_to_use, power = NULL,
-          h = ES.h(1 / tab1_inputs$power_p, 0), alt = "greater", n = n_to_use
+          h = ES.h(tab1_inputs$power_p / 100, tab1_inputs$power_p0 / 100), alt = "greater", n = n_to_use
         )$power
 
         # Build adjustment notes
@@ -653,7 +691,7 @@ app_server <- function(input, output, session) {
 
           sample_size_base <- pwr.p.test(
             sig.level = alpha_to_use, power = power,
-            h = ES.h(1 / tab1_inputs$ss_p, 0), alt = "greater", n = NULL
+            h = ES.h(tab1_inputs$ss_p / 100, tab1_inputs$ss_p0 / 100), alt = "greater", n = NULL
           )$n
 
           # Apply discontinuation adjustment
@@ -743,12 +781,13 @@ app_server <- function(input, output, session) {
           }
 
           # Solve for minimal detectable p
+          p0 <- tab1_inputs$ss_p0 / 100
           minimal_p <- uniroot(function(p) {
             pwr.p.test(
               sig.level = tab1_inputs$ss_alpha, power = power,
-              h = ES.h(p, 0), alt = "greater", n = n_effective
+              h = ES.h(p, p0), alt = "greater", n = n_effective
             )$power - power
-          }, c(0.001, 0.999))$root
+          }, c(p0 + 0.001, 0.999))$root
 
           minimal_rate <- 1 / minimal_p
 
@@ -765,9 +804,14 @@ app_server <- function(input, output, session) {
             },
             " (effective N = ", n_effective, "), ",
             "the study has ", format(power * 100, digits = 1), "% power (α = ",
-            tab1_inputs$ss_alpha, ") to detect an event with incidence rate of 1 in ",
-            format(ceiling(minimal_rate), digits = 1, nsmall = 0), " (or ",
-            format(minimal_p * 100, digits = 2, nsmall = 2), "%) or higher."
+            tab1_inputs$ss_alpha, ") to detect a proportion of ",
+            format(minimal_p * 100, digits = 2, nsmall = 2), "% or higher",
+            if (p0 > 0) {
+              paste0(" (compared to reference rate of ", format(p0 * 100, digits = 2), "%)")
+            } else {
+              ""
+            },
+            "."
           ))
 
           HTML(paste0(text0, text1, text2, text3))
@@ -1323,7 +1367,7 @@ app_server <- function(input, output, session) {
         p0 <- tab4_inputs$match_p0 / 100
         m <- tab4_inputs$match_ratio
         power <- tab4_inputs$match_power / 100
-        sided_val <- ifelse(tab4_inputs$match_sided == "two.sided", 2, 1)
+        sided_val <- ifelse(identical(tab4_inputs$match_sided, "two.sided"), 2, 1)
 
         if (calc_mode == "calc_n") {
           # Calculate Sample Size
@@ -1740,11 +1784,22 @@ app_server <- function(input, output, session) {
             )
           }
 
+          # Determine effect size magnitude
+          magnitude <- if (abs(d) < 0.2) {
+            "trivial"
+          } else if (abs(d) < 0.5) {
+            "small"
+          } else if (abs(d) < 0.8) {
+            "medium"
+          } else {
+            "large"
+          }
+
           text0 <- hr()
           text1 <- h1("Results of this analysis")
           text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
           text3 <- p(paste0(
-            "To detect an effect size of ", format_cohens_d(d),
+            "To detect an effect size of Cohen's d = ", format_numeric(d, 2),
             " in a two-group comparison of continuous outcomes with ", format_numeric(power * 100, 0),
             "% power at α = ", format_numeric(alpha_to_use, 4), " (", tab5_inputs$cont_ss_sided, " test), ",
             "the required sample sizes are: Group 1: n1 = ", format_numeric(n1_final, 0),
@@ -1752,7 +1807,11 @@ app_server <- function(input, output, session) {
             format_numeric(n_total_final, 0), "). ",
             "Cohen's d is the standardized mean difference (difference in means / pooled SD)."
           ))
-          HTML(paste0(text0, text1, text2, text3, adjustment_notes, missing_data_text, clustering_text))
+          text4 <- h4("Effect Size Interpretation")
+          text5 <- p(HTML(paste0(
+            "Cohen's d = ", format_numeric(d, 2), " represents a <strong>", magnitude, "</strong> effect size."
+          )))
+          HTML(paste0(text0, text1, text2, text3, text4, text5, adjustment_notes, missing_data_text, clustering_text))
 
         } else {
           # Calculate Effect Size (Minimal Detectable Effect)
@@ -1907,7 +1966,7 @@ app_server <- function(input, output, session) {
           if (ratio == 1) {
             n <- pwr.2p.test(
               h = abs(h), sig.level = alpha_to_use,
-              power = power, alternative = "less"
+              power = power, alternative = "two.sided"
             )$n
             n1_base <- n
             n2_base <- n
@@ -1917,7 +1976,7 @@ app_server <- function(input, output, session) {
               pwr.2p2n.test(
                 h = abs(h), n1 = n1, n2 = n2,
                 sig.level = alpha_to_use,
-                alternative = "less"
+                alternative = "two.sided"
               )$power - power
             }
             n1_base <- tryCatch(
@@ -2084,7 +2143,7 @@ app_server <- function(input, output, session) {
             power_achieved <- pwr.2p2n.test(
               h = abs(h), n1 = n1_effective, n2 = n2_effective,
               sig.level = alpha_to_use,
-              alternative = "less"
+              alternative = "two.sided"
             )$power
 
             if (abs(power_achieved - power) < 0.01) {
@@ -2905,7 +2964,7 @@ app_server <- function(input, output, session) {
           pow <- vapply(n_seq, function(n) {
             pwr.p.test(
               sig.level = tab1_inputs$power_alpha, power = NULL,
-              h = ES.h(1 / tab1_inputs$power_p, 0), alt = "greater", n = n
+              h = ES.h(tab1_inputs$power_p / 100, tab1_inputs$power_p0 / 100), alt = "greater", n = n
             )$power
           }, FUN.VALUE = numeric(1))
 
@@ -2926,14 +2985,14 @@ app_server <- function(input, output, session) {
           target_power <- tab1_inputs$ss_power / 100
           n_required <- pwr.p.test(
             sig.level = tab1_inputs$ss_alpha, power = target_power,
-            h = ES.h(1 / tab1_inputs$ss_p, 0), alt = "greater", n = NULL
+            h = ES.h(tab1_inputs$ss_p / 100, tab1_inputs$ss_p0 / 100), alt = "greater", n = NULL
           )$n
           n_seq <- generate_n_sequence_for_ss(n_required = n_required)
 
           pow <- vapply(n_seq, function(n) {
             pwr.p.test(
               sig.level = tab1_inputs$ss_alpha, power = NULL,
-              h = ES.h(1 / tab1_inputs$ss_p, 0), alt = "greater", n = n
+              h = ES.h(tab1_inputs$ss_p / 100, tab1_inputs$ss_p0 / 100), alt = "greater", n = n
             )$power
           }, FUN.VALUE = numeric(1))
 
@@ -3127,12 +3186,18 @@ app_server <- function(input, output, session) {
           ratio <- tab5_inputs$cont_ss_ratio
           target_power <- tab5_inputs$cont_ss_power / 100
 
-          n1_test <- pwr.t2n.test(d = d, n1 = NULL, n2 = NULL, sig.level = alpha, power = target_power, alternative = sided)$n1
+          # Calculate required n1 for equal allocation, then adjust for ratio
+          if (ratio == 1) {
+            n1_test <- pwr.t.test(d = d, sig.level = alpha, power = target_power, alternative = sided)$n
+          } else {
+            # For unequal allocation, iteratively solve for n1
+            n1_test <- solve_n1_t_test(d, ratio, alpha, target_power, sided)
+          }
           current_n1 <- ceiling(n1_test)
 
           n1_range <- seq(from = max(5, floor(current_n1 * 0.25)), to = floor(current_n1 * 3), length.out = 100)
           power_vals <- vapply(n1_range, function(n1_val) {
-            pwr.t2n.test(d = d, n1 = n1_val, n2 = n1_val * ratio, sig.level = alpha, alternative = sided)$power
+            pwr.t2n.test(d = d, n1 = n1_val, n2 = n1_val * ratio, sig.level = alpha, alternative = sided, power = NULL)$power
           }, FUN.VALUE = numeric(1))
 
           plot_ly() %>%
@@ -3602,10 +3667,10 @@ app_server <- function(input, output, session) {
       } else if (identical(input$sidebar_page, "ss_single")) {
         tab1_inputs <- tab1_vals$inputs()
         sample_size <- pwr.p.test(
-          sig.level = tab1_inputs$ss_alpha, 
+          sig.level = tab1_inputs$ss_alpha,
           power = tab1_inputs$ss_power / 100,
-          h = ES.h(1 / tab1_inputs$ss_p, 0), 
-          alt = "greater", 
+          h = ES.h(tab1_inputs$ss_p / 100, tab1_inputs$ss_p0 / 100),
+          alt = "greater",
           n = NULL
         )$n
       } else {
@@ -3648,10 +3713,10 @@ app_server <- function(input, output, session) {
         } else if (identical(input$sidebar_page, "ss_single")) {
           tab1_inputs <- tab1_vals$inputs()
           sample_size <- pwr.p.test(
-            sig.level = tab1_inputs$ss_alpha, 
+            sig.level = tab1_inputs$ss_alpha,
             power = tab1_inputs$ss_power / 100,
-            h = ES.h(1 / tab1_inputs$ss_p, 0), 
-            alt = "greater", 
+            h = ES.h(tab1_inputs$ss_p / 100, tab1_inputs$ss_p0 / 100),
+            alt = "greater",
             n = NULL
           )$n
         } else {
@@ -3736,11 +3801,11 @@ app_server <- function(input, output, session) {
         results <- data.frame(
           Analysis_Type = "Single Proportion - Power Calculation",
           Sample_Size = tab1_inputs$power_n,
-          Event_Frequency_1_in = tab1_inputs$power_p,
-          Event_Rate_Percent = 100 / tab1_inputs$power_p,
+          Expected_Proportion_Percent = tab1_inputs$power_p,
+          Reference_Proportion_Percent = tab1_inputs$power_p0,
           Power_Percent = pwr.p.test(
             sig.level = tab1_inputs$power_alpha, power = NULL,
-            h = ES.h(1 / tab1_inputs$power_p, 0), alt = "greater",
+            h = ES.h(tab1_inputs$power_p / 100, tab1_inputs$power_p0 / 100), alt = "greater",
             n = tab1_inputs$power_n
           )$power * 100,
           Significance_Level = tab1_inputs$power_alpha,
@@ -3752,13 +3817,13 @@ app_server <- function(input, output, session) {
         tab1_inputs <- tab1_vals$inputs()
         sample_size <- pwr.p.test(
           sig.level = tab1_inputs$ss_alpha, power = tab1_inputs$ss_power / 100,
-          h = ES.h(1 / tab1_inputs$ss_p, 0), alt = "greater", n = NULL
+          h = ES.h(tab1_inputs$ss_p / 100, tab1_inputs$ss_p0 / 100), alt = "greater", n = NULL
         )$n
         results <- data.frame(
           Analysis_Type = "Single Proportion - Sample Size Calculation",
           Desired_Power_Percent = tab1_inputs$ss_power,
-          Event_Frequency_1_in = tab1_inputs$ss_p,
-          Event_Rate_Percent = 100 / tab1_inputs$ss_p,
+          Expected_Proportion_Percent = tab1_inputs$ss_p,
+          Reference_Proportion_Percent = tab1_inputs$ss_p0,
           Required_Sample_Size = ceiling(sample_size),
           Significance_Level = tab1_inputs$ss_alpha,
           Discontinuation_Rate_Percent = tab1_inputs$ss_discon,
@@ -3949,7 +4014,7 @@ app_server <- function(input, output, session) {
         if (ratio == 1) {
           n <- pwr.2p.test(
             h = abs(h), sig.level = input$noninf_alpha,
-            power = power, alternative = "less"
+            power = power, alternative = "two.sided"
           )$n
           n1 <- n
           n2 <- n
@@ -3959,7 +4024,7 @@ app_server <- function(input, output, session) {
             pwr.2p2n.test(
               h = abs(h), n1 = n1, n2 = n2,
               sig.level = input$noninf_alpha,
-              alternative = "less"
+              alternative = "two.sided"
             )$power - power
           }
           n1 <- tryCatch(
@@ -4134,25 +4199,31 @@ app_server <- function(input, output, session) {
         # Safe comparison using identical() to avoid comparison errors
         is_power_single <- identical(input$sidebar_page, "power_single")
         
-        incidence_rate <- if (is_power_single) {
+        expected_proportion <- if (is_power_single) {
           tab1_inputs$power_p
         } else {
           tab1_inputs$ss_p
         }
-        
+
+        reference_proportion <- if (is_power_single) {
+          tab1_inputs$power_p0
+        } else {
+          tab1_inputs$ss_p0
+        }
+
         sample_size <- if (is_power_single) {
           tab1_inputs$power_n
         } else {
           pwr.p.test(
             sig.level = tab1_inputs$ss_alpha, power = tab1_inputs$ss_power / 100,
-            h = ES.h(1 / tab1_inputs$ss_p, 0), alt = "greater", n = NULL
+            h = ES.h(tab1_inputs$ss_p / 100, tab1_inputs$ss_p0 / 100), alt = "greater", n = NULL
           )$n
         }
 
         power <- if (is_power_single) {
           pwr.p.test(
             sig.level = tab1_inputs$power_alpha, power = NULL,
-            h = ES.h(1 / tab1_inputs$power_p, 0), alt = "greater", n = tab1_inputs$power_n
+            h = ES.h(tab1_inputs$power_p / 100, tab1_inputs$power_p0 / 100), alt = "greater", n = tab1_inputs$power_n
           )$power
         } else {
           tab1_inputs$ss_power / 100
@@ -4183,7 +4254,8 @@ app_server <- function(input, output, session) {
         # Set up parameters to pass to Rmd document
         params <- list(
           tabset = get_page_display_name(input$sidebar_page),
-          incidence_rate = incidence_rate,
+          expected_proportion = expected_proportion,
+          reference_proportion = reference_proportion,
           sample_size = sample_size,
           power = power,
           discon = discon,
@@ -4223,10 +4295,11 @@ app_server <- function(input, output, session) {
           Scenario = v$scenario_counter,
           Type = "Single Prop - Power",
           Sample_Size = tab1_inputs$power_n,
-          Event_Freq = paste0("1 in ", tab1_inputs$power_p),
+          Expected_Prop_Pct = paste0(tab1_inputs$power_p, "%"),
+          Ref_Prop_Pct = paste0(tab1_inputs$power_p0, "%"),
           Power_Pct = round(pwr.p.test(
             sig.level = tab1_inputs$power_alpha, power = NULL,
-            h = ES.h(1 / tab1_inputs$power_p, 0), alt = "greater",
+            h = ES.h(tab1_inputs$power_p / 100, tab1_inputs$power_p0 / 100), alt = "greater",
             n = tab1_inputs$power_n
           )$power * 100, 1),
           Alpha = tab1_inputs$power_alpha,
@@ -4238,13 +4311,14 @@ app_server <- function(input, output, session) {
         tab1_inputs <- tab1_vals$inputs()
         sample_size <- pwr.p.test(
           sig.level = tab1_inputs$ss_alpha, power = tab1_inputs$ss_power / 100,
-          h = ES.h(1 / tab1_inputs$ss_p, 0), alt = "greater", n = NULL
+          h = ES.h(tab1_inputs$ss_p / 100, tab1_inputs$ss_p0 / 100), alt = "greater", n = NULL
         )$n
         new_scenario <- data.frame(
           Scenario = v$scenario_counter,
           Type = "Single Prop - SS",
           Sample_Size = ceiling(sample_size),
-          Event_Freq = paste0("1 in ", tab1_inputs$ss_p),
+          Expected_Prop_Pct = paste0(tab1_inputs$ss_p, "%"),
+          Ref_Prop_Pct = paste0(tab1_inputs$ss_p0, "%"),
           Power_Pct = tab1_inputs$ss_power,
           Alpha = tab1_inputs$ss_alpha,
           Disc_Rate = paste0(tab1_inputs$ss_discon, "%"),

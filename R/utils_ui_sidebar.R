@@ -296,6 +296,20 @@ create_sidebar_nav <- function() {
         tags$div(
           class = "nav-group-children nav-group-children-parent",
 
+          # Child: Multiple-Bias Analysis (single item)
+          tags$div(
+            class = "nav-group nav-group-child",
+            tags$a(
+              href = "#",
+              class = "nav-item-single",
+              `data-page` = "sensitivity_multi_bias",
+              role = "button",
+              tabindex = "0",
+              tags$span(class = "nav-group-icon", icon("layer-group")),
+              tags$span(class = "nav-group-label", "Multiple-Bias Analysis")
+            )
+          ),
+
           # Child: E-value Calculator (single item)
           tags$div(
             class = "nav-group nav-group-child",

@@ -158,7 +158,7 @@ The tool supports 9 different analysis types. Here's how to choose:
 **Step 2: Binary Outcome - How many groups?**
 
 **One group** (comparing to a known rate):
-- → **Single Proportion (Rule of 3)**
+- → **Single Proportion Test**
 - Example: "What is the infection rate in our hospital compared to the national average?"
 
 **Two groups** (comparing two treatments/exposures):
