@@ -17,7 +17,6 @@
 #' @importFrom utils write.csv
 #' @importFrom magrittr %>%
 #' @importFrom rmarkdown render
-#' @importFrom shinyBS bsTooltip
 app_server <- function(input, output, session) {
 
   # Your application server logic

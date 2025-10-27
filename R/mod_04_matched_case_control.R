@@ -17,19 +17,18 @@ mod_04_matched_case_control_ui <- function(id) {
       h2(class = "page-title", "Matched Case-Control Study"),
       helpText("Calculate sample size OR minimal detectable odds ratio"),
       hr(),
-      radioButtons_fixed(
-        ns("match_calc_mode"),
-        "Calculation Mode:",
-        choices = c(
-          "Calculate Sample Size (given odds ratio)" = "calc_n",
-          "Calculate Odds Ratio (given sample size)" = "calc_effect"
+      bslib::tooltip(
+        radioButtons_fixed(
+          ns("match_calc_mode"),
+          "Calculation Mode:",
+          choices = c(
+            "Calculate Sample Size (given odds ratio)" = "calc_n",
+            "Calculate Odds Ratio (given sample size)" = "calc_effect"
+          ),
+          selected = "calc_n"
         ),
-        selected = "calc_n"
-      ),
-      bsTooltip(
-        ns("match_calc_mode"),
         "Choose whether to calculate required sample size or minimal detectable odds ratio",
-        "right"
+        placement = "right"
       ),
       hr(),
       create_segmented_power(
@@ -96,13 +95,16 @@ mod_04_matched_case_control_ui <- function(id) {
         selected = 0.05,
         tooltip = "Type I error rate (typically 0.05)"
       ),
-      radioButtons_fixed(
-        ns("match_sided"),
-        "Test Type:",
-        choices = c("Two-sided" = "two.sided", "One-sided" = "one.sided"),
-        selected = "two.sided"
+      bslib::tooltip(
+        radioButtons_fixed(
+          ns("match_sided"),
+          "Test Type:",
+          choices = c("Two-sided" = "two.sided", "One-sided" = "one.sided"),
+          selected = "two.sided"
+        ),
+        "Two-sided: test if groups differ. One-sided: test directional hypothesis",
+        placement = "right"
       ),
-      bsTooltip(ns("match_sided"), "Two-sided: test if groups differ. One-sided: test directional hypothesis", "right"),
       hr(),
       missing_data_ui(ns("missing_data")),
       hr(),

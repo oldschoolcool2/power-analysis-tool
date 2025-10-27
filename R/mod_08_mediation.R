@@ -19,20 +19,19 @@ mod_08_mediation_ui <- function(id) {
       hr(),
 
       # Calculation Mode Selector
-      radioButtons_fixed(
-        ns("calc_mode"),
-        "Calculation Mode:",
-        choices = c(
-          "Calculate Power (given sample size)" = "calc_power",
-          "Calculate Sample Size (given power)" = "calc_n",
-          "Calculate Minimal Detectable Effect (given N and power)" = "calc_mde"
+      bslib::tooltip(
+        radioButtons_fixed(
+          ns("calc_mode"),
+          "Calculation Mode:",
+          choices = c(
+            "Calculate Power (given sample size)" = "calc_power",
+            "Calculate Sample Size (given power)" = "calc_n",
+            "Calculate Minimal Detectable Effect (given N and power)" = "calc_mde"
+          ),
+          selected = "calc_power"
         ),
-        selected = "calc_power"
-      ),
-      bsTooltip(
-        ns("calc_mode"),
         "Choose what to calculate: power, required sample size, or minimal detectable indirect effect",
-        "right"
+        placement = "right"
       ),
 
       hr(),
@@ -143,16 +142,15 @@ mod_08_mediation_ui <- function(id) {
         tooltip = "Type I error rate (typically 0.05 for two-sided tests)"
       ),
 
-      radioButtons_fixed(
-        ns("med_sided"),
-        "Test Type:",
-        choices = c("Two-sided" = "two.sided", "One-sided" = "one.sided"),
-        selected = "two.sided"
-      ),
-      bsTooltip(
-        ns("med_sided"),
+      bslib::tooltip(
+        radioButtons_fixed(
+          ns("med_sided"),
+          "Test Type:",
+          choices = c("Two-sided" = "two.sided", "One-sided" = "one.sided"),
+          selected = "two.sided"
+        ),
         "Two-sided: test if indirect effect ≠ 0. One-sided: test if indirect effect > 0",
-        "right"
+        placement = "right"
       ),
 
       hr(),

@@ -34,10 +34,23 @@ body {
   font-family: var(--font-family-base);
   font-size: var(--font-size-base);
   line-height: var(--line-height-normal);
-  color: var(--text-primary);
+  color: var(--text-primary) !important;
   background-color: var(--bg-app);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Ensure all text elements respect the color variables */
+p, span, div, li, td, th, label {
+  color: inherit;
+}
+
+/* Force Bootstrap text utilities to respect our variables */
+.text-muted,
+.form-text,
+.help-block,
+.text-secondary {
+  color: var(--text-secondary) !important;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -1006,3 +1019,123 @@ tr:hover {
 .shadow-sm { box-shadow: var(--shadow-sm) !important; }
 .shadow-md { box-shadow: var(--shadow-md) !important; }
 .shadow-lg { box-shadow: var(--shadow-lg) !important; }
+
+/* ========================================================================
+   DARK MODE COMPREHENSIVE FIX
+   ======================================================================== */
+
+/* Ensure all text content respects dark mode colors */
+html[data-theme="dark"] body,
+html[data-theme="dark"] p,
+html[data-theme="dark"] span:not(.badge):not(.btn),
+html[data-theme="dark"] div:not(.btn):not(.badge),
+html[data-theme="dark"] li,
+html[data-theme="dark"] .help-block,
+html[data-theme="dark"] .shiny-text-output,
+[data-theme="dark"] body,
+[data-theme="dark"] p,
+[data-theme="dark"] span:not(.badge):not(.btn),
+[data-theme="dark"] div:not(.btn):not(.badge),
+[data-theme="dark"] li,
+[data-theme="dark"] .help-block,
+[data-theme="dark"] .shiny-text-output {
+  color: var(--text-primary) !important;
+}
+
+/* Dark mode headings */
+html[data-theme="dark"] h1,
+html[data-theme="dark"] h2,
+html[data-theme="dark"] h3,
+html[data-theme="dark"] h4,
+html[data-theme="dark"] h5,
+html[data-theme="dark"] h6,
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4,
+[data-theme="dark"] h5,
+[data-theme="dark"] h6 {
+  color: var(--text-primary) !important;
+}
+
+/* Dark mode secondary text */
+html[data-theme="dark"] .text-muted,
+html[data-theme="dark"] .text-secondary,
+html[data-theme="dark"] .form-text,
+html[data-theme="dark"] label,
+html[data-theme="dark"] .control-label,
+[data-theme="dark"] .text-muted,
+[data-theme="dark"] .text-secondary,
+[data-theme="dark"] .form-text,
+[data-theme="dark"] label,
+[data-theme="dark"] .control-label {
+  color: var(--text-secondary) !important;
+}
+
+/* Dark mode links */
+html[data-theme="dark"] a,
+[data-theme="dark"] a {
+  color: var(--text-link) !important;
+}
+
+html[data-theme="dark"] a:hover,
+[data-theme="dark"] a:hover {
+  color: var(--text-link-hover) !important;
+}
+
+/* Ensure content cards have proper background and text */
+html[data-theme="dark"] .content-card,
+[data-theme="dark"] .content-card {
+  background-color: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Dark mode form inputs */
+html[data-theme="dark"] .form-control,
+html[data-theme="dark"] input[type="number"],
+html[data-theme="dark"] input[type="text"],
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select,
+[data-theme="dark"] .form-control,
+[data-theme="dark"] input[type="number"],
+[data-theme="dark"] input[type="text"],
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+  background-color: var(--bg-input) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color-default) !important;
+}
+
+/* Dark mode tables */
+html[data-theme="dark"] .dataTable thead th,
+html[data-theme="dark"] th,
+[data-theme="dark"] .dataTable thead th,
+[data-theme="dark"] th {
+  background-color: var(--color-neutral-100) !important;
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="dark"] .dataTable tbody td,
+html[data-theme="dark"] td,
+[data-theme="dark"] .dataTable tbody td,
+[data-theme="dark"] td {
+  color: var(--text-primary) !important;
+}
+
+/* Dark mode accordions */
+html[data-theme="dark"] .accordion-body,
+html[data-theme="dark"] .panel-body,
+[data-theme="dark"] .accordion-body,
+[data-theme="dark"] .panel-body {
+  color: var(--text-primary) !important;
+}
+
+/* Ensure Bootstrap's emphasis text respects dark mode */
+html[data-theme="dark"] .text-emphasis,
+html[data-theme="dark"] strong,
+html[data-theme="dark"] b,
+[data-theme="dark"] .text-emphasis,
+[data-theme="dark"] strong,
+[data-theme="dark"] b {
+  color: var(--text-primary) !important;
+}

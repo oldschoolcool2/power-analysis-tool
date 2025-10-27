@@ -77,19 +77,18 @@ mod_01_single_proportion_ui <- function(id) {
       h2(class = "page-title", "Single Proportion: Sample Size Calculation"),
       helpText("Calculate required sample size OR minimal detectable effect size"),
       hr(),
-      radioButtons_fixed(
-        ns("ss_single_calc_mode"),
-        "Calculation Mode:",
-        choices = c(
-          "Calculate Sample Size (given effect size)" = "calc_n",
-          "Calculate Effect Size (given sample size)" = "calc_effect"
+      bslib::tooltip(
+        radioButtons_fixed(
+          ns("ss_single_calc_mode"),
+          "Calculation Mode:",
+          choices = c(
+            "Calculate Sample Size (given effect size)" = "calc_n",
+            "Calculate Effect Size (given sample size)" = "calc_effect"
+          ),
+          selected = "calc_n"
         ),
-        selected = "calc_n"
-      ),
-      bsTooltip(
-        ns("ss_single_calc_mode"),
         "Choose whether to calculate required sample size or minimal detectable effect size",
-        "right"
+        placement = "right"
       ),
       hr(),
       create_segmented_power(

@@ -78,19 +78,18 @@ mod_03_survival_ui <- function(id) {
       h2(class = "page-title", "Survival Analysis (Cox): Sample Size Calculation"),
       helpText("Calculate required sample size OR minimal detectable hazard ratio"),
       hr(),
-      radioButtons_fixed(
-        ns("surv_ss_calc_mode"),
-        "Calculation Mode:",
-        choices = c(
-          "Calculate Sample Size (given hazard ratio)" = "calc_n",
-          "Calculate Hazard Ratio (given sample size)" = "calc_effect"
+      bslib::tooltip(
+        radioButtons_fixed(
+          ns("surv_ss_calc_mode"),
+          "Calculation Mode:",
+          choices = c(
+            "Calculate Sample Size (given hazard ratio)" = "calc_n",
+            "Calculate Hazard Ratio (given sample size)" = "calc_effect"
+          ),
+          selected = "calc_n"
         ),
-        selected = "calc_n"
-      ),
-      bsTooltip(
-        ns("surv_ss_calc_mode"),
         "Choose whether to calculate required sample size or minimal detectable hazard ratio",
-        "right"
+        placement = "right"
       ),
       hr(),
       create_segmented_power(

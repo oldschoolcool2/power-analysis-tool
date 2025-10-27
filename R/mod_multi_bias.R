@@ -41,79 +41,74 @@ multi_bias_ui <- function(id) {
       "You can select one or more bias types."
     ),
 
-    checkboxInput(
-      ns("include_confounding"),
-      "Unmeasured Confounding",
-      value = TRUE
-    ),
-    bsTooltip(
-      ns("include_confounding"),
+    bslib::tooltip(
+      checkboxInput(
+        ns("include_confounding"),
+        "Unmeasured Confounding",
+        value = TRUE
+      ),
       "Include unmeasured confounding in the analysis. This represents confounders not adjusted for in your study.",
-      "right"
+      placement = "right"
     ),
 
-    checkboxInput(
-      ns("include_selection"),
-      "Selection Bias",
-      value = FALSE
-    ),
-    bsTooltip(
-      ns("include_selection"),
+    bslib::tooltip(
+      checkboxInput(
+        ns("include_selection"),
+        "Selection Bias",
+        value = FALSE
+      ),
       "Include selection bias, which occurs when the study sample differs systematically from the target population.",
-      "right"
+      placement = "right"
     ),
 
     conditionalPanel(
       condition = sprintf("input['%s']", ns("include_selection")),
       div(
         style = "margin-left: 25px;",
-        radioButtons(
-          ns("selection_type"),
-          "Selection Bias Type:",
-          choices = c(
-            "General population" = "general",
-            "Selected population only" = "selected"
+        bslib::tooltip(
+          radioButtons(
+            ns("selection_type"),
+            "Selection Bias Type:",
+            choices = c(
+              "General population" = "general",
+              "Selected population only" = "selected"
+            ),
+            selected = "general",
+            inline = TRUE
           ),
-          selected = "general",
-          inline = TRUE
-        ),
-        bsTooltip(
-          ns("selection_type"),
           "General: Making inference about the total population. Selected: Making inference only about the selected population.",
-          "right"
+          placement = "right"
         )
       )
     ),
 
-    checkboxInput(
-      ns("include_misclass"),
-      "Differential Misclassification",
-      value = FALSE
-    ),
-    bsTooltip(
-      ns("include_misclass"),
+    bslib::tooltip(
+      checkboxInput(
+        ns("include_misclass"),
+        "Differential Misclassification",
+        value = FALSE
+      ),
       "Include differential misclassification bias, which occurs when measurement error differs between exposure groups.",
-      "right"
+      placement = "right"
     ),
 
     conditionalPanel(
       condition = sprintf("input['%s']", ns("include_misclass")),
       div(
         style = "margin-left: 25px;",
-        radioButtons(
-          ns("misclass_type"),
-          "Misclassification Type:",
-          choices = c(
-            "Outcome misclassification" = "outcome",
-            "Exposure misclassification" = "exposure"
+        bslib::tooltip(
+          radioButtons(
+            ns("misclass_type"),
+            "Misclassification Type:",
+            choices = c(
+              "Outcome misclassification" = "outcome",
+              "Exposure misclassification" = "exposure"
+            ),
+            selected = "outcome",
+            inline = TRUE
           ),
-          selected = "outcome",
-          inline = TRUE
-        ),
-        bsTooltip(
-          ns("misclass_type"),
           "Choose whether the misclassification affects the outcome or exposure variable.",
-          "right"
+          placement = "right"
         ),
 
         conditionalPanel(
@@ -155,15 +150,14 @@ multi_bias_ui <- function(id) {
       tooltip = "The observed risk ratio from your study. RR > 1 indicates increased risk, RR < 1 indicates protective effect."
     ),
 
-    checkboxInput(
-      ns("include_ci"),
-      "Include Confidence Interval",
-      value = FALSE
-    ),
-    bsTooltip(
-      ns("include_ci"),
+    bslib::tooltip(
+      checkboxInput(
+        ns("include_ci"),
+        "Include Confidence Interval",
+        value = FALSE
+      ),
       "Optionally provide confidence intervals for more complete sensitivity analysis",
-      "right"
+      placement = "right"
     ),
 
     conditionalPanel(
@@ -192,20 +186,19 @@ multi_bias_ui <- function(id) {
 
     h3("Analysis Type"),
 
-    radioButtons(
-      ns("analysis_type"),
-      "Choose analysis:",
-      choices = c(
-        "Multi-bias E-value" = "evalue",
-        "Bias-adjusted bound" = "bound"
+    bslib::tooltip(
+      radioButtons(
+        ns("analysis_type"),
+        "Choose analysis:",
+        choices = c(
+          "Multi-bias E-value" = "evalue",
+          "Bias-adjusted bound" = "bound"
+        ),
+        selected = "evalue",
+        inline = FALSE
       ),
-      selected = "evalue",
-      inline = FALSE
-    ),
-    bsTooltip(
-      ns("analysis_type"),
       "E-value: Calculate minimum bias strength to explain away effect. Bound: Calculate adjusted effect given specific bias values.",
-      "right"
+      placement = "right"
     ),
 
     helpText(

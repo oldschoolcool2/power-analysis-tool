@@ -16,7 +16,6 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList conditionalPanel h2 h3 h4 hr helpText p strong div actionButton icon
-#' @importFrom shinyBS bsTooltip
 mod_10_sensitivity_analyses_ui <- function(id){
   ns <- NS(id)
   tagList(
@@ -89,21 +88,20 @@ mod_10_sensitivity_analyses_ui <- function(id){
         "Choose the type of effect measure you want to assess for sensitivity to unmeasured confounding:"
       ),
 
-      radioButtons(
-        ns("effect_type"),
-        "Effect Measure:",
-        choices = c(
-          "Relative Risk (RR)" = "RR",
-          "Odds Ratio (OR)" = "OR",
-          "Hazard Ratio (HR)" = "HR",
-          "Mean Difference (MD)" = "MD"
+      bslib::tooltip(
+        radioButtons(
+          ns("effect_type"),
+          "Effect Measure:",
+          choices = c(
+            "Relative Risk (RR)" = "RR",
+            "Odds Ratio (OR)" = "OR",
+            "Hazard Ratio (HR)" = "HR",
+            "Mean Difference (MD)" = "MD"
+          ),
+          selected = "RR"
         ),
-        selected = "RR"
-      ),
-      bsTooltip(
-        ns("effect_type"),
         "Select the type of effect estimate you want to evaluate. Different effect measures require different E-value calculations.",
-        "right"
+        placement = "right"
       ),
 
       hr(),

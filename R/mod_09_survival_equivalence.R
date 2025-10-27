@@ -18,36 +18,34 @@ mod_09_survival_equivalence_ui <- function(id) {
       hr(),
 
       # Test Type Selection
-      radioButtons_fixed(
-        ns("test_type"),
-        "Test Type:",
-        choices = c(
-          "Non-Inferiority (one-sided)" = "non-inferiority",
-          "Equivalence (two one-sided tests)" = "equivalence"
+      bslib::tooltip(
+        radioButtons_fixed(
+          ns("test_type"),
+          "Test Type:",
+          choices = c(
+            "Non-Inferiority (one-sided)" = "non-inferiority",
+            "Equivalence (two one-sided tests)" = "equivalence"
+          ),
+          selected = "non-inferiority"
         ),
-        selected = "non-inferiority"
-      ),
-      bsTooltip(
-        ns("test_type"),
         "Non-inferiority tests if new treatment is not worse than margin. Equivalence tests if treatments are similar within margins.",
-        "right"
+        placement = "right"
       ),
       hr(),
 
       # Calculation Mode
-      radioButtons_fixed(
-        ns("calc_mode"),
-        "Calculation Mode:",
-        choices = c(
-          "Calculate Sample Size (given margin)" = "calc_n",
-          "Calculate Margin (given sample size)" = "calc_margin"
+      bslib::tooltip(
+        radioButtons_fixed(
+          ns("calc_mode"),
+          "Calculation Mode:",
+          choices = c(
+            "Calculate Sample Size (given margin)" = "calc_n",
+            "Calculate Margin (given sample size)" = "calc_margin"
+          ),
+          selected = "calc_n"
         ),
-        selected = "calc_n"
-      ),
-      bsTooltip(
-        ns("calc_mode"),
         "Choose whether to calculate required sample size or minimal detectable margin",
-        "right"
+        placement = "right"
       ),
       hr(),
 

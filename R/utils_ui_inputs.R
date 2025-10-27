@@ -86,9 +86,10 @@ create_segmented_alpha <- function(inputId,
 
   # Add tooltip if provided
   if (!is.null(tooltip)) {
-    container <- tagList(
+    container <- bslib::tooltip(
       container,
-      bsTooltip(inputId, tooltip, "right")
+      tooltip,
+      placement = "right"
     )
   }
 
@@ -137,9 +138,10 @@ create_segmented_power <- function(inputId,
 
   # Add tooltip if provided
   if (!is.null(tooltip)) {
-    container <- tagList(
+    container <- bslib::tooltip(
       container,
-      bsTooltip(inputId, tooltip, "right")
+      tooltip,
+      placement = "right"
     )
   }
 
@@ -196,9 +198,10 @@ create_enhanced_slider <- function(inputId,
 
   # Add tooltip if provided
   if (!is.null(tooltip)) {
-    container <- tagList(
+    container <- bslib::tooltip(
       container,
-      bsTooltip(inputId, tooltip, "right")
+      tooltip,
+      placement = "right"
     )
   }
 
@@ -263,7 +266,7 @@ create_button_group <- function(buttons) {
 #' Create Numeric Input with Optional Tooltip and Validation
 #'
 #' Creates a numericInput and optionally attaches a tooltip and real-time validation.
-#' This consolidates the repeated pattern of numericInput + bsTooltip
+#' This consolidates the repeated pattern of numericInput with tooltips
 #' that appears 30+ times throughout the application.
 #'
 #' @param inputId The input slot that will be used to access the value
@@ -279,7 +282,7 @@ create_button_group <- function(buttons) {
 #' @return A tagList containing numericInput and optional tooltip
 #'
 #' @importFrom shiny numericInput tagList
-#' @importFrom shinyBS bsTooltip
+#' @importFrom bslib tooltip
 #'
 #' @examples
 #' create_numeric_input_with_tooltip(
@@ -333,9 +336,10 @@ create_numeric_input_with_tooltip <- function(inputId,
   # Add tooltip if provided
   if (!is.null(tooltip) && tooltip != "") {
     return(
-      tagList(
+      bslib::tooltip(
         input_element,
-        bsTooltip(inputId, tooltip, "right")
+        tooltip,
+        placement = "right"
       )
     )
   }
@@ -507,7 +511,6 @@ create_tabbed_options <- function(id, tabs) {
 #' )
 #'
 #' @importFrom shiny tags HTML icon
-#' @importFrom shinyBS bsPopover
 create_input_with_help_icon <- function(inputId, input_element, help_content) {
   help_icon_id <- paste0(inputId, "_help_icon")
 

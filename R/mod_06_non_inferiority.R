@@ -16,10 +16,13 @@ mod_06_non_inferiority_ui <- function(id) {
       h2(class = "page-title", "Non-Inferiority Testing"),
       helpText("Calculate sample size OR minimal detectable non-inferiority margin"),
       hr(),
-      radioButtons_fixed(ns("noninf_calc_mode"), "Calculation Mode:",
-        choices = c("Calculate Sample Size (given margin)" = "calc_n", "Calculate Margin (given sample size)" = "calc_effect"),
-        selected = "calc_n"),
-      bsTooltip(ns("noninf_calc_mode"), "Choose whether to calculate required sample size or minimal detectable non-inferiority margin", "right"),
+      bslib::tooltip(
+        radioButtons_fixed(ns("noninf_calc_mode"), "Calculation Mode:",
+          choices = c("Calculate Sample Size (given margin)" = "calc_n", "Calculate Margin (given sample size)" = "calc_effect"),
+          selected = "calc_n"),
+        "Choose whether to calculate required sample size or minimal detectable non-inferiority margin",
+        placement = "right"
+      ),
       hr(),
       create_segmented_power(ns("noninf_power"), "Desired Power:", selected = 80, tooltip = "Probability of demonstrating non-inferiority if true"),
       create_numeric_input_with_tooltip(ns("noninf_p1"), "Event Rate Test Group (%):", 10, min = 0, max = 100, step = 0.1, tooltip = "Expected event rate in test/generic group (as percentage)"),

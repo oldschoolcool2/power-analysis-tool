@@ -54,11 +54,14 @@ mod_02_two_group_ui <- function(id) {
       create_segmented_alpha(ns("twogrp_pow_alpha"), "Significance Level (α):",
                             selected = 0.05,
                             tooltip = "Type I error rate (typically 0.05)"),
-      radioButtons_fixed(ns("twogrp_pow_sided"), "Test Type:",
-        choices = c("Two-sided" = "two.sided", "One-sided" = "greater"),
-        selected = "two.sided"
+      bslib::tooltip(
+        radioButtons_fixed(ns("twogrp_pow_sided"), "Test Type:",
+          choices = c("Two-sided" = "two.sided", "One-sided" = "greater"),
+          selected = "two.sided"
+        ),
+        "Two-sided: test if groups differ. One-sided: test if Group 1 > Group 2",
+        placement = "right"
       ),
-      bsTooltip(ns("twogrp_pow_sided"), "Two-sided: test if groups differ. One-sided: test if Group 1 > Group 2", "right"),
       hr(),
       div(class = "btn-group-custom",
         actionButton(ns("example_twogrp_pow"), "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
@@ -72,17 +75,17 @@ mod_02_two_group_ui <- function(id) {
       h2(class = "page-title", "Two-Group Comparison: Sample Size Calculation"),
       helpText("Calculate required sample size OR minimal detectable effect size"),
       hr(),
-      radioButtons_fixed(ns("twogrp_ss_calc_mode"),
-        "Calculation Mode:",
-        choices = c(
-          "Calculate Sample Size (given effect size)" = "calc_n",
-          "Calculate Effect Size (given sample size)" = "calc_effect"
+      bslib::tooltip(
+        radioButtons_fixed(ns("twogrp_ss_calc_mode"),
+          "Calculation Mode:",
+          choices = c(
+            "Calculate Sample Size (given effect size)" = "calc_n",
+            "Calculate Effect Size (given sample size)" = "calc_effect"
+          ),
+          selected = "calc_n"
         ),
-        selected = "calc_n"
-      ),
-      bsTooltip(ns("twogrp_ss_calc_mode"),
         "Choose whether to calculate required sample size or minimal detectable effect size",
-        "right"
+        placement = "right"
       ),
       hr(),
       create_segmented_power(ns("twogrp_ss_power"), "Desired Power:",

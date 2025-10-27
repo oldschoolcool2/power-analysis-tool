@@ -5,7 +5,6 @@
 #' 
 #' @importFrom shiny fluidPage tags actionButton icon conditionalPanel uiOutput dataTableOutput tagList div p HTML
 #' @importFrom bslib bs_theme font_google
-#' @importFrom shinyBS bsModal
 #' @importFrom shinyjs useShinyjs
 #' @importFrom plotly plotlyOutput
 app_ui <- function(request) {
@@ -38,15 +37,13 @@ app_ui <- function(request) {
     tags$link(rel = "stylesheet", type = "text/css", href = "www/css/sidebar.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "www/css/result-cards.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "www/css/evalue-cards.css"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "www/css/multi-bias-cards.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "www/css/validation.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "www/css/progressive-disclosure.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "www/css/loading-spinner.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "www/css/success-animations.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "www/css/documentation.css"),
-    # JavaScript - XHR warning suppression must load first
-    tags$script(src = "www/js/suppress-xhr-warning.js"),
-    # JavaScript - Bootstrap 5 fix must load before other scripts
-    tags$script(src = "www/js/bootstrap5-shinyBS-fix.js"),
+    # JavaScript
     tags$script(src = "www/js/theme-switcher.js"),
     tags$script(src = "www/js/sidebar-navigation.js"),
     tags$script(src = "www/js/copy-to-clipboard.js"),
@@ -68,14 +65,25 @@ app_ui <- function(request) {
         background-color: #FFFFFF;
       }
       
-      /* Ensure dark mode overrides work */
+      /* Ensure dark mode overrides work - CRITICAL: Override Bootstrap inline styles */
+      html[data-theme='dark'],
       [data-theme='dark'] {
-        --bs-body-bg: #0F172A;
+        --bs-body-bg: #0F172A !important;
+        --bs-body-color: #F8F9FA !important;
+        --bs-body-color-rgb: 248, 249, 250 !important;
       }
       
+      html[data-theme='dark'],
       [data-theme='dark'] body,
       [data-theme='dark'] html {
-        background-color: #0F172A;
+        background-color: #0F172A !important;
+        color: #F8F9FA !important;
+      }
+      
+      /* Force all text to be light in dark mode */
+      html[data-theme='dark'] *:not(.btn):not(.badge),
+      [data-theme='dark'] *:not(.btn):not(.badge) {
+        color: inherit;
       }
       
       /* FIX: Style the Shiny disconnected overlay to be less intrusive */
@@ -368,20 +376,7 @@ golem_add_external_resources <- function() {
     directoryPath = www_path
   )
 
-  # Create shinyBS HTML dependency
-  shinyBS_dep <- htmltools::htmlDependency(
-    name = "shinyBS",
-    version = as.character(packageVersion("shinyBS")),
-    src = system.file("www", package = "shinyBS"),
-    script = "shinyBS.js",
-    stylesheet = "shinyBS.css"
-  )
-
-  # Attach dependencies
-  htmltools::attachDependencies(
-    tags$head(
-      # Placeholder for additional head content if needed
-    ),
-    shinyBS_dep
+  tags$head(
+    # Placeholder for additional head content if needed
   )
 }

@@ -53,40 +53,38 @@ clustering_ui <- function(id) {
       ),
 
       # ICC selection method
-      radioButtons_fixed(
-        ns("icc_method"),
-        "ICC Specification Method:",
-        choices = c(
-          "Select from typical values" = "select",
-          "Enter custom ICC" = "custom"
+      bslib::tooltip(
+        radioButtons_fixed(
+          ns("icc_method"),
+          "ICC Specification Method:",
+          choices = c(
+            "Select from typical values" = "select",
+            "Enter custom ICC" = "custom"
+          ),
+          selected = "select"
         ),
-        selected = "select"
-      ),
-      bsTooltip(
-        ns("icc_method"),
         "Choose whether to use typical ICC values from literature or enter your own ICC estimate",
-        "right"
+        placement = "right"
       ),
 
       # Conditional: Select from typical values
       conditionalPanel(
         condition = sprintf("input['%s'] == 'select'", ns("icc_method")),
 
-        selectInput(
-          ns("icc_domain"),
-          "Clinical Domain:",
-          choices = c(
-            "Behavioral Outcomes" = "behavioral",
-            "Clinical/Physiological Outcomes" = "clinical",
-            "Process Measures (e.g., adherence)" = "process",
-            "General Practice/Primary Care" = "gp"
+        bslib::tooltip(
+          selectInput(
+            ns("icc_domain"),
+            "Clinical Domain:",
+            choices = c(
+              "Behavioral Outcomes" = "behavioral",
+              "Clinical/Physiological Outcomes" = "clinical",
+              "Process Measures (e.g., adherence)" = "process",
+              "General Practice/Primary Care" = "gp"
+            ),
+            selected = "clinical"
           ),
-          selected = "clinical"
-        ),
-        bsTooltip(
-          ns("icc_domain"),
           "Different outcome types have different typical ICC values. Select the domain most relevant to your outcome.",
-          "right"
+          placement = "right"
         ),
 
         # Display the ICC value that will be used

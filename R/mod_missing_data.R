@@ -36,54 +36,51 @@ missing_data_ui <- function(id) {
       ),
 
       # Missing mechanism selection
-      radioButtons_fixed(
-        ns("missing_mechanism"),
-        "Missing Data Mechanism:",
-        choices = c(
-          "MCAR (Missing Completely At Random)" = "mcar",
-          "MAR (Missing At Random)" = "mar",
-          "MNAR (Missing Not At Random)" = "mnar"
+      bslib::tooltip(
+        radioButtons_fixed(
+          ns("missing_mechanism"),
+          "Missing Data Mechanism:",
+          choices = c(
+            "MCAR (Missing Completely At Random)" = "mcar",
+            "MAR (Missing At Random)" = "mar",
+            "MNAR (Missing Not At Random)" = "mnar"
+          ),
+          selected = "mar"
         ),
-        selected = "mar"
-      ),
-      bsTooltip(
-        ns("missing_mechanism"),
         "MCAR: minimal bias. MAR: controllable with observed data. MNAR: potential substantial bias",
-        "right"
+        placement = "right"
       ),
 
       # Analysis approach selection
-      radioButtons_fixed(
-        ns("missing_analysis"),
-        "Planned Analysis Approach:",
-        choices = c(
-          "Complete Case Analysis" = "complete_case",
-          "Multiple Imputation (MI)" = "multiple_imputation"
+      bslib::tooltip(
+        radioButtons_fixed(
+          ns("missing_analysis"),
+          "Planned Analysis Approach:",
+          choices = c(
+            "Complete Case Analysis" = "complete_case",
+            "Multiple Imputation (MI)" = "multiple_imputation"
+          ),
+          selected = "complete_case"
         ),
-        selected = "complete_case"
-      ),
-      bsTooltip(
-        ns("missing_analysis"),
         "Complete case: only use observations with no missing data (more conservative). MI: impute missing values (more efficient)",
-        "right"
+        placement = "right"
       ),
 
       # Multiple imputation parameters (conditional)
       conditionalPanel(
         condition = sprintf("input['%s'] == 'multiple_imputation'", ns("missing_analysis")),
 
-        numericInput(
-          ns("mi_imputations"),
-          "Number of Imputations (m):",
-          5,
-          min = 3,
-          max = 100,
-          step = 1
-        ),
-        bsTooltip(
-          ns("mi_imputations"),
+        bslib::tooltip(
+          numericInput(
+            ns("mi_imputations"),
+            "Number of Imputations (m):",
+            5,
+            min = 3,
+            max = 100,
+            step = 1
+          ),
           "Typical values: 5-20. More imputations increase precision but require more computation",
-          "right"
+          placement = "right"
         ),
 
         create_enhanced_slider(

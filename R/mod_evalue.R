@@ -97,15 +97,14 @@ evalue_ui <- function(id, effect_type = "RR") {
       },
 
       # Optional: Confidence interval
-      checkboxInput(
-        ns("include_ci"),
-        "Include Confidence Interval",
-        value = FALSE
-      ),
-      bsTooltip(
-        ns("include_ci"),
+      bslib::tooltip(
+        checkboxInput(
+          ns("include_ci"),
+          "Include Confidence Interval",
+          value = FALSE
+        ),
         "Optionally provide confidence intervals to calculate E-values for the CI bounds",
-        "right"
+        placement = "right"
       ),
 
       conditionalPanel(
@@ -160,15 +159,14 @@ evalue_ui <- function(id, effect_type = "RR") {
       if (effect_type %in% c("OR", "HR")) {
         tagList(
           hr(),
-          checkboxInput(
-            ns("outcome_rare"),
-            "Outcome is rare (<15%)",
-            value = TRUE
-          ),
-          bsTooltip(
-            ns("outcome_rare"),
+          bslib::tooltip(
+            checkboxInput(
+              ns("outcome_rare"),
+              "Outcome is rare (<15%)",
+              value = TRUE
+            ),
             "For rare outcomes, OR/HR approximates RR. For common outcomes, conversion to RR is performed.",
-            "right"
+            placement = "right"
           )
         )
       },

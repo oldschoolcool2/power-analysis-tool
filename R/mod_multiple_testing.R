@@ -43,15 +43,14 @@ multiple_testing_ui <- function(id) {
   ns <- NS(id)
 
   tagList(
-    checkboxInput(
-      ns("adjust_multiple_testing"),
-      "Adjust for Multiple Testing",
-      value = FALSE
-    ),
-    bsTooltip(
-      ns("adjust_multiple_testing"),
+    bslib::tooltip(
+      checkboxInput(
+        ns("adjust_multiple_testing"),
+        "Adjust for Multiple Testing",
+        value = FALSE
+      ),
       "Enable this if you plan to conduct multiple statistical tests (e.g., multiple outcomes, subgroups, or endpoints)",
-      "right"
+      placement = "right"
     ),
 
     conditionalPanel(
@@ -81,21 +80,20 @@ multiple_testing_ui <- function(id) {
       ),
 
       # Correction method
-      selectInput(
-        ns("correction_method"),
-        "Correction Method:",
-        choices = c(
-          "Bonferroni (most conservative, controls FWER)" = "bonferroni",
-          "Holm (recommended, controls FWER)" = "holm",
-          "Hochberg (controls FWER)" = "hochberg",
-          "Benjamini-Hochberg (controls FDR, more power)" = "BH",
-          "Benjamini-Yekutieli (controls FDR, for dependent tests)" = "BY",
-          "None (not recommended for multiple tests)" = "none"
+      bslib::tooltip(
+        selectInput(
+          ns("correction_method"),
+          "Correction Method:",
+          choices = c(
+            "Bonferroni (most conservative, controls FWER)" = "bonferroni",
+            "Holm (recommended, controls FWER)" = "holm",
+            "Hochberg (controls FWER)" = "hochberg",
+            "Benjamini-Hochberg (controls FDR, more power)" = "BH",
+            "Benjamini-Yekutieli (controls FDR, for dependent tests)" = "BY",
+            "None (not recommended for multiple tests)" = "none"
+          ),
+          selected = "holm"
         ),
-        selected = "holm"
-      ),
-      bsTooltip(
-        ns("correction_method"),
         HTML(paste0(
           "<strong>FWER:</strong> Family-Wise Error Rate - probability of ≥1 false positive<br>",
           "<strong>FDR:</strong> False Discovery Rate - expected proportion of false positives<br><br>",
@@ -103,7 +101,7 @@ multiple_testing_ui <- function(id) {
           "<strong>Holm:</strong> Sequential, more powerful than Bonferroni<br>",
           "<strong>BH:</strong> Good for exploratory studies, maintains power"
         )),
-        "right"
+        placement = "right"
       ),
 
       # Method description helper text

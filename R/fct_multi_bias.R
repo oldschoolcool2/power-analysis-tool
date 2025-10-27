@@ -160,29 +160,25 @@ calc_multi_bound <- function(multi_bias_obj, rr, lo = NA, hi = NA,
     stop("Bias parameters must be specified")
   }
 
-  # Calculate bias-adjusted bound
-  result <- tryCatch({
-    if (!is.na(lo) && !is.na(hi)) {
-      do.call(EValue::multi_bound,
-              c(list(multi_bias_obj,
-                    est = EValue::RR(rr, lo, hi),
-                    true_rr = true_rr),
-                bias_parms))
-    } else {
-      do.call(EValue::multi_bound,
-              c(list(multi_bias_obj,
-                    est = EValue::RR(rr),
-                    true_rr = true_rr),
-                bias_parms))
-    }
+  # Calculate bias-adjusted bound (bias factor)
+  # multi_bound returns a single numeric value (the bias factor)
+  bias_factor <- tryCatch({
+    do.call(EValue::multi_bound,
+            c(list(multi_bias_obj,
+                  EValue::RR(rr)),
+              bias_parms))
   }, error = function(e) {
     stop(paste("Multi-bias bound calculation failed:", e$message))
   })
 
-  # Extract bounds
-  bound_est <- result[1, "bound_RR"]
-  bound_lo <- if (!is.na(lo)) result[1, "bound_lo"] else NA
-  bound_hi <- if (!is.na(hi)) result[1, "bound_hi"] else NA
+  # Calculate adjusted RR by dividing original RR by bias factor
+  # The bias factor represents how much the observed RR could be attenuated
+  bound_est <- rr / bias_factor
+  
+  # Calculate adjusted confidence bounds if provided
+  # Apply the same bias factor to the confidence limits
+  bound_lo <- if (!is.na(lo)) lo / bias_factor else NA
+  bound_hi <- if (!is.na(hi)) hi / bias_factor else NA
 
   # Interpretation
   interpretation <- interpret_multi_bound(
@@ -193,12 +189,12 @@ calc_multi_bound <- function(multi_bias_obj, rr, lo = NA, hi = NA,
 
   list(
     original_rr = rr,
+    bias_factor = bias_factor,
     adjusted_rr = bound_est,
     adjusted_lo = bound_lo,
     adjusted_hi = bound_hi,
     bias_parms = bias_parms,
-    interpretation = interpretation,
-    result_table = result
+    interpretation = interpretation
   )
 }
 
@@ -398,10 +394,13 @@ format_multi_bound_result <- function(multi_bound_result) {
     "<div class='multi-bias-result-card ", interp$css_class, "'>",
     "<h4>", interp$icon, " Bias-Adjusted Estimate</h4>",
     "<p>", interp$main_text, "</p>",
+    "<p><strong>Bias Factor:</strong> ",
+    format_numeric(multi_bound_result$bias_factor, 2), "</p>",
     "<p><strong>Original RR:</strong> ",
     format_numeric(multi_bound_result$original_rr, 2), "</p>",
     "<p><strong>Adjusted RR:</strong> ",
-    format_numeric(multi_bound_result$adjusted_rr, 2), "</p>"
+    format_numeric(multi_bound_result$adjusted_rr, 2), " ",
+    "(attenuated by factor of ", format_numeric(multi_bound_result$bias_factor, 2), ")</p>"
   )
 
   # Add CI if available
@@ -431,8 +430,13 @@ format_multi_bound_result <- function(multi_bound_result) {
 #' @noRd
 get_multi_bias_parameters <- function(multi_bias_obj) {
   # Get parameter names from the multi_bias object
-  parm_names <- names(multi_bias_obj$m)
-  parm_names
+  # The parameters are stored in the "parameters" attribute
+  parms_df <- attr(multi_bias_obj, "parameters")
+  if (is.null(parms_df)) {
+    return(character(0))
+  }
+  # Return the argument column which contains the parameter names for multi_bound()
+  parms_df$argument
 }
 
 

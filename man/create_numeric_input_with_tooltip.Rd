@@ -39,7 +39,7 @@ A tagList containing numericInput and optional tooltip
 }
 \description{
 Creates a numericInput and optionally attaches a tooltip and real-time validation.
-This consolidates the repeated pattern of numericInput + bsTooltip
+This consolidates the repeated pattern of numericInput with tooltips
 that appears 30+ times throughout the application.
 }
 \examples{

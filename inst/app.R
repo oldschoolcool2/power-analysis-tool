@@ -7,7 +7,6 @@ if (interactive()) {
 
 library(shiny)
 library(bslib)
-library(shinyBS)
 library(shinyjs)
 library(pwr)
 library(binom)
@@ -63,8 +62,7 @@ ui <- fluidPage(
     tags$link(rel = "stylesheet", type = "text/css", href = "css/loading-spinner.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "css/success-animations.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "css/documentation.css"),
-    # JavaScript - Bootstrap 5 fix must load before other scripts
-    tags$script(src = "js/bootstrap5-shinyBS-fix.js"),
+    # JavaScript
     tags$script(src = "js/theme-switcher.js"),
     tags$script(src = "js/sidebar-navigation.js"),
     tags$style(HTML("
@@ -190,17 +188,17 @@ ui <- fluidPage(
             h2(class = "page-title", "Single Proportion: Sample Size Calculation"),
             helpText("Calculate required sample size OR minimal detectable effect size"),
             hr(),
-            radioButtons_fixed("ss_single_calc_mode",
-              "Calculation Mode:",
-              choices = c(
-                "Calculate Sample Size (given effect size)" = "calc_n",
-                "Calculate Effect Size (given sample size)" = "calc_effect"
+            bslib::tooltip(
+              radioButtons_fixed("ss_single_calc_mode",
+                "Calculation Mode:",
+                choices = c(
+                  "Calculate Sample Size (given effect size)" = "calc_n",
+                  "Calculate Effect Size (given sample size)" = "calc_effect"
+                ),
+                selected = "calc_n"
               ),
-              selected = "calc_n"
-            ),
-            bsTooltip("ss_single_calc_mode",
               "Choose whether to calculate required sample size or minimal detectable effect size",
-              "right"
+              placement = "right"
             ),
             hr(),
             create_segmented_power("ss_power", "Desired Power:",
@@ -286,11 +284,14 @@ ui <- fluidPage(
             create_segmented_alpha("twogrp_pow_alpha", "Significance Level (α):",
                                   selected = 0.05,
                                   tooltip = "Type I error rate (typically 0.05)"),
-            radioButtons_fixed("twogrp_pow_sided", "Test Type:",
-              choices = c("Two-sided" = "two.sided", "One-sided" = "greater"),
-              selected = "two.sided"
+            bslib::tooltip(
+              radioButtons_fixed("twogrp_pow_sided", "Test Type:",
+                choices = c("Two-sided" = "two.sided", "One-sided" = "greater"),
+                selected = "two.sided"
+              ),
+              "Two-sided: test if groups differ. One-sided: test if Group 1 > Group 2",
+              placement = "right"
             ),
-            bsTooltip("twogrp_pow_sided", "Two-sided: test if groups differ. One-sided: test if Group 1 > Group 2", "right"),
             hr(),
             div(class = "btn-group-custom",
               actionButton("example_twogrp_pow", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
@@ -304,17 +305,17 @@ ui <- fluidPage(
             h2(class = "page-title", "Two-Group Comparison: Sample Size Calculation"),
             helpText("Calculate required sample size OR minimal detectable effect size"),
             hr(),
-            radioButtons_fixed("twogrp_ss_calc_mode",
-              "Calculation Mode:",
-              choices = c(
-                "Calculate Sample Size (given effect size)" = "calc_n",
-                "Calculate Effect Size (given sample size)" = "calc_effect"
+            bslib::tooltip(
+              radioButtons_fixed("twogrp_ss_calc_mode",
+                "Calculation Mode:",
+                choices = c(
+                  "Calculate Sample Size (given effect size)" = "calc_n",
+                  "Calculate Effect Size (given sample size)" = "calc_effect"
+                ),
+                selected = "calc_n"
               ),
-              selected = "calc_n"
-            ),
-            bsTooltip("twogrp_ss_calc_mode",
               "Choose whether to calculate required sample size or minimal detectable effect size",
-              "right"
+              placement = "right"
             ),
             hr(),
             create_segmented_power("twogrp_ss_power", "Desired Power:",
@@ -391,17 +392,17 @@ ui <- fluidPage(
             h2(class = "page-title", "Survival Analysis (Cox): Sample Size Calculation"),
             helpText("Calculate required sample size OR minimal detectable hazard ratio"),
             hr(),
-            radioButtons_fixed("surv_ss_calc_mode",
-              "Calculation Mode:",
-              choices = c(
-                "Calculate Sample Size (given hazard ratio)" = "calc_n",
-                "Calculate Hazard Ratio (given sample size)" = "calc_effect"
+            bslib::tooltip(
+              radioButtons_fixed("surv_ss_calc_mode",
+                "Calculation Mode:",
+                choices = c(
+                  "Calculate Sample Size (given hazard ratio)" = "calc_n",
+                  "Calculate Hazard Ratio (given sample size)" = "calc_effect"
+                ),
+                selected = "calc_n"
               ),
-              selected = "calc_n"
-            ),
-            bsTooltip("surv_ss_calc_mode",
               "Choose whether to calculate required sample size or minimal detectable hazard ratio",
-              "right"
+              placement = "right"
             ),
             hr(),
             create_segmented_power("surv_ss_power", "Desired Power:",
@@ -443,17 +444,17 @@ ui <- fluidPage(
             h2(class = "page-title", "Matched Case-Control Study"),
             helpText("Calculate sample size OR minimal detectable odds ratio"),
             hr(),
-            radioButtons_fixed("match_calc_mode",
-              "Calculation Mode:",
-              choices = c(
-                "Calculate Sample Size (given odds ratio)" = "calc_n",
-                "Calculate Odds Ratio (given sample size)" = "calc_effect"
+            bslib::tooltip(
+              radioButtons_fixed("match_calc_mode",
+                "Calculation Mode:",
+                choices = c(
+                  "Calculate Sample Size (given odds ratio)" = "calc_n",
+                  "Calculate Odds Ratio (given sample size)" = "calc_effect"
+                ),
+                selected = "calc_n"
               ),
-              selected = "calc_n"
-            ),
-            bsTooltip("match_calc_mode",
               "Choose whether to calculate required sample size or minimal detectable odds ratio",
-              "right"
+              placement = "right"
             ),
             hr(),
             create_segmented_power("match_power", "Desired Power:",
@@ -480,11 +481,14 @@ ui <- fluidPage(
             create_segmented_alpha("match_alpha", "Significance Level (α):",
                                   selected = 0.05,
                                   tooltip = "Type I error rate (typically 0.05)"),
-            radioButtons_fixed("match_sided", "Test Type:",
-              choices = c("Two-sided" = "two.sided", "One-sided" = "one.sided"),
-              selected = "two.sided"
+            bslib::tooltip(
+              radioButtons_fixed("match_sided", "Test Type:",
+                choices = c("Two-sided" = "two.sided", "One-sided" = "one.sided"),
+                selected = "two.sided"
+              ),
+              "Two-sided: test if groups differ. One-sided: test directional hypothesis",
+              placement = "right"
             ),
-            bsTooltip("match_sided", "Two-sided: test if groups differ. One-sided: test directional hypothesis", "right"),
             hr(),
             missing_data_ui("match-missing_data"),
             hr(),
@@ -512,11 +516,14 @@ ui <- fluidPage(
             create_segmented_alpha("cont_pow_alpha", "Significance Level (α):",
                                   selected = 0.05,
                                   tooltip = "Type I error rate (typically 0.05)"),
-            radioButtons_fixed("cont_pow_sided", "Test Type:",
-              choices = c("Two-sided" = "two.sided", "One-sided (greater)" = "greater", "One-sided (less)" = "less"),
-              selected = "two.sided"
+            bslib::tooltip(
+              radioButtons_fixed("cont_pow_sided", "Test Type:",
+                choices = c("Two-sided" = "two.sided", "One-sided (greater)" = "greater", "One-sided (less)" = "less"),
+                selected = "two.sided"
+              ),
+              "Two-sided: test if groups differ. One-sided: test directional hypothesis",
+              placement = "right"
             ),
-            bsTooltip("cont_pow_sided", "Two-sided: test if groups differ. One-sided: test directional hypothesis", "right"),
             hr(),
             div(class = "btn-group-custom",
               actionButton("example_cont_pow", "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
@@ -530,17 +537,17 @@ ui <- fluidPage(
             h2(class = "page-title", "Continuous Outcomes (t-test): Sample Size Calculation"),
             helpText("Calculate required sample size OR minimal detectable effect size"),
             hr(),
-            radioButtons_fixed("cont_ss_calc_mode",
-              "Calculation Mode:",
-              choices = c(
-                "Calculate Sample Size (given effect size)" = "calc_n",
-                "Calculate Effect Size (given sample size)" = "calc_effect"
+            bslib::tooltip(
+              radioButtons_fixed("cont_ss_calc_mode",
+                "Calculation Mode:",
+                choices = c(
+                  "Calculate Sample Size (given effect size)" = "calc_n",
+                  "Calculate Effect Size (given sample size)" = "calc_effect"
+                ),
+                selected = "calc_n"
               ),
-              selected = "calc_n"
-            ),
-            bsTooltip("cont_ss_calc_mode",
               "Choose whether to calculate required sample size or minimal detectable effect size (Cohen's d)",
-              "right"
+              placement = "right"
             ),
             hr(),
             create_segmented_power("cont_ss_power", "Desired Power:",
@@ -580,17 +587,17 @@ ui <- fluidPage(
             h2(class = "page-title", "Non-Inferiority Testing"),
             helpText("Calculate sample size OR minimal detectable non-inferiority margin"),
             hr(),
-            radioButtons_fixed("noninf_calc_mode",
-              "Calculation Mode:",
-              choices = c(
-                "Calculate Sample Size (given margin)" = "calc_n",
-                "Calculate Margin (given sample size)" = "calc_effect"
+            bslib::tooltip(
+              radioButtons_fixed("noninf_calc_mode",
+                "Calculation Mode:",
+                choices = c(
+                  "Calculate Sample Size (given margin)" = "calc_n",
+                  "Calculate Margin (given sample size)" = "calc_effect"
+                ),
+                selected = "calc_n"
               ),
-              selected = "calc_n"
-            ),
-            bsTooltip("noninf_calc_mode",
               "Choose whether to calculate required sample size or minimal detectable non-inferiority margin",
-              "right"
+              placement = "right"
             ),
             hr(),
             create_segmented_power("noninf_power", "Desired Power:",
@@ -638,16 +645,17 @@ ui <- fluidPage(
             hr(),
 
             # Method selection
-            radioButtons_fixed("ps_calc_method",
-              "Calculation Method:",
-              choices = c(
-                "Austin (2021) - VIF Method (Traditional)" = "austin",
-                "Li et al. (2025) - Overlap + Confounding Method (NEW)" = "li_2025"
-              ),
-              selected = "austin"),
-            bsTooltip("ps_calc_method",
+            bslib::tooltip(
+              radioButtons_fixed("ps_calc_method",
+                "Calculation Method:",
+                choices = c(
+                  "Austin (2021) - VIF Method (Traditional)" = "austin",
+                  "Li et al. (2025) - Overlap + Confounding Method (NEW)" = "li_2025"
+                ),
+                selected = "austin"),
               "Austin (2021): Uses c-statistic to estimate VIF. Li et al. (2025): More accurate, accounts for overlap AND confounder-outcome association",
-              "right"),
+              placement = "right"
+            ),
 
             hr(),
 
@@ -699,19 +707,20 @@ ui <- fluidPage(
 
             # Weighting method selection (common to both methods)
             hr(),
-            radioButtons_fixed("vif_method",
-              "Weighting Method:",
-              choices = c(
-                "ATE - Inverse Probability of Treatment Weighting" = "ATE",
-                "ATT - Average Treatment Effect on Treated" = "ATT",
-                "ATO - Overlap Weights (most efficient)" = "ATO",
-                "ATM - Matching Weights" = "ATM",
-                "ATEN - Entropy Weights" = "ATEN"
-              ),
-              selected = "ATE"),
-            bsTooltip("vif_method",
+            bslib::tooltip(
+              radioButtons_fixed("vif_method",
+                "Weighting Method:",
+                choices = c(
+                  "ATE - Inverse Probability of Treatment Weighting" = "ATE",
+                  "ATT - Average Treatment Effect on Treated" = "ATT",
+                  "ATO - Overlap Weights (most efficient)" = "ATO",
+                  "ATM - Matching Weights" = "ATM",
+                  "ATEN - Entropy Weights" = "ATEN"
+                ),
+                selected = "ATE"),
               "ATE: generalizes to full population. ATT: effect in treated only. ATO/ATM/ATEN: focus on overlap region (more efficient)",
-              "right"),
+              placement = "right"
+            ),
 
             hr(),
             div(class = "btn-group-custom",
