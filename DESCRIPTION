@@ -28,7 +28,8 @@ Imports:
     golem (>= 0.4.1),
     magrittr (>= 2.0.0),
     rmarkdown (>= 2.28),
-    htmltools
+    htmltools,
+    DT (>= 0.33)
 Suggests:
     testthat (>= 3.2.1),
     shinytest2 (>= 0.3.2),

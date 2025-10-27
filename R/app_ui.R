@@ -3,7 +3,8 @@
 #' @param request Internal parameter for `{shiny}`. DO NOT REMOVE.
 #' @noRd
 #' 
-#' @importFrom shiny fluidPage tags actionButton icon conditionalPanel uiOutput dataTableOutput tagList div p HTML
+#' @importFrom shiny fluidPage tags actionButton icon conditionalPanel uiOutput tagList div p HTML
+#' @importFrom DT DTOutput
 #' @importFrom bslib bs_theme font_google
 #' @importFrom shinyjs useShinyjs
 #' @importFrom plotly plotlyOutput
@@ -15,14 +16,25 @@ app_ui <- function(request) {
     # Your application UI logic
     fluidPage(
   # Modern bslib theme for mobile responsiveness
+  # Note: bslib color contrast warnings in dev mode are informational for auto-generated
+  # color variations. Our custom CSS (design-tokens.css) uses WCAG AA compliant colors.
   theme = bs_theme(
     version = 5,
-    bootswatch = NULL,  # Remove Cosmo theme - it has grey background
-    primary = "#2B5876",  # Updated to professional teal/slate
+    bootswatch = NULL,
+    # WCAG AA compliant primary color (7:1 contrast on white)
+    primary = "#0F2A3F",  # Deep slate - matches design-tokens.css --color-primary-900
     base_font = font_google("Inter"),
     heading_font = font_google("Inter"),
-    bg = "#FFFFFF",  # Force pure white background
-    fg = "#1D2A39"   # Dark text on white
+    bg = "#FFFFFF",
+    fg = "#1D2A39",
+    # Disable problematic auto-generated color features
+    "enable-shadows" = TRUE,
+    "enable-gradients" = FALSE,
+    # Explicitly set semantic colors to WCAG compliant values
+    success = "#047857",   # --color-success-700 from design-tokens.css
+    info = "#1D4ED8",      # --color-info-700 from design-tokens.css
+    warning = "#B45309",   # --color-warning-700 from design-tokens.css
+    danger = "#B91C1C"     # --color-error-700 from design-tokens.css
   ),
 
   # Link custom CSS files for modern design system
@@ -317,7 +329,7 @@ app_ui <- function(request) {
         uiOutput("figure_title"),
         plotlyOutput("power_plot", height = "500px"),
         uiOutput("table_title"),
-        dataTableOutput("result_table"),
+        DTOutput("result_table"),
         uiOutput("table_footnotes"),
         uiOutput("download_buttons"),
 

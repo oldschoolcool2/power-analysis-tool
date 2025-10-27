@@ -6,7 +6,8 @@
 #' @importFrom shiny moduleServer observeEvent reactive renderPlot renderPrint
 #' @importFrom shiny observe reactiveValues outputOptions showNotification debounce
 #' @importFrom shiny strong br em HTML h1 h4 h5 h6 p downloadButton downloadHandler
-#' @importFrom shiny tableOutput renderTable bindCache renderDataTable
+#' @importFrom shiny tableOutput renderTable bindCache
+#' @importFrom DT renderDT
 #' @importFrom shinyjs useShinyjs
 #' @importFrom stats uniroot qnorm
 #' @importFrom pwr pwr.p.test ES.h pwr.t2n.test pwr.t.test
@@ -113,28 +114,8 @@ app_server <- function(input, output, session) {
     }
   }
   
-  # Convert sidebar_page value to display name (for filenames, titles, etc.)
-  get_page_display_name <- function(page) {
-    switch(page,
-      "power_single" = "Power (Single)",
-      "ss_single" = "Sample Size (Single)",
-      "power_twogrp" = "Power (Two-Group)",
-      "ss_twogrp" = "Sample Size (Two-Group)",
-      "power_survival" = "Power (Survival)",
-      "ss_survival" = "Sample Size (Survival)",
-      "match_casecontrol" = "Matched Case-Control",
-      "power_continuous" = "Power (Continuous)",
-      "ss_continuous" = "Sample Size (Continuous)",
-      "noninf" = "Non-Inferiority",
-      "survival_ni_equiv" = "Time-to-Event Equivalence/Non-Inferiority",
-      "vif_calculator" = "Propensity Score VIF Calculator",
-      "mediation_analysis" = "Mediation Analysis",
-      "sensitivity_evalue" = "E-value Sensitivity Analysis",
-      "sensitivity_multi_bias" = "Multi-Bias Sensitivity Analysis",
-      "documentation" = "Documentation",
-      "Unknown"
-    )
-  }
+  # NOTE: get_page_display_name() has been moved to R/utils_export.R (2025-10-27)
+  # It is now available as an exported function from the utils_export module.
 
   # ============================================================
   # Quick Preview Footer Updates
@@ -436,15 +417,59 @@ app_server <- function(input, output, session) {
         need(tab3_inputs$surv_ss_pE >= 0 && tab3_inputs$surv_ss_pE <= 100, "Event rate must be between 0 and 100%"),
         need(tab3_inputs$surv_ss_hr != 1, "Hazard ratio must be different from 1 to calculate sample size")
       )
-    # Tab 4: Matched Case-Control
+    # Tab 4: Matched Case-Control (tab-aware validation)
     } else if (page == "match_casecontrol") {
       tab4_inputs <- tab4_vals$inputs()
+      calc_mode <- tab4_inputs$match_calc_mode
+
+      # Guard against NULL calc_mode
+      if (is.null(calc_mode) || length(calc_mode) == 0 || identical(calc_mode, "")) {
+        calc_mode <- "calc_n"  # Default to sample size
+      }
+
+      # Common validations for all tabs (with proper NULL handling)
       validate(
-        need(tab4_inputs$match_or > 0, "Odds ratio must be positive"),
-        need(tab4_inputs$match_p0 >= 0 && tab4_inputs$match_p0 <= 100, "Exposure probability must be between 0 and 100%"),
-        need(tab4_inputs$match_ratio >= 1, "Controls per case must be at least 1"),
-        need(tab4_inputs$match_or != 1, "Odds ratio must be different from 1 to calculate sample size")
+        need(!is.null(tab4_inputs$match_p0), "Exposure probability is required"),
+        need(!is.null(tab4_inputs$match_ratio), "Controls per case is required")
       )
+
+      # Only validate ranges if values exist
+      if (!is.null(tab4_inputs$match_p0)) {
+        validate(
+          need(tab4_inputs$match_p0 >= 0 && tab4_inputs$match_p0 <= 100, "Exposure probability must be between 0 and 100%")
+        )
+      }
+
+      if (!is.null(tab4_inputs$match_ratio)) {
+        validate(
+          need(tab4_inputs$match_ratio >= 1, "Controls per case must be at least 1")
+        )
+      }
+
+      # Tab-specific validations
+      if (identical(calc_mode, "calc_n")) {
+        # Sample Size tab
+        validate(
+          need(!is.null(tab4_inputs$match_or), "Odds ratio is required"),
+          need(tab4_inputs$match_or > 0, "Odds ratio must be positive"),
+          need(tab4_inputs$match_or != 1, "Odds ratio must be different from 1")
+        )
+      } else if (identical(calc_mode, "calc_power")) {
+        # Power Analysis tab
+        validate(
+          need(!is.null(tab4_inputs$match_n_pairs), "Number of matched pairs is required"),
+          need(!is.null(tab4_inputs$match_or), "Odds ratio is required"),
+          need(tab4_inputs$match_n_pairs > 0, "Number of matched pairs must be positive"),
+          need(tab4_inputs$match_or > 0, "Odds ratio must be positive"),
+          need(tab4_inputs$match_or != 1, "Odds ratio must be different from 1")
+        )
+      } else if (identical(calc_mode, "calc_effect")) {
+        # Detectable Effect tab
+        validate(
+          need(!is.null(tab4_inputs$match_n_pairs), "Number of matched pairs is required"),
+          need(tab4_inputs$match_n_pairs > 0, "Number of matched pairs must be positive")
+        )
+      }
     # Tab 5: Continuous Outcomes
     } else if (page == "power_continuous") {
       tab5_inputs <- tab5_vals$inputs()
@@ -592,8 +617,9 @@ app_server <- function(input, output, session) {
     isolate({
       # Get current page with default fallback
       page <- get_current_page()
-
+      cat("DEBUG result_text: page =", page, ", sidebar_page =", input$sidebar_page, "\n")
       validate_inputs()
+      cat("DEBUG result_text: validation passed for page =", page, "\n")
 
       # Tab 1: Single Proportion - Power Analysis (using sidebar_page)
       if (page == "power_single") {
@@ -1362,14 +1388,23 @@ app_server <- function(input, output, session) {
 
       # Tab 4: Matched Case-Control (using sidebar_page)
       } else if (page == "match_casecontrol") {
+        cat("DEBUG: Entered match_casecontrol branch\n")
         tab4_inputs <- tab4_vals$inputs()
         calc_mode <- tab4_inputs$match_calc_mode
+        cat("DEBUG: calc_mode =", calc_mode, "\n")
+
+        # Guard against NULL calc_mode
+        if (is.null(calc_mode) || calc_mode == "") {
+          calc_mode <- "calc_n"  # Default to sample size
+        }
+
         p0 <- tab4_inputs$match_p0 / 100
         m <- tab4_inputs$match_ratio
-        power <- tab4_inputs$match_power / 100
         sided_val <- ifelse(identical(tab4_inputs$match_sided, "two.sided"), 2, 1)
 
         if (calc_mode == "calc_n") {
+          # Sample Size Calculation
+          power <- tab4_inputs$match_power / 100
           # Calculate Sample Size
           or <- tab4_inputs$match_or
 
@@ -1484,9 +1519,116 @@ app_server <- function(input, output, session) {
           ))
           HTML(paste0(text0, text1, text2, text3, missing_data_text))
 
+        } else if (calc_mode == "calc_power") {
+          # Calculate Power Analysis (NEW!)
+          n_cases_nominal <- tab4_inputs$match_n_pairs
+          or <- tab4_inputs$match_or
+
+          # Account for missing data to get effective sample sizes
+          md_vals <- tab4_vals$missing_data_vals()
+          if (md_vals$adjust_missing) {
+            p_missing <- md_vals$missing_pct / 100
+            n_cases_effective <- ceiling(n_cases_nominal * (1 - p_missing))
+            missing_note <- paste0(" After accounting for ", md_vals$missing_pct,
+              "% missing data (", tolower(substr(md_vals$missing_mechanism, 1, 4)),
+              "), the effective number of cases is ", n_cases_effective, ".")
+          } else {
+            n_cases_effective <- n_cases_nominal
+            missing_note <- ""
+          }
+
+          # Account for clustering to adjust effective sample size
+          clust_vals <- tab4_vals$clustering_vals()
+          if (!is.null(clust_vals) && isTRUE(clust_vals$adjust_clustering)) {
+            de <- calc_design_effect(clust_vals$cluster_size, clust_vals$icc)
+            n_cases_before_clustering <- n_cases_effective
+            n_cases_effective <- ceiling(n_cases_effective / de)
+            clustering_note <- paste0(" After accounting for clustering (ICC = ", clust_vals$icc,
+              ", cluster size = ", clust_vals$cluster_size, ", design effect = ",
+              format(de, digits = 2), "), the effective number of cases is ", n_cases_effective, ".")
+          } else {
+            clustering_note <- ""
+          }
+
+          # Calculate power using epi.sscc
+          result <- tryCatch({
+            epi.sscc(
+              OR = or,
+              p0 = p0,
+              n = n_cases_effective,
+              power = NA,
+              r = m,
+              phi.coef = 0,
+              design = 1,
+              sided.test = sided_val,
+              conf.level = 1 - tab4_inputs$match_alpha
+            )
+          }, error = function(e) {
+            list(power = NA)
+          })
+
+          power_achieved <- result$power
+          if (is.null(power_achieved) || is.na(power_achieved)) {
+            power_text <- "<span style='color: red;'>Unable to calculate power with these parameters. Try adjusting sample size or effect size.</span>"
+            power_pct <- NA
+          } else {
+            power_pct <- power_achieved * 100
+            power_text <- paste0("<strong>", format_numeric(power_pct, 1), "%</strong>")
+          }
+
+          text0 <- hr()
+          text1 <- h1("Results of this analysis")
+          text2 <- h4("(This text can be copy/pasted into your synopsis or protocol)")
+          text3 <- p(paste0(
+            "<strong>Power Analysis for Matched Case-Control Study</strong><br>",
+            "For a matched case-control study with <strong>", n_cases_nominal, " matched pairs</strong> ",
+            "(", m, ":1 matching ratio), ",
+            "assuming an odds ratio of <strong>", format_numeric(or, 2), "</strong>, ",
+            format_numeric(p0 * 100, 1), "% exposure prevalence in controls, ",
+            "at α = ", tab4_inputs$match_alpha, " (", tab4_inputs$match_sided, " test).",
+            missing_note,
+            clustering_note,
+            "<br><br>",
+            "<strong>Statistical Power:</strong> ", power_text
+          ))
+
+          power_interpretation <- if (!is.na(power_pct)) {
+            quality <- if (power_pct >= 90) {
+              list(color = "#28a745", label = "Excellent", desc = "Very high probability of detecting the effect")
+            } else if (power_pct >= 80) {
+              list(color = "#28a745", label = "Good", desc = "Acceptable probability of detecting the effect")
+            } else if (power_pct >= 70) {
+              list(color = "#ffc107", label = "Moderate", desc = "May miss the effect in some cases")
+            } else if (power_pct >= 50) {
+              list(color = "#fd7e14", label = "Low", desc = "High risk of missing a true effect")
+            } else {
+              list(color = "#dc3545", label = "Very Low", desc = "Study is likely underpowered")
+            }
+
+            HTML(paste0(
+              "<p style='background-color: ", quality$color, "33; border-left: 4px solid ", quality$color, "; padding: 10px; margin-top: 15px;'>",
+              "<strong>Power Assessment: ", quality$label, "</strong><br>",
+              quality$desc, "<br><br>",
+              "<strong>Interpretation:</strong> ",
+              "With ", n_cases_nominal, " matched pairs and an expected OR of ", format_numeric(or, 2), ", ",
+              "this study has a ", format_numeric(power_pct, 1), "% chance of detecting a statistically significant effect. ",
+              if (power_pct < 80) {
+                paste0("<strong>Consider increasing sample size to achieve 80% power.</strong>")
+              } else {
+                "This meets the conventional threshold for adequate power."
+              },
+              "</p>"
+            ))
+          } else {
+            HTML("")
+          }
+
+          HTML(paste0(text0, text1, text2, text3, power_interpretation))
+
         } else {
           # Calculate Odds Ratio (Minimal Detectable Effect)
-          n_cases_nominal <- tab4_inputs$match_n_pairs_fixed
+          power <- tab4_inputs$match_power / 100
+          n_cases_nominal <- tab4_inputs$match_n_pairs
           n_controls_nominal <- n_cases_nominal * m
           n_total_nominal <- n_cases_nominal * (1 + m)
 
@@ -3689,7 +3831,7 @@ app_server <- function(input, output, session) {
 
   ################################################################################################## CONFIDENCE INTERVAL TABLE
 
-  output$result_table <- renderDataTable(
+  output$result_table <- renderDT(
     {
       if (!v$doAnalysis) {
         return()
@@ -3790,545 +3932,37 @@ app_server <- function(input, output, session) {
   })
 
   ################################################################################################## CSV DOWNLOAD
+  # Refactored 2025-10-27: Uses centralized export functions from R/fct_export.R and R/utils_export.R
+  # This replaces 540+ lines of duplicated code with a clean, testable implementation.
 
   output$report_csv <- downloadHandler(
     filename = function() {
-      paste("Power-Analysis-", get_page_display_name(input$sidebar_page), "-", Sys.Date(), ".csv", sep = "")
+      generate_export_filename(input$sidebar_page, "csv")
     },
     content = function(file) {
-      if (identical(input$sidebar_page, "power_single")) {
-        tab1_inputs <- tab1_vals$inputs()
-        results <- data.frame(
-          Analysis_Type = "Single Proportion - Power Calculation",
-          Sample_Size = tab1_inputs$power_n,
-          Expected_Proportion_Percent = tab1_inputs$power_p,
-          Reference_Proportion_Percent = tab1_inputs$power_p0,
-          Power_Percent = pwr.p.test(
-            sig.level = tab1_inputs$power_alpha, power = NULL,
-            h = ES.h(tab1_inputs$power_p / 100, tab1_inputs$power_p0 / 100), alt = "greater",
-            n = tab1_inputs$power_n
-          )$power * 100,
-          Significance_Level = tab1_inputs$power_alpha,
-          Discontinuation_Rate_Percent = tab1_inputs$power_discon,
-          Adjusted_Sample_Size = ceiling(tab1_inputs$power_n * (1 + tab1_inputs$power_discon / 100)),
-          Date = Sys.Date()
-        )
-      } else if (identical(input$sidebar_page, "ss_single")) {
-        tab1_inputs <- tab1_vals$inputs()
-        sample_size <- pwr.p.test(
-          sig.level = tab1_inputs$ss_alpha, power = tab1_inputs$ss_power / 100,
-          h = ES.h(tab1_inputs$ss_p / 100, tab1_inputs$ss_p0 / 100), alt = "greater", n = NULL
-        )$n
-        results <- data.frame(
-          Analysis_Type = "Single Proportion - Sample Size Calculation",
-          Desired_Power_Percent = tab1_inputs$ss_power,
-          Expected_Proportion_Percent = tab1_inputs$ss_p,
-          Reference_Proportion_Percent = tab1_inputs$ss_p0,
-          Required_Sample_Size = ceiling(sample_size),
-          Significance_Level = tab1_inputs$ss_alpha,
-          Discontinuation_Rate_Percent = tab1_inputs$ss_discon,
-          Adjusted_Sample_Size = ceiling(sample_size * (1 + tab1_inputs$ss_discon / 100)),
-          Date = Sys.Date()
-        )
-      } else if (identical(input$sidebar_page, "power_twogrp")) {
-        p1 <- input$twogrp_pow_p1 / 100
-        p2 <- input$twogrp_pow_p2 / 100
-        power <- pwr.2p2n.test(
-          h = ES.h(p1, p2), n1 = input$twogrp_pow_n1, n2 = input$twogrp_pow_n2,
-          sig.level = input$twogrp_pow_alpha,
-          alternative = input$twogrp_pow_sided
-        )$power
-        eff <- calc_effect_measures(p1, p2)
-        results <- data.frame(
-          Analysis_Type = "Two-Group Comparison - Power Calculation",
-          Sample_Size_Group1 = input$twogrp_pow_n1,
-          Sample_Size_Group2 = input$twogrp_pow_n2,
-          Event_Rate_Group1_Percent = input$twogrp_pow_p1,
-          Event_Rate_Group2_Percent = input$twogrp_pow_p2,
-          Power_Percent = power * 100,
-          Significance_Level = input$twogrp_pow_alpha,
-          Test_Type = input$twogrp_pow_sided,
-          Risk_Difference = eff$risk_diff,
-          Relative_Risk = eff$relative_risk,
-          Odds_Ratio = eff$odds_ratio,
-          Date = Sys.Date()
-        )
-      } else if (identical(input$sidebar_page, "ss_twogrp")) {
-        p1 <- input$twogrp_ss_p1 / 100
-        p2 <- input$twogrp_ss_p2 / 100
-        n1 <- solve_n1_for_ratio(
-          ES.h(p1, p2), input$twogrp_ss_ratio,
-          input$twogrp_ss_alpha, input$twogrp_ss_power / 100,
-          input$twogrp_ss_sided
-        )
-        n2 <- n1 * input$twogrp_ss_ratio
-        eff <- calc_effect_measures(p1, p2)
-        results <- data.frame(
-          Analysis_Type = "Two-Group Comparison - Sample Size Calculation",
-          Desired_Power_Percent = input$twogrp_ss_power,
-          Event_Rate_Group1_Percent = input$twogrp_ss_p1,
-          Event_Rate_Group2_Percent = input$twogrp_ss_p2,
-          Required_Sample_Size_Group1 = ceiling(n1),
-          Required_Sample_Size_Group2 = ceiling(n2),
-          Total_Sample_Size = ceiling(n1 + n2),
-          Allocation_Ratio = input$twogrp_ss_ratio,
-          Significance_Level = input$twogrp_ss_alpha,
-          Test_Type = input$twogrp_ss_sided,
-          Risk_Difference = eff$risk_diff,
-          Relative_Risk = eff$relative_risk,
-          Odds_Ratio = eff$odds_ratio,
-          Date = Sys.Date()
-        )
-      } else if (identical(input$sidebar_page, "power_survival")) {
-        n <- input$surv_pow_n
-        hr <- input$surv_pow_hr
-        k <- input$surv_pow_k / 100
-        pE <- input$surv_pow_pE / 100
-        power <- powerEpi.default(n = n, theta = hr, p = k, psi = pE, rho2 = 0, alpha = input$surv_pow_alpha)
-        results <- data.frame(
-          Analysis_Type = "Survival Analysis - Power Calculation",
-          Total_Sample_Size = n,
-          Hazard_Ratio = hr,
-          Proportion_Exposed_Percent = input$surv_pow_k,
-          Overall_Event_Rate_Percent = input$surv_pow_pE,
-          Power_Percent = power * 100,
-          Significance_Level = input$surv_pow_alpha,
-          Method = "Schoenfeld (1983)",
-          Date = Sys.Date()
-        )
-      } else if (identical(input$sidebar_page, "ss_survival")) {
-        hr <- input$surv_ss_hr
-        k <- input$surv_ss_k / 100
-        pE <- input$surv_ss_pE / 100
-        power <- input$surv_ss_power / 100
-        n_est <- ssizeEpi.default(power = power, theta = hr, p = k, psi = pE, rho2 = 0, alpha = input$surv_ss_alpha)
-        results <- data.frame(
-          Analysis_Type = "Survival Analysis - Sample Size Calculation",
-          Desired_Power_Percent = input$surv_ss_power,
-          Hazard_Ratio = hr,
-          Proportion_Exposed_Percent = input$surv_ss_k,
-          Overall_Event_Rate_Percent = input$surv_ss_pE,
-          Required_Total_Sample_Size = ceiling(n_est),
-          Significance_Level = input$surv_ss_alpha,
-          Method = "Schoenfeld (1983)",
-          Date = Sys.Date()
-        )
-        } else if (identical(input$sidebar_page, "match_casecontrol")) {
-        or <- input$match_or
-        p0 <- input$match_p0 / 100
-        m <- input$match_ratio
-        power <- input$match_power / 100
-        sided_val <- ifelse(identical(input$match_sided, "two.sided"), 2, 1)
-        result <- epi.sscc(
-          OR = or, p0 = p0, n = NA, power = power,
-          r = m, phi.coef = 0, design = 1, sided.test = sided_val,
-          conf.level = 1 - input$match_alpha
-        )
-        n_cases <- ceiling(result$n.total)
-        results <- data.frame(
-          Analysis_Type = "Matched Case-Control - Sample Size Calculation",
-          Desired_Power_Percent = input$match_power * 100,
-          Odds_Ratio = or,
-          Exposure_Prob_Controls_Percent = input$match_p0,
-          Controls_Per_Case = m,
-          Required_Cases = n_cases,
-          Required_Controls = n_cases * m,
-          Total_Sample_Size = n_cases * (1 + m),
-          Significance_Level = input$match_alpha,
-          Test_Type = input$match_sided,
-          Date = Sys.Date()
-        )
-      } else if (identical(input$sidebar_page, "power_continuous")) {
-        n1 <- input$cont_pow_n1
-        n2 <- input$cont_pow_n2
-        d <- input$cont_pow_d
-        power <- pwr.t2n.test(
-          n1 = n1, n2 = n2, d = d,
-          sig.level = input$cont_pow_alpha,
-          alternative = input$cont_pow_sided
-        )$power
-        results <- data.frame(
-          Analysis_Type = "Continuous Outcomes - Power Calculation",
-          Sample_Size_Group1 = n1,
-          Sample_Size_Group2 = n2,
-          Effect_Size_Cohens_d = d,
-          Power_Percent = power * 100,
-          Significance_Level = input$cont_pow_alpha,
-          Test_Type = input$cont_pow_sided,
-          Date = Sys.Date()
-        )
-      } else if (identical(input$sidebar_page, "ss_continuous")) {
-        d <- input$cont_ss_d
-        power <- input$cont_ss_power / 100
-        ratio <- input$cont_ss_ratio
-        if (ratio == 1) {
-          n <- pwr.t.test(
-            d = d, sig.level = input$cont_ss_alpha,
-            power = power, type = "two.sample",
-            alternative = input$cont_ss_sided
-          )$n
-          n1 <- n
-          n2 <- n
-        } else {
-          f <- function(n1) {
-            n2 <- n1 * ratio
-            pwr.t2n.test(
-              n1 = n1, n2 = n2, d = d,
-              sig.level = input$cont_ss_alpha,
-              alternative = input$cont_ss_sided
-            )$power - power
-          }
-          n1 <- tryCatch(
-            {
-              uniroot(f, c(2, 1e6), extendInt = "yes")$root
-            },
-            error = function(e) {
-              pwr.t.test(
-                d = d, sig.level = input$cont_ss_alpha,
-                power = power, type = "two.sample",
-                alternative = input$cont_ss_sided
-              )$n
-            }
-          )
-          n2 <- n1 * ratio
-        }
-        results <- data.frame(
-          Analysis_Type = "Continuous Outcomes - Sample Size Calculation",
-          Desired_Power_Percent = input$cont_ss_power,
-          Effect_Size_Cohens_d = d,
-          Required_Sample_Size_Group1 = ceiling(n1),
-          Required_Sample_Size_Group2 = ceiling(n2),
-          Total_Sample_Size = ceiling(n1 + n2),
-          Allocation_Ratio = ratio,
-          Significance_Level = input$cont_ss_alpha,
-          Test_Type = input$cont_ss_sided,
-          Date = Sys.Date()
-        )
-        } else if (identical(input$sidebar_page, "noninf")) {
-        p1 <- input$noninf_p1 / 100
-        p2 <- input$noninf_p2 / 100
-        margin <- input$noninf_margin / 100
-        power <- input$noninf_power / 100
-        ratio <- input$noninf_ratio
-        h <- ES.h(p1, p2 + margin)
-        if (ratio == 1) {
-          n <- pwr.2p.test(
-            h = abs(h), sig.level = input$noninf_alpha,
-            power = power, alternative = "two.sided"
-          )$n
-          n1 <- n
-          n2 <- n
-        } else {
-          f <- function(n1) {
-            n2 <- n1 * ratio
-            pwr.2p2n.test(
-              h = abs(h), n1 = n1, n2 = n2,
-              sig.level = input$noninf_alpha,
-              alternative = "two.sided"
-            )$power - power
-          }
-          n1 <- tryCatch(
-            {
-              uniroot(f, c(2, 1e6), extendInt = "yes")$root
-            },
-            error = function(e) {
-              pwr.2p.test(
-                h = abs(h), sig.level = input$noninf_alpha,
-                power = power, alternative = "less"
-              )$n
-            }
-          )
-          n2 <- n1 * ratio
-        }
-        results <- data.frame(
-          Analysis_Type = "Non-Inferiority - Sample Size Calculation",
-          Desired_Power_Percent = input$noninf_power,
-          Event_Rate_Test_Percent = input$noninf_p1,
-          Event_Rate_Reference_Percent = input$noninf_p2,
-          Non_Inferiority_Margin_Percent = input$noninf_margin,
-          Required_Sample_Size_Test = ceiling(n1),
-          Required_Sample_Size_Reference = ceiling(n2),
-          Total_Sample_Size = ceiling(n1 + n2),
-          Allocation_Ratio = ratio,
-          Significance_Level = input$noninf_alpha,
-          Date = Sys.Date()
-        )
+      # Prepare reactive values for extraction
+      reactive_vals_list <- prepare_reactive_vals(
+        tab1_vals = tab1_vals,
+        tab8_vals = tab8_vals,
+        tab9_vals = tab9_vals,
+        tab10_vals = tab10_vals
+      )
 
-      } else if (identical(input$sidebar_page, "survival_ni_equiv")) {
-        tab9_inputs <- tab9_vals$inputs()
-        test_type <- tab9_inputs$test_type
-        calc_mode <- tab9_inputs$calc_mode
+      # Extract inputs using centralized function
+      inputs <- extract_analysis_inputs(
+        input$sidebar_page,
+        input,
+        reactive_vals_list
+      )
 
-        if (calc_mode == "calc_n") {
-          power <- tab9_inputs$power / 100
-          hr_expected <- tab9_inputs$hr_expected
-          prop_exposed <- tab9_inputs$prop_exposed / 100
-          event_rate <- tab9_inputs$event_rate / 100
-          ratio <- tab9_inputs$allocation_ratio
-          alpha <- tab9_inputs$alpha
+      # Build export data using pure functions (testable!)
+      results <- build_export_data(
+        input$sidebar_page,
+        inputs,
+        shiny_input = input
+      )
 
-          if (test_type == "non-inferiority") {
-            hr_margin <- tab9_inputs$hr_margin_ni
-
-            n_total <- ssize_survival_ni(
-              power = power,
-              hr_expected = hr_expected,
-              hr_margin = hr_margin,
-              k = prop_exposed,
-              pE = event_rate,
-              alpha = alpha,
-              ratio = ratio
-            )
-
-            n_test <- ceiling(n_total / (1 + ratio))
-            n_ref <- n_total - n_test
-            d_events <- events_survival_ni(power, hr_expected, hr_margin, alpha)
-
-            results <- data.frame(
-              Analysis_Type = "Time-to-Event Non-Inferiority - Sample Size",
-              Test_Type = "Non-Inferiority (one-sided)",
-              Expected_HR = hr_expected,
-              NI_Margin_HR = hr_margin,
-              Desired_Power_Percent = tab9_inputs$power,
-              Significance_Level = alpha,
-              Prop_Exposed_Percent = tab9_inputs$prop_exposed,
-              Event_Rate_Percent = tab9_inputs$event_rate,
-              Allocation_Ratio = ratio,
-              Total_Sample_Size = n_total,
-              Sample_Size_Test = n_test,
-              Sample_Size_Reference = n_ref,
-              Required_Events = d_events,
-              Date = Sys.Date()
-            )
-
-          } else {
-            hr_margin <- tab9_inputs$hr_margin_equiv
-            hr_lower <- 1 / hr_margin
-            hr_upper <- hr_margin
-
-            n_total <- ssize_survival_equiv(
-              power = power,
-              hr_expected = hr_expected,
-              hr_lower = hr_lower,
-              hr_upper = hr_upper,
-              k = prop_exposed,
-              pE = event_rate,
-              alpha = alpha,
-              ratio = ratio
-            )
-
-            n_test <- ceiling(n_total / (1 + ratio))
-            n_ref <- n_total - n_test
-            d_events <- events_survival_ni(power, hr_expected, hr_upper, alpha / 2)
-
-            results <- data.frame(
-              Analysis_Type = "Time-to-Event Equivalence - Sample Size",
-              Test_Type = "Equivalence (TOST)",
-              Expected_HR = hr_expected,
-              Equiv_Margin_Lower_HR = hr_lower,
-              Equiv_Margin_Upper_HR = hr_upper,
-              Desired_Power_Percent = tab9_inputs$power,
-              Significance_Level = alpha,
-              Prop_Exposed_Percent = tab9_inputs$prop_exposed,
-              Event_Rate_Percent = tab9_inputs$event_rate,
-              Allocation_Ratio = ratio,
-              Total_Sample_Size = n_total,
-              Sample_Size_Test = n_test,
-              Sample_Size_Reference = n_ref,
-              Required_Events = d_events,
-              Date = Sys.Date()
-            )
-          }
-
-        } else {
-          # Margin calculation
-          n_fixed <- tab9_inputs$n_fixed
-          hr_expected <- tab9_inputs$hr_expected
-          power <- tab9_inputs$power / 100
-          prop_exposed <- tab9_inputs$prop_exposed / 100
-          event_rate <- tab9_inputs$event_rate / 100
-          ratio <- tab9_inputs$allocation_ratio
-          alpha <- tab9_inputs$alpha
-
-          margin_detectable <- mde_survival_ni(
-            n = n_fixed,
-            hr_expected = hr_expected,
-            power = power,
-            k = prop_exposed,
-            pE = event_rate,
-            alpha = alpha,
-            ratio = ratio
-          )
-
-          results <- data.frame(
-            Analysis_Type = "Time-to-Event NI/Equivalence - Margin Calculation",
-            Test_Type = tab9_inputs$test_type,
-            Available_Sample_Size = n_fixed,
-            Expected_HR = hr_expected,
-            Detectable_Margin_HR = margin_detectable,
-            Desired_Power_Percent = tab9_inputs$power,
-            Significance_Level = alpha,
-            Prop_Exposed_Percent = tab9_inputs$prop_exposed,
-            Event_Rate_Percent = tab9_inputs$event_rate,
-            Allocation_Ratio = ratio,
-            Date = Sys.Date()
-          )
-        }
-      } else if (identical(input$sidebar_page, "mediation_analysis")) {
-        # Get module inputs
-        med_inputs <- tab8_vals$inputs()
-
-        # Extract values
-        calc_mode <- med_inputs$calc_mode
-        a <- med_inputs$path_a
-        b <- med_inputs$path_b
-        c_prime <- med_inputs$path_c_prime
-        alpha <- med_inputs$med_alpha
-        alternative <- med_inputs$med_sided
-
-        # Handle standard errors (use input or estimate from N)
-        se_a <- if (!is.na(med_inputs$se_a)) med_inputs$se_a else NULL
-        se_b <- if (!is.na(med_inputs$se_b)) med_inputs$se_b else NULL
-
-        # Calculate based on mode
-        if (calc_mode == "calc_power") {
-          # Calculate power given N
-          n <- med_inputs$med_n
-          power <- calc_mediation_power(n, a, b, se_a, se_b, alpha, alternative)
-
-          results <- data.frame(
-            Analysis_Type = "Mediation Analysis - Power Calculation",
-            Sample_Size = n,
-            Power_Percent = power * 100,
-            Path_a_X_to_M = a,
-            Path_b_M_to_Y = b,
-            Indirect_Effect_ab = a * b,
-            Path_c_prime_Direct = ifelse(!is.na(c_prime), c_prime, NA),
-            SE_Path_a = ifelse(!is.null(se_a), se_a, 1/sqrt(n)),
-            SE_Path_b = ifelse(!is.null(se_b), se_b, 1/sqrt(n)),
-            Significance_Level = alpha,
-            Test_Type = alternative,
-            Date = Sys.Date()
-          )
-
-        } else if (calc_mode == "calc_n") {
-          # Calculate sample size given power
-          power <- med_inputs$med_power / 100
-          n_required <- calc_mediation_n(a, b, power, alpha, alternative)
-
-          results <- data.frame(
-            Analysis_Type = "Mediation Analysis - Sample Size Calculation",
-            Required_Sample_Size = ifelse(!is.na(n_required), ceiling(n_required), NA),
-            Desired_Power_Percent = med_inputs$med_power,
-            Path_a_X_to_M = a,
-            Path_b_M_to_Y = b,
-            Indirect_Effect_ab = a * b,
-            Path_c_prime_Direct = ifelse(!is.na(c_prime), c_prime, NA),
-            Significance_Level = alpha,
-            Test_Type = alternative,
-            Date = Sys.Date()
-          )
-
-        } else if (calc_mode == "calc_mde") {
-          # Calculate minimal detectable effect
-          n <- med_inputs$med_n
-          power <- med_inputs$med_power / 100
-          b_min <- calc_mediation_mde(n, a, power, alpha, alternative)
-          ab_min <- a * b_min
-
-          results <- data.frame(
-            Analysis_Type = "Mediation Analysis - Minimal Detectable Effect",
-            Sample_Size = n,
-            Desired_Power_Percent = med_inputs$med_power,
-            Path_a_X_to_M = a,
-            Path_b_M_to_Y_Minimum = ifelse(!is.na(b_min), b_min, NA),
-            Indirect_Effect_ab_Minimum = ifelse(!is.na(ab_min), ab_min, NA),
-            Path_c_prime_Direct = ifelse(!is.na(c_prime), c_prime, NA),
-            Significance_Level = alpha,
-            Test_Type = alternative,
-            Date = Sys.Date()
-          )
-        }
-      } else if (identical(input$sidebar_page, "sensitivity_multi_bias")) {
-        # Get module inputs
-        tab10_vals_data <- tab10_vals()
-        multi_bias_data <- tab10_vals_data$multi_bias
-
-        # Extract bias configuration
-        include_confounding <- multi_bias_data$include_confounding
-        include_selection <- multi_bias_data$include_selection
-        include_misclass <- multi_bias_data$include_misclass
-        selection_type <- multi_bias_data$selection_type
-        misclass_type <- multi_bias_data$misclass_type
-        rr <- multi_bias_data$rr
-        include_ci <- multi_bias_data$include_ci
-        ci_lower <- multi_bias_data$ci_lower
-        ci_upper <- multi_bias_data$ci_upper
-        analysis_type <- multi_bias_data$analysis_type
-
-        # Build bias types list
-        bias_types <- character(0)
-        if (include_confounding) bias_types <- c(bias_types, "Unmeasured Confounding")
-        if (include_selection) bias_types <- c(bias_types, paste0("Selection Bias (", selection_type, ")"))
-        if (include_misclass) bias_types <- c(bias_types, paste0("Misclassification (", misclass_type, ")"))
-        bias_types_str <- paste(bias_types, collapse = "; ")
-
-        # Extract results
-        mb_results <- multi_bias_data$results
-
-        if (!is.null(mb_results) && !is.null(mb_results$valid) && mb_results$valid) {
-          if (analysis_type == "evalue") {
-            # E-value analysis export
-            results <- data.frame(
-              Analysis_Type = "Multi-Bias Sensitivity Analysis - E-value",
-              Bias_Types = bias_types_str,
-              Observed_RR = rr,
-              CI_Lower = ifelse(include_ci, ci_lower, NA),
-              CI_Upper = ifelse(include_ci, ci_upper, NA),
-              Multi_Bias_E_value = mb_results$evalue,
-              Number_of_Bias_Types = length(bias_types),
-              Robustness_Level = mb_results$interpretation$magnitude,
-              Date = Sys.Date(),
-              stringsAsFactors = FALSE
-            )
-          } else {
-            # Bias-adjusted bound analysis export
-            # Format bias parameters as a string
-            bias_parms_str <- paste(
-              names(mb_results$bias_parms),
-              "=",
-              sapply(mb_results$bias_parms, function(x) sprintf("%.2f", x)),
-              collapse = "; "
-            )
-
-            results <- data.frame(
-              Analysis_Type = "Multi-Bias Sensitivity Analysis - Bias-Adjusted Bound",
-              Bias_Types = bias_types_str,
-              Observed_RR = mb_results$original_rr,
-              CI_Lower = ifelse(include_ci, ci_lower, NA),
-              CI_Upper = ifelse(include_ci, ci_upper, NA),
-              Bias_Parameters = bias_parms_str,
-              Bias_Factor = mb_results$bias_factor,
-              Adjusted_RR = mb_results$adjusted_rr,
-              Adjusted_CI_Lower = ifelse(!is.na(mb_results$adjusted_lo), mb_results$adjusted_lo, NA),
-              Adjusted_CI_Upper = ifelse(!is.na(mb_results$adjusted_hi), mb_results$adjusted_hi, NA),
-              Crosses_Null = mb_results$interpretation$crosses_null,
-              Number_of_Bias_Types = length(bias_types),
-              Date = Sys.Date(),
-              stringsAsFactors = FALSE
-            )
-          }
-        } else {
-          # No valid results available - create placeholder
-          results <- data.frame(
-            Analysis_Type = "Multi-Bias Sensitivity Analysis",
-            Note = "No calculation results available. Please run analysis first.",
-            Date = Sys.Date(),
-            stringsAsFactors = FALSE
-          )
-        }
-      }
-
+      # Write to CSV
       write.csv(results, file, row.names = FALSE)
     }
   )
