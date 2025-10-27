@@ -127,6 +127,15 @@ calculate_n_li_2025 <- function(effect_size,
                                 rho_squared,
                                 weight_type = "ATE",
                                 outcome_var = 1) {
+  logger::log_debug(
+    "calculate_n_li_2025 called",
+    effect_size = effect_size,
+    power = power,
+    treatment_prop = treatment_prop,
+    overlap_phi = overlap_phi,
+    rho_squared = rho_squared,
+    weight_type = weight_type
+  )
 
   # Critical values
   z_alpha <- qnorm(1 - alpha/2)
@@ -171,6 +180,8 @@ calculate_n_li_2025 <- function(effect_size,
 
   # Variance Inflation Factor (for comparison with Austin method)
   vif_li_2025 <- overlap_penalty * confounding_penalty * weight_multiplier
+
+  logger::log_debug("calculate_n_li_2025 completed", n_required = n_required, vif = vif_li_2025)
 
   list(
     n_required = n_required,

@@ -14,12 +14,21 @@
 #'
 #' @noRd
 calc_missing_data_inflation <- function(n_required, missing_pct, mechanism = "mar", analysis_type = "complete_case", mi_imputations = 5, mi_r_squared = 0.5) {
+  logger::log_debug(
+    "calc_missing_data_inflation called",
+    n_required = n_required,
+    missing_pct = missing_pct,
+    mechanism = mechanism,
+    analysis_type = analysis_type
+  )
+
   # Validate inputs
   if (is.null(missing_pct) || length(missing_pct) == 0 || is.na(missing_pct)) {
     missing_pct <- 0
   }
-  
+
   if (isTRUE(all.equal(missing_pct, 0)) || missing_pct <= 0) {
+    logger::log_trace("calc_missing_data_inflation: no missingness, no adjustment needed")
     return(list(
       n_inflated = n_required,
       inflation_factor = 1.0,
@@ -132,6 +141,13 @@ calc_missing_data_inflation <- function(n_required, missing_pct, mechanism = "ma
       r_squared_quality = if (mi_r_squared >= 0.7) "strong" else if (mi_r_squared >= 0.5) "moderate" else if (mi_r_squared >= 0.3) "weak" else "very weak"
     )
   }
+
+  logger::log_debug(
+    "calc_missing_data_inflation completed",
+    n_inflated = n_inflated,
+    inflation_factor = round(inflation_factor, 3),
+    analysis_type = analysis_type
+  )
 
   list(
     n_inflated = n_inflated,

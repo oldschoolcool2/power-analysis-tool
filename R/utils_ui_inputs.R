@@ -278,6 +278,9 @@ create_button_group <- function(buttons) {
 #' @param tooltip Optional tooltip text to display (NULL means no tooltip)
 #' @param validation_type Optional validation type for real-time validation
 #'   (e.g., "sample_size", "power", "proportion", "hazard_ratio", "event_rate")
+#' @param help_content Optional help content for contextual help icon
+#' @param updateOn When to send updated values to server: "change" (every keystroke)
+#'   or "blur" (when focus lost). Default is "blur" to reduce reactive churn.
 #'
 #' @return A tagList containing numericInput and optional tooltip
 #'
@@ -303,7 +306,8 @@ create_numeric_input_with_tooltip <- function(inputId,
                                               step = 1,
                                               tooltip = NULL,
                                               validation_type = NULL,
-                                              help_content = NULL) {
+                                              help_content = NULL,
+                                              updateOn = "blur") {
 
   # Create the numeric input
   # Build arguments list, only including min/max if not NULL
@@ -313,11 +317,23 @@ create_numeric_input_with_tooltip <- function(inputId,
     value = value,
     step = step
   )
-  
+
   if (!is.null(min)) input_args$min <- min
   if (!is.null(max)) input_args$max <- max
-  
+
+  # Add updateOn parameter to reduce reactive churn
+  # "blur" waits until user leaves input field
+  # "change" updates immediately on every keystroke (default Shiny behavior)
   input_element <- do.call(numericInput, input_args)
+
+  # Modify the input element to add updateOn attribute
+  # The actual input tag is nested within the form-group div
+  if (!is.null(input_element$children[[2]])) {
+    input_tag <- input_element$children[[2]]
+    if (inherits(input_tag, "shiny.tag") && !is.null(input_tag$attribs)) {
+      input_tag$attribs$`data-shiny-update-on` <- updateOn
+    }
+  }
 
   # Add validation attribute if validation type is specified
   if (!is.null(validation_type)) {

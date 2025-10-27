@@ -236,6 +236,138 @@ mod_02_two_group_server <- function(id){
       updateRadioButtons(session, "twogrp_ss_sided", selected = "two.sided")
     })
 
+    # Define allowlists for categorical inputs (security best practice)
+    VALID_ALPHA <- c("0.001", "0.01", "0.05", "0.10")
+    VALID_POWER <- c("70", "80", "90", "95")
+    VALID_TEST_TYPES <- c("one.sided", "two.sided")
+    VALID_CALC_MODES <- c("calc_n", "calc_effect")
+
+    # Raw reactive inputs (not debounced)
+    inputs_raw <- reactive({
+      # Use req() to prevent execution until inputs are available
+      req(input$twogrp_pow_n1)
+      req(input$twogrp_pow_n2)
+      req(input$twogrp_pow_p1)
+      req(input$twogrp_pow_p2)
+      req(input$twogrp_pow_alpha)
+      req(input$twogrp_pow_sided)
+
+      # Validate and sanitize numeric inputs with proper type checking
+      tryCatch({
+        list(
+          # Power analysis inputs
+          twogrp_pow_n1 = validate_numeric_input(
+            input$twogrp_pow_n1,
+            "Sample size group 1",
+            min = 1,
+            max = 1e7
+          ),
+          twogrp_pow_n2 = validate_numeric_input(
+            input$twogrp_pow_n2,
+            "Sample size group 2",
+            min = 1,
+            max = 1e7
+          ),
+          twogrp_pow_p1 = validate_proportion_input(
+            input$twogrp_pow_p1,
+            "Event rate group 1"
+          ),
+          twogrp_pow_p2 = validate_proportion_input(
+            input$twogrp_pow_p2,
+            "Event rate group 2"
+          ),
+          twogrp_pow_alpha = as.numeric(validate_choice_input(
+            input$twogrp_pow_alpha,
+            VALID_ALPHA,
+            "Significance level"
+          )),
+          twogrp_pow_sided = validate_choice_input(
+            input$twogrp_pow_sided,
+            VALID_TEST_TYPES,
+            "Test type"
+          ),
+
+          # Sample size calculation inputs
+          twogrp_ss_calc_mode = validate_choice_input(
+            input$twogrp_ss_calc_mode %||% "calc_n",
+            VALID_CALC_MODES,
+            "Calculation mode"
+          ),
+          twogrp_ss_power = as.numeric(validate_choice_input(
+            input$twogrp_ss_power %||% "80",
+            VALID_POWER,
+            "Power level"
+          )),
+          twogrp_ss_p1 = validate_proportion_input(
+            input$twogrp_ss_p1 %||% 10,
+            "Event rate group 1"
+          ),
+          twogrp_ss_p2 = validate_proportion_input(
+            input$twogrp_ss_p2 %||% 5,
+            "Event rate group 2"
+          ),
+          twogrp_ss_n1_fixed = validate_numeric_input(
+            input$twogrp_ss_n1_fixed %||% 500,
+            "Fixed sample size group 1",
+            min = 10,
+            max = 1e7,
+            allow_null = TRUE
+          ),
+          twogrp_ss_p2_baseline = validate_proportion_input(
+            input$twogrp_ss_p2_baseline %||% 10,
+            "Baseline proportion group 2",
+            allow_null = TRUE
+          ),
+          twogrp_ss_ratio = validate_numeric_input(
+            input$twogrp_ss_ratio %||% 1,
+            "Allocation ratio",
+            min = 0.01,
+            max = 100
+          ),
+          twogrp_ss_alpha = as.numeric(validate_choice_input(
+            input$twogrp_ss_alpha %||% "0.05",
+            VALID_ALPHA,
+            "Significance level"
+          )),
+          twogrp_ss_sided = validate_choice_input(
+            input$twogrp_ss_sided %||% "two.sided",
+            VALID_TEST_TYPES,
+            "Test type"
+          )
+        )
+      }, error = function(e) {
+        # If validation fails, log the error (in production) and return defaults
+        if (golem::app_prod()) {
+          logger::log_warn(
+            "Input validation failed in two-group module",
+            error = conditionMessage(e)
+          )
+        }
+
+        # Return safe defaults if validation fails
+        list(
+          twogrp_pow_n1 = 200,
+          twogrp_pow_n2 = 200,
+          twogrp_pow_p1 = 10,
+          twogrp_pow_p2 = 5,
+          twogrp_pow_alpha = 0.05,
+          twogrp_pow_sided = "two.sided",
+          twogrp_ss_calc_mode = "calc_n",
+          twogrp_ss_power = 80,
+          twogrp_ss_p1 = 10,
+          twogrp_ss_p2 = 5,
+          twogrp_ss_n1_fixed = 500,
+          twogrp_ss_p2_baseline = 10,
+          twogrp_ss_ratio = 1,
+          twogrp_ss_alpha = 0.05,
+          twogrp_ss_sided = "two.sided"
+        )
+      })
+    })
+
+    # Debounced inputs - wait 500ms after last change before updating
+    inputs <- inputs_raw %>% debounce(500)
+
     # Register cleanup handler
     onStop(function() {
       log_module_event("two_group", "cleanup", session)
@@ -246,26 +378,7 @@ mod_02_two_group_server <- function(id){
       inputs = reactive({
         # Log reactive execution at TRACE level (only when debugging)
         log_reactive_execution("two_group_inputs", session)
-
-        list(
-          # Power analysis inputs
-          twogrp_pow_n1 = as.numeric(input$twogrp_pow_n1),
-          twogrp_pow_n2 = as.numeric(input$twogrp_pow_n2),
-          twogrp_pow_p1 = as.numeric(input$twogrp_pow_p1),
-          twogrp_pow_p2 = as.numeric(input$twogrp_pow_p2),
-          twogrp_pow_alpha = as.numeric(input$twogrp_pow_alpha),
-          twogrp_pow_sided = input$twogrp_pow_sided,
-          # Sample size inputs
-          twogrp_ss_calc_mode = input$twogrp_ss_calc_mode,
-          twogrp_ss_power = as.numeric(input$twogrp_ss_power),
-          twogrp_ss_p1 = as.numeric(input$twogrp_ss_p1),
-          twogrp_ss_p2 = as.numeric(input$twogrp_ss_p2),
-          twogrp_ss_n1_fixed = as.numeric(input$twogrp_ss_n1_fixed),
-          twogrp_ss_p2_baseline = as.numeric(input$twogrp_ss_p2_baseline),
-          twogrp_ss_ratio = as.numeric(input$twogrp_ss_ratio),
-          twogrp_ss_alpha = as.numeric(input$twogrp_ss_alpha),
-          twogrp_ss_sided = input$twogrp_ss_sided
-        )
+        inputs()
       }),
       missing_data_vals = missing_data_vals,
       clustering_vals = clustering_vals,

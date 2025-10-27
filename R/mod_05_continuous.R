@@ -242,6 +242,125 @@ mod_05_continuous_server <- function(id){
       updateRadioButtons(session, "cont_ss_sided", selected = "two.sided")
     })
 
+    # Define allowlists for categorical inputs (security best practice)
+    VALID_ALPHA <- c("0.001", "0.01", "0.05", "0.10")
+    VALID_POWER <- c("70", "80", "90", "95")
+    VALID_TEST_TYPES <- c("one.sided", "two.sided")
+    VALID_CALC_MODES <- c("calc_n", "calc_effect")
+
+    # Raw reactive inputs (not debounced)
+    inputs_raw <- reactive({
+      # Use req() to prevent execution until inputs are available
+      req(input$cont_pow_n1)
+      req(input$cont_pow_n2)
+      req(input$cont_pow_d)
+      req(input$cont_pow_alpha)
+      req(input$cont_pow_sided)
+
+      # Validate and sanitize numeric inputs with proper type checking
+      tryCatch({
+        list(
+          # Power analysis inputs
+          cont_pow_n1 = validate_numeric_input(
+            input$cont_pow_n1,
+            "Sample size group 1",
+            min = 1,
+            max = 1e7
+          ),
+          cont_pow_n2 = validate_numeric_input(
+            input$cont_pow_n2,
+            "Sample size group 2",
+            min = 1,
+            max = 1e7
+          ),
+          cont_pow_d = validate_numeric_input(
+            input$cont_pow_d,
+            "Cohen's d",
+            min = -10,
+            max = 10
+          ),
+          cont_pow_alpha = as.numeric(validate_choice_input(
+            input$cont_pow_alpha,
+            VALID_ALPHA,
+            "Significance level"
+          )),
+          cont_pow_sided = validate_choice_input(
+            input$cont_pow_sided,
+            VALID_TEST_TYPES,
+            "Test type"
+          ),
+
+          # Sample size calculation inputs
+          cont_ss_calc_mode = validate_choice_input(
+            input$cont_ss_calc_mode %||% "calc_n",
+            VALID_CALC_MODES,
+            "Calculation mode"
+          ),
+          cont_ss_power = as.numeric(validate_choice_input(
+            input$cont_ss_power %||% "80",
+            VALID_POWER,
+            "Power level"
+          )),
+          cont_ss_d = validate_numeric_input(
+            input$cont_ss_d %||% 0.5,
+            "Cohen's d",
+            min = -10,
+            max = 10
+          ),
+          cont_ss_n1_fixed = validate_numeric_input(
+            input$cont_ss_n1_fixed %||% 100,
+            "Fixed sample size group 1",
+            min = 10,
+            max = 1e7,
+            allow_null = TRUE
+          ),
+          cont_ss_ratio = validate_numeric_input(
+            input$cont_ss_ratio %||% 1,
+            "Allocation ratio",
+            min = 0.01,
+            max = 100
+          ),
+          cont_ss_alpha = as.numeric(validate_choice_input(
+            input$cont_ss_alpha %||% "0.05",
+            VALID_ALPHA,
+            "Significance level"
+          )),
+          cont_ss_sided = validate_choice_input(
+            input$cont_ss_sided %||% "two.sided",
+            VALID_TEST_TYPES,
+            "Test type"
+          )
+        )
+      }, error = function(e) {
+        # If validation fails, log the error (in production) and return defaults
+        if (golem::app_prod()) {
+          logger::log_warn(
+            "Input validation failed in continuous outcome module",
+            error = conditionMessage(e)
+          )
+        }
+
+        # Return safe defaults if validation fails
+        list(
+          cont_pow_n1 = 100,
+          cont_pow_n2 = 100,
+          cont_pow_d = 0.5,
+          cont_pow_alpha = 0.05,
+          cont_pow_sided = "two.sided",
+          cont_ss_calc_mode = "calc_n",
+          cont_ss_power = 80,
+          cont_ss_d = 0.5,
+          cont_ss_n1_fixed = 100,
+          cont_ss_ratio = 1,
+          cont_ss_alpha = 0.05,
+          cont_ss_sided = "two.sided"
+        )
+      })
+    })
+
+    # Debounced inputs - wait 500ms after last change before updating
+    inputs <- inputs_raw %>% debounce(500)
+
     # Register cleanup handler
     onStop(function() {
       log_module_event("continuous", "cleanup", session)
@@ -252,23 +371,7 @@ mod_05_continuous_server <- function(id){
       inputs = reactive({
         # Log reactive execution at TRACE level (only when debugging)
         log_reactive_execution("continuous_inputs", session)
-
-        list(
-          # Power analysis inputs
-          cont_pow_n1 = as.numeric(input$cont_pow_n1),
-          cont_pow_n2 = as.numeric(input$cont_pow_n2),
-          cont_pow_d = as.numeric(input$cont_pow_d),
-          cont_pow_alpha = as.numeric(input$cont_pow_alpha),
-          cont_pow_sided = input$cont_pow_sided,
-          # Sample size inputs
-          cont_ss_calc_mode = input$cont_ss_calc_mode,
-          cont_ss_power = as.numeric(input$cont_ss_power),
-          cont_ss_d = as.numeric(input$cont_ss_d),
-          cont_ss_n1_fixed = as.numeric(input$cont_ss_n1_fixed),
-          cont_ss_ratio = as.numeric(input$cont_ss_ratio),
-          cont_ss_alpha = as.numeric(input$cont_ss_alpha),
-          cont_ss_sided = input$cont_ss_sided
-        )
+        inputs()
       }),
       missing_data_vals = missing_data_vals,
       clustering_vals = clustering_vals,

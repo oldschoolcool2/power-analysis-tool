@@ -87,6 +87,7 @@ create_multi_bias <- function(include_confounding = TRUE,
 #'
 #' @noRd
 calc_multi_evalue <- function(multi_bias_obj, rr, lo = NA, hi = NA, true_rr = 1) {
+  logger::log_debug("calc_multi_evalue called", rr = rr, lo = lo, hi = hi, true_rr = true_rr)
 
   # Input validation
   if (!is.numeric(rr) || rr <= 0) {
@@ -121,6 +122,8 @@ calc_multi_evalue <- function(multi_bias_obj, rr, lo = NA, hi = NA, true_rr = 1)
     rr = rr,
     multi_bias_obj = multi_bias_obj
   )
+
+  logger::log_debug("calc_multi_evalue completed", evalue = evalue)
 
   list(
     evalue = evalue,

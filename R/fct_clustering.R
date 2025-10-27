@@ -38,17 +38,34 @@
 #'
 #' @noRd
 calc_design_effect <- function(cluster_size, icc) {
-  if (cluster_size < 1) {
-    stop("Cluster size must be at least 1")
-  }
-  if (icc < 0 || icc > 1) {
-    stop("ICC must be between 0 and 1")
-  }
+  logger::log_debug("calc_design_effect called", cluster_size = cluster_size, icc = icc)
 
-  # Design Effect formula
-  de <- 1 + (cluster_size - 1) * icc
+  tryCatch(
+    {
+      if (cluster_size < 1) {
+        stop("Cluster size must be at least 1")
+      }
+      if (icc < 0 || icc > 1) {
+        stop("ICC must be between 0 and 1")
+      }
 
-  return(de)
+      # Design Effect formula
+      de <- 1 + (cluster_size - 1) * icc
+
+      logger::log_debug("calc_design_effect completed", design_effect = de)
+      return(de)
+    },
+    error = function(e) {
+      logger::log_error(
+        "calc_design_effect failed",
+        error_class = class(e)[1],
+        error_msg = conditionMessage(e),
+        cluster_size = cluster_size,
+        icc = icc
+      )
+      stop(e)
+    }
+  )
 }
 
 
@@ -107,13 +124,31 @@ calc_effective_n <- function(n_total, design_effect) {
 #'
 #' @noRd
 calc_clustered_n <- function(n_unclustered, design_effect) {
-  if (design_effect < 1) {
-    stop("Design effect must be >= 1")
-  }
+  logger::log_debug("calc_clustered_n called", n_unclustered = n_unclustered, design_effect = design_effect)
 
-  n_total <- n_unclustered * design_effect
+  tryCatch(
+    {
+      if (design_effect < 1) {
+        stop("Design effect must be >= 1")
+      }
 
-  return(ceiling(n_total))
+      n_total <- n_unclustered * design_effect
+      result <- ceiling(n_total)
+
+      logger::log_debug("calc_clustered_n completed", n_total = result)
+      return(result)
+    },
+    error = function(e) {
+      logger::log_error(
+        "calc_clustered_n failed",
+        error_class = class(e)[1],
+        error_msg = conditionMessage(e),
+        n_unclustered = n_unclustered,
+        design_effect = design_effect
+      )
+      stop(e)
+    }
+  )
 }
 
 
@@ -276,6 +311,8 @@ format_design_effect_interpretation <- function(design_effect, n_unclustered,
 #'
 #' @noRd
 validate_clustering_params <- function(n_clusters, cluster_size, icc) {
+  logger::log_trace("validate_clustering_params called", n_clusters = n_clusters, cluster_size = cluster_size, icc = icc)
+
   valid <- TRUE
   messages <- character(0)
 
@@ -283,6 +320,7 @@ validate_clustering_params <- function(n_clusters, cluster_size, icc) {
   if (n_clusters < 2) {
     valid <- FALSE
     messages <- c(messages, "ERROR: At least 2 clusters are required for clustered analysis.")
+    logger::log_warn("Clustering validation: insufficient clusters", n_clusters = n_clusters)
   }
 
   # Warning: low cluster count

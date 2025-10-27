@@ -398,54 +398,207 @@ app_server <- function(input, output, session) {
 
     # Tab 1: Single Proportion (using sidebar_page)
     if (page == "power_single") {
+      # Use req() to guard against NULL inputs
+      req(tab1_vals$inputs())
       tab1_inputs <- tab1_vals$inputs()
-      validate(
-        need(tab1_inputs$power_n > 0, "Sample size must be positive"),
-        need(tab1_inputs$power_p > 0, "Event frequency must be positive"),
-        need(tab1_inputs$power_discon >= 0 && tab1_inputs$power_discon <= 100, "Discontinuation rate must be between 0 and 100%")
+
+      # Use dedicated validation function
+      validation <- validate_single_proportion_inputs(
+        n = tab1_inputs$power_n,
+        p = tab1_inputs$power_p,
+        p0 = tab1_inputs$power_p0,
+        alpha = tab1_inputs$power_alpha,
+        discon = tab1_inputs$power_discon,
+        calc_mode = "power"
       )
+
+      # Display errors if validation failed
+      if (!validation$valid) {
+        validate(
+          need(FALSE, paste(validation$errors, collapse = "\n"))
+        )
+      }
+
+      # Display warnings as notifications (non-blocking)
+      if (length(validation$warnings) > 0) {
+        showNotification(
+          paste(validation$warnings, collapse = "\n"),
+          type = "warning",
+          duration = 5
+        )
+      }
+
     } else if (page == "ss_single") {
+      # Use req() to guard against NULL inputs
+      req(tab1_vals$inputs())
       tab1_inputs <- tab1_vals$inputs()
-      validate(
-        need(tab1_inputs$ss_p > 0, "Event frequency must be positive"),
-        need(tab1_inputs$ss_discon >= 0 && tab1_inputs$ss_discon <= 100, "Discontinuation rate must be between 0 and 100%")
-      )
+
+      # Determine calculation mode and gather appropriate inputs
+      calc_mode <- tab1_inputs$ss_single_calc_mode
+
+      if (calc_mode == "calc_n") {
+        # Calculate sample size given effect
+        validation <- validate_single_proportion_inputs(
+          p = tab1_inputs$ss_p,
+          p0 = tab1_inputs$ss_p0,
+          alpha = tab1_inputs$ss_alpha,
+          power = tab1_inputs$ss_power,
+          discon = tab1_inputs$ss_discon,
+          calc_mode = "calc_n"
+        )
+      } else {
+        # Calculate effect size given sample
+        validation <- validate_single_proportion_inputs(
+          n_fixed = tab1_inputs$ss_n_fixed,
+          p0 = tab1_inputs$ss_p0,
+          alpha = tab1_inputs$ss_alpha,
+          power = tab1_inputs$ss_power,
+          discon = tab1_inputs$ss_discon,
+          calc_mode = "calc_effect"
+        )
+      }
+
+      # Display errors if validation failed
+      if (!validation$valid) {
+        validate(
+          need(FALSE, paste(validation$errors, collapse = "\n"))
+        )
+      }
+
+      # Display warnings as notifications (non-blocking)
+      if (length(validation$warnings) > 0) {
+        showNotification(
+          paste(validation$warnings, collapse = "\n"),
+          type = "warning",
+          duration = 5
+        )
+      }
     # Tab 2: Two-Group Comparison (using sidebar_page)
     } else if (page == "power_twogrp") {
+      # Use req() to guard against NULL inputs
+      req(tab2_vals$inputs())
       tab2_inputs <- tab2_vals$inputs()
-      validate(
-        need(tab2_inputs$twogrp_pow_n1 > 0, "Sample size Group 1 must be positive"),
-        need(tab2_inputs$twogrp_pow_n2 > 0, "Sample size Group 2 must be positive"),
-        need(tab2_inputs$twogrp_pow_p1 >= 0 && tab2_inputs$twogrp_pow_p1 <= 100, "Event rate Group 1 must be between 0 and 100%"),
-        need(tab2_inputs$twogrp_pow_p2 >= 0 && tab2_inputs$twogrp_pow_p2 <= 100, "Event rate Group 2 must be between 0 and 100%"),
-        need(tab2_inputs$twogrp_pow_p1 != tab2_inputs$twogrp_pow_p2, "Event rates must be different to calculate power")
+
+      # Use dedicated validation function
+      validation <- validate_two_group_inputs(
+        n1 = tab2_inputs$twogrp_pow_n1,
+        n2 = tab2_inputs$twogrp_pow_n2,
+        p1 = tab2_inputs$twogrp_pow_p1,
+        p2 = tab2_inputs$twogrp_pow_p2,
+        alpha = tab2_inputs$twogrp_pow_alpha,
+        test_type = if (tab2_inputs$twogrp_pow_sided == "two.sided") "two_sided" else "one_sided",
+        calc_mode = "power"
       )
+
+      # Display errors if validation failed
+      if (!validation$valid) {
+        validate(
+          need(FALSE, paste(validation$errors, collapse = "\n"))
+        )
+      }
+
+      # Display warnings as notifications (non-blocking)
+      if (length(validation$warnings) > 0) {
+        showNotification(
+          paste(validation$warnings, collapse = "\n"),
+          type = "warning",
+          duration = 5
+        )
+      }
+
     } else if (page == "ss_twogrp") {
+      # Use req() to guard against NULL inputs
+      req(tab2_vals$inputs())
       tab2_inputs <- tab2_vals$inputs()
-      validate(
-        need(tab2_inputs$twogrp_ss_p1 >= 0 && tab2_inputs$twogrp_ss_p1 <= 100, "Event rate Group 1 must be between 0 and 100%"),
-        need(tab2_inputs$twogrp_ss_p2 >= 0 && tab2_inputs$twogrp_ss_p2 <= 100, "Event rate Group 2 must be between 0 and 100%"),
-        need(tab2_inputs$twogrp_ss_p1 != tab2_inputs$twogrp_ss_p2, "Event rates must be different to calculate sample size"),
-        need(tab2_inputs$twogrp_ss_ratio > 0, "Allocation ratio must be positive")
+
+      # Use dedicated validation function
+      validation <- validate_two_group_inputs(
+        p1 = tab2_inputs$twogrp_ss_p1,
+        p2 = tab2_inputs$twogrp_ss_p2,
+        alpha = tab2_inputs$twogrp_ss_alpha,
+        power = tab2_inputs$twogrp_ss_power,
+        alloc_ratio = tab2_inputs$twogrp_ss_ratio,
+        test_type = if (tab2_inputs$twogrp_ss_sided == "two.sided") "two_sided" else "one_sided",
+        calc_mode = "calc_n"
       )
+
+      # Display errors if validation failed
+      if (!validation$valid) {
+        validate(
+          need(FALSE, paste(validation$errors, collapse = "\n"))
+        )
+      }
+
+      # Display warnings as notifications (non-blocking)
+      if (length(validation$warnings) > 0) {
+        showNotification(
+          paste(validation$warnings, collapse = "\n"),
+          type = "warning",
+          duration = 5
+        )
+      }
     # Tab 3: Survival Analysis
     } else if (page == "power_survival") {
+      # Use req() to guard against NULL inputs
+      req(tab3_vals$inputs())
       tab3_inputs <- tab3_vals$inputs()
-      validate(
-        need(tab3_inputs$surv_pow_n > 0, "Sample size must be positive"),
-        need(tab3_inputs$surv_pow_hr > 0, "Hazard ratio must be positive"),
-        need(tab3_inputs$surv_pow_k >= 0 && tab3_inputs$surv_pow_k <= 100, "Proportion exposed must be between 0 and 100%"),
-        need(tab3_inputs$surv_pow_pE >= 0 && tab3_inputs$surv_pow_pE <= 100, "Event rate must be between 0 and 100%"),
-        need(tab3_inputs$surv_pow_hr != 1, "Hazard ratio must be different from 1 to calculate power")
+
+      # Use dedicated validation function
+      validation <- validate_survival_inputs(
+        n = tab3_inputs$surv_pow_n,
+        hr = tab3_inputs$surv_pow_hr,
+        prop_exposed = tab3_inputs$surv_pow_k,
+        event_rate = tab3_inputs$surv_pow_pE,
+        alpha = tab3_inputs$surv_pow_alpha,
+        calc_mode = "power"
       )
+
+      # Display errors if validation failed
+      if (!validation$valid) {
+        validate(
+          need(FALSE, paste(validation$errors, collapse = "\n"))
+        )
+      }
+
+      # Display warnings as notifications (non-blocking)
+      if (length(validation$warnings) > 0) {
+        showNotification(
+          paste(validation$warnings, collapse = "\n"),
+          type = "warning",
+          duration = 5
+        )
+      }
+
     } else if (page == "ss_survival") {
+      # Use req() to guard against NULL inputs
+      req(tab3_vals$inputs())
       tab3_inputs <- tab3_vals$inputs()
-      validate(
-        need(tab3_inputs$surv_ss_hr > 0, "Hazard ratio must be positive"),
-        need(tab3_inputs$surv_ss_k >= 0 && tab3_inputs$surv_ss_k <= 100, "Proportion exposed must be between 0 and 100%"),
-        need(tab3_inputs$surv_ss_pE >= 0 && tab3_inputs$surv_ss_pE <= 100, "Event rate must be between 0 and 100%"),
-        need(tab3_inputs$surv_ss_hr != 1, "Hazard ratio must be different from 1 to calculate sample size")
+
+      # Use dedicated validation function
+      validation <- validate_survival_inputs(
+        hr = tab3_inputs$surv_ss_hr,
+        prop_exposed = tab3_inputs$surv_ss_k,
+        event_rate = tab3_inputs$surv_ss_pE,
+        alpha = tab3_inputs$surv_ss_alpha,
+        power = tab3_inputs$surv_ss_power,
+        calc_mode = "calc_n"
       )
+
+      # Display errors if validation failed
+      if (!validation$valid) {
+        validate(
+          need(FALSE, paste(validation$errors, collapse = "\n"))
+        )
+      }
+
+      # Display warnings as notifications (non-blocking)
+      if (length(validation$warnings) > 0) {
+        showNotification(
+          paste(validation$warnings, collapse = "\n"),
+          type = "warning",
+          duration = 5
+        )
+      }
     # Tab 4: Matched Case-Control (tab-aware validation)
     } else if (page == "match_casecontrol") {
       tab4_inputs <- tab4_vals$inputs()
@@ -501,20 +654,66 @@ app_server <- function(input, output, session) {
       }
     # Tab 5: Continuous Outcomes
     } else if (page == "power_continuous") {
+      # Use req() to guard against NULL inputs
+      req(tab5_vals$inputs())
       tab5_inputs <- tab5_vals$inputs()
-      validate(
-        need(tab5_inputs$cont_pow_n1 > 1, "Sample size Group 1 must be at least 2"),
-        need(tab5_inputs$cont_pow_n2 > 1, "Sample size Group 2 must be at least 2"),
-        need(tab5_inputs$cont_pow_d > 0, "Effect size (Cohen's d) must be positive"),
-        need(tab5_inputs$cont_pow_d != 0, "Effect size cannot be zero")
+
+      # Use dedicated validation function
+      validation <- validate_continuous_outcome_inputs(
+        n1 = tab5_inputs$cont_pow_n1,
+        n2 = tab5_inputs$cont_pow_n2,
+        cohens_d = tab5_inputs$cont_pow_d,
+        alpha = tab5_inputs$cont_pow_alpha,
+        test_type = if (tab5_inputs$cont_pow_sided == "two.sided") "two_sided" else "one_sided",
+        calc_mode = "power"
       )
+
+      # Display errors if validation failed
+      if (!validation$valid) {
+        validate(
+          need(FALSE, paste(validation$errors, collapse = "\n"))
+        )
+      }
+
+      # Display warnings as notifications (non-blocking)
+      if (length(validation$warnings) > 0) {
+        showNotification(
+          paste(validation$warnings, collapse = "\n"),
+          type = "warning",
+          duration = 5
+        )
+      }
+
     } else if (page == "ss_continuous") {
+      # Use req() to guard against NULL inputs
+      req(tab5_vals$inputs())
       tab5_inputs <- tab5_vals$inputs()
-      validate(
-        need(tab5_inputs$cont_ss_d > 0, "Effect size (Cohen's d) must be positive"),
-        need(tab5_inputs$cont_ss_d != 0, "Effect size cannot be zero"),
-        need(tab5_inputs$cont_ss_ratio > 0, "Allocation ratio must be positive")
+
+      # Use dedicated validation function
+      validation <- validate_continuous_outcome_inputs(
+        cohens_d = tab5_inputs$cont_ss_d,
+        alpha = tab5_inputs$cont_ss_alpha,
+        power = tab5_inputs$cont_ss_power,
+        alloc_ratio = tab5_inputs$cont_ss_ratio,
+        test_type = if (tab5_inputs$cont_ss_sided == "two.sided") "two_sided" else "one_sided",
+        calc_mode = "calc_n"
       )
+
+      # Display errors if validation failed
+      if (!validation$valid) {
+        validate(
+          need(FALSE, paste(validation$errors, collapse = "\n"))
+        )
+      }
+
+      # Display warnings as notifications (non-blocking)
+      if (length(validation$warnings) > 0) {
+        showNotification(
+          paste(validation$warnings, collapse = "\n"),
+          type = "warning",
+          duration = 5
+        )
+      }
     # Tab 6: Non-Inferiority
     } else if (page == "noninf") {
       tab6_inputs <- tab6_vals$inputs()

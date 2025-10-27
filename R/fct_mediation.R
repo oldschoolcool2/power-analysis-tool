@@ -44,21 +44,24 @@ calc_sobel_se <- function(a, b, se_a, se_b) {
 #' @noRd
 calc_mediation_power <- function(n, a, b, se_a = NULL, se_b = NULL,
                                   alpha = 0.05, alternative = "two.sided") {
+  logger::log_debug("calc_mediation_power called", n = n, a = a, b = b, alpha = alpha, alternative = alternative)
 
-  # Estimate standard errors if not provided
-  # Conservative approximation: SE ≈ 1/sqrt(n) for standardized coefficients
-  if (is.null(se_a)) {
-    se_a <- 1 / sqrt(n)
-  }
-  if (is.null(se_b)) {
-    se_b <- 1 / sqrt(n)
-  }
+  tryCatch(
+    {
+      # Estimate standard errors if not provided
+      # Conservative approximation: SE ≈ 1/sqrt(n) for standardized coefficients
+      if (is.null(se_a)) {
+        se_a <- 1 / sqrt(n)
+      }
+      if (is.null(se_b)) {
+        se_b <- 1 / sqrt(n)
+      }
 
-  # Indirect effect
-  ab <- a * b
+      # Indirect effect
+      ab <- a * b
 
-  # Sobel standard error
-  se_ab <- calc_sobel_se(a, b, se_a, se_b)
+      # Sobel standard error
+      se_ab <- calc_sobel_se(a, b, se_a, se_b)
 
   # Non-centrality parameter
   ncp <- abs(ab) / se_ab
@@ -70,14 +73,28 @@ calc_mediation_power <- function(n, a, b, se_a = NULL, se_b = NULL,
     z_crit <- qnorm(1 - alpha)
   }
 
-  # Power calculation
-  if (alternative == "two.sided") {
-    power <- pnorm(ncp - z_crit) + pnorm(-ncp - z_crit)
-  } else {
-    power <- pnorm(ncp - z_crit)
-  }
+      # Power calculation
+      if (alternative == "two.sided") {
+        power <- pnorm(ncp - z_crit) + pnorm(-ncp - z_crit)
+      } else {
+        power <- pnorm(ncp - z_crit)
+      }
 
-  return(power)
+      logger::log_debug("calc_mediation_power completed", power = power, indirect_effect = ab)
+      return(power)
+    },
+    error = function(e) {
+      logger::log_error(
+        "calc_mediation_power failed",
+        error_class = class(e)[1],
+        error_msg = conditionMessage(e),
+        n = n,
+        a = a,
+        b = b
+      )
+      stop(e)
+    }
+  )
 }
 
 #' Calculate Required Sample Size for Mediation Analysis
@@ -92,6 +109,7 @@ calc_mediation_power <- function(n, a, b, se_a = NULL, se_b = NULL,
 #' @noRd
 calc_mediation_n <- function(a, b, power = 0.80, alpha = 0.05,
                               alternative = "two.sided") {
+  logger::log_debug("calc_mediation_n called", a = a, b = b, power = power, alpha = alpha)
 
   # Use uniroot to solve for n
   # Search range: from 10 to 100,000
@@ -105,14 +123,24 @@ calc_mediation_n <- function(a, b, power = 0.80, alpha = 0.05,
       extendInt = "yes"
     )
   }, error = function(e) {
+    logger::log_warn(
+      "calc_mediation_n: uniroot failed",
+      error_msg = conditionMessage(e),
+      a = a,
+      b = b,
+      power = power
+    )
     return(NULL)
   })
 
   if (is.null(result)) {
+    logger::log_debug("calc_mediation_n: no solution found")
     return(NA)
   }
 
-  return(ceiling(result$root))
+  n <- ceiling(result$root)
+  logger::log_debug("calc_mediation_n completed", n_required = n)
+  return(n)
 }
 
 #' Calculate Minimal Detectable Indirect Effect

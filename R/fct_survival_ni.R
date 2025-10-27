@@ -32,15 +32,27 @@ LOG_EFFECT_TOLERANCE <- 1e-10
 #' @return Total sample size required
 #' @export
 ssize_survival_ni <- function(power, hr_expected, hr_margin, k, pE, alpha = 0.025, ratio = 1) {
+  logger::log_debug(
+    "ssize_survival_ni called",
+    power = power,
+    hr_expected = hr_expected,
+    hr_margin = hr_margin,
+    k = k,
+    pE = pE,
+    alpha = alpha,
+    ratio = ratio
+  )
 
-  # Validate inputs
-  if (power <= 0 || power >= 1) stop("Power must be between 0 and 1")
-  if (hr_expected <= 0) stop("Expected HR must be positive")
-  if (hr_margin <= 0) stop("NI margin must be positive")
-  if (k <= 0 || k >= 1) stop("Proportion exposed must be between 0 and 1")
-  if (pE <= 0 || pE >= 1) stop("Event rate must be between 0 and 1")
-  if (alpha <= 0 || alpha >= 1) stop("Alpha must be between 0 and 1")
-  if (ratio <= 0) stop("Allocation ratio must be positive")
+  tryCatch(
+    {
+      # Validate inputs
+      if (power <= 0 || power >= 1) stop("Power must be between 0 and 1")
+      if (hr_expected <= 0) stop("Expected HR must be positive")
+      if (hr_margin <= 0) stop("NI margin must be positive")
+      if (k <= 0 || k >= 1) stop("Proportion exposed must be between 0 and 1")
+      if (pE <= 0 || pE >= 1) stop("Event rate must be between 0 and 1")
+      if (alpha <= 0 || alpha >= 1) stop("Alpha must be between 0 and 1")
+      if (ratio <= 0) stop("Allocation ratio must be positive")
 
   # Convert to z-scores
   z_alpha <- qnorm(1 - alpha)  # One-sided test for NI
@@ -50,30 +62,45 @@ ssize_survival_ni <- function(power, hr_expected, hr_margin, k, pE, alpha = 0.02
   # For NI test: H0: log(HR) >= log(margin) vs H1: log(HR) < log(margin)
   log_effect <- log(hr_expected) - log(hr_margin)
 
-  # If expected HR is worse than margin, we cannot demonstrate NI
-  if (abs(log_effect) < LOG_EFFECT_TOLERANCE) {
-    warning("Expected HR equals the margin - cannot demonstrate non-inferiority")
-    return(Inf)
-  }
+      # If expected HR is worse than margin, we cannot demonstrate NI
+      if (abs(log_effect) < LOG_EFFECT_TOLERANCE) {
+        logger::log_warn("ssize_survival_ni: expected HR equals margin", hr_expected = hr_expected, hr_margin = hr_margin)
+        warning("Expected HR equals the margin - cannot demonstrate non-inferiority")
+        return(Inf)
+      }
 
-  # Calculate required number of events using Schoenfeld formula adapted for NI
-  # d = (z_alpha + z_beta)^2 / (log_effect)^2
-  d_events <- ((z_alpha + z_beta)^2) / (log_effect^2)
+      # Calculate required number of events using Schoenfeld formula adapted for NI
+      # d = (z_alpha + z_beta)^2 / (log_effect)^2
+      d_events <- ((z_alpha + z_beta)^2) / (log_effect^2)
 
-  # Convert events to total sample size
-  # Accounting for allocation ratio
-  # Adjusted allocation: k_adj for unequal allocation
-  k_adj <- ratio / (1 + ratio)
+      # Convert events to total sample size
+      # Accounting for allocation ratio
+      # Adjusted allocation: k_adj for unequal allocation
+      k_adj <- ratio / (1 + ratio)
 
-  # Total N needed to observe d events
-  # n = d / (pE * variance_factor)
-  # For Cox model: variance_factor = 4 * k * (1-k) for equal allocation
-  # For unequal allocation: variance_factor = 4 * k_adj * (1-k_adj)
-  variance_factor <- 4 * k_adj * (1 - k_adj)
+      # Total N needed to observe d events
+      # n = d / (pE * variance_factor)
+      # For Cox model: variance_factor = 4 * k * (1-k) for equal allocation
+      # For unequal allocation: variance_factor = 4 * k_adj * (1-k_adj)
+      variance_factor <- 4 * k_adj * (1 - k_adj)
 
-  n_total <- d_events / (pE * variance_factor)
+      n_total <- d_events / (pE * variance_factor)
+      result <- ceiling(n_total)
 
-  return(ceiling(n_total))
+      logger::log_debug("ssize_survival_ni completed", n_total = result, d_events = d_events)
+      return(result)
+    },
+    error = function(e) {
+      logger::log_error(
+        "ssize_survival_ni failed",
+        error_class = class(e)[1],
+        error_msg = conditionMessage(e),
+        hr_expected = hr_expected,
+        hr_margin = hr_margin
+      )
+      stop(e)
+    }
+  )
 }
 
 #' Calculate Sample Size for Time-to-Event Equivalence Test

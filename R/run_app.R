@@ -6,12 +6,26 @@
 #' @importFrom shiny shinyApp
 #' @importFrom golem with_golem_options
 run_app <- function(...) {
+  # Configure error sanitization based on environment
+  # In production, sanitize errors to prevent information leakage
+  # In development, show full error messages for debugging
+  env <- Sys.getenv("R_CONFIG_ACTIVE", "default")
+
+  if (env == "production") {
+    options(shiny.sanitize.errors = TRUE)
+    logger::log_info("Error sanitization ENABLED (production mode)")
+  } else {
+    options(shiny.sanitize.errors = FALSE)
+    logger::log_info("Error sanitization DISABLED (development mode)")
+  }
+
   # Log application startup
   logger::log_info(
     "Application starting",
     version = as.character(packageVersion("PowerAnalysisTool")),
     r_version = R.version.string,
-    golem_version = as.character(packageVersion("golem"))
+    golem_version = as.character(packageVersion("golem")),
+    environment = env
   )
 
   # Source helper files needed by the app

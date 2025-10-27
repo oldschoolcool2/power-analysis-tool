@@ -64,17 +64,20 @@ N_TESTS_BONFERRONI_WARNING <- 10
 #'
 #' @noRd
 calc_adjusted_alpha <- function(alpha = 0.05, n_tests = 1, method = "bonferroni") {
+  logger::log_debug("calc_adjusted_alpha called", alpha = alpha, n_tests = n_tests, method = method)
 
-  # Input validation
-  if (!is.numeric(alpha) || alpha <= 0 || alpha >= 1) {
-    stop("Alpha must be between 0 and 1")
-  }
+  tryCatch(
+    {
+      # Input validation
+      if (!is.numeric(alpha) || alpha <= 0 || alpha >= 1) {
+        stop("Alpha must be between 0 and 1")
+      }
 
-  if (!is.numeric(n_tests) || n_tests < 1) {
-    stop("Number of tests must be at least 1")
-  }
+      if (!is.numeric(n_tests) || n_tests < 1) {
+        stop("Number of tests must be at least 1")
+      }
 
-  n_tests <- as.integer(n_tests)
+      n_tests <- as.integer(n_tests)
 
   # Calculate adjusted alpha based on method
   alpha_adj <- switch(tolower(method),
@@ -101,24 +104,39 @@ calc_adjusted_alpha <- function(alpha = 0.05, n_tests = 1, method = "bonferroni"
   # Get method details
   method_info <- get_correction_method_info(method)
 
-  # Interpretation
-  interpretation <- interpret_multiple_testing(
-    alpha_original = alpha,
-    alpha_adjusted = alpha_adj,
-    n_tests = n_tests,
-    method = method,
-    method_info = method_info
-  )
+      # Interpretation
+      interpretation <- interpret_multiple_testing(
+        alpha_original = alpha,
+        alpha_adjusted = alpha_adj,
+        n_tests = n_tests,
+        method = method,
+        method_info = method_info
+      )
 
-  list(
-    alpha_original = alpha,
-    alpha_adjusted = alpha_adj,
-    n_tests = n_tests,
-    method = method,
-    method_name = method_info$name,
-    controls = method_info$controls,
-    inflation_factor = inflation_factor,
-    interpretation = interpretation
+      logger::log_debug("calc_adjusted_alpha completed", alpha_adjusted = alpha_adj, inflation_factor = inflation_factor)
+
+      list(
+        alpha_original = alpha,
+        alpha_adjusted = alpha_adj,
+        n_tests = n_tests,
+        method = method,
+        method_name = method_info$name,
+        controls = method_info$controls,
+        inflation_factor = inflation_factor,
+        interpretation = interpretation
+      )
+    },
+    error = function(e) {
+      logger::log_error(
+        "calc_adjusted_alpha failed",
+        error_class = class(e)[1],
+        error_msg = conditionMessage(e),
+        alpha = alpha,
+        n_tests = n_tests,
+        method = method
+      )
+      stop(e)
+    }
   )
 }
 

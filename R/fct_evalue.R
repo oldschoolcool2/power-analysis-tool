@@ -37,18 +37,22 @@
 #'
 #' @noRd
 calc_evalue_rr <- function(rr, lo = NA, hi = NA, true_value = 1) {
-  # Input validation
-  if (!is.numeric(rr) || rr <= 0) {
-    stop("RR must be a positive number")
-  }
+  logger::log_debug("calc_evalue_rr called", rr = rr, lo = lo, hi = hi, true_value = true_value)
 
-  # Calculate E-values using EValue package
-  result <- EValue::evalues.RR(
-    est = rr,
-    lo = lo,
-    hi = hi,
-    true = true_value
-  )
+  tryCatch(
+    {
+      # Input validation
+      if (!is.numeric(rr) || rr <= 0) {
+        stop("RR must be a positive number")
+      }
+
+      # Calculate E-values using EValue package
+      result <- EValue::evalues.RR(
+        est = rr,
+        lo = lo,
+        hi = hi,
+        true = true_value
+      )
 
   # Extract values
   evalue_point <- result[2, 1]  # E-value for point estimate
@@ -58,15 +62,30 @@ calc_evalue_rr <- function(rr, lo = NA, hi = NA, true_value = 1) {
     NA
   }
 
-  # Interpretation
-  interpretation <- interpret_evalue(evalue_point, evalue_ci)
+      # Interpretation
+      interpretation <- interpret_evalue(evalue_point, evalue_ci)
 
-  list(
-    evalue_point = evalue_point,
-    evalue_ci = evalue_ci,
-    rr_converted = result[1, 1],  # Original RR
-    interpretation = interpretation,
-    result_matrix = result
+      logger::log_debug("calc_evalue_rr completed", evalue_point = evalue_point, evalue_ci = evalue_ci)
+
+      list(
+        evalue_point = evalue_point,
+        evalue_ci = evalue_ci,
+        rr_converted = result[1, 1],  # Original RR
+        interpretation = interpretation,
+        result_matrix = result
+      )
+    },
+    error = function(e) {
+      logger::log_error(
+        "calc_evalue_rr failed",
+        error_class = class(e)[1],
+        error_msg = conditionMessage(e),
+        rr = rr,
+        lo = lo,
+        hi = hi
+      )
+      stop(e)
+    }
   )
 }
 
@@ -91,19 +110,23 @@ calc_evalue_rr <- function(rr, lo = NA, hi = NA, true_value = 1) {
 #'
 #' @noRd
 calc_evalue_or <- function(or, lo = NA, hi = NA, rare = TRUE, true_value = 1) {
-  # Input validation
-  if (!is.numeric(or) || or <= 0) {
-    stop("OR must be a positive number")
-  }
+  logger::log_debug("calc_evalue_or called", or = or, lo = lo, hi = hi, rare = rare)
 
-  # Calculate E-values using EValue package
-  result <- EValue::evalues.OR(
-    est = or,
-    lo = lo,
-    hi = hi,
-    rare = rare,
-    true = true_value
-  )
+  tryCatch(
+    {
+      # Input validation
+      if (!is.numeric(or) || or <= 0) {
+        stop("OR must be a positive number")
+      }
+
+      # Calculate E-values using EValue package
+      result <- EValue::evalues.OR(
+        est = or,
+        lo = lo,
+        hi = hi,
+        rare = rare,
+        true = true_value
+      )
 
   # Extract values
   evalue_point <- result[2, 1]  # E-value for point estimate
@@ -119,23 +142,37 @@ calc_evalue_or <- function(or, lo = NA, hi = NA, rare = TRUE, true_value = 1) {
   # Interpretation
   interpretation <- interpret_evalue(evalue_point, evalue_ci)
 
-  # Add note about OR to RR conversion if not rare
-  if (!rare) {
-    interpretation$notes <- paste0(
-      interpretation$notes,
-      " Note: For common outcomes, OR was converted to RR (",
-      format_numeric(rr_converted, 2),
-      ") before calculating E-values."
-    )
-  }
+      # Add note about OR to RR conversion if not rare
+      if (!rare) {
+        interpretation$notes <- paste0(
+          interpretation$notes,
+          " Note: For common outcomes, OR was converted to RR (",
+          format_numeric(rr_converted, 2),
+          ") before calculating E-values."
+        )
+      }
 
-  list(
-    evalue_point = evalue_point,
-    evalue_ci = evalue_ci,
-    or_original = or,
-    rr_converted = rr_converted,
-    interpretation = interpretation,
-    result_matrix = result
+      logger::log_debug("calc_evalue_or completed", evalue_point = evalue_point, rr_converted = rr_converted)
+
+      list(
+        evalue_point = evalue_point,
+        evalue_ci = evalue_ci,
+        or_original = or,
+        rr_converted = rr_converted,
+        interpretation = interpretation,
+        result_matrix = result
+      )
+    },
+    error = function(e) {
+      logger::log_error(
+        "calc_evalue_or failed",
+        error_class = class(e)[1],
+        error_msg = conditionMessage(e),
+        or = or,
+        rare = rare
+      )
+      stop(e)
+    }
   )
 }
 
@@ -389,6 +426,8 @@ format_evalue_result <- function(evalue_result, effect_type = "RR") {
 #'
 #' @noRd
 validate_evalue_inputs <- function(effect_estimate, lo = NA, hi = NA, effect_type = "RR") {
+  logger::log_trace("validate_evalue_inputs called", effect_estimate = effect_estimate, effect_type = effect_type)
+
   valid <- TRUE
   messages <- character(0)
 

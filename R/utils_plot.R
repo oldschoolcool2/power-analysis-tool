@@ -36,10 +36,12 @@ create_power_curve_plot <- function(n_seq,
                                    n_reference_label = "Current N",
                                    show_annotations = TRUE) {
 
-  # Validate inputs
-  if (length(n_seq) != length(power_vals)) {
-    stop("n_seq and power_vals must have the same length")
-  }
+  tryCatch(
+    {
+      # Validate inputs
+      if (length(n_seq) != length(power_vals)) {
+        stop("n_seq and power_vals must have the same length")
+      }
 
   # Find current power at n_current
   idx_current <- which.min(abs(n_seq - n_current))
@@ -220,7 +222,20 @@ create_power_curve_plot <- function(n_seq,
       modeBarButtonsToRemove = c("lasso2d", "select2d")
     )
 
-  return(p)
+      return(p)
+    },
+    error = function(e) {
+      logger::log_error(
+        "create_power_curve_plot failed",
+        error_class = class(e)[1],
+        error_msg = conditionMessage(e),
+        n_seq_length = length(n_seq),
+        power_vals_length = length(power_vals),
+        n_current = n_current
+      )
+      stop(e)
+    }
+  )
 }
 
 

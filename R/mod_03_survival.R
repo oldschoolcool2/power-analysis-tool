@@ -249,6 +249,118 @@ mod_03_survival_server <- function(id){
       updateRadioButtons(session, "surv_ss_alpha", selected = "0.05")
     })
 
+    # Define allowlists for categorical inputs (security best practice)
+    VALID_ALPHA <- c("0.001", "0.01", "0.05", "0.10")
+    VALID_POWER <- c("70", "80", "90", "95")
+    VALID_CALC_MODES <- c("calc_n", "calc_effect")
+
+    # Raw reactive inputs (not debounced)
+    inputs_raw <- reactive({
+      # Use req() to prevent execution until inputs are available
+      req(input$surv_pow_n)
+      req(input$surv_pow_hr)
+      req(input$surv_pow_k)
+      req(input$surv_pow_pE)
+      req(input$surv_pow_alpha)
+
+      # Validate and sanitize numeric inputs with proper type checking
+      tryCatch({
+        list(
+          # Power analysis inputs
+          surv_pow_n = validate_numeric_input(
+            input$surv_pow_n,
+            "Sample size",
+            min = 1,
+            max = 1e7
+          ),
+          surv_pow_hr = validate_numeric_input(
+            input$surv_pow_hr,
+            "Hazard ratio",
+            min = 0.01,
+            max = 100
+          ),
+          surv_pow_k = validate_proportion_input(
+            input$surv_pow_k,
+            "Proportion exposed"
+          ),
+          surv_pow_pE = validate_proportion_input(
+            input$surv_pow_pE,
+            "Event rate"
+          ),
+          surv_pow_alpha = as.numeric(validate_choice_input(
+            input$surv_pow_alpha,
+            VALID_ALPHA,
+            "Significance level"
+          )),
+
+          # Sample size calculation inputs
+          surv_ss_calc_mode = validate_choice_input(
+            input$surv_ss_calc_mode %||% "calc_n",
+            VALID_CALC_MODES,
+            "Calculation mode"
+          ),
+          surv_ss_power = as.numeric(validate_choice_input(
+            input$surv_ss_power %||% "80",
+            VALID_POWER,
+            "Power level"
+          )),
+          surv_ss_hr = validate_numeric_input(
+            input$surv_ss_hr %||% 0.7,
+            "Hazard ratio",
+            min = 0.01,
+            max = 100
+          ),
+          surv_ss_n_fixed = validate_numeric_input(
+            input$surv_ss_n_fixed %||% 500,
+            "Fixed sample size",
+            min = 10,
+            max = 1e7,
+            allow_null = TRUE
+          ),
+          surv_ss_k = validate_proportion_input(
+            input$surv_ss_k %||% 50,
+            "Proportion exposed"
+          ),
+          surv_ss_pE = validate_proportion_input(
+            input$surv_ss_pE %||% 30,
+            "Event rate"
+          ),
+          surv_ss_alpha = as.numeric(validate_choice_input(
+            input$surv_ss_alpha %||% "0.05",
+            VALID_ALPHA,
+            "Significance level"
+          ))
+        )
+      }, error = function(e) {
+        # If validation fails, log the error (in production) and return defaults
+        if (golem::app_prod()) {
+          logger::log_warn(
+            "Input validation failed in survival module",
+            error = conditionMessage(e)
+          )
+        }
+
+        # Return safe defaults if validation fails
+        list(
+          surv_pow_n = 500,
+          surv_pow_hr = 0.7,
+          surv_pow_k = 50,
+          surv_pow_pE = 30,
+          surv_pow_alpha = 0.05,
+          surv_ss_calc_mode = "calc_n",
+          surv_ss_power = 80,
+          surv_ss_hr = 0.7,
+          surv_ss_n_fixed = 500,
+          surv_ss_k = 50,
+          surv_ss_pE = 30,
+          surv_ss_alpha = 0.05
+        )
+      })
+    })
+
+    # Debounced inputs - wait 500ms after last change before updating
+    inputs <- inputs_raw %>% debounce(500)
+
     # Register cleanup handler
     onStop(function() {
       log_module_event("survival", "cleanup", session)
@@ -259,23 +371,7 @@ mod_03_survival_server <- function(id){
       inputs = reactive({
         # Log reactive execution at TRACE level (only when debugging)
         log_reactive_execution("survival_inputs", session)
-
-        list(
-          # Power analysis inputs
-          surv_pow_n = as.numeric(input$surv_pow_n),
-          surv_pow_hr = as.numeric(input$surv_pow_hr),
-          surv_pow_k = as.numeric(input$surv_pow_k),
-          surv_pow_pE = as.numeric(input$surv_pow_pE),
-          surv_pow_alpha = as.numeric(input$surv_pow_alpha),
-          # Sample size inputs
-          surv_ss_calc_mode = input$surv_ss_calc_mode,
-          surv_ss_power = as.numeric(input$surv_ss_power),
-          surv_ss_hr = as.numeric(input$surv_ss_hr),
-          surv_ss_n_fixed = as.numeric(input$surv_ss_n_fixed),
-          surv_ss_k = as.numeric(input$surv_ss_k),
-          surv_ss_pE = as.numeric(input$surv_ss_pE),
-          surv_ss_alpha = as.numeric(input$surv_ss_alpha)
-        )
+        inputs()
       }),
       missing_data_vals = missing_data_vals,
       clustering_vals = clustering_vals,
