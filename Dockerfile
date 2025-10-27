@@ -43,6 +43,7 @@ RUN apt-get update && apt-get install -y \
     libfribidi-dev \
     libharfbuzz-dev \
     libssl-dev \
+    libudunits2-dev \
     libxml2-dev \
     && rm -rf /var/lib/apt/lists/*
 
