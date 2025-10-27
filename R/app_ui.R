@@ -43,6 +43,8 @@ app_ui <- function(request) {
     tags$link(rel = "stylesheet", type = "text/css", href = "www/css/loading-spinner.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "www/css/success-animations.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "www/css/documentation.css"),
+    # JavaScript - XHR warning suppression must load first
+    tags$script(src = "www/js/suppress-xhr-warning.js"),
     # JavaScript - Bootstrap 5 fix must load before other scripts
     tags$script(src = "www/js/bootstrap5-shinyBS-fix.js"),
     tags$script(src = "www/js/theme-switcher.js"),
@@ -206,8 +208,11 @@ app_ui <- function(request) {
         ), # End of input cards
 
         # ============================================================
-        # CALCULATE BUTTON (always visible)
+        # CALCULATE BUTTON & RESULTS (hidden on sensitivity pages)
         # ============================================================
+
+        conditionalPanel(
+          condition = "input.sidebar_page != 'sensitivity_evalue' && input.sidebar_page != 'sensitivity_multi_bias'",
 
         actionButton("go", "Calculate", icon = icon("calculator"), class = "btn-primary btn-lg w-100"),
 
@@ -279,6 +284,14 @@ app_ui <- function(request) {
           )
         ),
 
+        # Contextual help for Sensitivity Analyses (Multiple-Bias)
+        conditionalPanel(
+          condition = "input.sidebar_page == 'sensitivity_multi_bias'",
+          div(class = "content-card help-section",
+            create_contextual_help("sensitivity_multi_bias")
+          )
+        ),
+
         # Contextual help for Sensitivity Analyses (E-value)
         conditionalPanel(
           condition = "input.sidebar_page == 'sensitivity_evalue'",
@@ -302,6 +315,8 @@ app_ui <- function(request) {
 
         # Scenario comparison section
         uiOutput("scenario_comparison")
+
+        ) # End of conditionalPanel (exclude sensitivity pages)
 
         ) # End of conditionalPanel (analysis content)
 

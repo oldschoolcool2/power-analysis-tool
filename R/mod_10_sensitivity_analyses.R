@@ -22,6 +22,52 @@ mod_10_sensitivity_analyses_ui <- function(id){
   tagList(
 
     # ============================================================
+    # MULTIPLE BIAS SENSITIVITY ANALYSIS
+    # ============================================================
+
+    conditionalPanel(
+      condition = "input.sidebar_page == 'sensitivity_multi_bias'",
+      h2(class = "page-title", "Multiple-Bias Sensitivity Analysis"),
+
+      helpText(
+        "Multiple-bias sensitivity analysis assesses the joint impact of unmeasured confounding, ",
+        "selection bias, and differential misclassification. This analysis is performed in the ",
+        strong("report phase"), " after data collection to evaluate how combinations of biases ",
+        "could affect your observed findings."
+      ),
+
+      hr(),
+
+      multi_bias_ui(ns("multi_bias")),
+
+      hr(),
+
+      div(
+        class = "alert alert-info",
+        style = "margin-top: 20px;",
+        tags$strong(icon("info-circle"), " When to Use Multiple-Bias Analysis:"),
+        tags$ul(
+          tags$li(strong("Report Phase:"), "After completing your analysis and obtaining effect estimates"),
+          tags$li(strong("Multiple Threats:"), "When your study may be affected by more than one type of bias"),
+          tags$li(strong("Comprehensive Assessment:"), "To understand how combinations of biases work together"),
+          tags$li(strong("Realistic Scenarios:"), "Studies are rarely affected by just one bias in isolation")
+        ),
+        tags$p(
+          style = "margin-top: 10px;",
+          strong("Note:"), " Multi-bias E-values represent the minimum value that ",
+          strong("all"), " bias parameters must take on simultaneously to explain away your results."
+        )
+      ),
+
+      hr(),
+
+      div(class = "btn-group-custom",
+        actionButton(ns("example_multi_bias"), "Load Example", icon = icon("lightbulb"), class = "btn-info btn-sm"),
+        actionButton(ns("reset_multi_bias"), "Reset", icon = icon("refresh"), class = "btn-secondary btn-sm")
+      )
+    ),
+
+    # ============================================================
     # E-VALUE SENSITIVITY ANALYSIS
     # ============================================================
 
@@ -129,11 +175,39 @@ mod_10_sensitivity_analyses_server <- function(id){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 
+    # Initialize Multi-Bias module
+    multi_bias_vals <- multi_bias_server("multi_bias")
+
     # Initialize E-value modules for each effect type
     evalue_vals_rr <- evalue_server("evalue_rr", effect_type = "RR")
     evalue_vals_or <- evalue_server("evalue_or", effect_type = "OR")
     evalue_vals_hr <- evalue_server("evalue_hr", effect_type = "HR")
     evalue_vals_md <- evalue_server("evalue_md", effect_type = "MD")
+
+    # Load Example button for Multi-Bias Analysis
+    observeEvent(input$example_multi_bias, {
+      # Example: Study with potential confounding and selection bias
+      # RR = 3.0 (95% CI: 2.0, 4.5)
+      session$sendInputMessage("multi_bias-include_confounding", list(value = TRUE))
+      session$sendInputMessage("multi_bias-include_selection", list(value = TRUE))
+      session$sendInputMessage("multi_bias-include_misclass", list(value = FALSE))
+      session$sendInputMessage("multi_bias-selection_type", list(value = "general"))
+      session$sendInputMessage("multi_bias-rr", list(value = 3.0))
+      session$sendInputMessage("multi_bias-include_ci", list(value = TRUE))
+      session$sendInputMessage("multi_bias-ci_lower", list(value = 2.0))
+      session$sendInputMessage("multi_bias-ci_upper", list(value = 4.5))
+      session$sendInputMessage("multi_bias-analysis_type", list(value = "evalue"))
+    })
+
+    # Reset button for Multi-Bias Analysis
+    observeEvent(input$reset_multi_bias, {
+      session$sendInputMessage("multi_bias-include_confounding", list(value = TRUE))
+      session$sendInputMessage("multi_bias-include_selection", list(value = FALSE))
+      session$sendInputMessage("multi_bias-include_misclass", list(value = FALSE))
+      session$sendInputMessage("multi_bias-rr", list(value = 3.0))
+      session$sendInputMessage("multi_bias-include_ci", list(value = FALSE))
+      session$sendInputMessage("multi_bias-analysis_type", list(value = "evalue"))
+    })
 
     # Load Example button - uses classic smoking-lung cancer example from VanderWeele & Ding (2017)
     observeEvent(input$example_evalue, {
@@ -192,6 +266,7 @@ mod_10_sensitivity_analyses_server <- function(id){
     return(
       reactive({
         list(
+          multi_bias = multi_bias_vals(),
           effect_type = input$effect_type,
           evalue_rr = evalue_vals_rr(),
           evalue_or = evalue_vals_or(),

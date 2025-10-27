@@ -57,6 +57,7 @@ ui <- fluidPage(
     tags$link(rel = "stylesheet", type = "text/css", href = "css/sidebar.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "css/result-cards.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "css/evalue-cards.css"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "css/multi-bias-cards.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "css/validation.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "css/progressive-disclosure.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "css/loading-spinner.css"),
