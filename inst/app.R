@@ -3795,6 +3795,77 @@ server <- function(input, output, session) {
           Significance_Level = input$noninf_alpha,
           Date = Sys.Date()
         )
+      } else if (input$tabset == "Propensity Score VIF Calculator") {
+        # Get common inputs
+        n_rct <- input$vif_n_rct
+        prevalence_pct <- input$vif_prevalence
+        weight_method <- input$vif_method
+        ps_calc_method <- input$ps_calc_method
+
+        # Calculate based on selected method
+        if (ps_calc_method == "austin") {
+          # Austin (2021) VIF method
+          c_stat <- input$vif_cstat
+          vif <- estimate_vif_propensity_score(c_stat, prevalence_pct, weight_method)
+          n_adjusted <- ceiling(n_rct * vif)
+          n_increase <- n_adjusted - n_rct
+          pct_increase <- (vif - 1) * 100
+          n_effective <- floor(n_rct / vif)
+
+          results <- data.frame(
+            Analysis_Type = "Propensity Score VIF Calculator - Austin (2021)",
+            Calculation_Method = "Austin (2021)",
+            Weighting_Method = weight_method,
+            RCT_Sample_Size = n_rct,
+            Treatment_Prevalence_Percent = prevalence_pct,
+            C_Statistic = c_stat,
+            VIF = vif,
+            Adjusted_Sample_Size = n_adjusted,
+            Sample_Size_Increase = n_increase,
+            Percent_Increase = pct_increase,
+            Effective_Sample_Size = n_effective,
+            Date = Sys.Date()
+          )
+        } else {
+          # Li et al. (2025) method
+          overlap_phi <- input$vif_overlap_phi
+          rho_squared <- input$vif_rho_squared
+          treatment_prop <- prevalence_pct / 100
+          effect_size <- 0.2  # Standardized effect size placeholder
+
+          li_result <- calculate_n_li_2025(
+            effect_size = effect_size,
+            alpha = 0.05,
+            power = 0.80,
+            treatment_prop = treatment_prop,
+            overlap_phi = overlap_phi,
+            rho_squared = rho_squared,
+            weight_type = weight_method,
+            outcome_var = 1
+          )
+
+          vif <- li_result$vif
+          n_adjusted <- li_result$n_required
+          n_increase <- n_adjusted - n_rct
+          pct_increase <- (vif - 1) * 100
+          n_effective <- li_result$n_effective
+
+          results <- data.frame(
+            Analysis_Type = "Propensity Score VIF Calculator - Li et al. (2025)",
+            Calculation_Method = "Li et al. (2025)",
+            Weighting_Method = weight_method,
+            RCT_Sample_Size = n_rct,
+            Treatment_Prevalence_Percent = prevalence_pct,
+            Overlap_Coefficient_Phi = overlap_phi,
+            Confounder_Outcome_R_Squared = rho_squared,
+            VIF = vif,
+            Adjusted_Sample_Size = n_adjusted,
+            Sample_Size_Increase = n_increase,
+            Percent_Increase = pct_increase,
+            Effective_Sample_Size = n_effective,
+            Date = Sys.Date()
+          )
+        }
       }
 
       write.csv(results, file, row.names = FALSE)
