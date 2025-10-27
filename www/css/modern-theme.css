@@ -243,7 +243,7 @@ code {
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   color: var(--text-inverse);
-  background-color: var(--color-primary-600);
+  background-color: var(--color-primary-700);  /* Changed from 600 to 700 for WCAG AA contrast (4.5:1) */
   border: none;
   border-radius: var(--border-radius-md);
   padding: var(--space-4) var(--space-8);
@@ -257,7 +257,7 @@ code {
 
 .btn-primary:hover,
 .btn-primary.btn-lg:hover {
-  background-color: var(--color-primary-700);
+  background-color: var(--color-primary-800);  /* Changed from 700 to 800 to maintain visual hierarchy */
   box-shadow: var(--shadow-lg);
   transform: translateY(-1px);
   color: var(--text-inverse);

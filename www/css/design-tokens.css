@@ -117,11 +117,11 @@
   --text-error: var(--color-error-600);
   --text-info: var(--color-info-600);
   
-  /* Sidebar text with opacity (on dark backgrounds) */
+  /* Sidebar text with opacity (on dark backgrounds) - Updated for WCAG AA */
   --text-sidebar-dimmed: rgba(255, 255, 255, 0.7);
-  --text-sidebar-medium: rgba(255, 255, 255, 0.75);
-  --text-sidebar-bright: rgba(255, 255, 255, 0.8);
-  --text-sidebar-primary: rgba(255, 255, 255, 0.9);
+  --text-sidebar-medium: rgba(255, 255, 255, 0.85);  /* Increased from 0.75 for better contrast */
+  --text-sidebar-bright: rgba(255, 255, 255, 0.9);   /* Increased from 0.8 for better contrast */
+  --text-sidebar-primary: rgba(255, 255, 255, 1.0);  /* Increased from 0.9 to pure white for WCAG AA */
 
   /* ========================================================================
      BOOTSTRAP 5 SEMANTIC VARIABLE MAPPINGS
