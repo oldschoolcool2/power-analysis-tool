@@ -130,6 +130,7 @@ app_server <- function(input, output, session) {
       "vif_calculator" = "Propensity Score VIF Calculator",
       "mediation_analysis" = "Mediation Analysis",
       "sensitivity_evalue" = "E-value Sensitivity Analysis",
+      "sensitivity_multi_bias" = "Multi-Bias Sensitivity Analysis",
       "documentation" = "Documentation",
       "Unknown"
     )
@@ -4171,6 +4172,159 @@ app_server <- function(input, output, session) {
             Event_Rate_Percent = tab9_inputs$event_rate,
             Allocation_Ratio = ratio,
             Date = Sys.Date()
+          )
+        }
+      } else if (identical(input$sidebar_page, "mediation_analysis")) {
+        # Get module inputs
+        med_inputs <- tab8_vals$inputs()
+
+        # Extract values
+        calc_mode <- med_inputs$calc_mode
+        a <- med_inputs$path_a
+        b <- med_inputs$path_b
+        c_prime <- med_inputs$path_c_prime
+        alpha <- med_inputs$med_alpha
+        alternative <- med_inputs$med_sided
+
+        # Handle standard errors (use input or estimate from N)
+        se_a <- if (!is.na(med_inputs$se_a)) med_inputs$se_a else NULL
+        se_b <- if (!is.na(med_inputs$se_b)) med_inputs$se_b else NULL
+
+        # Calculate based on mode
+        if (calc_mode == "calc_power") {
+          # Calculate power given N
+          n <- med_inputs$med_n
+          power <- calc_mediation_power(n, a, b, se_a, se_b, alpha, alternative)
+
+          results <- data.frame(
+            Analysis_Type = "Mediation Analysis - Power Calculation",
+            Sample_Size = n,
+            Power_Percent = power * 100,
+            Path_a_X_to_M = a,
+            Path_b_M_to_Y = b,
+            Indirect_Effect_ab = a * b,
+            Path_c_prime_Direct = ifelse(!is.na(c_prime), c_prime, NA),
+            SE_Path_a = ifelse(!is.null(se_a), se_a, 1/sqrt(n)),
+            SE_Path_b = ifelse(!is.null(se_b), se_b, 1/sqrt(n)),
+            Significance_Level = alpha,
+            Test_Type = alternative,
+            Date = Sys.Date()
+          )
+
+        } else if (calc_mode == "calc_n") {
+          # Calculate sample size given power
+          power <- med_inputs$med_power / 100
+          n_required <- calc_mediation_n(a, b, power, alpha, alternative)
+
+          results <- data.frame(
+            Analysis_Type = "Mediation Analysis - Sample Size Calculation",
+            Required_Sample_Size = ifelse(!is.na(n_required), ceiling(n_required), NA),
+            Desired_Power_Percent = med_inputs$med_power,
+            Path_a_X_to_M = a,
+            Path_b_M_to_Y = b,
+            Indirect_Effect_ab = a * b,
+            Path_c_prime_Direct = ifelse(!is.na(c_prime), c_prime, NA),
+            Significance_Level = alpha,
+            Test_Type = alternative,
+            Date = Sys.Date()
+          )
+
+        } else if (calc_mode == "calc_mde") {
+          # Calculate minimal detectable effect
+          n <- med_inputs$med_n
+          power <- med_inputs$med_power / 100
+          b_min <- calc_mediation_mde(n, a, power, alpha, alternative)
+          ab_min <- a * b_min
+
+          results <- data.frame(
+            Analysis_Type = "Mediation Analysis - Minimal Detectable Effect",
+            Sample_Size = n,
+            Desired_Power_Percent = med_inputs$med_power,
+            Path_a_X_to_M = a,
+            Path_b_M_to_Y_Minimum = ifelse(!is.na(b_min), b_min, NA),
+            Indirect_Effect_ab_Minimum = ifelse(!is.na(ab_min), ab_min, NA),
+            Path_c_prime_Direct = ifelse(!is.na(c_prime), c_prime, NA),
+            Significance_Level = alpha,
+            Test_Type = alternative,
+            Date = Sys.Date()
+          )
+        }
+      } else if (identical(input$sidebar_page, "sensitivity_multi_bias")) {
+        # Get module inputs
+        tab10_vals_data <- tab10_vals()
+        multi_bias_data <- tab10_vals_data$multi_bias
+
+        # Extract bias configuration
+        include_confounding <- multi_bias_data$include_confounding
+        include_selection <- multi_bias_data$include_selection
+        include_misclass <- multi_bias_data$include_misclass
+        selection_type <- multi_bias_data$selection_type
+        misclass_type <- multi_bias_data$misclass_type
+        rr <- multi_bias_data$rr
+        include_ci <- multi_bias_data$include_ci
+        ci_lower <- multi_bias_data$ci_lower
+        ci_upper <- multi_bias_data$ci_upper
+        analysis_type <- multi_bias_data$analysis_type
+
+        # Build bias types list
+        bias_types <- character(0)
+        if (include_confounding) bias_types <- c(bias_types, "Unmeasured Confounding")
+        if (include_selection) bias_types <- c(bias_types, paste0("Selection Bias (", selection_type, ")"))
+        if (include_misclass) bias_types <- c(bias_types, paste0("Misclassification (", misclass_type, ")"))
+        bias_types_str <- paste(bias_types, collapse = "; ")
+
+        # Extract results
+        mb_results <- multi_bias_data$results
+
+        if (!is.null(mb_results) && !is.null(mb_results$valid) && mb_results$valid) {
+          if (analysis_type == "evalue") {
+            # E-value analysis export
+            results <- data.frame(
+              Analysis_Type = "Multi-Bias Sensitivity Analysis - E-value",
+              Bias_Types = bias_types_str,
+              Observed_RR = rr,
+              CI_Lower = ifelse(include_ci, ci_lower, NA),
+              CI_Upper = ifelse(include_ci, ci_upper, NA),
+              Multi_Bias_E_value = mb_results$evalue,
+              Number_of_Bias_Types = length(bias_types),
+              Robustness_Level = mb_results$interpretation$magnitude,
+              Date = Sys.Date(),
+              stringsAsFactors = FALSE
+            )
+          } else {
+            # Bias-adjusted bound analysis export
+            # Format bias parameters as a string
+            bias_parms_str <- paste(
+              names(mb_results$bias_parms),
+              "=",
+              sapply(mb_results$bias_parms, function(x) sprintf("%.2f", x)),
+              collapse = "; "
+            )
+
+            results <- data.frame(
+              Analysis_Type = "Multi-Bias Sensitivity Analysis - Bias-Adjusted Bound",
+              Bias_Types = bias_types_str,
+              Observed_RR = mb_results$original_rr,
+              CI_Lower = ifelse(include_ci, ci_lower, NA),
+              CI_Upper = ifelse(include_ci, ci_upper, NA),
+              Bias_Parameters = bias_parms_str,
+              Bias_Factor = mb_results$bias_factor,
+              Adjusted_RR = mb_results$adjusted_rr,
+              Adjusted_CI_Lower = ifelse(!is.na(mb_results$adjusted_lo), mb_results$adjusted_lo, NA),
+              Adjusted_CI_Upper = ifelse(!is.na(mb_results$adjusted_hi), mb_results$adjusted_hi, NA),
+              Crosses_Null = mb_results$interpretation$crosses_null,
+              Number_of_Bias_Types = length(bias_types),
+              Date = Sys.Date(),
+              stringsAsFactors = FALSE
+            )
+          }
+        } else {
+          # No valid results available - create placeholder
+          results <- data.frame(
+            Analysis_Type = "Multi-Bias Sensitivity Analysis",
+            Note = "No calculation results available. Please run analysis first.",
+            Date = Sys.Date(),
+            stringsAsFactors = FALSE
           )
         }
       }

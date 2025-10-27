@@ -29,9 +29,9 @@
 │ 5. Continuous Outcomes (t-tests)           │     ✅     │     ✅     │    ✅    │    ❌    │ Cohen's d (t-test)          │
 │ 6. Non-Inferiority Testing                 │     ❌     │     ✅     │    ✅    │    ❌    │ Cohen's h (margin adjusted) │
 │ 7. Propensity Score VIF Calculator         │     N/A    │     N/A    │    ✅    │    ❌    │ VIF calculation             │
-│ 8. Mediation Analysis                      │     N/A    │     ✅     │    ❌    │    ❌    │ Product of coefficients     │
+│ 8. Mediation Analysis                      │     N/A    │     ✅     │    ✅    │    ❌    │ Product of coefficients     │
 │ 9. Time-to-Event Equivalence/NI           │     ❌     │     ✅     │    ✅    │    ❌    │ Schoenfeld (equivalence)    │
-│ 10. Multiple-Bias Sensitivity Analysis     │     N/A    │     N/A    │    ❌    │    ❌    │ Bias factor quantification  │
+│ 10. Multiple-Bias Sensitivity Analysis     │     N/A    │     N/A    │    ✅    │    ❌    │ Bias factor quantification  │
 └─────────────────────────────────────────────┴────────────┴────────────┴──────────┴──────────┴─────────────────────────────┘
 ```
 
@@ -255,16 +255,17 @@
 
 ---
 
-### 8. Mediation Analysis ⚠️ NO EXPORTS
+### 8. Mediation Analysis ⚠️ EXPORT INCOMPLETE
 
-**Status:** Sample size calculation only, no exports
+**Status:** Sample size calculation complete, CSV export added
 **Module File:** `R/mod_08_mediation.R`
 
 #### Features
-- ❌ Power calculation
-- ✅ Sample size calculation
+- ✅ Power calculation (given sample size)
+- ✅ Sample size calculation (given power)
+- ✅ Minimal detectable effect calculation (given N and power)
 - ✅ Effect size specification for direct and indirect paths
-- ❌ CSV export
+- ✅ CSV export
 - ❌ PDF export
 
 #### Statistical Method
@@ -274,13 +275,17 @@
 - **Use Cases:** Testing mediation hypotheses
 
 #### Export Formats
-- **CSV:** ❌ Not implemented
+- **CSV:** ✅ Includes all three calculation modes (power, sample size, MDE)
+  - Path coefficients (a, b, c')
+  - Indirect effect (a × b)
+  - Standard errors (estimated or user-provided)
+  - Statistical parameters (α, test type)
 - **PDF:** ❌ Not implemented
 
 #### Gaps
-1. No export functionality
-2. Missing power calculation for given sample size
-3. No bootstrapping confidence interval guidance
+1. No PDF export
+2. No bootstrapping confidence interval guidance
+3. Missing documentation on appropriate effect size magnitudes
 
 ---
 
@@ -316,9 +321,9 @@
 
 ---
 
-### 10. Multiple-Bias Sensitivity Analysis 🚧 IN DEVELOPMENT
+### 10. Multiple-Bias Sensitivity Analysis ⚠️ EXPORT PARTIALLY COMPLETE
 
-**Status:** Recently added, exports not yet implemented
+**Status:** CSV export implemented, PDF pending
 **Module File:** `R/mod_10_sensitivity_analyses.R` (wrapper)
 **Sub-module:** `R/mod_multi_bias.R`
 
@@ -326,7 +331,7 @@
 - ✅ Multiple bias factor analysis
 - ✅ Joint impact of confounding, selection bias, misclassification
 - ✅ Interactive bias parameter specification
-- ❌ CSV export
+- ✅ CSV export (E-value and Bias-adjusted bound)
 - ❌ PDF export
 
 #### Statistical Method
@@ -336,15 +341,19 @@
   - Selection bias
   - Differential misclassification
 - **Use Cases:** Report-phase sensitivity analysis
+- **Analysis Modes:**
+  - E-value: Minimum bias strength to explain away effect
+  - Bias-adjusted bound: Effect estimate given specific bias values
 
 #### Export Formats
-- **CSV:** ❌ Not implemented (PRIORITY)
+- **CSV:** ✅ Implemented with support for both analysis types
+  - E-value export: Includes observed RR, CI, multi-bias E-value, robustness level
+  - Bound export: Includes bias parameters, bias factor, adjusted RR, adjusted CI
 - **PDF:** ❌ Not implemented
 
 #### Gaps
-1. No export functionality
-2. Cannot save bias scenarios
-3. Missing comparison table for multiple scenarios
+1. No PDF export
+2. Missing scenario comparison table for multiple scenarios
 
 ---
 
@@ -353,8 +362,8 @@
 ### CSV Export Coverage
 
 ```
-Modules with CSV Export:  8/10  (80%)
-Modules without CSV:      2/10  (20%)
+Modules with CSV Export:  10/10 (100%) ✅
+Modules without CSV:       0/10  (0%)
 ```
 
 **✅ CSV Implemented:**
@@ -364,12 +373,13 @@ Modules without CSV:      2/10  (20%)
 4. Matched Case-Control
 5. Continuous Outcomes
 6. Non-Inferiority Testing
-7. Propensity Score VIF Calculator ⭐ NEW
-8. Time-to-Event Equivalence/NI
+7. Propensity Score VIF Calculator
+8. Mediation Analysis
+9. Time-to-Event Equivalence/NI
+10. Multiple-Bias Sensitivity Analysis ⭐ NEW
 
 **❌ CSV Missing:**
-1. Mediation Analysis
-2. Multiple-Bias Sensitivity Analysis
+None - 100% CSV coverage achieved! 🎉
 
 ### PDF Export Coverage
 
@@ -388,10 +398,10 @@ Modules without PDF:      9/10  (90%)
 
 ## Recommended Priorities for Feature Parity
 
-### Priority 1: CRITICAL (Export Gaps)
+### Priority 1: CRITICAL (Export Gaps) - ✅ ALL COMPLETED
 1. ~~**Add CSV export to VIF Calculator**~~ ✅ COMPLETED (2025-10-27)
-2. **Add CSV export to Mediation Analysis** - Sample size results should be exportable
-3. **Add CSV export to Multi-Bias Sensitivity** - Sensitivity scenarios need documentation
+2. ~~**Add CSV export to Mediation Analysis**~~ ✅ COMPLETED (2025-10-27)
+3. ~~**Add CSV export to Multi-Bias Sensitivity**~~ ✅ COMPLETED (2025-10-27)
 
 ### Priority 2: HIGH (PDF Reports for Common Analyses)
 4. **Two-Group Comparisons PDF** - Very common analysis type
@@ -476,19 +486,25 @@ Modules without PDF:      9/10  (90%)
 - **COMPLETED:** CSV export for VIF Calculator module ✅
   - Supports both Austin (2021) and Li et al. (2025) methods
   - Includes all relevant parameters and calculations
-  - CSV coverage increased from 70% to 80%
+- **COMPLETED:** CSV export for Mediation Analysis module ✅
+  - Supports all three calculation modes (power, sample size, MDE)
+  - Includes path coefficients, indirect effects, and standard errors
+- **COMPLETED:** CSV export for Multi-Bias Sensitivity Analysis module ✅
+  - Supports both E-value and bias-adjusted bound analyses
+  - Includes bias types, observed RR, CI, multi-bias E-value, robustness level
+  - Includes bias parameters, bias factor, adjusted estimates for bound analysis
+  - **🎉 CSV coverage: 100% (10/10 modules) - ALL PRIORITY 1 ITEMS COMPLETE!**
 - **IDENTIFIED:** 9 modules still missing PDF export
-- **IDENTIFIED:** 2 modules missing CSV export (down from 3)
 
 ---
 
 ## Next Steps
 
-1. **Immediate:** Add CSV export to VIF, Mediation, Multi-Bias modules
-2. **Sprint 1:** Create PDF templates for Two-Group and Survival modules
-3. **Sprint 2:** Add power calculations to modules with sample size only
-4. **Sprint 3:** Standardize export formats across all modules
-5. **Sprint 4:** Add comprehensive testing for all export functionality
+1. ~~**Immediate:** Add CSV export to Multi-Bias Sensitivity module~~ ✅ COMPLETED
+2. **Priority 2 (HIGH):** Create PDF templates for Two-Group and Survival modules
+3. **Priority 3 (MEDIUM):** Add power calculations to modules with sample size only
+4. **Sprint 1:** Standardize export formats across all modules
+5. **Sprint 2:** Add comprehensive testing for all export functionality
 
 ---
 
