@@ -208,6 +208,9 @@ mod_09_survival_equivalence_server <- function(id){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 
+    # Log module initialization
+    log_module_event("survival_equivalence", "init", session)
+
     # Initialize modules
     missing_data_vals <- missing_data_server("missing_data")
     clustering_vals <- clustering_server("clustering")
@@ -215,8 +218,20 @@ mod_09_survival_equivalence_server <- function(id){
     # Initialize multiple testing module
     multiple_testing_vals <- multiple_testing_server("multiple_testing")
 
+    logger::log_debug(
+      "Survival equivalence module sub-modules initialized",
+      module = "survival_equivalence",
+      session_id = session$token
+    )
+
     # Example button
     observeEvent(input$example, {
+      logger::log_info(
+        "Loading example data for survival equivalence",
+        module = "survival_equivalence",
+        action = "load_example",
+        session_id = session$token
+      )
       updateRadioButtons(session, "test_type", selected = "non-inferiority")
       updateRadioButtons(session, "calc_mode", selected = "calc_n")
       updateRadioButtons(session, "power", selected = "80")
@@ -230,6 +245,12 @@ mod_09_survival_equivalence_server <- function(id){
 
     # Reset button
     observeEvent(input$reset, {
+      logger::log_info(
+        "Resetting survival equivalence inputs",
+        module = "survival_equivalence",
+        action = "reset",
+        session_id = session$token
+      )
       updateRadioButtons(session, "test_type", selected = "non-inferiority")
       updateRadioButtons(session, "calc_mode", selected = "calc_n")
       updateRadioButtons(session, "power", selected = "80")
@@ -243,9 +264,17 @@ mod_09_survival_equivalence_server <- function(id){
       updateRadioButtons(session, "alpha", selected = "0.025")
     })
 
+    # Register cleanup handler
+    onStop(function() {
+      log_module_event("survival_equivalence", "cleanup", session)
+    })
+
     # Return reactive values
     list(
       inputs = reactive({
+        # Log reactive execution at TRACE level (only when debugging)
+        log_reactive_execution("survival_equivalence_inputs", session)
+
         list(
           test_type = input$test_type,
           calc_mode = input$calc_mode,

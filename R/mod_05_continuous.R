@@ -159,6 +159,9 @@ mod_05_continuous_server <- function(id){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 
+    # Log module initialization
+    log_module_event("continuous", "init", session)
+
     # Initialize missing data module for sample size tab
     missing_data_vals <- missing_data_server("missing_data")
     clustering_vals <- clustering_server("clustering")
@@ -166,8 +169,21 @@ mod_05_continuous_server <- function(id){
     # Initialize multiple testing module for sample size tab
     multiple_testing_vals <- multiple_testing_server("multiple_testing")
 
+    logger::log_debug(
+      "Continuous module sub-modules initialized",
+      module = "continuous",
+      session_id = session$token
+    )
+
     # Example button - Power Analysis
     observeEvent(input$example_cont_pow, {
+      logger::log_info(
+        "Loading example data for continuous power analysis",
+        module = "continuous",
+        action = "load_example",
+        page = "power",
+        session_id = session$token
+      )
       updateNumericInput(session, "cont_pow_n1", value = 150)
       updateNumericInput(session, "cont_pow_n2", value = 150)
       updateNumericInput(session, "cont_pow_d", value = 0.4)
@@ -177,6 +193,13 @@ mod_05_continuous_server <- function(id){
 
     # Reset button - Power Analysis
     observeEvent(input$reset_cont_pow, {
+      logger::log_info(
+        "Resetting continuous power analysis inputs",
+        module = "continuous",
+        action = "reset",
+        page = "power",
+        session_id = session$token
+      )
       updateNumericInput(session, "cont_pow_n1", value = 100)
       updateNumericInput(session, "cont_pow_n2", value = 100)
       updateNumericInput(session, "cont_pow_d", value = 0.5)
@@ -186,6 +209,13 @@ mod_05_continuous_server <- function(id){
 
     # Example button - Sample Size
     observeEvent(input$example_cont_ss, {
+      logger::log_info(
+        "Loading example data for continuous sample size",
+        module = "continuous",
+        action = "load_example",
+        page = "sample_size",
+        session_id = session$token
+      )
       updateRadioButtons(session, "cont_ss_calc_mode", selected = "calc_n")
       updateRadioButtons(session, "cont_ss_power", selected = "90")
       updateNumericInput(session, "cont_ss_d", value = 0.4)
@@ -196,6 +226,13 @@ mod_05_continuous_server <- function(id){
 
     # Reset button - Sample Size
     observeEvent(input$reset_cont_ss, {
+      logger::log_info(
+        "Resetting continuous sample size inputs",
+        module = "continuous",
+        action = "reset",
+        page = "sample_size",
+        session_id = session$token
+      )
       updateRadioButtons(session, "cont_ss_calc_mode", selected = "calc_n")
       updateRadioButtons(session, "cont_ss_power", selected = "80")
       updateNumericInput(session, "cont_ss_d", value = 0.5)
@@ -205,9 +242,17 @@ mod_05_continuous_server <- function(id){
       updateRadioButtons(session, "cont_ss_sided", selected = "two.sided")
     })
 
+    # Register cleanup handler
+    onStop(function() {
+      log_module_event("continuous", "cleanup", session)
+    })
+
     # Return reactive values
     list(
       inputs = reactive({
+        # Log reactive execution at TRACE level (only when debugging)
+        log_reactive_execution("continuous_inputs", session)
+
         list(
           # Power analysis inputs
           cont_pow_n1 = as.numeric(input$cont_pow_n1),

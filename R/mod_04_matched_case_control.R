@@ -217,6 +217,9 @@ mod_04_matched_case_control_server <- function(id){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 
+    # Log module initialization
+    log_module_event("matched_case_control", "init", session)
+
     # Initialize missing data module
     missing_data_vals <- missing_data_server("missing_data")
     clustering_vals <- clustering_server("clustering")
@@ -224,10 +227,24 @@ mod_04_matched_case_control_server <- function(id){
     # Initialize multiple testing module
     multiple_testing_vals <- multiple_testing_server("multiple_testing")
 
+    logger::log_debug(
+      "Matched case-control module sub-modules initialized",
+      module = "matched_case_control",
+      session_id = session$token
+    )
+
     # Example button - updates based on active tab
     observeEvent(input$example_match, {
       # Guard against NULL or invalid analysis type
       req(input$match_analysis_type)
+
+      logger::log_info(
+        "Loading example data for matched case-control",
+        module = "matched_case_control",
+        action = "load_example",
+        analysis_type = input$match_analysis_type,
+        session_id = session$token
+      )
 
       if (isTRUE(input$match_analysis_type == "sample_size")) {
         updateRadioButtons(session, "match_power_ss", selected = "80")
@@ -254,6 +271,14 @@ mod_04_matched_case_control_server <- function(id){
       # Guard against NULL or invalid analysis type
       req(input$match_analysis_type)
 
+      logger::log_info(
+        "Resetting matched case-control inputs",
+        module = "matched_case_control",
+        action = "reset",
+        analysis_type = input$match_analysis_type,
+        session_id = session$token
+      )
+
       if (isTRUE(input$match_analysis_type == "sample_size")) {
         updateRadioButtons(session, "match_power_ss", selected = "80")
         updateNumericInput(session, "match_or_ss", value = 2.0)
@@ -274,9 +299,17 @@ mod_04_matched_case_control_server <- function(id){
       updateRadioButtons(session, "match_sided", selected = "two.sided")
     })
 
+    # Register cleanup handler
+    onStop(function() {
+      log_module_event("matched_case_control", "cleanup", session)
+    })
+
     # Return reactive values based on active tab
     list(
       inputs = reactive({
+        # Log reactive execution at TRACE level (only when debugging)
+        log_reactive_execution("matched_case_control_inputs", session)
+
         # Determine analysis mode from active tab (with fallback to sample_size)
         analysis_type <- if (is.null(input$match_analysis_type) || input$match_analysis_type == "") {
           "sample_size"

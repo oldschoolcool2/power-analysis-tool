@@ -173,8 +173,17 @@ mod_08_mediation_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    # Log module initialization
+    log_module_event("mediation", "init", session)
+
     # Example button
     observeEvent(input$example_med, {
+      logger::log_info(
+        "Loading example data for mediation analysis",
+        module = "mediation",
+        action = "load_example",
+        session_id = session$token
+      )
       # Example: Drug → Adherence → Clinical Outcome
       updateRadioButtons(session, "calc_mode", selected = "calc_n")
       updateRadioButtons(session, "med_power", selected = "80")
@@ -195,6 +204,12 @@ mod_08_mediation_server <- function(id) {
 
     # Reset button
     observeEvent(input$reset_med, {
+      logger::log_info(
+        "Resetting mediation analysis inputs",
+        module = "mediation",
+        action = "reset",
+        session_id = session$token
+      )
       updateRadioButtons(session, "calc_mode", selected = "calc_power")
       updateNumericInput(session, "med_n", value = 200)
       updateRadioButtons(session, "med_power", selected = "80")
@@ -207,9 +222,17 @@ mod_08_mediation_server <- function(id) {
       updateRadioButtons(session, "med_sided", selected = "two.sided")
     })
 
+    # Register cleanup handler
+    onStop(function() {
+      log_module_event("mediation", "cleanup", session)
+    })
+
     # Return reactive values
     list(
       inputs = reactive({
+        # Log reactive execution at TRACE level (only when debugging)
+        log_reactive_execution("mediation_inputs", session)
+
         list(
           calc_mode = input$calc_mode,
           med_n = as.numeric(input$med_n),

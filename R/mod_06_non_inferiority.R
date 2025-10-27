@@ -55,13 +55,29 @@ mod_06_non_inferiority_ui <- function(id) {
 mod_06_non_inferiority_server <- function(id){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
+
+    # Log module initialization
+    log_module_event("non_inferiority", "init", session)
+
     missing_data_vals <- missing_data_server("missing_data")
     clustering_vals <- clustering_server("clustering")
 
     # Initialize multiple testing module
     multiple_testing_vals <- multiple_testing_server("multiple_testing")
 
+    logger::log_debug(
+      "Non-inferiority module sub-modules initialized",
+      module = "non_inferiority",
+      session_id = session$token
+    )
+
     observeEvent(input$example_noninf, {
+      logger::log_info(
+        "Loading example data for non-inferiority",
+        module = "non_inferiority",
+        action = "load_example",
+        session_id = session$token
+      )
       updateRadioButtons(session, "noninf_calc_mode", selected = "calc_n")
       updateRadioButtons(session, "noninf_power", selected = "80")
       updateNumericInput(session, "noninf_p1", value = 10)
@@ -70,8 +86,14 @@ mod_06_non_inferiority_server <- function(id){
       updateNumericInput(session, "noninf_ratio", value = 1)
       updateRadioButtons(session, "noninf_alpha", selected = "0.025")
     })
-    
+
     observeEvent(input$reset_noninf, {
+      logger::log_info(
+        "Resetting non-inferiority inputs",
+        module = "non_inferiority",
+        action = "reset",
+        session_id = session$token
+      )
       updateRadioButtons(session, "noninf_calc_mode", selected = "calc_n")
       updateRadioButtons(session, "noninf_power", selected = "80")
       updateNumericInput(session, "noninf_p1", value = 10)
@@ -82,8 +104,16 @@ mod_06_non_inferiority_server <- function(id){
       updateRadioButtons(session, "noninf_alpha", selected = "0.025")
     })
 
+    # Register cleanup handler
+    onStop(function() {
+      log_module_event("non_inferiority", "cleanup", session)
+    })
+
     list(
       inputs = reactive({
+        # Log reactive execution at TRACE level (only when debugging)
+        log_reactive_execution("non_inferiority_inputs", session)
+
         list(noninf_calc_mode = input$noninf_calc_mode, noninf_power = as.numeric(input$noninf_power),
              noninf_p1 = as.numeric(input$noninf_p1), noninf_p2 = as.numeric(input$noninf_p2), noninf_margin = as.numeric(input$noninf_margin),
              noninf_n1_fixed = as.numeric(input$noninf_n1_fixed), noninf_ratio = as.numeric(input$noninf_ratio), noninf_alpha = as.numeric(input$noninf_alpha))

@@ -166,6 +166,9 @@ mod_03_survival_server <- function(id){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 
+    # Log module initialization
+    log_module_event("survival", "init", session)
+
     # Initialize missing data module for sample size tab
     missing_data_vals <- missing_data_server("missing_data")
     clustering_vals <- clustering_server("clustering")
@@ -173,8 +176,21 @@ mod_03_survival_server <- function(id){
     # Initialize multiple testing module for sample size tab
     multiple_testing_vals <- multiple_testing_server("multiple_testing")
 
+    logger::log_debug(
+      "Survival module sub-modules initialized",
+      module = "survival",
+      session_id = session$token
+    )
+
     # Example button - Power Analysis
     observeEvent(input$example_surv_pow, {
+      logger::log_info(
+        "Loading example data for survival power analysis",
+        module = "survival",
+        action = "load_example",
+        page = "power",
+        session_id = session$token
+      )
       updateNumericInput(session, "surv_pow_n", value = 800)
       updateNumericInput(session, "surv_pow_hr", value = 0.65)
       updateSliderInput(session, "surv_pow_k", value = 50)
@@ -184,6 +200,13 @@ mod_03_survival_server <- function(id){
 
     # Reset button - Power Analysis
     observeEvent(input$reset_surv_pow, {
+      logger::log_info(
+        "Resetting survival power analysis inputs",
+        module = "survival",
+        action = "reset",
+        page = "power",
+        session_id = session$token
+      )
       updateNumericInput(session, "surv_pow_n", value = 500)
       updateNumericInput(session, "surv_pow_hr", value = 0.7)
       updateSliderInput(session, "surv_pow_k", value = 50)
@@ -193,6 +216,13 @@ mod_03_survival_server <- function(id){
 
     # Example button - Sample Size
     observeEvent(input$example_surv_ss, {
+      logger::log_info(
+        "Loading example data for survival sample size",
+        module = "survival",
+        action = "load_example",
+        page = "sample_size",
+        session_id = session$token
+      )
       updateRadioButtons(session, "surv_ss_calc_mode", selected = "calc_n")
       updateRadioButtons(session, "surv_ss_power", selected = "90")
       updateNumericInput(session, "surv_ss_hr", value = 0.65)
@@ -203,6 +233,13 @@ mod_03_survival_server <- function(id){
 
     # Reset button - Sample Size
     observeEvent(input$reset_surv_ss, {
+      logger::log_info(
+        "Resetting survival sample size inputs",
+        module = "survival",
+        action = "reset",
+        page = "sample_size",
+        session_id = session$token
+      )
       updateRadioButtons(session, "surv_ss_calc_mode", selected = "calc_n")
       updateRadioButtons(session, "surv_ss_power", selected = "80")
       updateNumericInput(session, "surv_ss_hr", value = 0.7)
@@ -212,9 +249,17 @@ mod_03_survival_server <- function(id){
       updateRadioButtons(session, "surv_ss_alpha", selected = "0.05")
     })
 
+    # Register cleanup handler
+    onStop(function() {
+      log_module_event("survival", "cleanup", session)
+    })
+
     # Return reactive values
     list(
       inputs = reactive({
+        # Log reactive execution at TRACE level (only when debugging)
+        log_reactive_execution("survival_inputs", session)
+
         list(
           # Power analysis inputs
           surv_pow_n = as.numeric(input$surv_pow_n),

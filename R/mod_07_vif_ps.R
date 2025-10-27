@@ -24,6 +24,15 @@ mod_07_vif_ps_ui <- function(id) {
 mod_07_vif_ps_server <- function(id){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
+
+    # Log module initialization (placeholder module)
+    log_module_event("vif_ps", "init", session)
+
+    # Register cleanup handler
+    onStop(function() {
+      log_module_event("vif_ps", "cleanup", session)
+    })
+
     # Placeholder - existing logic remains in app_server.R for now
     list(inputs = reactive({}))
   })

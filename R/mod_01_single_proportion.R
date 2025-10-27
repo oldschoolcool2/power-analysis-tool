@@ -177,6 +177,9 @@ mod_01_single_proportion_server <- function(id, parent_session = NULL){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 
+    # Log module initialization
+    log_module_event("single_proportion", "init", session)
+
     # Use parent session for rendering to shared outputs
     if (is.null(parent_session)) {
       parent_session <- session$parent
@@ -191,8 +194,21 @@ mod_01_single_proportion_server <- function(id, parent_session = NULL){
     # Initialize multiple testing module for sample size tab
     multiple_testing_vals <- multiple_testing_server("multiple_testing")
 
+    logger::log_debug(
+      "Single proportion module sub-modules initialized",
+      module = "single_proportion",
+      session_id = session$token
+    )
+
     # Example button - Power Analysis
     observeEvent(input$example_power_single, {
+      logger::log_info(
+        "Loading example data for single proportion power analysis",
+        module = "single_proportion",
+        action = "load_example",
+        page = "power",
+        session_id = session$token
+      )
       updateNumericInput(session, "power_n", value = 1500)
       updateNumericInput(session, "power_p", value = 0.2)  # 0.2% expected
       updateNumericInput(session, "power_p0", value = 0)   # 0% reference (rare event)
@@ -202,6 +218,13 @@ mod_01_single_proportion_server <- function(id, parent_session = NULL){
 
     # Reset button - Power Analysis
     observeEvent(input$reset_power_single, {
+      logger::log_info(
+        "Resetting single proportion power analysis inputs",
+        module = "single_proportion",
+        action = "reset",
+        page = "power",
+        session_id = session$token
+      )
       updateNumericInput(session, "power_n", value = 230)
       updateNumericInput(session, "power_p", value = 1)    # 1% expected
       updateNumericInput(session, "power_p0", value = 0)   # 0% reference
@@ -211,6 +234,13 @@ mod_01_single_proportion_server <- function(id, parent_session = NULL){
 
     # Example button - Sample Size
     observeEvent(input$example_ss_single, {
+      logger::log_info(
+        "Loading example data for single proportion sample size",
+        module = "single_proportion",
+        action = "load_example",
+        page = "sample_size",
+        session_id = session$token
+      )
       updateRadioButtons(session, "ss_single_calc_mode", selected = "calc_n")
       updateRadioButtons(session, "ss_power", selected = "80")
       updateNumericInput(session, "ss_p", value = 0.2)   # 0.2% expected
@@ -221,6 +251,13 @@ mod_01_single_proportion_server <- function(id, parent_session = NULL){
 
     # Reset button - Sample Size
     observeEvent(input$reset_ss_single, {
+      logger::log_info(
+        "Resetting single proportion sample size inputs",
+        module = "single_proportion",
+        action = "reset",
+        page = "sample_size",
+        session_id = session$token
+      )
       updateRadioButtons(session, "ss_single_calc_mode", selected = "calc_n")
       updateRadioButtons(session, "ss_power", selected = "80")
       updateNumericInput(session, "ss_p", value = 1)      # 1% expected
@@ -230,24 +267,129 @@ mod_01_single_proportion_server <- function(id, parent_session = NULL){
       updateRadioButtons(session, "ss_alpha", selected = "0.05")
     })
 
-    # Return reactive values that indicate this module should handle results
-    # The parent app_server will check these to know which module is active
+    # Define allowlists for categorical inputs (security best practice)
+    VALID_ALPHA <- c("0.001", "0.01", "0.05", "0.10")
+    VALID_POWER <- c("70", "80", "90", "95")
+    VALID_CALC_MODES <- c("calc_n", "calc_effect")
+
+    # Raw reactive inputs (not debounced)
+    # This separates input collection from validation
+    inputs_raw <- reactive({
+      # Use req() to prevent execution until inputs are available
+      # This is more efficient than validate() for simple presence checks
+      req(input$power_n)
+      req(input$power_p)
+      req(input$power_p0)
+      req(input$power_alpha)
+      req(input$power_discon)
+
+      # Validate and sanitize numeric inputs with proper type checking
+      tryCatch({
+        list(
+          # Power calculation inputs
+          power_n = validate_numeric_input(
+            input$power_n,
+            "Sample size",
+            min = 1,
+            max = 1e7
+          ),
+          power_p = validate_proportion_input(
+            input$power_p,
+            "Expected proportion"
+          ),
+          power_p0 = validate_proportion_input(
+            input$power_p0,
+            "Reference proportion"
+          ),
+          power_alpha = as.numeric(validate_choice_input(
+            input$power_alpha,
+            VALID_ALPHA,
+            "Significance level"
+          )),
+          power_discon = validate_proportion_input(
+            input$power_discon,
+            "Discontinuation rate"
+          ),
+
+          # Sample size calculation inputs
+          ss_single_calc_mode = validate_choice_input(
+            input$ss_single_calc_mode %||% "calc_n",
+            VALID_CALC_MODES,
+            "Calculation mode"
+          ),
+          ss_power = as.numeric(validate_choice_input(
+            input$ss_power %||% "80",
+            VALID_POWER,
+            "Power level"
+          )),
+          ss_p = validate_proportion_input(
+            input$ss_p %||% 1,
+            "Expected proportion",
+            allow_null = TRUE
+          ),
+          ss_p0 = validate_proportion_input(
+            input$ss_p0 %||% 0,
+            "Reference proportion"
+          ),
+          ss_n_fixed = validate_numeric_input(
+            input$ss_n_fixed %||% 500,
+            "Fixed sample size",
+            min = 10,
+            max = 1e7,
+            allow_null = TRUE
+          ),
+          ss_discon = validate_proportion_input(
+            input$ss_discon %||% 10,
+            "Discontinuation rate"
+          ),
+          ss_alpha = as.numeric(validate_choice_input(
+            input$ss_alpha %||% "0.05",
+            VALID_ALPHA,
+            "Significance level"
+          ))
+        )
+      }, error = function(e) {
+        # If validation fails, log the error (in production) and return defaults
+        if (golem::app_prod()) {
+          logger::log_warn(
+            "Input validation failed in single proportion module",
+            error = conditionMessage(e)
+          )
+        }
+
+        # Return safe defaults if validation fails
+        list(
+          power_n = 230,
+          power_p = 1,
+          power_p0 = 0,
+          power_alpha = 0.05,
+          power_discon = 10,
+          ss_single_calc_mode = "calc_n",
+          ss_power = 80,
+          ss_p = 1,
+          ss_p0 = 0,
+          ss_n_fixed = 500,
+          ss_discon = 10,
+          ss_alpha = 0.05
+        )
+      })
+    })
+
+    # Debounced inputs - wait 500ms after last change before updating
+    # This prevents excessive recalculation while user is typing
+    inputs <- inputs_raw %>% debounce(500)
+
+    # Register cleanup handler
+    onStop(function() {
+      log_module_event("single_proportion", "cleanup", session)
+    })
+
+    # Return reactive values for parent app_server
     list(
       inputs = reactive({
-        list(
-          power_n = if (is.null(input$power_n) || is.na(as.numeric(input$power_n))) 230 else as.numeric(input$power_n),
-          power_p = if (is.null(input$power_p) || is.na(as.numeric(input$power_p))) 1 else as.numeric(input$power_p),
-          power_p0 = if (is.null(input$power_p0) || is.na(as.numeric(input$power_p0))) 0 else as.numeric(input$power_p0),
-          power_alpha = if (is.null(input$power_alpha) || is.na(as.numeric(input$power_alpha))) 0.05 else as.numeric(input$power_alpha),
-          power_discon = if (is.null(input$power_discon) || is.na(as.numeric(input$power_discon))) 10 else as.numeric(input$power_discon),
-          ss_single_calc_mode = if (is.null(input$ss_single_calc_mode)) "calc_n" else input$ss_single_calc_mode,
-          ss_power = if (is.null(input$ss_power) || is.na(as.numeric(input$ss_power))) 80 else as.numeric(input$ss_power),
-          ss_p = if (is.null(input$ss_p) || is.na(as.numeric(input$ss_p))) 1 else as.numeric(input$ss_p),
-          ss_p0 = if (is.null(input$ss_p0) || is.na(as.numeric(input$ss_p0))) 0 else as.numeric(input$ss_p0),
-          ss_n_fixed = if (is.null(input$ss_n_fixed) || is.na(as.numeric(input$ss_n_fixed))) 500 else as.numeric(input$ss_n_fixed),
-          ss_discon = if (is.null(input$ss_discon) || is.na(as.numeric(input$ss_discon))) 10 else as.numeric(input$ss_discon),
-          ss_alpha = if (is.null(input$ss_alpha) || is.na(as.numeric(input$ss_alpha))) 0.05 else as.numeric(input$ss_alpha)
-        )
+        # Log reactive execution at TRACE level (only when debugging)
+        log_reactive_execution("single_proportion_inputs", session)
+        inputs()
       }),
       missing_data_vals = missing_data_vals,
       clustering_vals = clustering_vals,

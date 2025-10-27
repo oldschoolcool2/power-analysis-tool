@@ -173,6 +173,9 @@ mod_10_sensitivity_analyses_server <- function(id){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 
+    # Log module initialization
+    log_module_event("sensitivity_analyses", "init", session)
+
     # Initialize Multi-Bias module
     multi_bias_vals <- multi_bias_server("multi_bias")
 
@@ -182,8 +185,22 @@ mod_10_sensitivity_analyses_server <- function(id){
     evalue_vals_hr <- evalue_server("evalue_hr", effect_type = "HR")
     evalue_vals_md <- evalue_server("evalue_md", effect_type = "MD")
 
+    logger::log_debug(
+      "Sensitivity analyses module sub-modules initialized",
+      module = "sensitivity_analyses",
+      sub_modules = "multi_bias, evalue_rr, evalue_or, evalue_hr, evalue_md",
+      session_id = session$token
+    )
+
     # Load Example button for Multi-Bias Analysis
     observeEvent(input$example_multi_bias, {
+      logger::log_info(
+        "Loading example data for sensitivity analyses (Multi-Bias)",
+        module = "sensitivity_analyses",
+        action = "load_example",
+        analysis_type = "multi_bias",
+        session_id = session$token
+      )
       # Example: Study with potential confounding and selection bias
       # RR = 3.0 (95% CI: 2.0, 4.5)
       session$sendInputMessage("multi_bias-include_confounding", list(value = TRUE))
@@ -199,6 +216,13 @@ mod_10_sensitivity_analyses_server <- function(id){
 
     # Reset button for Multi-Bias Analysis
     observeEvent(input$reset_multi_bias, {
+      logger::log_info(
+        "Resetting sensitivity analyses inputs (Multi-Bias)",
+        module = "sensitivity_analyses",
+        action = "reset",
+        analysis_type = "multi_bias",
+        session_id = session$token
+      )
       session$sendInputMessage("multi_bias-include_confounding", list(value = TRUE))
       session$sendInputMessage("multi_bias-include_selection", list(value = FALSE))
       session$sendInputMessage("multi_bias-include_misclass", list(value = FALSE))
@@ -209,6 +233,13 @@ mod_10_sensitivity_analyses_server <- function(id){
 
     # Load Example button - uses classic smoking-lung cancer example from VanderWeele & Ding (2017)
     observeEvent(input$example_evalue, {
+      logger::log_info(
+        "Loading example data for sensitivity analyses (E-value)",
+        module = "sensitivity_analyses",
+        action = "load_example",
+        effect_type = input$effect_type,
+        session_id = session$token
+      )
       # Get current effect type
       current_type <- input$effect_type
 
@@ -253,6 +284,12 @@ mod_10_sensitivity_analyses_server <- function(id){
 
     # Reset button
     observeEvent(input$reset_evalue, {
+      logger::log_info(
+        "Resetting sensitivity analyses inputs",
+        module = "sensitivity_analyses",
+        action = "reset",
+        session_id = session$token
+      )
       # Reset to RR as default
       updateRadioButtons(session, "effect_type", selected = "RR")
 
@@ -260,9 +297,17 @@ mod_10_sensitivity_analyses_server <- function(id){
       # We could add explicit reset logic here if needed in the future
     })
 
+    # Register cleanup handler
+    onStop(function() {
+      log_module_event("sensitivity_analyses", "cleanup", session)
+    })
+
     # Return reactive values if needed by parent app
     return(
       reactive({
+        # Log reactive execution at TRACE level (only when debugging)
+        log_reactive_execution("sensitivity_analyses_inputs", session)
+
         list(
           multi_bias = multi_bias_vals(),
           effect_type = input$effect_type,
