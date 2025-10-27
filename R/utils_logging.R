@@ -13,6 +13,7 @@
 #' @param fn_name Character string name of the function for logging
 #' @param ... Named arguments to pass to the function
 #' @param log_level Log level for entry/exit messages (default: DEBUG)
+#' @param track_performance If TRUE, measure and log execution time (default: FALSE)
 #'
 #' @return Result of the function call
 #'
@@ -21,6 +22,7 @@
 #' - Logs function entry with all arguments at DEBUG level
 #' - Executes the function
 #' - Logs successful completion at DEBUG level
+#' - Optionally tracks and logs execution time
 #' - Logs errors at ERROR level with full context
 #' - Re-throws errors after logging
 #'
@@ -29,13 +31,17 @@
 #' result <- log_function_call(
 #'   calculate_power,
 #'   "calculate_power",
-#'   p1 = 0.5, p2 = 0.6, alpha = 0.05
+#'   p1 = 0.5, p2 = 0.6, alpha = 0.05,
+#'   track_performance = TRUE
 #' )
 #' }
 #'
 #' @noRd
-log_function_call <- function(fn, fn_name, ..., log_level = logger::DEBUG) {
+log_function_call <- function(fn, fn_name, ..., log_level = logger::DEBUG, track_performance = FALSE) {
   args <- list(...)
+
+  # Start timing if performance tracking enabled
+  start_time <- if (track_performance) Sys.time() else NULL
 
   # Log function entry
   logger::log_level(
@@ -51,23 +57,44 @@ log_function_call <- function(fn, fn_name, ..., log_level = logger::DEBUG) {
     {
       res <- do.call(fn, args)
 
-      # Log successful completion
-      logger::log_level(
-        log_level,
-        paste0(fn_name, " completed successfully"),
-        fn = fn_name
-      )
+      # Calculate duration if tracking
+      if (track_performance && !is.null(start_time)) {
+        duration_ms <- as.numeric(difftime(Sys.time(), start_time, units = "secs")) * 1000
+
+        # Log successful completion with timing
+        logger::log_level(
+          log_level,
+          paste0(fn_name, " completed successfully"),
+          fn = fn_name,
+          duration_ms = round(duration_ms, 2)
+        )
+      } else {
+        # Log without timing
+        logger::log_level(
+          log_level,
+          paste0(fn_name, " completed successfully"),
+          fn = fn_name
+        )
+      }
 
       res
     },
     error = function(e) {
+      # Calculate duration even for errors
+      duration_ms <- if (track_performance && !is.null(start_time)) {
+        as.numeric(difftime(Sys.time(), start_time, units = "secs")) * 1000
+      } else {
+        NULL
+      }
+
       # Log error with full context
       logger::log_error(
         paste0(fn_name, " failed"),
         fn = fn_name,
         error_class = class(e)[1],
         error_msg = conditionMessage(e),
-        args = args
+        args = args,
+        duration_ms = if (!is.null(duration_ms)) round(duration_ms, 2) else NULL
       )
 
       # Re-throw the error
@@ -215,31 +242,36 @@ log_module_event <- function(module_id, event, session = NULL, ...) {
 #' @param result Calculation result (or NULL if not yet computed)
 #' @param success Logical indicating success (default: TRUE)
 #' @param error Error object if calculation failed (default: NULL)
+#' @param duration_ms Optional execution duration in milliseconds
 #'
 #' @return Nothing (used for side effects)
 #'
 #' @examples
 #' \dontrun{
+#' start <- Sys.time()
 #' result <- tryCatch({
 #'   res <- calculate_power(p1, p2, alpha)
-#'   log_calculation("power", list(p1=p1, p2=p2, alpha=alpha), res)
+#'   duration <- as.numeric(difftime(Sys.time(), start, units = "secs")) * 1000
+#'   log_calculation("power", list(p1=p1, p2=p2, alpha=alpha), res, duration_ms = duration)
 #'   res
 #' }, error = function(e) {
+#'   duration <- as.numeric(difftime(Sys.time(), start, units = "secs")) * 1000
 #'   log_calculation("power", list(p1=p1, p2=p2, alpha=alpha),
-#'                  NULL, success=FALSE, error=e)
+#'                  NULL, success=FALSE, error=e, duration_ms = duration)
 #' })
 #' }
 #'
 #' @noRd
 log_calculation <- function(calc_name, inputs, result = NULL,
-                            success = TRUE, error = NULL) {
+                            success = TRUE, error = NULL, duration_ms = NULL) {
   if (success) {
     logger::log_info(
       paste0("Calculation '", calc_name, "' completed"),
       calculation = calc_name,
       inputs = inputs,
       result_class = class(result)[1],
-      result_length = if (is.null(result)) 0 else length(result)
+      result_length = if (is.null(result)) 0 else length(result),
+      duration_ms = if (!is.null(duration_ms)) round(duration_ms, 2) else NULL
     )
   } else {
     logger::log_error(
@@ -247,9 +279,75 @@ log_calculation <- function(calc_name, inputs, result = NULL,
       calculation = calc_name,
       inputs = inputs,
       error_class = if (!is.null(error)) class(error)[1] else "unknown",
-      error_msg = if (!is.null(error)) conditionMessage(error) else "unknown"
+      error_msg = if (!is.null(error)) conditionMessage(error) else "unknown",
+      duration_ms = if (!is.null(duration_ms)) round(duration_ms, 2) else NULL
     )
   }
+}
+
+#' Measure Performance of Code Block
+#'
+#' Executes a code block and measures its execution time, with optional
+#' automatic logging of performance metrics.
+#'
+#' @param expr Expression to evaluate
+#' @param label Optional label for the operation (for logging)
+#' @param log_result If TRUE, log the performance result (default: FALSE)
+#' @param threshold_ms If specified, only log if duration exceeds threshold
+#'
+#' @return List with 'result' (the expression result) and 'duration_ms'
+#'
+#' @examples
+#' \dontrun{
+#' perf <- measure_performance({
+#'   calculate_power(p1 = 0.5, p2 = 0.6)
+#' }, label = "power_calculation", log_result = TRUE)
+#'
+#' result <- perf$result
+#' cat("Took", perf$duration_ms, "ms\n")
+#' }
+#'
+#' @noRd
+measure_performance <- function(expr, label = "operation", log_result = FALSE, threshold_ms = NULL) {
+  start_time <- Sys.time()
+
+  result <- tryCatch(
+    expr,
+    error = function(e) {
+      duration_ms <- as.numeric(difftime(Sys.time(), start_time, units = "secs")) * 1000
+
+      if (log_result) {
+        logger::log_error(
+          paste0("Performance measurement: ", label, " failed"),
+          label = label,
+          duration_ms = round(duration_ms, 2),
+          error_msg = conditionMessage(e)
+        )
+      }
+
+      stop(e)
+    }
+  )
+
+  duration_ms <- as.numeric(difftime(Sys.time(), start_time, units = "secs")) * 1000
+
+  # Log if requested and threshold met
+  if (log_result) {
+    should_log <- is.null(threshold_ms) || duration_ms >= threshold_ms
+
+    if (should_log) {
+      logger::log_info(
+        paste0("Performance measurement: ", label),
+        label = label,
+        duration_ms = round(duration_ms, 2)
+      )
+    }
+  }
+
+  list(
+    result = result,
+    duration_ms = duration_ms
+  )
 }
 
 #' Safe Logging Helper (Prevents Logging Failures from Breaking Code)

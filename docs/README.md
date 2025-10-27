@@ -111,6 +111,12 @@ This documentation follows the **[Diataxis framework](https://diataxis.fr/)**, w
 2. Read [Using Shiny Modules and Helpers](002-how-to-guides/005-using-shiny-modules-and-helpers.md) for step-by-step guide
 3. Review [REFACTORING_SUMMARY.md](../REFACTORING_SUMMARY.md) for implementation status and impact metrics
 
+### "I want to set up logging and monitoring" ✨ NEW
+1. Read [Logging Best Practices](002-how-to-guides/018-logging-best-practices.md) for structured logging guidelines
+2. Use the Shiny monitoring dashboard in `inst/app_monitoring/app.R` for real-time log analysis
+3. Read [Analyze Logs with CLI Tool](002-how-to-guides/019-analyze-logs-with-loganalyzer.md) for command-line log analysis
+4. Read [External Log Service Integrations](002-how-to-guides/020-external-log-services.md) to send logs to Loggly, CloudWatch, Datadog, or Loki
+
 ---
 
 ## 📝 Documentation Standards
@@ -314,6 +320,9 @@ grep -r "search term" docs/ --exclude-dir=reports
 | Quick start guide | [002-how-to-guides/003-quick-start-guide.md](002-how-to-guides/003-quick-start-guide.md) |
 | E2E testing with shinytest2 | [002-how-to-guides/004-end-to-end-testing-with-shinytest2.md](002-how-to-guides/004-end-to-end-testing-with-shinytest2.md) |
 | **Docker best practices maintenance** | **[002-how-to-guides/007-maintain-docker-best-practices.md](002-how-to-guides/007-maintain-docker-best-practices.md)** |
+| Logging best practices | [002-how-to-guides/018-logging-best-practices.md](002-how-to-guides/018-logging-best-practices.md) |
+| Analyze logs with CLI tool | [002-how-to-guides/019-analyze-logs-with-loganalyzer.md](002-how-to-guides/019-analyze-logs-with-loganalyzer.md) |
+| **External log service integrations** | **[002-how-to-guides/020-external-log-services.md](002-how-to-guides/020-external-log-services.md)** |
 | Code quality tools | [003-reference/001-code-quality-tools.md](003-reference/001-code-quality-tools.md) |
 | Antipatterns | [003-reference/002-antipatterns-guide.md](003-reference/002-antipatterns-guide.md) |
 | Developer guide (comprehensive) | [003-reference/003-developer-guide.md](003-reference/003-developer-guide.md) |
@@ -345,6 +354,6 @@ See [Enhancement Reports](reports/enhancements/) for detailed version documentat
 
 ---
 
-**Last Updated:** 2025-10-24
+**Last Updated:** 2025-10-27
 **Documentation Framework:** [Diataxis](https://diataxis.fr/)
 **Maintained By:** Development Team

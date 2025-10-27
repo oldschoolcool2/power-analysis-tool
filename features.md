@@ -25,7 +25,7 @@
 │ 1. Single Proportion Test                  │     ✅     │     ✅     │    ✅    │    ✅    │ Cohen's h (arcsine)         │
 │ 2. Two-Group Comparisons                   │     ✅     │     ✅     │    ✅    │    ❌    │ Cohen's h (2-sample)        │
 │ 3. Survival Analysis (Cox)                 │     ✅     │     ✅     │    ✅    │    ❌    │ Schoenfeld (1983)           │
-│ 4. Matched Case-Control                    │     ❌     │     ✅     │    ✅    │    ❌    │ McNemar's test (epiR)       │
+│ 4. Matched Case-Control                    │     ✅     │     ✅     │    ✅    │    ❌    │ McNemar's test (epiR)       │
 │ 5. Continuous Outcomes (t-tests)           │     ✅     │     ✅     │    ✅    │    ❌    │ Cohen's d (t-test)          │
 │ 6. Non-Inferiority Testing                 │     ❌     │     ✅     │    ✅    │    ❌    │ Cohen's h (margin adjusted) │
 │ 7. Propensity Score VIF Calculator         │     N/A    │     N/A    │    ✅    │    ❌    │ VIF calculation             │
@@ -132,17 +132,19 @@
 
 ---
 
-### 4. Matched Case-Control ⚠️ LIMITED SCOPE
+### 4. Matched Case-Control ✅ FULLY FEATURED
 
-**Status:** Sample size only, no power calculation
+**Status:** Complete power, sample size, and MDE analysis with tabbed interface
 **Module File:** `R/mod_04_matched_case_control.R`
 
 #### Features
-- ❌ Power calculation (not available in underlying epiR package)
+- ✅ **Power calculation** (NEW! Added via tabbed interface)
 - ✅ Sample size calculation
+- ✅ **Minimal detectable effect** (MDE) calculation
+- ✅ **Tabbed interface** - Modern UX with pill-style tabs for three analysis modes
 - ✅ Matching ratio (controls per case)
 - ✅ Odds ratio specification
-- ✅ CSV export
+- ✅ CSV export (all three modes)
 - ❌ PDF export
 
 #### Statistical Method
@@ -151,14 +153,17 @@
 - **Design:** Matched case-control with variable matching ratio
 - **Use Cases:** Case-control studies with matching
 
+#### Analysis Modes (Tabbed Interface)
+1. **Sample Size Tab:** Calculate required matched pairs given OR and power
+2. **Power Analysis Tab:** Calculate achieved power given sample size and OR
+3. **Detectable Effect Tab:** Calculate minimal detectable OR given sample size and power
+
 #### Export Formats
-- **CSV:** ✅ Includes OR, matching ratio, required cases/controls
+- **CSV:** ✅ Includes mode-specific outputs (sample size, power, or MDE)
 - **PDF:** ❌ Not implemented
 
 #### Gaps
-1. No power calculation (limitation of epiR package)
-2. No PDF export
-3. Could add approximate power calculation using conditional logistic regression
+1. No PDF export
 
 ---
 
