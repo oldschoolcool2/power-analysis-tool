@@ -129,6 +129,7 @@ multiple_testing_server <- function(id) {
     mt_calc <- reactive({
       req(input$adjust_multiple_testing)
       req(input$n_tests)
+      req(input$correction_method)
 
       # Get current inputs
       n_tests <- input$n_tests

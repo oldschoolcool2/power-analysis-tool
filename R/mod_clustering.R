@@ -132,9 +132,12 @@ clustering_server <- function(id) {
 
     # Reactive: Get current ICC value
     current_icc <- reactive({
+      req(input$icc_method)
       if (input$icc_method == "select") {
+        req(input$icc_domain)
         icc_values[[input$icc_domain]]
       } else {
+        req(input$icc_custom)
         input$icc_custom
       }
     })
@@ -174,6 +177,8 @@ clustering_server <- function(id) {
     # Calculate and display design effect summary
     output$design_effect_summary <- renderUI({
       req(input$adjust_clustering)
+      req(input$cluster_size)
+      req(input$n_clusters)
 
       m <- input$cluster_size
       icc <- current_icc()
