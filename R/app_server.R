@@ -111,7 +111,7 @@ app_server <- function(input, output, session) {
   # Clear results when switching pages (prevent content bleeding)
   # Each page should only show its own results, not previous page results
   observeEvent(input$sidebar_page, {
-    cat("DEBUG: Page changed to", input$sidebar_page, "- clearing results and resetting doAnalysis\n")
+    logger::log_debug("Page changed - clearing results and resetting doAnalysis", page = input$sidebar_page)
 
     # CRITICAL: Reset doAnalysis flag to prevent old results from re-rendering
     v$doAnalysis <- 0
@@ -888,14 +888,14 @@ app_server <- function(input, output, session) {
     isolate({
       # Get current page with default fallback
       page <- get_current_page()
-      cat("DEBUG result_text: page =", page, ", sidebar_page =", input$sidebar_page, "\n")
+      logger::log_debug("Rendering result_text", page = page, sidebar_page = input$sidebar_page)
 
       # Wrap validation in tryCatch to see if it's failing silently
       tryCatch({
         validate_inputs()
-        cat("DEBUG result_text: validation passed for page =", page, "\n")
+        logger::log_debug("Input validation passed", page = page)
       }, error = function(e) {
-        cat("DEBUG result_text: VALIDATION FAILED for page =", page, "- Error:", conditionMessage(e), "\n")
+        logger::log_warn("Input validation failed", page = page, error = conditionMessage(e))
         # Re-throw the error so Shiny handles it properly
         stop(e)
       })
@@ -1679,10 +1679,10 @@ app_server <- function(input, output, session) {
 
       # Tab 4: Matched Case-Control (using sidebar_page)
       } else if (page == "match_casecontrol") {
-        cat("DEBUG: Entered match_casecontrol branch\n")
+        logger::log_debug("Rendering matched case-control results")
         tab4_inputs <- tab4_vals$inputs()
         calc_mode <- tab4_inputs$match_calc_mode
-        cat("DEBUG: calc_mode =", calc_mode, "\n")
+        logger::log_debug("Matched case-control calculation mode", calc_mode = calc_mode)
 
         # Guard against NULL calc_mode
         if (is.null(calc_mode) || calc_mode == "") {
@@ -3275,7 +3275,7 @@ app_server <- function(input, output, session) {
         }
       } else {
         # No matching page found
-        cat("DEBUG: No matching page condition for page =", page, "\n")
+        logger::log_warn("No matching page condition found", page = page)
         return(NULL)
       }
     })
