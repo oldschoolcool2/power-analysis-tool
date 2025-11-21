@@ -40,10 +40,15 @@ RUN apt-get update && apt-get install -y \
     cmake \
     curl \
     libcurl4-openssl-dev \
+    libfreetype6-dev \
     libfribidi-dev \
     libharfbuzz-dev \
+    libjpeg-dev \
+    libpng-dev \
     libssl-dev \
+    libtiff5-dev \
     libudunits2-dev \
+    libwebp-dev \
     libxml2-dev \
     && rm -rf /var/lib/apt/lists/*
 
