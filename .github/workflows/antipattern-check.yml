@@ -73,8 +73,8 @@ jobs:
 
       - name: Run custom antipattern checks
         run: |
-          chmod +x check_antipatterns.R
-          Rscript check_antipatterns.R --file app.R
+          chmod +x scripts/check_antipatterns.R
+          Rscript scripts/check_antipatterns.R --file app.R
         continue-on-error: true  # Warning only for now
 
       - name: Check code style
