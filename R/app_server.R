@@ -142,7 +142,7 @@ app_server <- function(input, output, session) {
       input$sidebar_page
     }
   }
-  
+
   # NOTE: get_page_display_name() has been moved to R/utils_export.R (2025-10-27)
   # It is now available as an exported function from the utils_export module.
 
@@ -4289,10 +4289,10 @@ app_server <- function(input, output, session) {
         }
 
         tab1_inputs <- tab1_vals$inputs()
-        
+
         # Safe comparison using identical() to avoid comparison errors
         is_power_single <- identical(input$sidebar_page, "power_single")
-        
+
         expected_proportion <- if (is_power_single) {
           tab1_inputs$power_p
         } else {
@@ -4332,12 +4332,12 @@ app_server <- function(input, output, session) {
         # Copy the report file to a temporary directory
         tempReport <- file.path(tempdir(), "analysis-report.Rmd")
         rmd_template <- system.file("reports", "analysis-report.Rmd", package = "PowerAnalysisTool")
-        
+
         # Fall back to local file if package not installed (dev mode)
         if (rmd_template == "" || !file.exists(rmd_template)) {
           rmd_template <- "analysis-report.Rmd"
         }
-        
+
         file.copy(rmd_template, tempReport, overwrite = TRUE)
 
         # Create a Progress object
