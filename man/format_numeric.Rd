@@ -19,7 +19,7 @@ format_numeric(
 
 \item{nsmall}{Minimum decimal places (default 2)}
 
-\item{as_percent}{If TRUE, multiply by 100 and add % (default FALSE)}
+\item{as_percent}{If TRUE, multiply by 100 and add \% (default FALSE)}
 
 \item{as_integer}{If TRUE, round to integer (default FALSE)}
 }
@@ -31,6 +31,6 @@ Formats numeric values for display with appropriate decimal places.
 }
 \examples{
 format_numeric(0.8234, digits = 2) # "0.82"
-format_numeric(0.8234, as_percent = TRUE) # "82.34\%"
+format_numeric(0.8234, as_percent = TRUE) # "82.34\\%"
 format_numeric(230.7, as_integer = TRUE) # "231"
 }

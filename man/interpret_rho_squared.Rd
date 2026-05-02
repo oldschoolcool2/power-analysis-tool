@@ -2,7 +2,7 @@
 % Please edit documentation in R/fct_propensity_score.R
 \name{interpret_rho_squared}
 \alias{interpret_rho_squared}
-\title{Interpret Confounder-Outcome Association (ρ²)}
+\title{Interpret Confounder-Outcome Association (rho^2)}
 \usage{
 interpret_rho_squared(rho_squared)
 }

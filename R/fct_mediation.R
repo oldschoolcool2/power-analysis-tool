@@ -16,12 +16,12 @@ INDIRECT_EFFECT_MEDIUM <- 0.25
 
 #' Calculate Sobel Test Standard Error for Indirect Effect
 #'
-#' @param a Path coefficient X → M (treatment to mediator)
-#' @param b Path coefficient M → Y|X (mediator to outcome controlling for X)
+#' @param a Path coefficient X \u2192 M (treatment to mediator)
+#' @param b Path coefficient M \u2192 Y|X (mediator to outcome controlling for X)
 #' @param se_a Standard error of path a
 #' @param se_b Standard error of path b
 #'
-#' @return Standard error of the indirect effect (a × b)
+#' @return Standard error of the indirect effect (a \u00d7 b)
 #' @noRd
 calc_sobel_se <- function(a, b, se_a, se_b) {
   # Sobel's first-order approximation
@@ -33,8 +33,8 @@ calc_sobel_se <- function(a, b, se_a, se_b) {
 #' Calculate Power for Mediation Analysis (Sobel Test)
 #'
 #' @param n Sample size
-#' @param a Path coefficient X → M
-#' @param b Path coefficient M → Y|X
+#' @param a Path coefficient X \u2192 M
+#' @param b Path coefficient M \u2192 Y|X
 #' @param se_a Standard error of path a (if NULL, estimated from n)
 #' @param se_b Standard error of path b (if NULL, estimated from n)
 #' @param alpha Significance level (default 0.05)
@@ -49,7 +49,7 @@ calc_mediation_power <- function(n, a, b, se_a = NULL, se_b = NULL,
   tryCatch(
     {
       # Estimate standard errors if not provided
-      # Conservative approximation: SE ≈ 1/sqrt(n) for standardized coefficients
+      # Conservative approximation: SE \u2248 1/sqrt(n) for standardized coefficients
       if (is.null(se_a)) {
         se_a <- 1 / sqrt(n)
       }
@@ -99,8 +99,8 @@ calc_mediation_power <- function(n, a, b, se_a = NULL, se_b = NULL,
 
 #' Calculate Required Sample Size for Mediation Analysis
 #'
-#' @param a Path coefficient X → M
-#' @param b Path coefficient M → Y|X
+#' @param a Path coefficient X \u2192 M
+#' @param b Path coefficient M \u2192 Y|X
 #' @param power Desired power (default 0.80)
 #' @param alpha Significance level (default 0.05)
 #' @param alternative Test type: "two.sided" or "one.sided"
@@ -146,7 +146,7 @@ calc_mediation_n <- function(a, b, power = 0.80, alpha = 0.05,
 #' Calculate Minimal Detectable Indirect Effect
 #'
 #' @param n Available sample size
-#' @param a Path coefficient X → M
+#' @param a Path coefficient X \u2192 M
 #' @param power Desired power
 #' @param alpha Significance level
 #' @param alternative Test type
@@ -200,7 +200,7 @@ interpret_path_coefficient <- function(coef) {
 
 #' Interpret Indirect Effect Size
 #'
-#' @param ab Indirect effect (a × b)
+#' @param ab Indirect effect (a \u00d7 b)
 #'
 #' @return Character string with interpretation
 #' @noRd
@@ -246,9 +246,9 @@ format_mediation_results <- function(a, b, c_prime = NULL, n, power = NULL, alph
     "<div class='path-diagram'>",
     "<p><strong>Path Coefficients:</strong></p>",
     "<ul>",
-    "<li><strong>a</strong> (X → M): ", format_numeric(a, 3),
+    "<li><strong>a</strong> (X \u2192 M): ", format_numeric(a, 3),
     " <span class='interpretation'>(", a_interp, ")</span></li>",
-    "<li><strong>b</strong> (M → Y|X): ", format_numeric(b, 3),
+    "<li><strong>b</strong> (M \u2192 Y|X): ", format_numeric(b, 3),
     " <span class='interpretation'>(", b_interp, ")</span></li>"
   )
 
@@ -256,7 +256,7 @@ format_mediation_results <- function(a, b, c_prime = NULL, n, power = NULL, alph
     c_interp <- interpret_path_coefficient(c_prime)
     result_html <- paste0(
       result_html,
-      "<li><strong>c'</strong> (X → Y|M, direct): ", format_numeric(c_prime, 3),
+      "<li><strong>c'</strong> (X \u2192 Y|M, direct): ", format_numeric(c_prime, 3),
       " <span class='interpretation'>(", c_interp, ")</span></li>"
     )
   }
@@ -264,7 +264,7 @@ format_mediation_results <- function(a, b, c_prime = NULL, n, power = NULL, alph
   result_html <- paste0(
     result_html,
     "</ul>",
-    "<p><strong>Indirect Effect (a × b):</strong> ", format_numeric(ab, 3),
+    "<p><strong>Indirect Effect (a \u00d7 b):</strong> ", format_numeric(ab, 3),
     " <span class='interpretation highlight'>(", ab_interp, ")</span></p>"
   )
 
@@ -272,7 +272,7 @@ format_mediation_results <- function(a, b, c_prime = NULL, n, power = NULL, alph
     result_html <- paste0(
       result_html,
       "<p><strong>Power:</strong> ", format_numeric(power * 100, 1),
-      "% (α = ", alpha, ")</p>"
+      "% (\u03b1 = ", alpha, ")</p>"
     )
   }
 

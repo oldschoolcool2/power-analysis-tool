@@ -17,7 +17,7 @@
 #'   - Benjamini-Hochberg (BH): Controls FDR, less conservative, more power
 #'   - Benjamini-Yekutieli (BY): Controls FDR under dependency
 #'
-#' FWER (Family-Wise Error Rate): Probability of making ≥1 Type I errors
+#' FWER (Family-Wise Error Rate): Probability of making >=1 Type I errors
 #' FDR (False Discovery Rate): Expected proportion of false positives among rejections
 #'
 #' @references
@@ -318,7 +318,7 @@ interpret_multiple_testing <- function(alpha_original, alpha_adjusted, n_tests,
 #'
 #' @details
 #' The relationship between sample size and alpha for a fixed power is approximately:
-#'   n_adjusted / n_base ≈ (z_alpha/2,adjusted / z_alpha/2,original)^2
+#'   n_adjusted / n_base ~= (z_alpha/2,adjusted / z_alpha/2,original)^2
 #'
 #' This is an approximation that works well for two-sided tests.
 #'

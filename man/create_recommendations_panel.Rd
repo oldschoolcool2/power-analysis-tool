@@ -20,7 +20,7 @@ Create a recommendations panel
 \examples{
 create_recommendations_panel(c(
   "Your ICC (0.05) is typical for clinical outcomes",
-  "Consider 20\% discontinuation rate for 12-month studies"
+  "Consider a discontinuation rate of 0.20 for 12-month studies"
 ))
 
 }

@@ -17,7 +17,7 @@ generate_ps_sensitivity_analysis(
 \arguments{
 \item{n_rct}{RCT-based sample size}
 
-\item{treatment_prev_pct}{Treatment prevalence (%)}
+\item{treatment_prev_pct}{Treatment prevalence (\%)}
 
 \item{c_stat}{C-statistic}
 

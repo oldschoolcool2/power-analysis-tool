@@ -35,6 +35,8 @@
 ^\.lintr$
 ^\.pre-commit-config\.yaml$
 ^\.trivyignore$
+^\.Renviron\.example$
+^\.cursorrules$
 ^analysis-report\.Rmd$
 ^check_antipatterns\.R$
 ^check_dependencies\.R$

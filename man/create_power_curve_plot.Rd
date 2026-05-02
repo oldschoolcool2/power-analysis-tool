@@ -22,7 +22,7 @@ create_power_curve_plot(
 
 \item{n_current}{Current or required sample size (for reference line)}
 
-\item{target_power}{Target power level (default 0.8 for 80%)}
+\item{target_power}{Target power level (default 0.8 for 80\%)}
 
 \item{plot_title}{Title for the plot}
 

@@ -164,8 +164,8 @@ validate_choice_input <- function(value, choices, name, allow_null = FALSE) {
 #'
 #' @param value Input value to validate
 #' @param name Parameter name for error messages
-#' @param allow_zero Whether 0% is acceptable (default: TRUE)
-#' @param allow_hundred Whether 100% is acceptable (default: TRUE)
+#' @param allow_zero Whether 0\% is acceptable (default: TRUE)
+#' @param allow_hundred Whether 100\% is acceptable (default: TRUE)
 #' @param allow_null Whether NULL is acceptable (default: FALSE)
 #'
 #' @return Validated proportion value

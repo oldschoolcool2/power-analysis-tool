@@ -20,6 +20,6 @@ Beta distribution parameters for propensity scores.
 }
 \details{
 This implements the methodology from Li et al. (2025) Section 3.2.
-Given π (treatment proportion) and φ (overlap), we can uniquely determine
+Given pi (treatment proportion) and phi (overlap), we can uniquely determine
 the propensity score distribution.
 }

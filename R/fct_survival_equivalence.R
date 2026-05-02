@@ -17,8 +17,8 @@ NULL
 #' @param hr_margin_ni Non-inferiority margin (HR > 1)
 #' @param hr_margin_equiv Equivalence margin (HR > 1)
 #' @param n_fixed Fixed sample size (for margin calculation)
-#' @param prop_exposed Proportion exposed/treated (%)
-#' @param event_rate Overall event rate (%)
+#' @param prop_exposed Proportion exposed/treated (\%)
+#' @param event_rate Overall event rate (\%)
 #' @param allocation_ratio Allocation ratio (n2/n1)
 #' @param alpha Significance level (0-1)
 #'

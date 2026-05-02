@@ -28,7 +28,7 @@ create_enhanced_slider(
 
 \item{step}{Step size}
 
-\item{post}{Optional string to append to value display (e.g., "%")}
+\item{post}{Optional string to append to value display (e.g., "\%")}
 
 \item{tooltip}{Optional tooltip text to display}
 }
@@ -44,5 +44,5 @@ Wraps a standard sliderInput with better styling, including:
 \examples{
 create_enhanced_slider("withdrawal_rate", "Withdrawal Rate:",
                       min = 0, max = 50, value = 10, step = 1,
-                      post = "\%", tooltip = "Expected dropout rate")
+                      post = " percent", tooltip = "Expected dropout rate")
 }

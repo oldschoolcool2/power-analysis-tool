@@ -2,7 +2,7 @@
 % Please edit documentation in R/fct_propensity_score.R
 \name{interpret_overlap_coefficient}
 \alias{interpret_overlap_coefficient}
-\title{Interpret Overlap Coefficient (Bhattacharyya φ)}
+\title{Interpret Overlap Coefficient (Bhattacharyya phi)}
 \usage{
 interpret_overlap_coefficient(phi)
 }

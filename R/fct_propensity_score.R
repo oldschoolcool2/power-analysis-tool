@@ -21,7 +21,7 @@
 #'
 #' @details
 #' For Beta-distributed propensity scores, the Bhattacharyya coefficient is:
-#' φ = [Γ(a+0.5)/(a^(1/2)Γ(a))] × [Γ(b+0.5)/(b^(1/2)Γ(b))]
+#' phi = [Gamma(a+0.5)/(a^(1/2)Gamma(a))] x [Gamma(b+0.5)/(b^(1/2)Gamma(b))]
 #'
 #' @export
 calculate_bhattacharyya_coefficient <- function(ps_params_treated, ps_params_control) {
@@ -54,7 +54,7 @@ calculate_bhattacharyya_coefficient <- function(ps_params_treated, ps_params_con
 #'
 #' @details
 #' This implements the methodology from Li et al. (2025) Section 3.2.
-#' Given π (treatment proportion) and φ (overlap), we can uniquely determine
+#' Given pi (treatment proportion) and phi (overlap), we can uniquely determine
 #' the propensity score distribution.
 #'
 #' @export
@@ -114,9 +114,9 @@ estimate_ps_distribution_params <- function(treatment_prop, overlap_phi) {
 #'
 #' @details
 #' Implements the methodology from Li et al. (2025):
-#' N = V̂(z_{1-α/2} + z_β)² / τ̂²
+#' N = V-hat(z_\{1-alpha/2\} + z_beta)^2 / tau-hat^2
 #'
-#' where V̂ incorporates both overlap (via φ) and confounder-outcome strength (via ρ²)
+#' where V-hat incorporates both overlap (via phi) and confounder-outcome strength (via rho^2)
 #'
 #' @export
 calculate_n_li_2025 <- function(effect_size,
@@ -257,10 +257,10 @@ calculate_power_li_2025 <- function(n,
 #' Generates a comparison table showing sample sizes under both methods.
 #'
 #' @param n_rct RCT-based sample size
-#' @param treatment_prev_pct Treatment prevalence (%)
+#' @param treatment_prev_pct Treatment prevalence (\%)
 #' @param c_stat C-statistic of PS model
 #' @param overlap_phi Overlap coefficient
-#' @param rho_squared Confounder-outcome R²
+#' @param rho_squared Confounder-outcome R^2
 #' @param weight_type Weighting method
 #'
 #' @return Data frame with comparison
@@ -317,7 +317,7 @@ compare_ps_methods <- function(n_rct,
 }
 
 
-#' Interpret Overlap Coefficient (Bhattacharyya φ)
+#' Interpret Overlap Coefficient (Bhattacharyya phi)
 #'
 #' Provides interpretation of overlap coefficient value
 #'
@@ -365,7 +365,7 @@ interpret_overlap_coefficient <- function(phi) {
 }
 
 
-#' Interpret Confounder-Outcome Association (ρ²)
+#' Interpret Confounder-Outcome Association (rho^2)
 #'
 #' Provides interpretation of R-squared representing confounding strength
 #'
@@ -411,7 +411,7 @@ interpret_rho_squared <- function(rho_squared) {
 #' Creates a table showing sample size requirements across different scenarios
 #'
 #' @param n_rct RCT-based sample size
-#' @param treatment_prev_pct Treatment prevalence (%)
+#' @param treatment_prev_pct Treatment prevalence (\%)
 #' @param c_stat C-statistic
 #' @param overlap_phi Base overlap coefficient
 #' @param rho_squared Base R-squared

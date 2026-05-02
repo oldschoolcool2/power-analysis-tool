@@ -20,5 +20,5 @@ The Bhattacharyya coefficient quantifies distributional overlap.
 }
 \details{
 For Beta-distributed propensity scores, the Bhattacharyya coefficient is:
-φ = [Γ(a+0.5)/(a^(1/2)Γ(a))] × [Γ(b+0.5)/(b^(1/2)Γ(b))]
+phi = [Gamma(a+0.5)/(a^(1/2)Gamma(a))] x [Gamma(b+0.5)/(b^(1/2)Gamma(b))]
 }

@@ -28,9 +28,9 @@ Returns: Reactive list with multiple testing parameters and adjusted values
 
 Statistical Background:
   When conducting k tests at alpha = 0.05, the probability of at least one
-  Type I error increases: P(≥1 error) = 1 - (1 - α)^k
+  Type I error increases: P(>=1 error) = 1 - (1 - alpha)^k
 
-  For k = 5 tests: P(≥1 error) = 23% (not 5%)!
+  For k = 5 tests: P(>=1 error) = 23\% (not 5\%)!
 
   Multiple testing corrections adjust alpha to control this inflation.
 }

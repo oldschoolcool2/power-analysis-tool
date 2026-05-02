@@ -11,11 +11,11 @@ NULL
 #' Returns a structured validation result with errors, warnings, and notes.
 #'
 #' @param n Sample size (for power calculations)
-#' @param p Expected proportion (%)
-#' @param p0 Null hypothesis proportion (%)
+#' @param p Expected proportion (\%)
+#' @param p0 Null hypothesis proportion (\%)
 #' @param alpha Significance level (0-1)
 #' @param power Power level (0-100)
-#' @param discon Discontinuation rate (%)
+#' @param discon Discontinuation rate (\%)
 #' @param calc_mode Calculation mode ("power", "calc_n", "calc_effect")
 #' @param n_fixed Fixed sample size (for effect size calculations)
 #'
@@ -202,7 +202,7 @@ validate_single_proportion_inputs <- function(n = NULL,
     if (length(error_msgs) > 0) {
       logger::log_warn(
         "Single proportion input validation failed",
-        function = "validate_single_proportion_inputs",
+        fn = "validate_single_proportion_inputs",
         calc_mode = calc_mode,
         error_count = length(error_msgs),
         errors = paste(error_msgs, collapse = "; ")

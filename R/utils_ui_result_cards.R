@@ -21,8 +21,8 @@ POWER_EXCELLENT <- 0.90     # Threshold for excellent power
 #' @return HTML div with styled card
 #'
 #' @examples
-#' create_result_card("Required Sample Size", "N = 450", "Power = 80%", "success")
-#' create_result_card("Achieved Power", "52%", "Underpowered", "danger", "exclamation-triangle")
+#' create_result_card("Required Sample Size", "N = 450", "Power = 0.80", "success")
+#' create_result_card("Achieved Power", "0.52", "Underpowered", "danger", "exclamation-triangle")
 #'
 #' @importFrom shiny tags icon
 create_result_card <- function(title, value, subtitle = NULL, status = "info", icon_name = NULL) {
@@ -92,7 +92,8 @@ create_result_card <- function(title, value, subtitle = NULL, status = "info", i
 #'
 #' @examples
 #' create_key_finding("You need 450 participants to detect this effect", "info", "chart-bar")
-#' create_key_finding("With 200 participants, power drops to 52%", "warning", "exclamation-triangle")
+#' create_key_finding("With 200 participants, power drops below target", "warning",
+#'                    "exclamation-triangle")
 #'
 #' @importFrom shiny tags icon
 create_key_finding <- function(text, type = "info", icon_name = NULL) {
@@ -189,8 +190,8 @@ get_power_status <- function(power, as_percentage = FALSE) {
 #'
 #' @examples
 #' create_comparison_card(list(
-#'   list(title = "Scenario A", value = "n=400", subtitle = "Power: 78%"),
-#'   list(title = "Scenario B", value = "n=600", subtitle = "Power: 89%")
+#'   list(title = "Scenario A", value = "n=400", subtitle = "Power: 78\%"),
+#'   list(title = "Scenario B", value = "n=600", subtitle = "Power: 89\%")
 #' ))
 #'
 #' @importFrom shiny tags
@@ -235,7 +236,7 @@ create_comparison_card <- function(scenarios) {
 #' @examples
 #' create_recommendations_panel(c(
 #'   "Your ICC (0.05) is typical for clinical outcomes",
-#'   "Consider 20% discontinuation rate for 12-month studies"
+#'   "Consider a discontinuation rate of 0.20 for 12-month studies"
 #' ))
 #'
 #' @importFrom shiny tags icon

@@ -32,7 +32,7 @@
 #' @return List with E-values and interpretation
 #'
 #' @examples
-#' # RR = 2.0 with 95% CI [1.5, 2.8]
+#' # RR = 2.0 with 95\% CI [1.5, 2.8]
 #' result <- calc_evalue_rr(2.0, lo = 1.5, hi = 2.8)
 #'
 #' @noRd
@@ -95,7 +95,7 @@ calc_evalue_rr <- function(rr, lo = NA, hi = NA, true_value = 1) {
 #' @param or Point estimate of odds ratio
 #' @param lo Lower confidence limit (optional)
 #' @param hi Upper confidence limit (optional)
-#' @param rare Logical, whether outcome is rare (<15%) (default TRUE)
+#' @param rare Logical, whether outcome is rare (<15\%) (default TRUE)
 #' @param true_value Null value for OR (default 1)
 #'
 #' @return List with E-values and interpretation
@@ -105,7 +105,7 @@ calc_evalue_rr <- function(rr, lo = NA, hi = NA, true_value = 1) {
 #' converts OR to RR before calculating E-values.
 #'
 #' @examples
-#' # OR = 2.5 with 95% CI [1.8, 3.5], common outcome
+#' # OR = 2.5 with 95\% CI [1.8, 3.5], common outcome
 #' result <- calc_evalue_or(2.5, lo = 1.8, hi = 3.5, rare = FALSE)
 #'
 #' @noRd
@@ -188,7 +188,7 @@ calc_evalue_or <- function(or, lo = NA, hi = NA, rare = TRUE, true_value = 1) {
 #' @return List with E-values and interpretation
 #'
 #' @examples
-#' # HR = 1.8 with 95% CI [1.3, 2.5]
+#' # HR = 1.8 with 95\% CI [1.3, 2.5]
 #' result <- calc_evalue_hr(1.8, lo = 1.3, hi = 2.5)
 #'
 #' @noRd
@@ -311,22 +311,22 @@ interpret_evalue <- function(evalue_point, evalue_ci = NA) {
     magnitude <- "weak"
     css_class <- "evalue-weak"
     robustness <- "Weak robustness: Minor unmeasured confounding could explain away the effect."
-    icon <- "⚠️"
+    icon <- "\u26a0\ufe0f"
   } else if (evalue_point < 2.0) {
     magnitude <- "moderate"
     css_class <- "evalue-moderate"
     robustness <- "Moderate robustness: Requires moderate unmeasured confounding to explain away the effect."
-    icon <- "⚡"
+    icon <- "\u26a1"
   } else if (evalue_point < 3.0) {
     magnitude <- "strong"
     css_class <- "evalue-strong"
     robustness <- "Strong robustness: Requires strong unmeasured confounding to explain away the effect."
-    icon <- "✓"
+    icon <- "\u2713"
   } else {
     magnitude <- "very strong"
     css_class <- "evalue-very-strong"
     robustness <- "Very strong robustness: Effect is highly robust to unmeasured confounding."
-    icon <- "✓✓"
+    icon <- "\u2713\u2713"
   }
 
   # Interpretation text

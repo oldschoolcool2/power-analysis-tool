@@ -12,7 +12,7 @@ NULL
 #'
 #' @param n_pairs Number of matched pairs (for power/MDE calculations)
 #' @param or_value Odds ratio
-#' @param p0 Exposure probability in controls (%)
+#' @param p0 Exposure probability in controls (\%)
 #' @param alpha Significance level (0-1)
 #' @param power Power level (0-100)
 #' @param ratio Controls per case (matching ratio)
@@ -141,7 +141,7 @@ validate_matched_case_control_inputs <- function(n_pairs = NULL,
   # Validate matching ratio (controls per case)
   if (!is.null(ratio)) {
     if (is.na(ratio) || ratio < 1 || ratio != floor(ratio)) {
-      messages <- c(messages, "ERROR: Controls per case must be a whole number ≥ 1")
+      messages <- c(messages, "ERROR: Controls per case must be a whole number \u2265 1")
       valid <- FALSE
     } else if (ratio > 4) {
       messages <- c(messages, "WARNING: Matching ratio > 4 provides diminishing returns in power. Consider cost vs. benefit")
@@ -169,7 +169,7 @@ validate_matched_case_control_inputs <- function(n_pairs = NULL,
   if (!is.null(calc_mode)) {
     if (calc_mode == "calc_n" && !is.null(power)) {
       if (power >= 99.9) {
-        messages <- c(messages, "WARNING: Power ≥ 99.9% will require extremely large sample size")
+        messages <- c(messages, "WARNING: Power \u2265 99.9% will require extremely large sample size")
       }
     }
 

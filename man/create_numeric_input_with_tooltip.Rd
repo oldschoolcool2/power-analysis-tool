@@ -13,7 +13,8 @@ create_numeric_input_with_tooltip(
   step = 1,
   tooltip = NULL,
   validation_type = NULL,
-  help_content = NULL
+  help_content = NULL,
+  updateOn = "blur"
 )
 }
 \arguments{
@@ -33,6 +34,11 @@ create_numeric_input_with_tooltip(
 
 \item{validation_type}{Optional validation type for real-time validation
 (e.g., "sample_size", "power", "proportion", "hazard_ratio", "event_rate")}
+
+\item{help_content}{Optional help content for contextual help icon}
+
+\item{updateOn}{When to send updated values to server: "change" (every keystroke)
+or "blur" (when focus lost). Default is "blur" to reduce reactive churn.}
 }
 \value{
 A tagList containing numericInput and optional tooltip

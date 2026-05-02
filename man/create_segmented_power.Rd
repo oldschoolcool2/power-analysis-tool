@@ -28,5 +28,5 @@ A Shiny tag element with segmented control styling
 }
 \description{
 Similar to create_segmented_alpha but for power level selection.
-Common power values are 70%, 80%, 90%, 95%.
+Common power values are 70\%, 80\%, 90\%, 95\%.
 }

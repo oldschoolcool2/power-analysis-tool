@@ -99,14 +99,14 @@ format_missing_data_text <- function(missing_adj, n_before) {
 #' @param value Numeric value to format
 #' @param digits Number of significant digits (default 2)
 #' @param nsmall Minimum decimal places (default 2)
-#' @param as_percent If TRUE, multiply by 100 and add % (default FALSE)
+#' @param as_percent If TRUE, multiply by 100 and add \% (default FALSE)
 #' @param as_integer If TRUE, round to integer (default FALSE)
 #'
 #' @return Character string with formatted value
 #'
 #' @examples
 #' format_numeric(0.8234, digits = 2) # "0.82"
-#' format_numeric(0.8234, as_percent = TRUE) # "82.34%"
+#' format_numeric(0.8234, as_percent = TRUE) # "82.34\%"
 #' format_numeric(230.7, as_integer = TRUE) # "231"
 format_numeric <- function(value,
                           digits = 2,
