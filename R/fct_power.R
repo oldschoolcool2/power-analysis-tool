@@ -3,6 +3,24 @@
 #' Business logic for power/sample size calculations.
 #' These are pure functions with no Shiny reactivity.
 
+#' Memoized pwr.* wrappers
+#'
+#' Power-curve renderers call pwr.*.test 50–100 times per re-render with
+#' identical arguments across sessions and re-renders. memoise wraps each
+#' call with a process-wide cache so identical (n, h, sig.level) tuples are
+#' served from memory.
+#'
+#' Cache lives for the process lifetime. Pure functions, no reactivity.
+#'
+#' @noRd
+#' @importFrom memoise memoise
+#' @importFrom pwr pwr.p.test pwr.2p2n.test pwr.t2n.test pwr.t.test pwr.2p.test
+pwr_p_test_cached <- memoise::memoise(pwr::pwr.p.test)
+pwr_2p2n_test_cached <- memoise::memoise(pwr::pwr.2p2n.test)
+pwr_t2n_test_cached <- memoise::memoise(pwr::pwr.t2n.test)
+pwr_t_test_cached <- memoise::memoise(pwr::pwr.t.test)
+pwr_2p_test_cached <- memoise::memoise(pwr::pwr.2p.test)
+
 #' Solve for n1 Given Allocation Ratio (Unequal Groups)
 #'
 #' Solves for the sample size in group 1 when groups have unequal allocation.

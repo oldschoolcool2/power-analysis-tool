@@ -41,55 +41,25 @@ app_server <- function(input, output, session) {
   PREVALENCE_IMBALANCED_LOWER <- 20  # Below 20% considered imbalanced
   PREVALENCE_IMBALANCED_UPPER <- 80  # Above 80% considered imbalanced
 
-  logger::log_debug("App configuration constants set")
-
   # ============================================================
   # Module Initialization
   # ============================================================
+  # Each module emits its own log_module_event("init", ...) so the per-module
+  # log_debug calls below would be redundant. Kept the single info-level line
+  # below for session start-tracking.
 
-  logger::log_info("Initializing all analysis modules")
-
-  # Tab 1: Single Proportion (includes missing data module)
   tab1_vals <- mod_01_single_proportion_server("tab1")
-  logger::log_debug("Module initialized: single_proportion")
-
-  # Tab 2: Two-Group Comparisons (includes missing data module)
   tab2_vals <- mod_02_two_group_server("tab2")
-  logger::log_debug("Module initialized: two_group")
-
-  # Tab 3: Survival Analysis (includes missing data module)
   tab3_vals <- mod_03_survival_server("tab3")
-  logger::log_debug("Module initialized: survival")
-
-  # Tab 4: Matched Case-Control (includes missing data module)
   tab4_vals <- mod_04_matched_case_control_server("tab4")
-  logger::log_debug("Module initialized: matched_case_control")
-
-  # Tab 5: Continuous Outcomes (includes missing data module)
   tab5_vals <- mod_05_continuous_server("tab5")
-  logger::log_debug("Module initialized: continuous")
-
-  # Tab 6: Non-Inferiority (includes missing data module)
   tab6_vals <- mod_06_non_inferiority_server("tab6")
-  logger::log_debug("Module initialized: non_inferiority")
-
-  # Tab 7: VIF/Propensity Score
   tab7_vals <- mod_07_vif_ps_server("tab7")
-  logger::log_debug("Module initialized: vif_ps")
-
-  # Tab 8: Mediation Analysis
   tab8_vals <- mod_08_mediation_server("tab8")
-  logger::log_debug("Module initialized: mediation")
-
-  # Tab 9: Time-to-Event Equivalence/NI
   tab9_vals <- mod_09_survival_equivalence_server("tab9")
-  logger::log_debug("Module initialized: survival_equivalence")
-
-  # Tab 10: Sensitivity Analyses
   tab10_vals <- mod_10_sensitivity_analyses_server("tab10")
-  logger::log_debug("Module initialized: sensitivity_analyses")
 
-  logger::log_info("All analysis modules initialized successfully")
+  logger::log_info("All analysis modules initialized")
 
   # Missing data modules for tabs not yet fully migrated
   # missing_data_surv_ss <- missing_data_server("surv_ss-missing_data")  # Now in tab3 module
@@ -108,26 +78,13 @@ app_server <- function(input, output, session) {
     }
   })
 
-  # Clear results when switching pages (prevent content bleeding)
-  # Each page should only show its own results, not previous page results
+  # Reset the analysis gate on page change. Renders read v$doAnalysis as
+  # their first action and return NULL when 0, which (combined with the
+  # `computed` boolean in the bindCache key) routes to the cached-NULL bucket
+  # without polluting the real-result bucket. Reassigning output$X directly
+  # would replace cached observers and defeat bindCache.
   observeEvent(input$sidebar_page, {
-    logger::log_debug("Page changed - clearing results and resetting doAnalysis", page = input$sidebar_page)
-
-    # CRITICAL: Reset doAnalysis flag to prevent old results from re-rendering
     v$doAnalysis <- 0
-
-    # Clear all result outputs to prevent "apples and oranges" mixing
-    output$result_text <- renderUI({ NULL })
-    output$effect_measures <- renderUI({ NULL })
-    output$figure_title <- renderUI({ NULL })
-    output$table_title <- renderUI({ NULL })
-    output$table_footnotes <- renderUI({ NULL })
-    output$download_buttons <- renderUI({ NULL })
-    output$scenario_comparison <- renderUI({ NULL })
-    output$live_preview <- renderUI({ NULL })
-
-    # Note: power_plot and result_table are cleared by their renderPlotly/renderDataTable
-    # returning NULL when req() fails (no data available)
   }, ignoreInit = TRUE)
 
   # ============================================================
@@ -3392,8 +3349,11 @@ app_server <- function(input, output, session) {
 
   output$power_plot <- renderPlotly(
     {
+      # Gate: when v$doAnalysis is 0 (initial state or after page change), the
+      # cache key below contains FALSE for `computed`, so the cached NULL is
+      # served. After Calculate, key contains TRUE — different bucket.
       if (!v$doAnalysis) {
-        return()
+        return(NULL)
       }
       isolate({
         # Guard against NULL or uninitialized sidebar_page
@@ -3410,10 +3370,11 @@ app_server <- function(input, output, session) {
           n_current <- tab1_inputs$power_n
           n_seq <- generate_n_sequence(n_reference = n_current)
 
+          h_val <- ES.h(tab1_inputs$power_p / 100, tab1_inputs$power_p0 / 100)
           pow <- vapply(n_seq, function(n) {
-            pwr.p.test(
+            pwr_p_test_cached(
               sig.level = tab1_inputs$power_alpha, power = NULL,
-              h = ES.h(tab1_inputs$power_p / 100, tab1_inputs$power_p0 / 100), alt = "greater", n = n
+              h = h_val, alt = "greater", n = n
             )$power
           }, FUN.VALUE = numeric(1))
 
@@ -3432,16 +3393,17 @@ app_server <- function(input, output, session) {
           tab1_inputs <- tab1_vals$inputs()
           # Generate power curve data
           target_power <- tab1_inputs$ss_power / 100
-          n_required <- pwr.p.test(
+          h_val <- ES.h(tab1_inputs$ss_p / 100, tab1_inputs$ss_p0 / 100)
+          n_required <- pwr_p_test_cached(
             sig.level = tab1_inputs$ss_alpha, power = target_power,
-            h = ES.h(tab1_inputs$ss_p / 100, tab1_inputs$ss_p0 / 100), alt = "greater", n = NULL
+            h = h_val, alt = "greater", n = NULL
           )$n
           n_seq <- generate_n_sequence_for_ss(n_required = n_required)
 
           pow <- vapply(n_seq, function(n) {
-            pwr.p.test(
+            pwr_p_test_cached(
               sig.level = tab1_inputs$ss_alpha, power = NULL,
-              h = ES.h(tab1_inputs$ss_p / 100, tab1_inputs$ss_p0 / 100), alt = "greater", n = n
+              h = h_val, alt = "greater", n = n
             )$power
           }, FUN.VALUE = numeric(1))
 
@@ -4055,40 +4017,27 @@ app_server <- function(input, output, session) {
       })
     }
   ) %>%
+    # Cache identity = page + module input snapshots + a boolean "computed"
+    # flag. The boolean splits the cache into two buckets:
+    #   - computed=FALSE → caches the NULL returned by the gate
+    #   - computed=TRUE  → caches real plots
+    # Previously v$doAnalysis (an integer counter) was the cache key, so each
+    # Calculate click forced a cache miss. Now repeat clicks with identical
+    # inputs are true cache hits.
+    # NOTE: also fixed un-namespaced input keys here. The old list referenced
+    # input$power_n etc. which never matched the namespaced module IDs.
     bindCache(
       input$sidebar_page,
-      # Single Proportion inputs
-      input$power_n, input$power_p, input$power_alpha,
-      input$ss_power, input$ss_p, input$ss_alpha,
-      # Two-Group inputs
-      input$twogrp_pow_n1, input$twogrp_pow_n2, input$twogrp_pow_p1, input$twogrp_pow_p2,
-      input$twogrp_pow_alpha, input$twogrp_pow_sided,
-      input$twogrp_ss_p1, input$twogrp_ss_p2, input$twogrp_ss_ratio,
-      input$twogrp_ss_alpha, input$twogrp_ss_sided, input$twogrp_ss_power,
-      # Survival inputs
-      input$surv_pow_n, input$surv_pow_hr, input$surv_pow_k, input$surv_pow_pE, input$surv_pow_alpha,
-      input$surv_ss_hr, input$surv_ss_k, input$surv_ss_pE, input$surv_ss_alpha, input$surv_ss_power,
-      # Continuous Outcomes inputs
-      input$cont_pow_n1, input$cont_pow_n2, input$cont_pow_d, input$cont_pow_alpha, input$cont_pow_sided,
-      input$cont_ss_d, input$cont_ss_alpha, input$cont_ss_sided, input$cont_ss_ratio, input$cont_ss_power,
-      # Matched Case-Control inputs
-      input$match_calc_mode, input$match_or, input$match_n_pairs_fixed, input$match_p0,
-      input$match_ratio, input$match_power, input$match_alpha, input$match_sided,
-      # Non-Inferiority inputs
-      input$noninf_calc_mode, input$noninf_p1, input$noninf_p2, input$noninf_margin,
-      input$noninf_n1_fixed, input$noninf_ratio, input$noninf_power, input$noninf_alpha,
-      # VIF Calculator inputs
-      input$vif_n_rct, input$vif_prevalence, input$vif_cstat, input$vif_method,
-      # Mediation Analysis inputs
-      input$`tab8-calc_mode`, input$`tab8-path_a`, input$`tab8-path_b`, input$`tab8-path_c_prime`,
-      input$`tab8-med_n`, input$`tab8-med_power`, input$`tab8-med_alpha`, input$`tab8-med_sided`,
-      input$`tab8-se_a`, input$`tab8-se_b`,
-      # Survival NI/Equivalence inputs
-      input$`tab9-test_type`, input$`tab9-calc_mode`, input$`tab9-power`, input$`tab9-hr_expected`,
-      input$`tab9-hr_margin_ni`, input$`tab9-hr_margin_equiv`, input$`tab9-n_fixed`,
-      input$`tab9-prop_exposed`, input$`tab9-event_rate`, input$`tab9-allocation_ratio`, input$`tab9-alpha`,
-      # Include doAnalysis flag to invalidate cache when Calculate is pressed
-      v$doAnalysis
+      isTRUE(v$doAnalysis > 0),
+      tab1_vals$inputs(),
+      tab2_vals$inputs(),
+      tab3_vals$inputs(),
+      tab4_vals$inputs(),
+      tab5_vals$inputs(),
+      tab6_vals$inputs(),
+      tab7_vals$inputs(),
+      tab8_vals$inputs(),
+      tab9_vals$inputs()
     )
 
   ################################################################################################## TABLE TITLE
@@ -4141,19 +4090,18 @@ app_server <- function(input, output, session) {
   output$result_table <- renderDT(
     {
       if (!v$doAnalysis) {
-        return()
-      }
-
-      # Guard against NULL or uninitialized sidebar_page
-      if (is.null(input$sidebar_page) || length(input$sidebar_page) == 0) {
         return(NULL)
       }
-
-      if (grepl("twogrp", input$sidebar_page)) {
-        return()
-      } # Only show for single proportion
-
       isolate({
+        # Guard against NULL or uninitialized sidebar_page
+        if (is.null(input$sidebar_page) || length(input$sidebar_page) == 0) {
+          return(NULL)
+        }
+
+        if (grepl("twogrp", input$sidebar_page)) {
+          return(NULL)
+        } # Only show for single proportion
+
         validate_inputs()
 
         if (identical(input$sidebar_page, "power_single")) {
@@ -4161,7 +4109,7 @@ app_server <- function(input, output, session) {
           sample_size <- tab1_inputs$power_n
         } else if (identical(input$sidebar_page, "ss_single")) {
           tab1_inputs <- tab1_vals$inputs()
-          sample_size <- pwr.p.test(
+          sample_size <- pwr_p_test_cached(
             sig.level = tab1_inputs$ss_alpha,
             power = tab1_inputs$ss_power / 100,
             h = ES.h(tab1_inputs$ss_p / 100, tab1_inputs$ss_p0 / 100),
@@ -4197,7 +4145,12 @@ app_server <- function(input, output, session) {
       list(title = "Upper Limit<sup>2</sup>"),
       list(title = "Length")
     ), paging = TRUE, searching = FALSE, processing = FALSE)
-  )
+  ) %>%
+    bindCache(
+      input$sidebar_page,
+      isTRUE(v$doAnalysis > 0),
+      tab1_vals$inputs()
+    )
 
   ################################################################################################## TABLE FOOTNOTES
 

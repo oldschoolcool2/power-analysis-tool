@@ -180,7 +180,7 @@ validate_two_group_inputs <- function(n1 = NULL,
     if (length(error_msgs) > 0) {
       logger::log_warn(
         "Two-group comparison input validation failed",
-        function = "validate_two_group_inputs",
+        fn = "validate_two_group_inputs",
         calc_mode = calc_mode,
         error_count = length(error_msgs),
         errors = paste(error_msgs, collapse = "; ")
