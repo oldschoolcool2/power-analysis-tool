@@ -111,7 +111,7 @@ validate_clustering_inputs <- function(cluster_size, icc, n_clusters = NULL) {
 #'
 #' @details
 #' The design effect quantifies the loss of statistical efficiency due to clustering.
-#' Formula: DE = 1 + (m - 1) × ICC
+#' Formula: DE = 1 + (m - 1) x ICC
 #'
 #' Where:
 #'   - m = average cluster size
@@ -212,7 +212,7 @@ calc_effective_n <- function(n_total, design_effect) {
 #' @return Required total sample size for clustered design
 #'
 #' @details
-#' Formula: N_total = N_unclustered × DE
+#' Formula: N_total = N_unclustered x DE
 #'
 #' This function inflates the sample size calculated for an unclustered design
 #' to maintain the same statistical power when data are clustered.

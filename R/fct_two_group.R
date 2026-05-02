@@ -12,12 +12,12 @@ NULL
 #'
 #' @param n1 Sample size group 1 (for power calculations)
 #' @param n2 Sample size group 2 (for power calculations)
-#' @param p1 Event rate group 1 (%)
-#' @param p2 Event rate group 2 (%)
+#' @param p1 Event rate group 1 (\%)
+#' @param p2 Event rate group 2 (\%)
 #' @param alpha Significance level (0-1)
 #' @param power Power level (0-100)
 #' @param alloc_ratio Allocation ratio (n2/n1)
-#' @param discon Discontinuation rate (%)
+#' @param discon Discontinuation rate (\%)
 #' @param test_type Test type ("one_sided" or "two_sided")
 #' @param calc_mode Calculation mode ("power", "calc_n")
 #'
@@ -180,7 +180,7 @@ validate_two_group_inputs <- function(n1 = NULL,
     if (length(error_msgs) > 0) {
       logger::log_warn(
         "Two-group comparison input validation failed",
-        function = "validate_two_group_inputs",
+        fn = "validate_two_group_inputs",
         calc_mode = calc_mode,
         error_count = length(error_msgs),
         errors = paste(error_msgs, collapse = "; ")

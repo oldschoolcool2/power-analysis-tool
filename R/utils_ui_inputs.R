@@ -46,6 +46,7 @@ radioButtons_fixed <- function(inputId, label, choices, selected = NULL, inline 
 #' Replaces slider input with a precise button group/segmented control.
 #' Users can select common alpha values with a single click.
 #'
+#' @encoding UTF-8
 #' @param inputId The input slot that will be used to access the value
 #' @param label Display label for the input
 #' @param choices Named vector of choices (e.g., c("0.01" = 0.01, "0.05" = 0.05))
@@ -55,10 +56,10 @@ radioButtons_fixed <- function(inputId, label, choices, selected = NULL, inline 
 #' @return A Shiny tag element with segmented control styling
 #'
 #' @examples
-#' create_segmented_alpha("power_alpha", "Significance Level (α):",
+#' create_segmented_alpha("power_alpha", "Significance Level (alpha):",
 #'                        selected = 0.05, tooltip = "Type I error rate")
 create_segmented_alpha <- function(inputId,
-                                   label = "Significance Level (α):",
+                                   label = "Significance Level (\u03b1):",
                                    choices = c("0.01" = 0.01,
                                              "0.025" = 0.025,
                                              "0.05" = 0.05,
@@ -100,7 +101,7 @@ create_segmented_alpha <- function(inputId,
 #' Create Segmented Control for Power Level
 #'
 #' Similar to create_segmented_alpha but for power level selection.
-#' Common power values are 70%, 80%, 90%, 95%.
+#' Common power values are 70\%, 80\%, 90\%, 95\%.
 #'
 #' @param inputId The input slot that will be used to access the value
 #' @param label Display label for the input
@@ -162,7 +163,7 @@ create_segmented_power <- function(inputId,
 #' @param max Maximum value
 #' @param value Initial value
 #' @param step Step size
-#' @param post Optional string to append to value display (e.g., "%")
+#' @param post Optional string to append to value display (e.g., "\%")
 #' @param tooltip Optional tooltip text to display
 #'
 #' @return A Shiny tag element with enhanced slider styling
@@ -170,7 +171,7 @@ create_segmented_power <- function(inputId,
 #' @examples
 #' create_enhanced_slider("withdrawal_rate", "Withdrawal Rate:",
 #'                       min = 0, max = 50, value = 10, step = 1,
-#'                       post = "%", tooltip = "Expected dropout rate")
+#'                       post = " percent", tooltip = "Expected dropout rate")
 create_enhanced_slider <- function(inputId,
                                   label,
                                   min,

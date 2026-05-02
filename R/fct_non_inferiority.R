@@ -10,8 +10,8 @@ NULL
 #' Validates all inputs for non-inferiority testing calculations.
 #' Returns a structured validation result with errors, warnings, and notes.
 #'
-#' @param p1 Event rate in test group (%)
-#' @param p2 Event rate in reference group (%)
+#' @param p1 Event rate in test group (\%)
+#' @param p2 Event rate in reference group (\%)
 #' @param margin Non-inferiority margin (percentage points)
 #' @param n1_fixed Fixed sample size in test group (for margin calculation)
 #' @param alpha Significance level (0-1)

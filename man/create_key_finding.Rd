@@ -21,6 +21,7 @@ Create a key finding callout
 }
 \examples{
 create_key_finding("You need 450 participants to detect this effect", "info", "chart-bar")
-create_key_finding("With 200 participants, power drops to 52\%", "warning", "exclamation-triangle")
+create_key_finding("With 200 participants, power drops below target", "warning",
+                   "exclamation-triangle")
 
 }

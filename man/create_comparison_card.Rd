@@ -17,8 +17,8 @@ Create a comparison card for multiple scenarios
 }
 \examples{
 create_comparison_card(list(
-  list(title = "Scenario A", value = "n=400", subtitle = "Power: 78\%"),
-  list(title = "Scenario B", value = "n=600", subtitle = "Power: 89\%")
+  list(title = "Scenario A", value = "n=400", subtitle = "Power: 78\\%"),
+  list(title = "Scenario B", value = "n=600", subtitle = "Power: 89\\%")
 ))
 
 }

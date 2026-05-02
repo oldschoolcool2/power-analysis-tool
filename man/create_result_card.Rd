@@ -30,7 +30,7 @@ HTML div with styled card
 Create a visual result summary card
 }
 \examples{
-create_result_card("Required Sample Size", "N = 450", "Power = 80\%", "success")
-create_result_card("Achieved Power", "52\%", "Underpowered", "danger", "exclamation-triangle")
+create_result_card("Required Sample Size", "N = 450", "Power = 0.80", "success")
+create_result_card("Achieved Power", "0.52", "Underpowered", "danger", "exclamation-triangle")
 
 }

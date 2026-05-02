@@ -852,12 +852,12 @@ app_server <- function(input, output, session) {
     preview_text <- if (prev$tab == "Power (Single)") {
       paste0(
         "Preview: Testing n=", prev$n, " participants for event rate 1 in ", prev$p,
-        " (", round(prev$rate * 100, 2), "%) at α=", prev$alpha
+        " (", round(prev$rate * 100, 2), "%) at \u03b1=", prev$alpha
       )
     } else if (prev$tab == "Sample Size (Single)") {
       paste0(
         "Preview: Calculating sample size for ", prev$power, "% power, ",
-        "event rate 1 in ", prev$p, " (", round(prev$rate * 100, 2), "%) at α=", prev$alpha
+        "event rate 1 in ", prev$p, " (", round(prev$rate * 100, 2), "%) at \u03b1=", prev$alpha
       )
     } else if (prev$tab == "Power (Two-Group)") {
       paste0(
@@ -932,7 +932,7 @@ app_server <- function(input, output, session) {
         # Calculate power with adjustments
         power <- pwr.p.test(
           sig.level = alpha_to_use, power = NULL,
-          h = ES.h(tab1_inputs$power_p / 100, tab1_inputs$power_p0 / 100), alt = "greater", n = n_to_use
+          h = ES.h(tab1_inputs$power_p / 100, tab1_inputs$power_p0 / 100), alternative = "greater", n = n_to_use
         )$power
 
         # Build adjustment notes
@@ -944,8 +944,8 @@ app_server <- function(input, output, session) {
           if (!is.null(mt_vals) && isTRUE(mt_vals$adjust_alpha)) {
             adjustment_notes <- paste0(adjustment_notes,
               "<p><strong>Multiple Testing:</strong> Using ", mt_vals$correction_method,
-              " correction for ", mt_vals$n_tests, " tests. Adjusted α = ",
-              format(alpha_to_use, digits = 4), " (original α = ", tab1_inputs$power_alpha, ").</p>")
+              " correction for ", mt_vals$n_tests, " tests. Adjusted \u03b1 = ",
+              format(alpha_to_use, digits = 4), " (original \u03b1 = ", tab1_inputs$power_alpha, ").</p>")
           }
 
           if (!is.null(clust_vals) && isTRUE(clust_vals$adjust_clustering)) {
@@ -1000,7 +1000,7 @@ app_server <- function(input, output, session) {
 
           sample_size_base <- pwr.p.test(
             sig.level = alpha_to_use, power = power,
-            h = ES.h(tab1_inputs$ss_p / 100, tab1_inputs$ss_p0 / 100), alt = "greater", n = NULL
+            h = ES.h(tab1_inputs$ss_p / 100, tab1_inputs$ss_p0 / 100), alternative = "greater", n = NULL
           )$n
 
           # Apply discontinuation adjustment
@@ -1036,7 +1036,7 @@ app_server <- function(input, output, session) {
           mt_text <- if (!is.null(mt_vals) && isTRUE(mt_vals$adjust_alpha)) {
             paste0(" <strong>Multiple testing correction:</strong> Using ",
                    mt_vals$correction_method, " correction for ", mt_vals$n_tests,
-                   " tests, adjusted α = ", format(alpha_to_use, digits = 4), ".")
+                   " tests, adjusted \u03b1 = ", format(alpha_to_use, digits = 4), ".")
           } else {
             ""
           }
@@ -1050,7 +1050,7 @@ app_server <- function(input, output, session) {
             format(1 / incidence_rate * 100, digits = 2, nsmall = 2), "%), ",
             format(ceiling(sample_size_base), digits = 1, nsmall = 0),
             " participants would be needed to observe at least one event with ",
-            format(power * 100, digits = 1, nsmall = 0), "% probability (α = ",
+            format(power * 100, digits = 1, nsmall = 0), "% probability (\u03b1 = ",
             tab1_inputs$ss_alpha, ").",
             mt_text,
             " Accounting for a possible withdrawal or discontinuation rate of ",
@@ -1094,7 +1094,7 @@ app_server <- function(input, output, session) {
           minimal_p <- uniroot(function(p) {
             pwr.p.test(
               sig.level = tab1_inputs$ss_alpha, power = power,
-              h = ES.h(p, p0), alt = "greater", n = n_effective
+              h = ES.h(p, p0), alternative = "greater", n = n_effective
             )$power - power
           }, c(p0 + 0.001, 0.999))$root
 
@@ -1112,7 +1112,7 @@ app_server <- function(input, output, session) {
               ""
             },
             " (effective N = ", n_effective, "), ",
-            "the study has ", format(power * 100, digits = 1), "% power (α = ",
+            "the study has ", format(power * 100, digits = 1), "% power (\u03b1 = ",
             tab1_inputs$ss_alpha, ") to detect a proportion of ",
             format(minimal_p * 100, digits = 2, nsmall = 2), "% or higher",
             if (p0 > 0) {
@@ -1174,8 +1174,8 @@ app_server <- function(input, output, session) {
           if (!is.null(mt_vals) && isTRUE(mt_vals$adjust_alpha)) {
             adjustment_notes <- paste0(adjustment_notes,
               "<p><strong>Multiple Testing:</strong> Using ", mt_vals$correction_method,
-              " correction for ", mt_vals$n_tests, " tests. Adjusted α = ",
-              format(alpha_to_use, digits = 4), " (original α = ", tab2_inputs$twogrp_pow_alpha, ").</p>")
+              " correction for ", mt_vals$n_tests, " tests. Adjusted \u03b1 = ",
+              format(alpha_to_use, digits = 4), " (original \u03b1 = ", tab2_inputs$twogrp_pow_alpha, ").</p>")
           }
 
           if (!is.null(clust_vals) && isTRUE(clust_vals$adjust_clustering)) {
@@ -1199,7 +1199,7 @@ app_server <- function(input, output, session) {
           format(p1 * 100, digits = 2, nsmall = 1), "% in Group 1 and ",
           format(p2 * 100, digits = 2, nsmall = 1), "% in Group 2, with sample sizes of n1 = ",
           n1, " and n2 = ", n2, ", the study has ",
-          format(power * 100, digits = 1, nsmall = 1), "% power to detect this difference at α = ",
+          format(power * 100, digits = 1, nsmall = 1), "% power to detect this difference at \u03b1 = ",
           tab2_inputs$twogrp_pow_alpha, " (", tab2_inputs$twogrp_pow_sided, " test)."
         ))
         HTML(paste0(text0, text1, text2, text3, adjustment_notes))
@@ -1281,7 +1281,7 @@ app_server <- function(input, output, session) {
           mt_text <- if (!is.null(mt_vals) && isTRUE(mt_vals$adjust_alpha)) {
             paste0(" <strong>Multiple testing correction:</strong> Using ",
                    mt_vals$correction_method, " correction for ", mt_vals$n_tests,
-                   " tests, adjusted α = ", format(alpha_to_use, digits = 4), ".")
+                   " tests, adjusted \u03b1 = ", format(alpha_to_use, digits = 4), ".")
           } else {
             ""
           }
@@ -1297,7 +1297,7 @@ app_server <- function(input, output, session) {
             "To detect a difference in event rates from ",
             format(p2 * 100, digits = 2, nsmall = 1), "% in Group 2 (control) to ",
             format(p1 * 100, digits = 2, nsmall = 1), "% in Group 1 (exposed/treatment) with ",
-            format(power * 100, digits = 1, nsmall = 0), "% power at α = ",
+            format(power * 100, digits = 1, nsmall = 0), "% power at \u03b1 = ",
             tab2_inputs$twogrp_ss_alpha, " (", tab2_inputs$twogrp_ss_sided, " test).",
             mt_text,
             " Base required sample sizes: Group 1: n1 = ",
@@ -1383,7 +1383,7 @@ app_server <- function(input, output, session) {
           # Multiple testing note
           mt_note <- if (!is.null(mt_vals) && isTRUE(mt_vals$adjust_alpha)) {
             paste0(" Using ", mt_vals$correction_method, " correction for ", mt_vals$n_tests,
-                   " tests, adjusted α = ", format(alpha_to_use, digits = 4), ".")
+                   " tests, adjusted \u03b1 = ", format(alpha_to_use, digits = 4), ".")
           } else {
             ""
           }
@@ -1397,7 +1397,7 @@ app_server <- function(input, output, session) {
 
           # Convert h to p1 given p2
           # h = 2*asin(sqrt(p1)) - 2*asin(sqrt(p2))
-          # Therefore: p1 = sin²((h + 2*asin(sqrt(p2)))/2)
+          # Therefore: p1 = sin\u00b2((h + 2*asin(sqrt(p2)))/2)
           p1_detectable <- sin((h_min + 2 * asin(sqrt(p2))) / 2)^2
 
           # Calculate effect measures
@@ -1413,7 +1413,7 @@ app_server <- function(input, output, session) {
             mt_note,
             missing_note,
             clustering_note,
-            " With ", format(power * 100, digits = 1), "% power and α = ", tab2_inputs$twogrp_ss_alpha,
+            " With ", format(power * 100, digits = 1), "% power and \u03b1 = ", tab2_inputs$twogrp_ss_alpha,
             " (", tab2_inputs$twogrp_ss_sided, " test), given a baseline event rate of ",
             format(p2 * 100, digits = 2), "% in Group 2, ",
             "the <strong>minimal detectable event rate in Group 1 is ",
@@ -1473,8 +1473,8 @@ app_server <- function(input, output, session) {
           if (!is.null(mt_vals) && isTRUE(mt_vals$adjust_alpha)) {
             adjustment_notes <- paste0(adjustment_notes,
               "<p><strong>Multiple Testing:</strong> Using ", mt_vals$correction_method,
-              " correction for ", mt_vals$n_tests, " tests. Adjusted α = ",
-              format(alpha_to_use, digits = 4), " (original α = ", tab3_inputs$surv_pow_alpha, ").</p>")
+              " correction for ", mt_vals$n_tests, " tests. Adjusted \u03b1 = ",
+              format(alpha_to_use, digits = 4), " (original \u03b1 = ", tab3_inputs$surv_pow_alpha, ").</p>")
           }
 
           if (!is.null(clust_vals) && isTRUE(clust_vals$adjust_clustering)) {
@@ -1559,7 +1559,7 @@ app_server <- function(input, output, session) {
           if (!is.null(mt_vals) && isTRUE(mt_vals$adjust_alpha)) {
             adjustment_text <- paste0(" <strong>Multiple testing correction:</strong> Using ",
                    mt_vals$correction_method, " correction for ", mt_vals$n_tests,
-                   " tests, adjusted α = ", format(alpha_to_use, digits = 4), ".")
+                   " tests, adjusted \u03b1 = ", format(alpha_to_use, digits = 4), ".")
           }
 
           text0 <- hr()
@@ -1569,7 +1569,7 @@ app_server <- function(input, output, session) {
             "To detect a hazard ratio of ", format_numeric(hr, 2),
             " with ", format_numeric(power * 100, 0), "% power in a survival analysis using Cox regression, ",
             "with ", format_numeric(k * 100, 1), "% of participants exposed/treated and an overall event rate of ",
-            format_numeric(pE * 100, 1), "%, at α = ", tab3_inputs$surv_ss_alpha, " (two-sided test).",
+            format_numeric(pE * 100, 1), "%, at \u03b1 = ", tab3_inputs$surv_ss_alpha, " (two-sided test).",
             adjustment_text,
             " Base sample size: N = ", format_numeric(ceiling(n_base), 0), " participants.",
             if (md_vals$adjust_missing) {
@@ -1653,7 +1653,7 @@ app_server <- function(input, output, session) {
             "<strong>Minimal Detectable Effect Size Analysis</strong><br>",
             "With an available sample size of N=", n_nominal, " participants,",
             missing_note,
-            " With ", format_numeric(power * 100, 0), "% power, α = ", tab3_inputs$surv_ss_alpha,
+            " With ", format_numeric(power * 100, 0), "% power, \u03b1 = ", tab3_inputs$surv_ss_alpha,
             ", ", format_numeric(k * 100, 1), "% exposed/treated, and ",
             format_numeric(pE * 100, 1), "% overall event rate, ",
             "the <strong>minimal detectable hazard ratio is HR = ",
@@ -1669,8 +1669,8 @@ app_server <- function(input, output, session) {
             " (", hr_interpretation, ")<br>",
             "<strong>Interpretation:</strong> ",
             ifelse(hr_detectable < 1,
-              paste0("Can detect protective effects with HR ≤ ", format_numeric(hr_detectable, 3)),
-              paste0("Can detect risk increases with HR ≥ ", format_numeric(hr_detectable, 3))),
+              paste0("Can detect protective effects with HR \u2264 ", format_numeric(hr_detectable, 3)),
+              paste0("Can detect risk increases with HR \u2265 ", format_numeric(hr_detectable, 3))),
             "</p>"
           ))
 
@@ -1764,7 +1764,7 @@ app_server <- function(input, output, session) {
           if (!is.null(mt_vals) && isTRUE(mt_vals$adjust_alpha)) {
             adjustment_text <- paste0(" <strong>Multiple testing correction:</strong> Using ",
                    mt_vals$correction_method, " correction for ", mt_vals$n_tests,
-                   " tests, adjusted α = ", format(alpha_to_use, digits = 4), ".")
+                   " tests, adjusted \u03b1 = ", format(alpha_to_use, digits = 4), ".")
           }
 
           text0 <- hr()
@@ -1775,7 +1775,7 @@ app_server <- function(input, output, session) {
             format_numeric(or), " with ", format_numeric(power * 100, 0),
             "% power, assuming ", format_numeric(p0 * 100, 1),
             "% exposure prevalence in controls, and a ", m, ":1 matching ratio (controls per case), ",
-            "at α = ", tab4_inputs$match_alpha, " (", tab4_inputs$match_sided, " test).",
+            "at \u03b1 = ", tab4_inputs$match_alpha, " (", tab4_inputs$match_sided, " test).",
             adjustment_text,
             " Base sample size: ", n_cases_base, " cases and ",
             format_numeric(n_controls_base, 0), " controls (total N = ",
@@ -1876,7 +1876,7 @@ app_server <- function(input, output, session) {
             "(", m, ":1 matching ratio), ",
             "assuming an odds ratio of <strong>", format_numeric(or, 2), "</strong>, ",
             format_numeric(p0 * 100, 1), "% exposure prevalence in controls, ",
-            "at α = ", tab4_inputs$match_alpha, " (", tab4_inputs$match_sided, " test).",
+            "at \u03b1 = ", tab4_inputs$match_alpha, " (", tab4_inputs$match_sided, " test).",
             missing_note,
             clustering_note,
             "<br><br>",
@@ -1983,7 +1983,7 @@ app_server <- function(input, output, session) {
             "<strong>Minimal Detectable Effect Size Analysis</strong><br>",
             "With an available sample size of ", n_cases_nominal, " matched case-control pairs,",
             missing_note,
-            " With ", format_numeric(power * 100, 0), "% power, α = ", tab4_inputs$match_alpha,
+            " With ", format_numeric(power * 100, 0), "% power, \u03b1 = ", tab4_inputs$match_alpha,
             ", assuming ", format_numeric(p0 * 100, 1),
             "% exposure prevalence in controls and a ", m, ":1 matching ratio, ",
             "the <strong>minimal detectable odds ratio is OR = ",
@@ -2000,8 +2000,8 @@ app_server <- function(input, output, session) {
               " (risk factor)"), "<br>",
             "<strong>Interpretation:</strong> ",
             ifelse(or_detectable < 1,
-              paste0("Can detect protective effects with OR ≤ ", format_numeric(or_detectable, 2)),
-              paste0("Can detect risk increases with OR ≥ ", format_numeric(or_detectable, 2))),
+              paste0("Can detect protective effects with OR \u2264 ", format_numeric(or_detectable, 2)),
+              paste0("Can detect risk increases with OR \u2265 ", format_numeric(or_detectable, 2))),
             "</p>"
           ))
 
@@ -2055,8 +2055,8 @@ app_server <- function(input, output, session) {
           if (!is.null(mt_vals) && isTRUE(mt_vals$adjust_alpha)) {
             adjustment_notes <- paste0(adjustment_notes,
               "<p><strong>Multiple Testing:</strong> Using ", mt_vals$correction_method,
-              " correction for ", mt_vals$n_tests, " tests. Adjusted α = ",
-              format(alpha_to_use, digits = 4), " (original α = ", tab5_inputs$cont_pow_alpha, ").</p>")
+              " correction for ", mt_vals$n_tests, " tests. Adjusted \u03b1 = ",
+              format(alpha_to_use, digits = 4), " (original \u03b1 = ", tab5_inputs$cont_pow_alpha, ").</p>")
           }
 
           if (!is.null(clust_vals) && isTRUE(clust_vals$adjust_clustering)) {
@@ -2213,8 +2213,8 @@ app_server <- function(input, output, session) {
               adjustment_notes,
               "<p style='background-color: #d1ecf1; border-left: 4px solid #0c5460; padding: 10px; margin-top: 15px;'>",
               "<strong>Multiple Testing Adjustment Applied:</strong><br>",
-              "Original α = ", format_numeric(tab5_inputs$cont_ss_alpha, 4),
-              " adjusted to α = ", format_numeric(alpha_to_use, 4),
+              "Original \u03b1 = ", format_numeric(tab5_inputs$cont_ss_alpha, 4),
+              " adjusted to \u03b1 = ", format_numeric(alpha_to_use, 4),
               " using ", mt_vals$correction_method,
               " correction for ", mt_vals$n_tests, " comparisons.",
               "</p>"
@@ -2238,7 +2238,7 @@ app_server <- function(input, output, session) {
           text3 <- p(paste0(
             "To detect an effect size of Cohen's d = ", format_numeric(d, 2),
             " in a two-group comparison of continuous outcomes with ", format_numeric(power * 100, 0),
-            "% power at α = ", format_numeric(alpha_to_use, 4), " (", tab5_inputs$cont_ss_sided, " test), ",
+            "% power at \u03b1 = ", format_numeric(alpha_to_use, 4), " (", tab5_inputs$cont_ss_sided, " test), ",
             "the required sample sizes are: Group 1: n1 = ", format_numeric(n1_final, 0),
             ", Group 2: n2 = ", format_numeric(n2_final, 0), " (total N = ",
             format_numeric(n_total_final, 0), "). ",
@@ -2309,8 +2309,8 @@ app_server <- function(input, output, session) {
               adjustment_notes,
               "<p style='background-color: #d1ecf1; border-left: 4px solid #0c5460; padding: 10px; margin-top: 15px;'>",
               "<strong>Multiple Testing Adjustment Applied:</strong><br>",
-              "Original α = ", format_numeric(tab5_inputs$cont_ss_alpha, 4),
-              " adjusted to α = ", format_numeric(alpha_to_use, 4),
+              "Original \u03b1 = ", format_numeric(tab5_inputs$cont_ss_alpha, 4),
+              " adjusted to \u03b1 = ", format_numeric(alpha_to_use, 4),
               " using ", mt_vals$correction_method,
               " correction for ", mt_vals$n_tests, " comparisons.",
               "</p>"
@@ -2347,7 +2347,7 @@ app_server <- function(input, output, session) {
             } else {
               ""
             },
-            " With ", format_numeric(power * 100, 0), "% power and α = ", format_numeric(alpha_to_use, 4),
+            " With ", format_numeric(power * 100, 0), "% power and \u03b1 = ", format_numeric(alpha_to_use, 4),
             " (", tab5_inputs$cont_ss_sided, " test), ",
             "the <strong>minimal detectable effect size is Cohen's d = ",
             format_numeric(d_detectable, 3), "</strong> (", format_cohens_d(d_detectable), "). ",
@@ -2501,8 +2501,8 @@ app_server <- function(input, output, session) {
               adjustment_notes,
               "<p style='background-color: #d1ecf1; border-left: 4px solid #0c5460; padding: 10px; margin-top: 15px;'>",
               "<strong>Multiple Testing Adjustment Applied:</strong><br>",
-              "Original α = ", format_numeric(tab6_inputs$noninf_alpha, 4),
-              " adjusted to α = ", format_numeric(alpha_to_use, 4),
+              "Original \u03b1 = ", format_numeric(tab6_inputs$noninf_alpha, 4),
+              " adjusted to \u03b1 = ", format_numeric(alpha_to_use, 4),
               " using ", mt_vals$correction_method,
               " correction for ", mt_vals$n_tests, " comparisons.",
               "</p>"
@@ -2517,7 +2517,7 @@ app_server <- function(input, output, session) {
             format_numeric(p1 * 100, 2, 1), "%) to a reference treatment (expected event rate: ",
             format_numeric(p2 * 100, 2, 1), "%) with a non-inferiority margin of ",
             format_numeric(margin * 100, 2, 1), " percentage points, to demonstrate non-inferiority with ",
-            format_numeric(power * 100, 0, 0), "% power at α = ", format_numeric(alpha_to_use, 4),
+            format_numeric(power * 100, 0, 0), "% power at \u03b1 = ", format_numeric(alpha_to_use, 4),
             " (one-sided test), the required sample sizes are: Test Group: n1 = ",
             format_numeric(n1_final, 0, 0), ", Reference Group: n2 = ",
             format_numeric(n2_final, 0, 0), " (total N = ",
@@ -2607,8 +2607,8 @@ app_server <- function(input, output, session) {
               adjustment_notes,
               "<p style='background-color: #d1ecf1; border-left: 4px solid #0c5460; padding: 10px; margin-top: 15px;'>",
               "<strong>Multiple Testing Adjustment Applied:</strong><br>",
-              "Original α = ", format_numeric(tab6_inputs$noninf_alpha, 4),
-              " adjusted to α = ", format_numeric(alpha_to_use, 4),
+              "Original \u03b1 = ", format_numeric(tab6_inputs$noninf_alpha, 4),
+              " adjusted to \u03b1 = ", format_numeric(alpha_to_use, 4),
               " using ", mt_vals$correction_method,
               " correction for ", mt_vals$n_tests, " comparisons.",
               "</p>"
@@ -2645,7 +2645,7 @@ app_server <- function(input, output, session) {
             } else {
               ""
             },
-            " With ", format_numeric(power * 100, 0, 0), "% power and α = ", format_numeric(alpha_to_use, 4),
+            " With ", format_numeric(power * 100, 0, 0), "% power and \u03b1 = ", format_numeric(alpha_to_use, 4),
             " (one-sided test), for a non-inferiority trial comparing test treatment (expected event rate: ",
             format_numeric(p1 * 100, 2, 1), "%) to reference treatment (expected event rate: ",
             format_numeric(p2 * 100, 2, 1), "%), ",
@@ -2750,8 +2750,8 @@ app_server <- function(input, output, session) {
           method_inputs_html <- paste0(
             "<ul>",
             "<li><strong>Treatment prevalence:</strong> ", prevalence_pct, "%</li>",
-            "<li><strong>Overlap coefficient (φ):</strong> ", format_numeric(overlap_phi, 2), " <span style='color: ", overlap_interp$color, ";'>(", overlap_interp$level, ")</span></li>",
-            "<li><strong>Confounder-outcome R²:</strong> ", format_numeric(rho_squared, 2), " <span style='color: ", rho_interp$color, ";'>(", rho_interp$level, ")</span></li>",
+            "<li><strong>Overlap coefficient (\u03c6):</strong> ", format_numeric(overlap_phi, 2), " <span style='color: ", overlap_interp$color, ";'>(", overlap_interp$level, ")</span></li>",
+            "<li><strong>Confounder-outcome R\u00b2:</strong> ", format_numeric(rho_squared, 2), " <span style='color: ", rho_interp$color, ";'>(", rho_interp$level, ")</span></li>",
             "</ul>"
           )
         }
@@ -2793,39 +2793,39 @@ app_server <- function(input, output, session) {
 
         if (ps_calc_method == "austin" && c_stat < PROPENSITY_CSTAT_LOW_THRESHOLD) {
           recommendations <- c(recommendations,
-            "⚠️ C-statistic is low. Consider including stronger confounders to improve propensity score model discrimination.")
+            "\u26a0\ufe0f C-statistic is low. Consider including stronger confounders to improve propensity score model discrimination.")
         } else if (ps_calc_method == "li_2025" && overlap_phi < PROPENSITY_OVERLAP_LOW_THRESHOLD) {
           recommendations <- c(recommendations,
-            "⚠️ Overlap coefficient is low. Propensity score distributions have poor overlap. Overlap weights (ATO) strongly recommended.")
+            "\u26a0\ufe0f Overlap coefficient is low. Propensity score distributions have poor overlap. Overlap weights (ATO) strongly recommended.")
         } else {
           recommendations <- c(recommendations,
-            "✅ Propensity score model assumptions are adequate.")
+            "\u2705 Propensity score model assumptions are adequate.")
         }
 
         if (ps_calc_method == "li_2025" && rho_squared > PROPENSITY_RHO_STRONG_THRESHOLD) {
           recommendations <- c(recommendations,
-            "⚠️ Strong confounder-outcome association (R² > 0.2) requires substantial sample size inflation. Consider whether all important confounders can be measured.")
+            "\u26a0\ufe0f Strong confounder-outcome association (R\u00b2 > 0.2) requires substantial sample size inflation. Consider whether all important confounders can be measured.")
         }
 
         if (prevalence_pct < PREVALENCE_IMBALANCED_LOWER || prevalence_pct > PREVALENCE_IMBALANCED_UPPER) {
           recommendations <- c(recommendations,
-            sprintf("⚠️ Treatment prevalence (%s%%) is imbalanced. VIF will be higher. Consider restricting to overlap region (ATO weights).", prevalence_pct))
+            sprintf("\u26a0\ufe0f Treatment prevalence (%s%%) is imbalanced. VIF will be higher. Consider restricting to overlap region (ATO weights).", prevalence_pct))
         } else {
           recommendations <- c(recommendations,
-            "✅ Treatment prevalence is reasonably balanced.")
+            "\u2705 Treatment prevalence is reasonably balanced.")
         }
 
         if (vif > 2.0) {
           recommendations <- c(recommendations,
-            "⚠️ High VIF suggests substantial efficiency loss. Consider overlap weights (ATO) or matching weights (ATM) to improve efficiency.")
+            "\u26a0\ufe0f High VIF suggests substantial efficiency loss. Consider overlap weights (ATO) or matching weights (ATM) to improve efficiency.")
         } else {
           recommendations <- c(recommendations,
-            "✅ VIF is acceptable. Propensity score weighting is feasible for this scenario.")
+            "\u2705 VIF is acceptable. Propensity score weighting is feasible for this scenario.")
         }
 
         if (ps_calc_method == "austin") {
           recommendations <- c(recommendations,
-            "💡 <strong>Try Li et al. (2025) method:</strong> Provides more accurate sample size by accounting for confounder-outcome association strength.")
+            "\U0001f4a1 <strong>Try Li et al. (2025) method:</strong> Provides more accurate sample size by accounting for confounder-outcome association strength.")
         }
 
         recommendations_html <- paste0(
@@ -2871,7 +2871,7 @@ app_server <- function(input, output, session) {
           "<p><strong>RCT-based sample size:</strong> ", format_numeric(n_rct, 0), "</p>",
           "<p><strong>Inflation needed:</strong> +", format_numeric(pct_increase, 1), "% (+", format_numeric(n_increase, 0), " participants)</p>",
           "<p style='font-size: 1.3em; color: #d32f2f;'><strong>Adjusted sample size:</strong> ", format_numeric(n_adjusted, 0), " participants</p>",
-          "<p><strong>Effective sample size after weighting:</strong> ≈", format_numeric(n_effective, 0), " (statistical information equivalent)</p>",
+          "<p><strong>Effective sample size after weighting:</strong> \u2248", format_numeric(n_effective, 0), " (statistical information equivalent)</p>",
           "</div>",
 
           "<hr>",
@@ -2887,8 +2887,8 @@ app_server <- function(input, output, session) {
           if (ps_calc_method == "li_2025") {
             paste0(
               "<p><strong>Key Insight (Li et al. 2025):</strong> This calculation accounts for both ",
-              "<strong>overlap</strong> (via φ=", format_numeric(overlap_phi, 2), ") and ",
-              "<strong>confounding strength</strong> (via R²=", format_numeric(rho_squared, 2), "), ",
+              "<strong>overlap</strong> (via \u03c6=", format_numeric(overlap_phi, 2), ") and ",
+              "<strong>confounding strength</strong> (via R\u00b2=", format_numeric(rho_squared, 2), "), ",
               "providing a more theoretically sound sample size estimate than VIF methods based solely on c-statistic.</p>"
             )
           } else {
@@ -2942,18 +2942,18 @@ app_server <- function(input, output, session) {
             "<h4>(Copy/paste this text into your protocol)</h4>",
             "<p>With a sample size of <strong>N = ", format_numeric(n, 0), "</strong> participants, ",
             "the study has <strong>", format_numeric(power * 100, 1), "% power</strong> to detect ",
-            "an indirect effect of <strong>a × b = ", format_numeric(a * b, 3), "</strong> ",
-            "(α = ", alpha, ", ", ifelse(alternative == "two.sided", "two-sided test", "one-sided test"), ").</p>",
+            "an indirect effect of <strong>a \u00d7 b = ", format_numeric(a * b, 3), "</strong> ",
+            "(\u03b1 = ", alpha, ", ", ifelse(alternative == "two.sided", "two-sided test", "one-sided test"), ").</p>",
             "<p><strong>Path Coefficients:</strong></p>",
             "<ul>",
-            "<li>Path a (X → M): ", format_numeric(a, 3), " <em>(", interpret_path_coefficient(a), ")</em></li>",
-            "<li>Path b (M → Y|X): ", format_numeric(b, 3), " <em>(", interpret_path_coefficient(b), ")</em></li>",
-            "<li>Indirect effect (a × b): ", format_numeric(a * b, 3), " <em>(", interpret_indirect_effect(a * b), ")</em></li>"
+            "<li>Path a (X \u2192 M): ", format_numeric(a, 3), " <em>(", interpret_path_coefficient(a), ")</em></li>",
+            "<li>Path b (M \u2192 Y|X): ", format_numeric(b, 3), " <em>(", interpret_path_coefficient(b), ")</em></li>",
+            "<li>Indirect effect (a \u00d7 b): ", format_numeric(a * b, 3), " <em>(", interpret_indirect_effect(a * b), ")</em></li>"
           ))
 
           if (!is.na(c_prime)) {
             result_html <- HTML(paste0(result_html,
-              "<li>Direct effect c' (X → Y|M): ", format_numeric(c_prime, 3), " <em>(", interpret_path_coefficient(c_prime), ")</em></li>"
+              "<li>Direct effect c' (X \u2192 Y|M): ", format_numeric(c_prime, 3), " <em>(", interpret_path_coefficient(c_prime), ")</em></li>"
             ))
           }
 
@@ -2983,14 +2983,14 @@ app_server <- function(input, output, session) {
               "<hr>",
               "<h4>(Copy/paste this text into your protocol)</h4>",
               "<p>To achieve <strong>", format_numeric(power * 100, 0), "% power</strong> to detect ",
-              "an indirect effect of <strong>a × b = ", format_numeric(a * b, 3), "</strong>, ",
+              "an indirect effect of <strong>a \u00d7 b = ", format_numeric(a * b, 3), "</strong>, ",
               "a sample size of <strong>N = ", format_numeric(n_required, 0), " participants</strong> is required ",
-              "(α = ", alpha, ", ", ifelse(alternative == "two.sided", "two-sided test", "one-sided test"), ").</p>",
+              "(\u03b1 = ", alpha, ", ", ifelse(alternative == "two.sided", "two-sided test", "one-sided test"), ").</p>",
               "<p><strong>Path Coefficients:</strong></p>",
               "<ul>",
-              "<li>Path a (X → M): ", format_numeric(a, 3), " <em>(", interpret_path_coefficient(a), ")</em></li>",
-              "<li>Path b (M → Y|X): ", format_numeric(b, 3), " <em>(", interpret_path_coefficient(b), ")</em></li>",
-              "<li>Indirect effect (a × b): ", format_numeric(a * b, 3), " <em>(", interpret_indirect_effect(a * b), ")</em></li>",
+              "<li>Path a (X \u2192 M): ", format_numeric(a, 3), " <em>(", interpret_path_coefficient(a), ")</em></li>",
+              "<li>Path b (M \u2192 Y|X): ", format_numeric(b, 3), " <em>(", interpret_path_coefficient(b), ")</em></li>",
+              "<li>Indirect effect (a \u00d7 b): ", format_numeric(a * b, 3), " <em>(", interpret_indirect_effect(a * b), ")</em></li>",
               "</ul>"
             ))
           }
@@ -3016,13 +3016,13 @@ app_server <- function(input, output, session) {
               "<h4>(Copy/paste this text into your protocol)</h4>",
               "<p>With <strong>N = ", format_numeric(n, 0), " participants</strong> and ",
               "<strong>", format_numeric(power * 100, 0), "% power</strong>, ",
-              "the smallest detectable indirect effect is <strong>a × b = ", format_numeric(ab_min, 3), "</strong> ",
-              "(α = ", alpha, ", ", ifelse(alternative == "two.sided", "two-sided test", "one-sided test"), ").</p>",
+              "the smallest detectable indirect effect is <strong>a \u00d7 b = ", format_numeric(ab_min, 3), "</strong> ",
+              "(\u03b1 = ", alpha, ", ", ifelse(alternative == "two.sided", "two-sided test", "one-sided test"), ").</p>",
               "<p><strong>Path Coefficients:</strong></p>",
               "<ul>",
-              "<li>Path a (X → M): ", format_numeric(a, 3), " <em>(", interpret_path_coefficient(a), ")</em> [Given]</li>",
-              "<li>Path b (M → Y|X): ", format_numeric(b_min, 3), " <em>(", interpret_path_coefficient(b_min), ")</em> [Minimal detectable]</li>",
-              "<li>Indirect effect (a × b): ", format_numeric(ab_min, 3), " <em>(", interpret_indirect_effect(ab_min), ")</em></li>",
+              "<li>Path a (X \u2192 M): ", format_numeric(a, 3), " <em>(", interpret_path_coefficient(a), ")</em> [Given]</li>",
+              "<li>Path b (M \u2192 Y|X): ", format_numeric(b_min, 3), " <em>(", interpret_path_coefficient(b_min), ")</em> [Minimal detectable]</li>",
+              "<li>Indirect effect (a \u00d7 b): ", format_numeric(ab_min, 3), " <em>(", interpret_indirect_effect(ab_min), ")</em></li>",
               "</ul>",
               "<p><strong>Interpretation:</strong> Given the available sample size and path a, the study can detect ",
               "indirect effects of magnitude ", format_numeric(ab_min, 3), " or larger with ", format_numeric(power * 100, 0), "% power.</p>"
@@ -3121,8 +3121,8 @@ app_server <- function(input, output, session) {
               mt_text <- HTML(paste0(
                 "<p style='background-color: #d1ecf1; border-left: 4px solid #0c5460; padding: 10px; margin-top: 15px;'>",
                 "<strong>Multiple Testing Adjustment Applied:</strong><br>",
-                "Original α = ", format_numeric(tab9_inputs$alpha, 4),
-                " adjusted to α = ", format_numeric(alpha_to_use, 4),
+                "Original \u03b1 = ", format_numeric(tab9_inputs$alpha, 4),
+                " adjusted to \u03b1 = ", format_numeric(alpha_to_use, 4),
                 " using ", mt_vals$correction_method,
                 " correction for ", mt_vals$n_tests, " comparisons.",
                 "</p>"
@@ -3203,8 +3203,8 @@ app_server <- function(input, output, session) {
               mt_text <- HTML(paste0(
                 "<p style='background-color: #d1ecf1; border-left: 4px solid #0c5460; padding: 10px; margin-top: 15px;'>",
                 "<strong>Multiple Testing Adjustment Applied:</strong><br>",
-                "Original α = ", format_numeric(tab9_inputs$alpha, 4),
-                " adjusted to α = ", format_numeric(alpha_to_use, 4),
+                "Original \u03b1 = ", format_numeric(tab9_inputs$alpha, 4),
+                " adjusted to \u03b1 = ", format_numeric(alpha_to_use, 4),
                 " using ", mt_vals$correction_method,
                 " correction for ", mt_vals$n_tests, " comparisons.",
                 "</p>"
@@ -3262,8 +3262,8 @@ app_server <- function(input, output, session) {
             mt_text <- HTML(paste0(
               "<p style='background-color: #d1ecf1; border-left: 4px solid #0c5460; padding: 10px; margin-top: 15px;'>",
               "<strong>Multiple Testing Adjustment Applied:</strong><br>",
-              "Original α = ", format_numeric(tab9_inputs$alpha, 4),
-              " adjusted to α = ", format_numeric(alpha_to_use, 4),
+              "Original \u03b1 = ", format_numeric(tab9_inputs$alpha, 4),
+              " adjusted to \u03b1 = ", format_numeric(alpha_to_use, 4),
               " using ", mt_vals$correction_method,
               " correction for ", mt_vals$n_tests, " comparisons.",
               "</p>"
@@ -3413,7 +3413,7 @@ app_server <- function(input, output, session) {
           pow <- vapply(n_seq, function(n) {
             pwr.p.test(
               sig.level = tab1_inputs$power_alpha, power = NULL,
-              h = ES.h(tab1_inputs$power_p / 100, tab1_inputs$power_p0 / 100), alt = "greater", n = n
+              h = ES.h(tab1_inputs$power_p / 100, tab1_inputs$power_p0 / 100), alternative = "greater", n = n
             )$power
           }, FUN.VALUE = numeric(1))
 
@@ -3434,14 +3434,14 @@ app_server <- function(input, output, session) {
           target_power <- tab1_inputs$ss_power / 100
           n_required <- pwr.p.test(
             sig.level = tab1_inputs$ss_alpha, power = target_power,
-            h = ES.h(tab1_inputs$ss_p / 100, tab1_inputs$ss_p0 / 100), alt = "greater", n = NULL
+            h = ES.h(tab1_inputs$ss_p / 100, tab1_inputs$ss_p0 / 100), alternative = "greater", n = NULL
           )$n
           n_seq <- generate_n_sequence_for_ss(n_required = n_required)
 
           pow <- vapply(n_seq, function(n) {
             pwr.p.test(
               sig.level = tab1_inputs$ss_alpha, power = NULL,
-              h = ES.h(tab1_inputs$ss_p / 100, tab1_inputs$ss_p0 / 100), alt = "greater", n = n
+              h = ES.h(tab1_inputs$ss_p / 100, tab1_inputs$ss_p0 / 100), alternative = "greater", n = n
             )$power
           }, FUN.VALUE = numeric(1))
 
@@ -3803,7 +3803,7 @@ app_server <- function(input, output, session) {
                 line = list(color = "#2B5876", width = 3),
                 name = "Power",
                 hovertemplate = paste0(
-                  "<b>Indirect Effect (a×b):</b> %{x:.3f}<br>",
+                  "<b>Indirect Effect (a\u00d7b):</b> %{x:.3f}<br>",
                   "<b>Power:</b> %{y:.1f}%<br>",
                   "<extra></extra>"
                 )
@@ -3830,7 +3830,7 @@ app_server <- function(input, output, session) {
               ) %>%
               layout(
                 title = paste0("Power Curve: Detectable Indirect Effects (N=", format_numeric(n, 0), ")"),
-                xaxis = list(title = "Indirect Effect (a × b)", gridcolor = "#E0E0E0"),
+                xaxis = list(title = "Indirect Effect (a \u00d7 b)", gridcolor = "#E0E0E0"),
                 yaxis = list(title = "Power (%)", gridcolor = "#E0E0E0", range = c(0, 100)),
                 hovermode = "closest",
                 plot_bgcolor = "#FFFFFF",
@@ -4119,7 +4119,7 @@ app_server <- function(input, output, session) {
           sig.level = tab1_inputs$ss_alpha,
           power = tab1_inputs$ss_power / 100,
           h = ES.h(tab1_inputs$ss_p / 100, tab1_inputs$ss_p0 / 100),
-          alt = "greater",
+          alternative = "greater",
           n = NULL
         )$n
       } else {
@@ -4165,7 +4165,7 @@ app_server <- function(input, output, session) {
             sig.level = tab1_inputs$ss_alpha,
             power = tab1_inputs$ss_power / 100,
             h = ES.h(tab1_inputs$ss_p / 100, tab1_inputs$ss_p0 / 100),
-            alt = "greater",
+            alternative = "greater",
             n = NULL
           )$n
         } else {
@@ -4310,14 +4310,14 @@ app_server <- function(input, output, session) {
         } else {
           pwr.p.test(
             sig.level = tab1_inputs$ss_alpha, power = tab1_inputs$ss_power / 100,
-            h = ES.h(tab1_inputs$ss_p / 100, tab1_inputs$ss_p0 / 100), alt = "greater", n = NULL
+            h = ES.h(tab1_inputs$ss_p / 100, tab1_inputs$ss_p0 / 100), alternative = "greater", n = NULL
           )$n
         }
 
         power <- if (is_power_single) {
           pwr.p.test(
             sig.level = tab1_inputs$power_alpha, power = NULL,
-            h = ES.h(tab1_inputs$power_p / 100, tab1_inputs$power_p0 / 100), alt = "greater", n = tab1_inputs$power_n
+            h = ES.h(tab1_inputs$power_p / 100, tab1_inputs$power_p0 / 100), alternative = "greater", n = tab1_inputs$power_n
           )$power
         } else {
           tab1_inputs$ss_power / 100
@@ -4393,7 +4393,7 @@ app_server <- function(input, output, session) {
           Ref_Prop_Pct = paste0(tab1_inputs$power_p0, "%"),
           Power_Pct = round(pwr.p.test(
             sig.level = tab1_inputs$power_alpha, power = NULL,
-            h = ES.h(tab1_inputs$power_p / 100, tab1_inputs$power_p0 / 100), alt = "greater",
+            h = ES.h(tab1_inputs$power_p / 100, tab1_inputs$power_p0 / 100), alternative = "greater",
             n = tab1_inputs$power_n
           )$power * 100, 1),
           Alpha = tab1_inputs$power_alpha,
@@ -4405,7 +4405,7 @@ app_server <- function(input, output, session) {
         tab1_inputs <- tab1_vals$inputs()
         sample_size <- pwr.p.test(
           sig.level = tab1_inputs$ss_alpha, power = tab1_inputs$ss_power / 100,
-          h = ES.h(tab1_inputs$ss_p / 100, tab1_inputs$ss_p0 / 100), alt = "greater", n = NULL
+          h = ES.h(tab1_inputs$ss_p / 100, tab1_inputs$ss_p0 / 100), alternative = "greater", n = NULL
         )$n
         new_scenario <- data.frame(
           Scenario = v$scenario_counter,

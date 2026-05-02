@@ -12,8 +12,8 @@ NULL
 #'
 #' @param n Sample size (for power calculations)
 #' @param hr Hazard ratio
-#' @param prop_exposed Proportion exposed (%)
-#' @param event_rate Overall event rate (%)
+#' @param prop_exposed Proportion exposed (\%)
+#' @param event_rate Overall event rate (\%)
 #' @param alpha Significance level (0-1)
 #' @param power Power level (0-100)
 #' @param alloc_ratio Allocation ratio
@@ -163,7 +163,7 @@ validate_survival_inputs <- function(n = NULL,
     if (length(error_msgs) > 0) {
       logger::log_warn(
         "Survival analysis input validation failed",
-        function = "validate_survival_inputs",
+        fn = "validate_survival_inputs",
         calc_mode = calc_mode,
         error_count = length(error_msgs),
         errors = paste(error_msgs, collapse = "; ")

@@ -129,7 +129,7 @@ build_power_single_export <- function(inputs) {
     sig.level = tab1_inputs$power_alpha,
     power = NULL,
     h = pwr::ES.h(tab1_inputs$power_p / 100, tab1_inputs$power_p0 / 100),
-    alt = "greater",
+    alternative = "greater",
     n = tab1_inputs$power_n
   )$power
 
@@ -161,7 +161,7 @@ build_ss_single_export <- function(inputs) {
     sig.level = tab1_inputs$ss_alpha,
     power = tab1_inputs$ss_power / 100,
     h = pwr::ES.h(tab1_inputs$ss_p / 100, tab1_inputs$ss_p0 / 100),
-    alt = "greater",
+    alternative = "greater",
     n = NULL
   )$n
 

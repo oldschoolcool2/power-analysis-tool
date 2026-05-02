@@ -15,7 +15,7 @@
 #' @param n_seq Numeric vector of sample sizes
 #' @param power_vals Numeric vector of power values corresponding to n_seq
 #' @param n_current Current or required sample size (for reference line)
-#' @param target_power Target power level (default 0.8 for 80%)
+#' @param target_power Target power level (default 0.8 for 80\%)
 #' @param plot_title Title for the plot
 #' @param xaxis_title Title for x-axis (default "Sample Size (N)")
 #' @param n_reference_label Label for the vertical reference line

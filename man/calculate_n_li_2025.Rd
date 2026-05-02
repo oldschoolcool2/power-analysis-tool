@@ -41,7 +41,7 @@ weighting, accounting for overlap and confounder-outcome association.
 }
 \details{
 Implements the methodology from Li et al. (2025):
-N = V̂(z_{1-α/2} + z_β)² / τ̂²
+N = V-hat(z_\{1-alpha/2\} + z_beta)^2 / tau-hat^2
 
-where V̂ incorporates both overlap (via φ) and confounder-outcome strength (via ρ²)
+where V-hat incorporates both overlap (via phi) and confounder-outcome strength (via rho^2)
 }

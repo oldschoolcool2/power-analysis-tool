@@ -3,9 +3,15 @@
 #' @param ... Arguments passed to shinyApp()
 #'
 #' @export
-#' @importFrom shiny shinyApp
+#' @importFrom shiny shinyApp checkboxInput eventReactive onStop selectInput sliderInput
 #' @importFrom golem with_golem_options
+#' @importFrom utils packageVersion
+#' @importFrom magrittr %>%
 run_app <- function(...) {
+  # Configure file-based logging now that an app session is actually starting.
+  # Done here (not in .onLoad) so package load stays free of filesystem I/O.
+  setup_app_logging()
+
   # Configure error sanitization based on environment
   # In production, sanitize errors to prevent information leakage
   # In development, show full error messages for debugging
@@ -22,9 +28,9 @@ run_app <- function(...) {
   # Log application startup
   logger::log_info(
     "Application starting",
-    version = as.character(packageVersion("PowerAnalysisTool")),
+    version = as.character(utils::packageVersion("PowerAnalysisTool")),
     r_version = R.version.string,
-    golem_version = as.character(packageVersion("golem")),
+    golem_version = as.character(utils::packageVersion("golem")),
     environment = env
   )
 

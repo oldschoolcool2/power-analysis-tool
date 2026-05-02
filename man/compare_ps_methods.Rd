@@ -16,13 +16,13 @@ compare_ps_methods(
 \arguments{
 \item{n_rct}{RCT-based sample size}
 
-\item{treatment_prev_pct}{Treatment prevalence (%)}
+\item{treatment_prev_pct}{Treatment prevalence (\%)}
 
 \item{c_stat}{C-statistic of PS model}
 
 \item{overlap_phi}{Overlap coefficient}
 
-\item{rho_squared}{Confounder-outcome R²}
+\item{rho_squared}{Confounder-outcome R^2}
 
 \item{weight_type}{Weighting method}
 }
