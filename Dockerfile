@@ -42,12 +42,16 @@ RUN apt-get update && apt-get install -y \
     libcurl4-openssl-dev \
     libfreetype6-dev \
     libfribidi-dev \
+    libgdal-dev \
+    libgeos-dev \
     libharfbuzz-dev \
     libjpeg-dev \
     libpng-dev \
+    libproj-dev \
     libssl-dev \
     libtiff5-dev \
     libudunits2-dev \
+    libuv1-dev \
     libwebp-dev \
     libxml2-dev \
     && rm -rf /var/lib/apt/lists/*
@@ -66,39 +70,40 @@ COPY .Rprofile .Rprofile
 COPY renv/activate.R renv/activate.R
 COPY renv/settings.json renv/settings.json
 
-# Copy package metadata files (required for golem package installation)
-COPY DESCRIPTION DESCRIPTION
-COPY NAMESPACE NAMESPACE
-
-# Copy R source code (required for package installation)
-COPY R/ R/
-
-# Create cache directory and restore packages
-# This is the heavy operation that gets cached
-# Explicitly load renv from system library before activating project
-# Using cache mount to persist downloads across builds
+# Restore R package dependencies first (heavy, rarely changes)
+# Cache mount persists downloads across builds.
+# Explicitly load renv from system library before activating project.
 RUN --mount=type=cache,target=/opt/renv/cache \
     mkdir -p /opt/renv/cache && \
     Rscript -e "library(renv, lib.loc = '/usr/local/lib/R/site-library'); renv::restore()"
 
 # Configure renv runtime environment (after restore to avoid bootstrap conflicts)
+# RENV_PATHS_LIBRARY is intentionally NOT set: leaving it unset lets renv use
+# the project library at /srv/shiny-server/renv/library/<platform>/<R-version>/<arch>
+# where renv::restore() actually installed the packages.
 ENV RENV_CONFIG_SANDBOX_ENABLED=FALSE
-ENV RENV_PATHS_LIBRARY=/usr/local/lib/R/site-library
 ENV RENV_PATHS_CACHE=/opt/renv/cache
 
-# Install remotes package (needed for package installation)
+# Install remotes (needed for package installation, separate from renv.lock).
 RUN R --quiet -e "install.packages('remotes', repos = 'https://cloud.r-project.org')"
 
-# Install the package itself (golem production best practice)
-# This installs PowerAnalysisTool as a proper R package
+# Install TinyTeX BEFORE copying R source — TinyTeX has no dependency on app
+# code, so this layer stays cached across source edits.
+# NOTE: temporarily skipped — yihui.org is not reachable from this build
+# environment, so the LaTeX bundle download hangs. PDF report generation will
+# fail until LaTeX is installed (re-enable these lines once network access
+# to yihui.org / mirror.ctan.org is available).
+# RUN R --quiet -e "tinytex::install_tinytex()"
+# RUN R --quiet -e "tinytex::tlmgr_install(c('booktabs', 'float', 'threeparttable'))"
+
+# Now copy package metadata + source (these change frequently)
+COPY DESCRIPTION DESCRIPTION
+COPY NAMESPACE NAMESPACE
+COPY R/ R/
+
+# Install the package itself (golem production best practice).
+# This installs PowerAnalysisTool as a proper R package.
 RUN R -e "remotes::install_local('.', upgrade = 'never', dependencies = FALSE, force = TRUE)"
-
-# Install TinyTeX for PDF generation (after renv restore)
-RUN R --quiet -e "tinytex::install_tinytex()"
-
-# Install LaTeX packages using R/tinytex (avoids PATH issues)
-# Packages sorted alphabetically for easier maintenance
-RUN R --quiet -e "tinytex::tlmgr_install(c('booktabs', 'float', 'threeparttable'))"
 
 # ------------------------------------------------------------------------------
 # Stage 2: Development - Includes testing and code quality tools
@@ -117,10 +122,10 @@ RUN mkdir -p /srv/shiny-server/app_cache && \
     chown -R shiny:shiny /srv/shiny-server/app_cache
 
 # Copy application code INCLUDING tests
+# Note: www/ is bundled inside the installed package via inst/app/www
 COPY --chown=shiny:shiny app.R app.R
 COPY --chown=shiny:shiny analysis-report.Rmd analysis-report.Rmd
 COPY --chown=shiny:shiny R/ R/
-COPY --chown=shiny:shiny www/ www/
 COPY --chown=shiny:shiny tests/ tests/
 
 USER shiny
@@ -141,10 +146,10 @@ RUN mkdir -p /srv/shiny-server/app_cache && \
     chown -R shiny:shiny /srv/shiny-server/app_cache
 
 # Copy ONLY application code (no tests, no dev tools)
+# Note: www/ is bundled inside the installed package via inst/app/www
 COPY --chown=shiny:shiny app.R app.R
 COPY --chown=shiny:shiny analysis-report.Rmd analysis-report.Rmd
 COPY --chown=shiny:shiny R/ R/
-COPY --chown=shiny:shiny www/ www/
 
 USER shiny
 

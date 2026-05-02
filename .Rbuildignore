@@ -17,7 +17,6 @@
 ^docker-compose\.dev\.yml$
 ^Dockerfile$
 ^docs/
-^www/
 ^PHASE2.*\.md$
 ^MIGRATION_STATUS\.md$
 ^SESSION_SUMMARY\.md$

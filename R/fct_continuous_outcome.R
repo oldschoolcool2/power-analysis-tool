@@ -167,7 +167,7 @@ validate_continuous_outcome_inputs <- function(n1 = NULL,
     if (length(error_msgs) > 0) {
       logger::log_warn(
         "Continuous outcome input validation failed",
-        function = "validate_continuous_outcome_inputs",
+        fn = "validate_continuous_outcome_inputs",
         calc_mode = calc_mode,
         error_count = length(error_msgs),
         errors = paste(error_msgs, collapse = "; ")

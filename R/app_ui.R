@@ -37,35 +37,14 @@ app_ui <- function(request) {
     danger = "#B91C1C"     # --color-error-700 from design-tokens.css
   ),
 
-  # Link custom CSS files for modern design system
+  # Bundled CSS/JS dependency. htmltools::htmlDependency dedupes across the
+  # session, versions the assets (cache-busts on package version bump), and
+  # injects exactly one <link>/<script> per file via Shiny's HTTP server.
+  pat_assets(),
+
   tags$head(
-    # Favicon
+    # Favicon (small enough to inline-link from head; not part of the bundle)
     tags$link(rel = "icon", type = "image/svg+xml", href = "www/favicon.svg"),
-    # CSS - version constant for cache busting (update when CSS changes)
-    tags$link(rel = "stylesheet", type = "text/css", href = "www/css/design-tokens.css?v=1.1.0"),
-    tags$link(rel = "stylesheet", type = "text/css", href = "www/css/modern-theme.css?v=1.1.0"),
-    tags$link(rel = "stylesheet", type = "text/css", href = "www/css/input-components.css"),
-    tags$link(rel = "stylesheet", type = "text/css", href = "www/css/responsive.css"),
-    tags$link(rel = "stylesheet", type = "text/css", href = "www/css/sidebar.css"),
-    tags$link(rel = "stylesheet", type = "text/css", href = "www/css/result-cards.css"),
-    tags$link(rel = "stylesheet", type = "text/css", href = "www/css/evalue-cards.css"),
-    tags$link(rel = "stylesheet", type = "text/css", href = "www/css/multi-bias-cards.css"),
-    tags$link(rel = "stylesheet", type = "text/css", href = "www/css/validation.css"),
-    tags$link(rel = "stylesheet", type = "text/css", href = "www/css/progressive-disclosure.css"),
-    tags$link(rel = "stylesheet", type = "text/css", href = "www/css/loading-spinner.css"),
-    tags$link(rel = "stylesheet", type = "text/css", href = "www/css/success-animations.css"),
-    tags$link(rel = "stylesheet", type = "text/css", href = "www/css/documentation.css"),
-    # JavaScript
-    tags$script(src = "www/js/theme-switcher.js"),
-    tags$script(src = "www/js/sidebar-navigation.js"),
-    tags$script(src = "www/js/copy-to-clipboard.js"),
-    tags$script(src = "www/js/input-validation.js"),
-    tags$script(src = "www/js/loading-spinner.js"),
-    tags$script(src = "www/js/keyboard-shortcuts.js"),
-    tags$script(src = "www/js/mobile-sidebar-toggle.js"),
-    tags$script(src = "www/js/session-restore.js"),
-    tags$script(src = "www/js/example-scenarios.js"),
-    tags$script(src = "www/js/initialize-popovers.js"),
     tags$style(HTML("
       /* Clean background color definitions */
       :root {
@@ -375,12 +354,12 @@ app_ui <- function(request) {
 #' @importFrom htmltools htmlDependency attachDependencies tagList
 #' @noRd
 golem_add_external_resources <- function() {
-  # Add resource path for www directory
-  # In development, www is in the root; in production, it's in inst/app/www
-  www_path <- if (file.exists("www")) {
-    "www"
-  } else {
-    app_sys("app", "www")
+  # Resolve www/ path. Inside the installed package the canonical location is
+  # inst/app/www (resolved by app_sys). For pkgload::load_all() in dev, fall
+  # back to the project-root inst/app/www tree.
+  www_path <- app_sys("app", "www")
+  if (!nzchar(www_path) || !dir.exists(www_path)) {
+    www_path <- file.path("inst", "app", "www")
   }
 
   addResourcePath(
@@ -390,5 +369,68 @@ golem_add_external_resources <- function() {
 
   tags$head(
     # Placeholder for additional head content if needed
+  )
+}
+
+#' Bundle all PAT static assets as a single HTML dependency
+#'
+#' Ships the project's CSS and JS as one versioned htmlDependency so Shiny can
+#' dedupe duplicates, attach a cache-busting version string, and load scripts
+#' with `defer` so they don't block first paint.
+#'
+#' Version string is derived from the installed package version, so any
+#' release automatically invalidates browser caches.
+#'
+#' @importFrom htmltools htmlDependency
+#' @importFrom utils packageVersion
+#' @noRd
+pat_assets <- function() {
+  # Same path resolution as golem_add_external_resources()
+  www_path <- app_sys("app", "www")
+  if (!nzchar(www_path) || !dir.exists(www_path)) {
+    www_path <- file.path("inst", "app", "www")
+  }
+
+  pkg_version <- tryCatch(
+    as.character(packageVersion("PowerAnalysisTool")),
+    error = function(e) "0.0.0"
+  )
+
+  htmlDependency(
+    name = "pat-assets",
+    version = pkg_version,
+    src = c(file = www_path),
+    stylesheet = c(
+      "css/design-tokens.css",
+      "css/modern-theme.css",
+      "css/input-components.css",
+      "css/responsive.css",
+      "css/sidebar.css",
+      "css/result-cards.css",
+      "css/evalue-cards.css",
+      "css/multi-bias-cards.css",
+      "css/validation.css",
+      "css/progressive-disclosure.css",
+      "css/loading-spinner.css",
+      "css/success-animations.css",
+      "css/documentation.css"
+    ),
+    # `defer` so JS doesn't block parsing; none of these scripts produce
+    # above-the-fold content, all attach handlers / read DOM after parse.
+    script = lapply(
+      c(
+        "js/theme-switcher.js",
+        "js/sidebar-navigation.js",
+        "js/copy-to-clipboard.js",
+        "js/input-validation.js",
+        "js/loading-spinner.js",
+        "js/keyboard-shortcuts.js",
+        "js/mobile-sidebar-toggle.js",
+        "js/session-restore.js",
+        "js/example-scenarios.js",
+        "js/initialize-popovers.js"
+      ),
+      function(s) list(src = s, defer = NA)
+    )
   )
 }
